@@ -358,17 +358,6 @@ export struct BackgroundLayer {
     }
 };
 
-export struct SpecifiedBackground {
-    Color color = TRANSPARENT;
-    Vec<BackgroundLayer> layers = {};
-
-    void repr(Io::Emit& e) const {
-        e("(specified-background");
-        e(" color={}", color);
-        e(" layers={}", layers);
-        e(")");
-    }
-};
 
 } // namespace Vaev::Css
 
@@ -394,16 +383,6 @@ export struct Backgrounds {
                All([](auto const& l) {
                    return l.image == NONE;
                });
-    }
-
-    operator Css::SpecifiedBackground() const {
-        Vec<Css::BackgroundLayer> specifiedLayers;
-        for (auto const& layer : layers)
-            specifiedLayers.pushBack(toSpecified(layer));
-        return {
-            toSpecified(color),
-            std::move(specifiedLayers),
-        };
     }
 };
 

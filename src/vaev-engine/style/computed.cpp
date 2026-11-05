@@ -101,7 +101,7 @@ export struct ComputedValues {
     Css::Visibility visibility = Keywords::VISIBLE;
     Css::WritingMode writingMode = Keywords::HORIZONTAL_TB;
     Css::Direction direction = Keywords::LTR;
-    Vaev::Css::Position position = Keywords::STATIC;
+    Css::Position position = Keywords::STATIC;
     Css::BoxSizing boxSizing = Keywords::CONTENT_BOX;
     Css::TableLayout tableLayout = Keywords::AUTO;
 

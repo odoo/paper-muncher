@@ -234,12 +234,14 @@ export struct PaddingInlineEndProperty : Property {
 };
 
 export struct PaddingProperty : Property {
+    using Value = Math::Insets<Css::LengthPercentage>;
+
     struct Registration : Property::Registration {
         Registration()
             : Property::Registration(Properties::PADDING, SHORTHAND) {}
 
         Rc<Property> initial() const override {
-            return makeRc<PaddingProperty>(self(), Vaev::Css::Paddings{Css::LengthPercentage::fromCanonical(0)});
+            return makeRc<PaddingProperty>(self(), Value{Css::LengthPercentage::fromCanonical(0)});
         }
 
         Rc<Property> load(ComputedValues const& c) const override {
@@ -247,13 +249,13 @@ export struct PaddingProperty : Property {
         }
 
         Res<Rc<Property>> parse(Cursor<Css::Sst>& c) const override {
-            return Ok(makeRc<PaddingProperty>(self(), try$(parseValue<Vaev::Css::Paddings>(c))));
+            return Ok(makeRc<PaddingProperty>(self(), try$(parseValue<Value>(c))));
         }
     };
 
-    Vaev::Css::Paddings _value;
+    Value _value;
 
-    PaddingProperty(Rc<Property::Registration> registration, Vaev::Css::Paddings value)
+    PaddingProperty(Rc<Property::Registration> registration, Value value)
         : Property(registration), _value(value) {}
 
     Longhands expand(RegisteredPropertySet& registry, ComputedValues const&, ComputedValues&) const override {

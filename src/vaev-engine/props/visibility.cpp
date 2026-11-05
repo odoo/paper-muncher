@@ -107,7 +107,7 @@ export struct OpacityProperty : Property {
 
 // https://drafts.csswg.org/css-masking/#the-clip-path
 export struct ClipPathProperty : Property {
-    using Value = Union</* Url, */ Vaev::Css::BasicShape, Keywords::None>;
+    using Value = Union</* Url, */ Css::BasicShape, Keywords::None>;
 
     struct Registration : Property::Registration {
         Registration() : Property::Registration(Properties::CLIP_PATH) {}
@@ -133,7 +133,7 @@ export struct ClipPathProperty : Property {
         : Property(registration), _value(value) {}
 
     void apply([[maybe_unused]] ComputedValues const& parent, ComputedValues& c, [[maybe_unused]] ComputationContext const& cx) const override {
-        if (auto clipShape = _value.is<Vaev::Css::BasicShape>())
+        if (auto clipShape = _value.is<Css::BasicShape>())
             c.clip.cow() = Some(resolve(*clipShape, cx));
         else
             c.clip.cow() = NONE;

@@ -275,7 +275,7 @@ export struct FontProperty : Property {
         Css::FontWidth width = Css::FontWidth::NORMAL;
         Css::FontStyle style = Css::FontStyle::NORMAL;
         Css::FontSize size = Keywords::MEDIUM;
-        Vaev::Css::LineHeight lineHeight = Keywords::NORMAL;
+        Css::LineHeight lineHeight = Keywords::NORMAL;
 
         void repr(Io::Emit& e) const {
             e("(font");
@@ -345,7 +345,7 @@ export struct FontProperty : Property {
             }
 
             if (c.skip(Css::Token::delim("/")))
-                value.lineHeight = try$(parseValue<Vaev::Css::LineHeight>(c));
+                value.lineHeight = try$(parseValue<Css::LineHeight>(c));
 
             value.families = {try$(parseValue<Css::FontFamily>(c))};
 

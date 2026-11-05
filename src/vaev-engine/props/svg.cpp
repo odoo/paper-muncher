@@ -227,7 +227,7 @@ export struct SvgFillProperty : Property {
             : Property::Registration(Properties::FILL, {PRESENTATION_ATTRIBUTE, INHERITED, BULK_INHERITED}) {}
 
         Rc<Property> initial() const override {
-            return makeRc<SvgFillProperty>(self(), Vaev::Css::SvgPaint{Some(Vaev::Css::Color{Gfx::BLACK})});
+            return makeRc<SvgFillProperty>(self(), Css::SvgPaint{Some(Css::Color{Gfx::BLACK})});
         }
 
         Rc<Property> load(ComputedValues const& c) const override {
@@ -235,13 +235,13 @@ export struct SvgFillProperty : Property {
         }
 
         Res<Rc<Property>> parse(Cursor<Css::Sst>& c) const override {
-            return Ok(makeRc<SvgFillProperty>(self(), try$(parseValue<Vaev::Css::SvgPaint>(c))));
+            return Ok(makeRc<SvgFillProperty>(self(), try$(parseValue<Css::SvgPaint>(c))));
         }
     };
 
-    Vaev::Css::SvgPaint _value;
+    Css::SvgPaint _value;
 
-    SvgFillProperty(Rc<Property::Registration> registration, Vaev::Css::SvgPaint value)
+    SvgFillProperty(Rc<Property::Registration> registration, Css::SvgPaint value)
         : Property(registration), _value(value) {}
 
     void apply([[maybe_unused]] ComputedValues const& parent, ComputedValues& c, [[maybe_unused]] ComputationContext const& cx) const override {
@@ -394,7 +394,7 @@ export struct SvgStrokeProperty : Property {
             : Property::Registration(Properties::STROKE, {PRESENTATION_ATTRIBUTE, INHERITED, BULK_INHERITED}) {}
 
         Rc<Property> initial() const override {
-            return makeRc<SvgStrokeProperty>(self(), Vaev::Css::SvgPaint{NONE});
+            return makeRc<SvgStrokeProperty>(self(), Css::SvgPaint{NONE});
         }
 
         Rc<Property> load(ComputedValues const& c) const override {
@@ -402,13 +402,13 @@ export struct SvgStrokeProperty : Property {
         }
 
         Res<Rc<Property>> parse(Cursor<Css::Sst>& c) const override {
-            return Ok(makeRc<SvgStrokeProperty>(self(), try$(parseValue<Vaev::Css::SvgPaint>(c))));
+            return Ok(makeRc<SvgStrokeProperty>(self(), try$(parseValue<Css::SvgPaint>(c))));
         }
     };
 
-    Vaev::Css::SvgPaint _value;
+    Css::SvgPaint _value;
 
-    SvgStrokeProperty(Rc<Property::Registration> registration, Vaev::Css::SvgPaint value)
+    SvgStrokeProperty(Rc<Property::Registration> registration, Css::SvgPaint value)
         : Property(registration), _value(value) {}
 
     void apply([[maybe_unused]] ComputedValues const& parent, ComputedValues& c, [[maybe_unused]] ComputationContext const& cx) const override {

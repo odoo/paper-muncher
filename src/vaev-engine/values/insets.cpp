@@ -57,13 +57,6 @@ struct ValueParser<Position> {
     }
 };
 
-export using Margins = Math::Insets<Union<Keywords::Auto, LengthPercentage>>;
-
-export using Paddings = Math::Insets<LengthPercentage>;
-
-// https://www.w3.org/TR/css-position-3/#propdef-inset
-export using BoxInsets = Math::Insets<Union<Keywords::Auto, LengthPercentage>>;
-
 } // namespace Vaev::Css
 
 namespace Vaev::Style {
@@ -148,19 +141,6 @@ export Css::Gap toSpecified(Style::Gap const& value) {
 }
 
 } // namespace Vaev::Style
-
-namespace Vaev::Css {
-
-export struct Gaps {
-    Gap row = Keywords::NORMAL;
-    Gap col = Keywords::NORMAL;
-
-    void repr(Io::Emit& e) const {
-        e("(gaps {} {})", row, col);
-    }
-};
-
-} // namespace Vaev::Css
 
 namespace Vaev::Style {
 

@@ -29,13 +29,13 @@ export struct FlexBasisProperty : Property {
         }
 
         Res<Rc<Property>> parse(Cursor<Css::Sst>& c) const override {
-            return Ok(makeRc<FlexBasisProperty>(self(), try$(parseValue<Vaev::Css::FlexBasis>(c))));
+            return Ok(makeRc<FlexBasisProperty>(self(), try$(parseValue<Css::FlexBasis>(c))));
         }
     };
 
-    Vaev::Css::FlexBasis _value;
+    Css::FlexBasis _value;
 
-    FlexBasisProperty(Rc<Property::Registration> registration, Vaev::Css::FlexBasis value)
+    FlexBasisProperty(Rc<Property::Registration> registration, Css::FlexBasis value)
         : Property(registration), _value(value) {}
 
     void apply([[maybe_unused]] ComputedValues const& parent, ComputedValues& c, [[maybe_unused]] ComputationContext const& cx) const override {
@@ -258,7 +258,7 @@ export struct FlexFlowProperty : Property {
 export struct FlexProperty : Property {
     // <'flex-grow'> <'flex-shrink'>? || <'flex-basis'>
     struct Value {
-        Vaev::Css::FlexBasis flexBasis = Keywords::AUTO;
+        Css::FlexBasis flexBasis = Keywords::AUTO;
         f64 flexGrow, flexShrink;
     };
 
@@ -308,11 +308,11 @@ export struct FlexProperty : Property {
 
             auto parsedGrowAndMaybeShrink = parseGrowShrink(c, value);
             if (parsedGrowAndMaybeShrink) {
-                auto basis = parseValue<Vaev::Css::FlexBasis>(c);
+                auto basis = parseValue<Css::FlexBasis>(c);
                 if (basis)
                     value.flexBasis = basis.expect();
             } else {
-                auto basis = parseValue<Vaev::Css::FlexBasis>(c);
+                auto basis = parseValue<Css::FlexBasis>(c);
                 if (basis)
                     value.flexBasis = basis.expect();
                 else

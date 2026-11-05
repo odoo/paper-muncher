@@ -41,17 +41,6 @@ export using BorderCollapse = Union<
     Keywords::Separate,
     Keywords::Collapse>;
 
-// MARK: Border Spacing --------------------------------------------------------
-// https://www.w3.org/TR/CSS22/tables.html#propdef-border-spacing
-
-export struct BorderSpacing {
-    Length horizontal, vertical;
-
-    void repr(Io::Emit& e) const {
-        e("({}, {})", horizontal, vertical);
-    }
-};
-
 } // namespace Vaev::Css
 
 namespace Vaev::Style {
@@ -61,65 +50,4 @@ export struct BorderSpacing {
     Pixel vertical = Pixel{0};
 };
 
-export Style::BorderSpacing resolve(Css::BorderSpacing const& value, Css::LengthContext auto const& ctx) {
-    return {resolve(value.horizontal, ctx), resolve(value.vertical, ctx)};
-}
-
-export Css::BorderSpacing toSpecified(Style::BorderSpacing const& value) {
-    return {toSpecified(value.horizontal), toSpecified(value.vertical)};
-}
-
 } // namespace Vaev::Style
-
-namespace Vaev::Css {
-
-export template <>
-struct ValueParser<BorderSpacing> {
-    static Res<BorderSpacing> parse(Cursor<Css::Sst>& c) {
-        if (c.ended())
-            return Error::invalidData("unexpected end of input");
-
-        auto firstLength = parseValue<Length>(c);
-
-        if (not firstLength)
-            return Error::invalidData("expected length parameter for border-spacing");
-
-        auto secondLength = parseValue<Length>(c);
-
-        if (secondLength) {
-            return Ok(BorderSpacing{firstLength.expect(), secondLength.expect()});
-        } else {
-            return Ok(BorderSpacing{firstLength.expect(), firstLength.expect()});
-        }
-
-        return Error::invalidData("expected border spacing value");
-    }
-};
-
-export template <>
-struct ValueSerializer<BorderSpacing> {
-    // https://drafts.csswg.org/cssom/#serialize-a-css-value
-    static Res<> serialize(Io::TextWriter& w, BorderSpacing const& value) {
-        // If component values can be omitted or replaced with a shorter representation
-        // without changing the meaning of the value, omit/replace them.
-        Io::StringWriter horizontal;
-        try$(serializeValue(horizontal, value.horizontal));
-        Io::StringWriter vertical;
-        try$(serializeValue(vertical, value.vertical));
-
-        auto h = horizontal.take();
-        auto v = vertical.take();
-        try$(w.writeStr(h.str()));
-
-        if (h == v)
-            return Ok();
-
-        try$(w.writeRune(' '));
-        try$(w.writeStr(v.str()));
-
-        return Ok();
-    }
-};
-
-} // namespace Vaev::Css
-

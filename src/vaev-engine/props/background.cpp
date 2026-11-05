@@ -32,13 +32,13 @@ export struct BackgroundColorProperty : Property {
         }
 
         Res<Rc<Property>> parse(Cursor<Css::Sst>& c) const override {
-            return Ok(makeRc<BackgroundColorProperty>(self(), try$(parseValue<Vaev::Css::Color>(c))));
+            return Ok(makeRc<BackgroundColorProperty>(self(), try$(parseValue<Css::Color>(c))));
         }
     };
 
-    Vaev::Css::Color _value;
+    Css::Color _value;
 
-    BackgroundColorProperty(Rc<Property::Registration> registration, Vaev::Css::Color value)
+    BackgroundColorProperty(Rc<Property::Registration> registration, Css::Color value)
         : Property(registration), _value(value) {}
 
     void apply([[maybe_unused]] ComputedValues const& parent, ComputedValues& c, [[maybe_unused]] ComputationContext const& cx) const override {
@@ -204,28 +204,45 @@ export struct BackgroundRepeatProperty : Property {
 
 // https://www.w3.org/TR/CSS22/colors.html#x10
 export struct BackgroundProperty : Property {
+    struct Value {
+        Css::Color color = Css::TRANSPARENT;
+        Vec<Css::BackgroundLayer> layers = {};
+
+        void repr(Io::Emit& e) const {
+            e("(background");
+            e(" color={}", color);
+            e(" layers={}", layers);
+            e(")");
+        }
+    };
+
     struct Registration : Property::Registration {
         Registration()
             : Property::Registration(Properties::BACKGROUND, SHORTHAND) {}
 
         Rc<Property> initial() const override {
-            return makeRc<BackgroundProperty>(self(), Css::SpecifiedBackground{Css::TRANSPARENT});
+            return makeRc<BackgroundProperty>(self(), Value{Css::TRANSPARENT});
         }
 
         Rc<Property> load(ComputedValues const& c) const override {
-            return makeRc<BackgroundProperty>(self(), *c.backgrounds);
+            return makeRc<BackgroundProperty>(self(), [&] {
+                Value value{toSpecified(c.backgrounds->color), {}};
+                for (auto const& layer : c.backgrounds->layers)
+                    value.layers.pushBack(toSpecified(layer));
+                return value;
+            }());
         }
 
         Res<Rc<Property>> parse(Cursor<Css::Sst>& c) const override {
-            Css::SpecifiedBackground value;
-            value.color = try$(parseValue<Vaev::Css::Color>(c));
+            Value value;
+            value.color = try$(parseValue<Css::Color>(c));
             return Ok(makeRc<BackgroundProperty>(self(), std::move(value)));
         }
     };
 
-    Css::SpecifiedBackground _value;
+    Value _value;
 
-    BackgroundProperty(Rc<Property::Registration> registration, Css::SpecifiedBackground value)
+    BackgroundProperty(Rc<Property::Registration> registration, Value value)
         : Property(registration), _value(std::move(value)) {}
 
     Longhands expand(RegisteredPropertySet& registry, ComputedValues const&, ComputedValues&) const override {
@@ -261,13 +278,13 @@ export struct ColorProperty : Property {
         }
 
         Res<Rc<Property>> parse(Cursor<Css::Sst>& c) const override {
-            return Ok(makeRc<ColorProperty>(self(), try$(parseValue<Vaev::Css::Color>(c))));
+            return Ok(makeRc<ColorProperty>(self(), try$(parseValue<Css::Color>(c))));
         }
     };
 
-    Vaev::Css::Color _value;
+    Css::Color _value;
 
-    ColorProperty(Rc<Property::Registration> registration, Vaev::Css::Color value)
+    ColorProperty(Rc<Property::Registration> registration, Css::Color value)
         : Property(registration), _value(value) {}
 
     void apply(ComputedValues const& parent, ComputedValues& c, [[maybe_unused]] ComputationContext const& cx) const override {

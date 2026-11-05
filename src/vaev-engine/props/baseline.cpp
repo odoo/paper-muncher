@@ -32,13 +32,13 @@ export struct LineHeightProperty : Property {
         }
 
         Res<Rc<Property>> parse(Cursor<Css::Sst>& c) const override {
-            return Ok(makeRc<LineHeightProperty>(self(), try$(parseValue<Vaev::Css::LineHeight>(c))));
+            return Ok(makeRc<LineHeightProperty>(self(), try$(parseValue<Css::LineHeight>(c))));
         }
     };
 
-    Vaev::Css::LineHeight _value;
+    Css::LineHeight _value;
 
-    LineHeightProperty(Rc<Property::Registration> registration, Vaev::Css::LineHeight value)
+    LineHeightProperty(Rc<Property::Registration> registration, Css::LineHeight value)
         : Property(registration), _value(value) {}
 
     void apply([[maybe_unused]] ComputedValues const& parent, ComputedValues& c, [[maybe_unused]] ComputationContext const& cx) const override {
@@ -176,13 +176,13 @@ export struct BaselineShiftProperty : Property {
         }
 
         Res<Rc<Property>> parse(Cursor<Css::Sst>& c) const override {
-            return Ok(makeRc<BaselineShiftProperty>(self(), try$(parseValue<Vaev::Css::BaselineShift>(c))));
+            return Ok(makeRc<BaselineShiftProperty>(self(), try$(parseValue<Css::BaselineShift>(c))));
         }
     };
 
-    Vaev::Css::BaselineShift _value;
+    Css::BaselineShift _value;
 
-    BaselineShiftProperty(Rc<Property::Registration> registration, Vaev::Css::BaselineShift value)
+    BaselineShiftProperty(Rc<Property::Registration> registration, Css::BaselineShift value)
         : Property(registration), _value(value) {}
 
     void apply([[maybe_unused]] ComputedValues const& parent, ComputedValues& c, [[maybe_unused]] ComputationContext const& cx) const override {
@@ -203,7 +203,7 @@ export struct VerticalAlignProperty : Property {
     struct Value {
         Opt<Css::BaselineSource> baselineSource = NONE;
         Opt<Css::AlignmentBaseline> alignmentBaseline = NONE;
-        Opt<Vaev::Css::BaselineShift> baselineShift = NONE;
+        Opt<Css::BaselineShift> baselineShift = NONE;
     };
 
     struct Registration : Property::Registration {
@@ -256,7 +256,7 @@ export struct VerticalAlignProperty : Property {
                     return Error::invalidData("duplicated value type");
                 }
 
-                auto maybeBaselineShift = parseValue<Vaev::Css::BaselineShift>(c);
+                auto maybeBaselineShift = parseValue<Css::BaselineShift>(c);
                 if (maybeBaselineShift) {
                     if (not value.baselineShift) {
                         value.baselineShift = Some(maybeBaselineShift.expect());
