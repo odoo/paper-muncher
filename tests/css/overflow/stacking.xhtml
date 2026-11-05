@@ -1,0 +1,62 @@
+<tests>
+<!-- Adapted from css/CSS2/zindex/stack-overflow-001.xht in web-platform-tests -->
+<test name="overflow-does-not-create-stacking-context">
+<container>
+    <html lang="en" xmlns="http://www.w3.org/1999/xhtml">
+
+    <head>
+        <style>
+            :root {
+                background-color: white;
+            }
+
+            div {
+                width: 100px;
+                height: 100px;
+                margin-bottom: -100px;
+            }
+
+            .before {
+                background-color: maroon;
+            }
+
+            .clipped {
+                background-color: red;
+            }
+
+            .after {
+                background-color: lime;
+            }
+        </style>
+    </head>
+
+    <body>
+        <slot />
+    </body>
+
+    </html>
+</container>
+
+<rendering>
+    <div class="after"></div>
+</rendering>
+
+<rendering>
+    <div class="before"></div>
+    <div class="clipped" style="overflow: hidden;"></div>
+    <div class="after"></div>
+</rendering>
+
+<rendering>
+    <div class="before"></div>
+    <div class="clipped" style="overflow-block: hidden;"></div>
+    <div class="after"></div>
+</rendering>
+
+<rendering>
+    <div class="before"></div>
+    <div class="clipped" style="overflow-inline: scroll;"></div>
+    <div class="after"></div>
+</rendering>
+</test>
+</tests>
