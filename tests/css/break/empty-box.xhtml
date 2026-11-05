@@ -1,0 +1,44 @@
+<tests>
+<test name="empty-box-taller-than-page" flow="paginate" width="200px" height="200px" margins="0">
+<container>
+    <html lang="en" xmlns="http://www.w3.org/1999/xhtml">
+
+    <head>
+        <style>
+            :root {
+                background-color: white;
+            }
+
+            body {
+                margin: 0;
+            }
+
+            .tall {
+                background-color: lightseagreen;
+            }
+
+            .after {
+                height: 50px;
+                background-color: salmon;
+            }
+        </style>
+    </head>
+
+    <body>
+        <slot />
+    </body>
+
+    </html>
+</container>
+
+<rendering>
+    <div class="tall" style="height: 200px;"></div>
+    <div class="after" style="break-before: page;"></div>
+</rendering>
+
+<rendering help="FIXME: the rest of the box should continue on the next page instead of being dropped">
+    <div class="tall" style="height: 300px;"></div>
+    <div class="after"></div>
+</rendering>
+</test>
+</tests>
