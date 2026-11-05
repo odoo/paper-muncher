@@ -1730,7 +1730,8 @@ export struct TableFormatingContext : FormatingContext {
         if (rowIsFreelyFragmentable) {
             // breakpoint inside of row, take in consideration ALL breakpoints
             // should stay in this row next fragmentation
-            currentBreakpoint.overrideIfBetter(Breakpoint::fromChildren(outputRow.breakpoints, i + 1, avoidBreakInsideRow or avoidBreakInsideRowGroup or avoidBreakInsideTable, false));
+            if (auto breakpoint = Breakpoint::fromChildren(outputRow.breakpoints, i + 1, avoidBreakInsideRow or avoidBreakInsideRowGroup or avoidBreakInsideTable, false))
+                currentBreakpoint.overrideIfBetter(breakpoint.take());
         }
 
         // we need to abort layout if we cannot fit cells on their last row
@@ -1747,7 +1748,8 @@ export struct TableFormatingContext : FormatingContext {
                     outputRow.breakpoints[j] = NONE;
             }
 
-            currentBreakpoint.overrideIfBetter(Breakpoint::fromChildren(outputRow.breakpoints, i + 1, avoidBreakInsideRow or avoidBreakInsideRowGroup or avoidBreakInsideTable, true));
+            if (auto breakpoint = Breakpoint::fromChildren(outputRow.breakpoints, i + 1, avoidBreakInsideRow or avoidBreakInsideRowGroup or avoidBreakInsideTable, true))
+                currentBreakpoint.overrideIfBetter(breakpoint.take());
 
         } else {
 

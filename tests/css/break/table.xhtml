@@ -1,0 +1,51 @@
+<tests>
+<test name="table-tall-row-without-cell-breakpoints" flow="paginate" width="200px" height="200px" margins="0">
+<container>
+    <html lang="en" xmlns="http://www.w3.org/1999/xhtml">
+
+    <head>
+        <style>
+            :root {
+                background-color: white;
+            }
+
+            body {
+                margin: 0;
+            }
+
+            table {
+                border-spacing: 0;
+            }
+
+            td {
+                padding: 0;
+            }
+
+            .cell {
+                width: 50px;
+                height: 150px;
+                background-color: lightseagreen;
+            }
+        </style>
+    </head>
+
+    <body>
+        <slot />
+    </body>
+
+    </html>
+</container>
+
+<rendering>
+    <div class="cell"></div>
+</rendering>
+
+<rendering help="a row taller than half the page whose cells offer no breakpoint must not crash">
+    <table>
+        <tr>
+            <td class="cell"></td>
+        </tr>
+    </table>
+</rendering>
+</test>
+</tests>
