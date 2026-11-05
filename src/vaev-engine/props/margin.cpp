@@ -15,17 +15,17 @@ namespace Vaev::Style {
 
 // https://drafts.csswg.org/css-box-4/#propdef-margin-top
 export struct MarginTopProperty : Property {
-    using Value = Union<Keywords::Auto, Calc<PercentOr<Length>>>;
+    using Value = Union<Keywords::Auto, LengthPercentage>;
 
     struct Registration : Property::Registration {
         Registration() : Property::Registration(Properties::MARGIN_TOP) {}
 
         Rc<Property> initial() const override {
-            return makeRc<MarginTopProperty>(self(), Calc<PercentOr<Length>>(Length{}));
+            return makeRc<MarginTopProperty>(self(), LengthPercentage::fromCanonical(0));
         }
 
         Rc<Property> load(ComputedValues const& c) const override {
-            return makeRc<MarginTopProperty>(self(), c.margin->top);
+            return makeRc<MarginTopProperty>(self(), toSpecified(c.margin->top));
         }
 
         Res<Rc<Property>> parse(Cursor<Css::Sst>& c) const override {
@@ -39,7 +39,7 @@ export struct MarginTopProperty : Property {
         : Property(registration), _value(value) {}
 
     void apply([[maybe_unused]] ComputedValues const& parent, ComputedValues& c, [[maybe_unused]] ComputationContext const& cx) const override {
-        c.margin.cow().top = _value;
+        c.margin.cow().top = resolve(_value, cx);
     }
 
     Res<> serialize(Io::TextWriter& w) const override {
@@ -59,11 +59,11 @@ export struct MarginRightProperty : Property {
         Registration() : Property::Registration(Properties::MARGIN_RIGHT) {}
 
         Rc<Property> initial() const override {
-            return makeRc<MarginRightProperty>(self(), Calc<PercentOr<Length>>(Length{}));
+            return makeRc<MarginRightProperty>(self(), LengthPercentage::fromCanonical(0));
         }
 
         Rc<Property> load(ComputedValues const& c) const override {
-            return makeRc<MarginRightProperty>(self(), c.margin->end);
+            return makeRc<MarginRightProperty>(self(), toSpecified(c.margin->end));
         }
 
         Res<Rc<Property>> parse(Cursor<Css::Sst>& c) const override {
@@ -77,7 +77,7 @@ export struct MarginRightProperty : Property {
         : Property(registration), _value(value) {}
 
     void apply([[maybe_unused]] ComputedValues const& parent, ComputedValues& c, [[maybe_unused]] ComputationContext const& cx) const override {
-        c.margin.cow().end = _value;
+        c.margin.cow().end = resolve(_value, cx);
     }
 
     Res<> serialize(Io::TextWriter& w) const override {
@@ -97,11 +97,11 @@ export struct MarginBottomProperty : Property {
         Registration() : Property::Registration(Properties::MARGIN_BOTTOM) {}
 
         Rc<Property> initial() const override {
-            return makeRc<MarginBottomProperty>(self(), Calc<PercentOr<Length>>(Length{}));
+            return makeRc<MarginBottomProperty>(self(), LengthPercentage::fromCanonical(0));
         }
 
         Rc<Property> load(ComputedValues const& c) const override {
-            return makeRc<MarginBottomProperty>(self(), c.margin->bottom);
+            return makeRc<MarginBottomProperty>(self(), toSpecified(c.margin->bottom));
         }
 
         Res<Rc<Property>> parse(Cursor<Css::Sst>& c) const override {
@@ -115,7 +115,7 @@ export struct MarginBottomProperty : Property {
         : Property(registration), _value(value) {}
 
     void apply([[maybe_unused]] ComputedValues const& parent, ComputedValues& c, [[maybe_unused]] ComputationContext const& cx) const override {
-        c.margin.cow().bottom = _value;
+        c.margin.cow().bottom = resolve(_value, cx);
     }
 
     Res<> serialize(Io::TextWriter& w) const override {
@@ -135,11 +135,11 @@ export struct MarginLeftProperty : Property {
         Registration() : Property::Registration(Properties::MARGIN_LEFT) {}
 
         Rc<Property> initial() const override {
-            return makeRc<MarginLeftProperty>(self(), Calc<PercentOr<Length>>(Length{}));
+            return makeRc<MarginLeftProperty>(self(), LengthPercentage::fromCanonical(0));
         }
 
         Rc<Property> load(ComputedValues const& c) const override {
-            return makeRc<MarginLeftProperty>(self(), c.margin->start);
+            return makeRc<MarginLeftProperty>(self(), toSpecified(c.margin->start));
         }
 
         Res<Rc<Property>> parse(Cursor<Css::Sst>& c) const override {
@@ -153,7 +153,7 @@ export struct MarginLeftProperty : Property {
         : Property(registration), _value(value) {}
 
     void apply([[maybe_unused]] ComputedValues const& parent, ComputedValues& c, [[maybe_unused]] ComputationContext const& cx) const override {
-        c.margin.cow().start = _value;
+        c.margin.cow().start = resolve(_value, cx);
     }
 
     Res<> serialize(Io::TextWriter& w) const override {
@@ -174,11 +174,11 @@ export struct MarginProperty : Property {
             : Property::Registration(Properties::MARGIN, SHORTHAND) {}
 
         Rc<Property> initial() const override {
-            return makeRc<MarginProperty>(self(), Value{Calc<PercentOr<Length>>(Length{})});
+            return makeRc<MarginProperty>(self(), Value{LengthPercentage::fromCanonical(0)});
         }
 
         Rc<Property> load(ComputedValues const& c) const override {
-            return makeRc<MarginProperty>(self(), *c.margin);
+            return makeRc<MarginProperty>(self(), toSpecified(*c.margin));
         }
 
         Res<Rc<Property>> parse(Cursor<Css::Sst>& c) const override {
@@ -213,11 +213,11 @@ export struct MarginInlineStartProperty : Property {
         Registration() : Property::Registration(Properties::MARGIN_INLINE_START, LOGICAL) {}
 
         Rc<Property> initial() const override {
-            return makeRc<MarginInlineStartProperty>(self(), Calc<PercentOr<Length>>(Length{}));
+            return makeRc<MarginInlineStartProperty>(self(), LengthPercentage::fromCanonical(0));
         }
 
         Rc<Property> load(ComputedValues const& c) const override {
-            return makeRc<MarginInlineStartProperty>(self(), c.margin->start);
+            return makeRc<MarginInlineStartProperty>(self(), toSpecified(c.margin->start));
         }
 
         Res<Rc<Property>> parse(Cursor<Css::Sst>& c) const override {
@@ -254,11 +254,11 @@ export struct MarginInlineEndProperty : Property {
         Registration() : Property::Registration(Properties::MARGIN_INLINE_END, LOGICAL) {}
 
         Rc<Property> initial() const override {
-            return makeRc<MarginInlineEndProperty>(self(), Calc<PercentOr<Length>>(Length{}));
+            return makeRc<MarginInlineEndProperty>(self(), LengthPercentage::fromCanonical(0));
         }
 
         Rc<Property> load(ComputedValues const& c) const override {
-            return makeRc<MarginInlineEndProperty>(self(), c.margin->end);
+            return makeRc<MarginInlineEndProperty>(self(), toSpecified(c.margin->end));
         }
 
         Res<Rc<Property>> parse(Cursor<Css::Sst>& c) const override {
@@ -287,23 +287,44 @@ export struct MarginInlineEndProperty : Property {
     }
 };
 
+// Value of the logical margin shorthands: <'margin-top'>{1,2}
+// The first value is the start side, the second (defaulting to the first) is the end side.
+// https://drafts.csswg.org/css-logical/#propdef-margin-block
+// https://drafts.csswg.org/css-logical/#propdef-margin-inline
+export struct LogicalMargins {
+    MarginTopProperty::Value start;
+    MarginTopProperty::Value end;
+
+    static Res<LogicalMargins> parse(Cursor<Css::Sst>& c) {
+        auto start = try$(parseValue<MarginTopProperty::Value>(c));
+        auto end = parseValue<MarginTopProperty::Value>(c);
+        if (not end)
+            return Ok(LogicalMargins{start, start});
+        return Ok(LogicalMargins{start, end.take()});
+    }
+
+    void repr(Io::Emit& e) const {
+        e("({} {})", start, end);
+    }
+};
+
 // https://drafts.csswg.org/css-logical/#propdef-margin-inline
 export struct MarginInlineProperty : Property {
-    using Value = Math::Insets<MarginTopProperty::Value>;
+    using Value = LogicalMargins;
 
     struct Registration : Property::Registration {
         Registration() : Property::Registration(Properties::MARGIN_INLINE, LOGICAL) {}
 
         Rc<Property> initial() const override {
-            return makeRc<MarginInlineProperty>(self(), Value{Calc<PercentOr<Length>>(Length{})});
+            return makeRc<MarginInlineProperty>(self(), Value{LengthPercentage::fromCanonical(0), LengthPercentage::fromCanonical(0)});
         }
 
         Rc<Property> load(ComputedValues const& c) const override {
-            return makeRc<MarginInlineProperty>(self(), Math::Insets{c.margin->start, c.margin->end});
+            return makeRc<MarginInlineProperty>(self(), Value{toSpecified(c.margin->start), toSpecified(c.margin->end)});
         }
 
         Res<Rc<Property>> parse(Cursor<Css::Sst>& c) const override {
-            return Ok(makeRc<MarginInlineProperty>(self(), try$(parseValue<Value>(c))));
+            return Ok(makeRc<MarginInlineProperty>(self(), try$(Value::parse(c))));
         }
     };
 
@@ -333,11 +354,11 @@ export struct MarginBlockStartProperty : Property {
         Registration() : Property::Registration(Properties::MARGIN_BLOCK_START, LOGICAL) {}
 
         Rc<Property> initial() const override {
-            return makeRc<MarginBlockStartProperty>(self(), Calc<PercentOr<Length>>(Length{}));
+            return makeRc<MarginBlockStartProperty>(self(), LengthPercentage::fromCanonical(0));
         }
 
         Rc<Property> load(ComputedValues const& c) const override {
-            return makeRc<MarginBlockStartProperty>(self(), c.margin->top);
+            return makeRc<MarginBlockStartProperty>(self(), toSpecified(c.margin->top));
         }
 
         Res<Rc<Property>> parse(Cursor<Css::Sst>& c) const override {
@@ -374,11 +395,11 @@ export struct MarginBlockEndProperty : Property {
         Registration() : Property::Registration(Properties::MARGIN_BLOCK_END, LOGICAL) {}
 
         Rc<Property> initial() const override {
-            return makeRc<MarginBlockEndProperty>(self(), Calc<PercentOr<Length>>(Length{}));
+            return makeRc<MarginBlockEndProperty>(self(), LengthPercentage::fromCanonical(0));
         }
 
         Rc<Property> load(ComputedValues const& c) const override {
-            return makeRc<MarginBlockEndProperty>(self(), c.margin->bottom);
+            return makeRc<MarginBlockEndProperty>(self(), toSpecified(c.margin->bottom));
         }
 
         Res<Rc<Property>> parse(Cursor<Css::Sst>& c) const override {
@@ -386,7 +407,7 @@ export struct MarginBlockEndProperty : Property {
         }
     };
 
-    Union<Keywords::Auto, Calc<PercentOr<Length>>> _value;
+    Value _value;
 
     MarginBlockEndProperty(Rc<Property::Registration> registration, Value value)
         : Property(registration), _value(value) {}
@@ -409,21 +430,21 @@ export struct MarginBlockEndProperty : Property {
 
 // https://drafts.csswg.org/css-logical/#propdef-margin-block
 export struct MarginBlockProperty : Property {
-    using Value = Math::Insets<MarginTopProperty::Value>;
+    using Value = LogicalMargins;
 
     struct Registration : Property::Registration {
         Registration() : Property::Registration(Properties::MARGIN_BLOCK, LOGICAL) {}
 
         Rc<Property> initial() const override {
-            return makeRc<MarginBlockProperty>(self(), Value{Calc<PercentOr<Length>>(Length{})});
+            return makeRc<MarginBlockProperty>(self(), Value{LengthPercentage::fromCanonical(0), LengthPercentage::fromCanonical(0)});
         }
 
         Rc<Property> load(ComputedValues const& c) const override {
-            return makeRc<MarginBlockProperty>(self(), Math::Insets{c.margin->top, c.margin->bottom});
+            return makeRc<MarginBlockProperty>(self(), Value{toSpecified(c.margin->top), toSpecified(c.margin->bottom)});
         }
 
         Res<Rc<Property>> parse(Cursor<Css::Sst>& c) const override {
-            return Ok(makeRc<MarginBlockProperty>(self(), try$(parseValue<Value>(c))));
+            return Ok(makeRc<MarginBlockProperty>(self(), try$(Value::parse(c))));
         }
     };
 
@@ -435,8 +456,8 @@ export struct MarginBlockProperty : Property {
     // FIXME: Take writing mode into account
     Longhands expand(RegisteredPropertySet& registry, ComputedValues const&, ComputedValues&) const override {
         return {
-            makeRc<MarginTopProperty>(registry.resolveRegistration(Properties::MARGIN_TOP, {}).expect(), _value.top),
-            makeRc<MarginBottomProperty>(registry.resolveRegistration(Properties::MARGIN_BOTTOM, {}).expect(), _value.bottom),
+            makeRc<MarginTopProperty>(registry.resolveRegistration(Properties::MARGIN_TOP, {}).expect(), _value.start),
+            makeRc<MarginBottomProperty>(registry.resolveRegistration(Properties::MARGIN_BOTTOM, {}).expect(), _value.end),
         };
     }
 

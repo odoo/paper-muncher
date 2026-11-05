@@ -21,14 +21,14 @@ export struct Image;
 export struct LinearGradient {
     struct Stop {
         Gfx::Color color;
-        Percent position;
+        PurePercentage position;
 
         void repr(Io::Emit& e) const {
             e("({} {})", color, position);
         }
     };
 
-    Angle angle;
+    PureAngle angle;
     ColorSpace colorSpace = ColorSpace::SRGB;
     Vec<Stop> stops;
 
@@ -64,14 +64,14 @@ export struct RadialGradient {
 export struct ConicGradient {
     struct Stop {
         Gfx::Color color;
-        Angle angle;
+        PureAngle angle;
 
         void repr(Io::Emit& e) const {
             e("({} {})", color, angle);
         }
     };
 
-    Angle angle;
+    PureAngle angle;
     Math::Vec2f position;
     ColorSpace colorSpace = ColorSpace::SRGB;
     Vec<LinearGradient::Stop> stops;
@@ -87,7 +87,7 @@ export struct ConicGradient {
 export struct CrossFade {
     struct Layer {
         Box<Image> image;
-        Percent opacity;
+        PurePercentage opacity;
 
         void repr(Io::Emit& e) const {
             e("({} {})", image, opacity);
@@ -106,7 +106,7 @@ export struct CrossFade {
 // https://www.w3.org/TR/css-images-4/#typedef-color-stripe
 export struct ColorStrip {
     Gfx::Color color;
-    Union<Percent, Flex> thickness;
+    Union<PurePercentage, PureFlex> thickness;
 
     void repr(Io::Emit& e) const {
         e("({} {})", color, thickness);

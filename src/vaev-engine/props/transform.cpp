@@ -31,14 +31,20 @@ export struct TransformOriginProperty : Property {
             return makeRc<TransformOriginProperty>(
                 self(),
                 TransformOrigin{
-                    .xOffset = Calc<PercentOr<Length>>{Percent{50}},
-                    .yOffset = Calc<PercentOr<Length>>{Percent{50}},
+                    .xOffset = LengthPercentage::fromPercentage(50),
+                    .yOffset = LengthPercentage::fromPercentage(50),
                 }
             );
         }
 
         Rc<Property> load(ComputedValues const& c) const override {
-            return makeRc<TransformOriginProperty>(self(), c.transform->origin);
+            return makeRc<TransformOriginProperty>(
+                self(),
+                TransformOrigin{
+                    .xOffset = toSpecified(c.transform->origin.x),
+                    .yOffset = toSpecified(c.transform->origin.y),
+                }
+            );
         }
 
         Res<Rc<Property>> parse(Cursor<Css::Sst>& c) const override {
@@ -52,7 +58,7 @@ export struct TransformOriginProperty : Property {
         : Property(registration), _value(value) {}
 
     void apply([[maybe_unused]] ComputedValues const& parent, ComputedValues& c, [[maybe_unused]] ComputationContext const& cx) const override {
-        c.transform.cow().origin = _value;
+        c.transform.cow().origin = resolve(_value, cx);
     }
 
     Res<> serialize(Io::TextWriter& w) const override {
@@ -116,7 +122,7 @@ export struct TransformProperty : Property {
         }
 
         Rc<Property> load(ComputedValues const& c) const override {
-            return makeRc<TransformProperty>(self(), c.transform->transform);
+            return makeRc<TransformProperty>(self(), toSpecified(c.transform->transform));
         }
 
         // https://www.w3.org/TR/SVG11/coords.html#TransformAttribute
@@ -129,19 +135,19 @@ export struct TransformProperty : Property {
             Cursor<Css::Sst> content = c.content;
             eatWhitespace(content);
 
-            auto angle = parseValue<Number>(content);
+            auto angle = parseValue<f64>(content);
             if (not angle)
                 return NONE;
 
             skipOmmitableComma(content);
 
-            auto cx = parseValue<Number>(content);
+            auto cx = parseValue<f64>(content);
             if (not cx)
                 return NONE;
 
             skipOmmitableComma(content);
 
-            auto cy = parseValue<Number>(content);
+            auto cy = parseValue<f64>(content);
             if (not cy)
                 return NONE;
 
@@ -221,7 +227,7 @@ export struct TransformProperty : Property {
         : Property(registration), _value(value) {}
 
     void apply([[maybe_unused]] ComputedValues const& parent, ComputedValues& c, [[maybe_unused]] ComputationContext const& cx) const override {
-        c.transform.cow().transform = _value;
+        c.transform.cow().transform = resolve(_value, cx);
     }
 
     void repr(Io::Emit& e) const override {

@@ -10,13 +10,14 @@ import Karm.Math;
 
 import :css;
 import :values.base;
-import :values.calc;
+import :values.calc2;
 import :values.length;
 import :values.percent;
 import :values.background;
 import :values.insets;
 import :values.borders;
 import :values.keywords;
+import :values.unitValue;
 
 using namespace Karm;
 
@@ -53,22 +54,46 @@ export Gfx::FillRule fillRuleToGfx(FillRule rule) {
     );
 }
 
-export using ShapeRadius = Union<
-    Calc<PercentOr<Length>>,
+export template <typename L>
+using ShapeRadiusT = Union<
+    L,
     Keywords::ClosestSide,
     Keywords::FarthestSide>;
+
+export using ShapeRadius = ShapeRadiusT<LengthPercentage>;
+export using ComputedShapeRadius = ShapeRadiusT<PixelPercentage>;
+
+export ComputedShapeRadius resolve(ShapeRadius const& value, LengthContext auto const& ctx) {
+    return value.visit([&](auto const& v) -> ComputedShapeRadius { return resolve(v, ctx); });
+}
+
+export ShapeRadius toSpecified(ComputedShapeRadius const& value) {
+    return value.visit([](auto const& v) -> ShapeRadius { return toSpecified(v); });
+}
 
 // MARK: Circle ----------------------------------------------------------------
 // https://www.w3.org/TR/css-shapes-1/#funcdef-basic-shape-circle
 
-export struct Circle {
-    ShapeRadius radius = Keywords::CLOSEST_SIDE;
-    BackgroundPosition position = {Keywords::CENTER, Percent(0), Keywords::CENTER, Percent(0)};
+export template <typename L, typename P>
+struct CircleT {
+    ShapeRadiusT<L> radius = Keywords::CLOSEST_SIDE;
+    P position = P::center();
 
     void repr(Io::Emit& e) const {
         e("(circle {} {})", radius, position);
     }
 };
+
+export using Circle = CircleT<LengthPercentage, BackgroundPosition>;
+export using ComputedCircle = CircleT<PixelPercentage, ComputedPosition>;
+
+export ComputedCircle resolve(Circle const& value, LengthContext auto const& ctx) {
+    return {resolve(value.radius, ctx), resolve(value.position, ctx)};
+}
+
+export Circle toSpecified(ComputedCircle const& value) {
+    return {toSpecified(value.radius), toSpecified(value.position)};
+}
 
 export template <>
 struct ValueParser<Circle> {
@@ -106,15 +131,27 @@ struct ValueParser<Circle> {
 // MARK: Ellipse ---------------------------------------------------------------
 // https://www.w3.org/TR/css-shapes-1/#funcdef-basic-shape-ellipse
 
-export struct Ellipse {
-    ShapeRadius rx = Keywords::CLOSEST_SIDE;
-    ShapeRadius ry = Keywords::CLOSEST_SIDE;
-    BackgroundPosition position = {Keywords::CENTER, Percent(0), Keywords::CENTER, Percent(0)};
+export template <typename L, typename P>
+struct EllipseT {
+    ShapeRadiusT<L> rx = Keywords::CLOSEST_SIDE;
+    ShapeRadiusT<L> ry = Keywords::CLOSEST_SIDE;
+    P position = P::center();
 
     void repr(Io::Emit& e) const {
         e("(ellipse {} {} {})", rx, ry, position);
     }
 };
+
+export using Ellipse = EllipseT<LengthPercentage, BackgroundPosition>;
+export using ComputedEllipse = EllipseT<PixelPercentage, ComputedPosition>;
+
+export ComputedEllipse resolve(Ellipse const& value, LengthContext auto const& ctx) {
+    return {resolve(value.rx, ctx), resolve(value.ry, ctx), resolve(value.position, ctx)};
+}
+
+export Ellipse toSpecified(ComputedEllipse const& value) {
+    return {toSpecified(value.rx), toSpecified(value.ry), toSpecified(value.position)};
+}
 
 export template <>
 struct ValueParser<Ellipse> {
@@ -154,14 +191,28 @@ struct ValueParser<Ellipse> {
 // MARK: Inset -----------------------------------------------------------------
 // https://www.w3.org/TR/css-shapes-1/#funcdef-basic-shape-inset
 
-export struct Inset {
-    Math::Insets<Calc<PercentOr<Length>>> insets = {Percent(0)};
-    Math::Radii<Calc<PercentOr<Length>>> borderRadius = {Percent(0)};
+export template <typename L>
+struct InsetT {
+    Math::Insets<L> insets;
+    Math::Radii<L> borderRadius;
 
     void repr(Io::Emit& e) const {
-        e("(inset {} {})", insets, borderRadius);
+        e("(inset {} ", insets);
+        reprRadii(e, borderRadius);
+        e(")");
     }
 };
+
+export using Inset = InsetT<LengthPercentage>;
+export using ComputedInset = InsetT<PixelPercentage>;
+
+export ComputedInset resolve(Inset const& value, LengthContext auto const& ctx) {
+    return {resolve(value.insets, ctx), resolve(value.borderRadius, ctx)};
+}
+
+export Inset toSpecified(ComputedInset const& value) {
+    return {toSpecified(value.insets), toSpecified(value.borderRadius)};
+}
 
 export template <>
 struct ValueParser<Inset> {
@@ -170,19 +221,18 @@ struct ValueParser<Inset> {
             return Error::invalidData("unexpected end of input");
 
         if (c->prefix == Css::Token::function("inset(")) {
-            Inset result;
             Cursor<Css::Sst> scan = c->content;
 
-            if (auto insets = parseValue<Math::Insets<Calc<PercentOr<Length>>>>(scan)) {
-                result.insets = insets.expect();
-            } else {
+            auto insets = parseValue<Math::Insets<LengthPercentage>>(scan);
+            if (not insets)
                 return Error::invalidData("expected insets");
-            }
+
+            Inset result{insets.take(), {LengthPercentage::fromPercentage(0)}};
 
             eatWhitespace(scan);
             if (scan.skip(Css::Token::ident("round"))) {
                 eatWhitespace(scan);
-                if (auto radii = parseValue<Math::Radii<Calc<PercentOr<Length>>>>(scan)) {
+                if (auto radii = parseValue<Math::Radii<LengthPercentage>>(scan)) {
                     result.borderRadius = radii.expect();
                 }
                 eatWhitespace(scan);
@@ -250,14 +300,32 @@ struct ValueParser<Path> {
 // MARK: Polygon ---------------------------------------------------------------
 // https://www.w3.org/TR/css-shapes-1/#funcdef-basic-shape-polygon
 
-export struct Polygon {
+export template <typename L>
+struct PolygonT {
     Gfx::FillRule fillRule = Gfx::FillRule::NONZERO;
-    Vec<Pair<Calc<PercentOr<Length>>>> points;
+    Vec<Pair<L>> points;
 
     void repr(Io::Emit& e) const {
         e("(polygon {} {})", fillRule, points);
     }
 };
+
+export using Polygon = PolygonT<LengthPercentage>;
+export using ComputedPolygon = PolygonT<PixelPercentage>;
+
+export ComputedPolygon resolve(Polygon const& value, LengthContext auto const& ctx) {
+    ComputedPolygon result{value.fillRule, {}};
+    for (auto const& [x, y] : value.points)
+        result.points.emplaceBack(resolve(x, ctx), resolve(y, ctx));
+    return result;
+}
+
+export Polygon toSpecified(ComputedPolygon const& value) {
+    Polygon result{value.fillRule, {}};
+    for (auto const& [x, y] : value.points)
+        result.points.emplaceBack(toSpecified(x), toSpecified(y));
+    return result;
+}
 
 export template <>
 struct ValueParser<Polygon> {
@@ -279,9 +347,9 @@ struct ValueParser<Polygon> {
                 begin = false;
 
                 eatWhitespace(scan);
-                auto x = try$(parseValue<Calc<PercentOr<Length>>>(scan));
+                auto x = try$(parseValue<LengthPercentage>(scan));
                 eatWhitespace(scan);
-                auto y = try$(parseValue<Calc<PercentOr<Length>>>(scan));
+                auto y = try$(parseValue<LengthPercentage>(scan));
                 eatWhitespace(scan);
                 result.points.emplaceBack(x, y);
             }
@@ -299,14 +367,28 @@ struct ValueParser<Polygon> {
 // MARK: Rect ------------------------------------------------------------------
 // https://www.w3.org/TR/css-shapes-1/#funcdef-basic-shape-rect
 
-export struct Rect {
-    Math::Insets<Calc<PercentOr<Length>>> insets = {Percent(0), Percent(100), Percent(100), Percent(0)};
-    Math::Radii<Calc<PercentOr<Length>>> borderRadius = {Percent(0)};
+export template <typename L>
+struct RectT {
+    Math::Insets<L> insets;
+    Math::Radii<L> borderRadius;
 
     void repr(Io::Emit& e) const {
-        e("(rect {} {})", insets, borderRadius);
+        e("(rect {} ", insets);
+        reprRadii(e, borderRadius);
+        e(")");
     }
 };
+
+export using Rect = RectT<LengthPercentage>;
+export using ComputedRect = RectT<PixelPercentage>;
+
+export ComputedRect resolve(Rect const& value, LengthContext auto const& ctx) {
+    return {resolve(value.insets, ctx), resolve(value.borderRadius, ctx)};
+}
+
+export Rect toSpecified(ComputedRect const& value) {
+    return {toSpecified(value.insets), toSpecified(value.borderRadius)};
+}
 
 export template <>
 struct ValueParser<Rect> {
@@ -315,29 +397,33 @@ struct ValueParser<Rect> {
             return Error::invalidData("unexpected end of input");
 
         if (c->prefix == Css::Token::function("rect(")) {
-            Rect result;
+            // NOTE: An auto value makes the edge of the box coincide with the corresponding edge of the reference box.
+            Rect result{
+                {LengthPercentage::fromPercentage(0), LengthPercentage::fromPercentage(100), LengthPercentage::fromPercentage(100), LengthPercentage::fromPercentage(0)},
+                {LengthPercentage::fromPercentage(0)},
+            };
             Cursor<Css::Sst> scan = c->content;
 
             eatWhitespace(scan);
             if (not parseValue<Keywords::Auto>(scan))
-                result.insets.top = try$(parseValue<Calc<PercentOr<Length>>>(scan));
+                result.insets.top = try$(parseValue<LengthPercentage>(scan));
 
             eatWhitespace(scan);
             if (not parseValue<Keywords::Auto>(scan))
-                result.insets.end = try$(parseValue<Calc<PercentOr<Length>>>(scan));
+                result.insets.end = try$(parseValue<LengthPercentage>(scan));
 
             eatWhitespace(scan);
             if (not parseValue<Keywords::Auto>(scan))
-                result.insets.bottom = try$(parseValue<Calc<PercentOr<Length>>>(scan));
+                result.insets.bottom = try$(parseValue<LengthPercentage>(scan));
 
             eatWhitespace(scan);
             if (not parseValue<Keywords::Auto>(scan))
-                result.insets.start = try$(parseValue<Calc<PercentOr<Length>>>(scan));
+                result.insets.start = try$(parseValue<LengthPercentage>(scan));
 
             eatWhitespace(scan);
             if (scan.skip(Css::Token::ident("round"))) {
                 eatWhitespace(scan);
-                if (auto radii = parseValue<Math::Radii<Calc<PercentOr<Length>>>>(scan)) {
+                if (auto radii = parseValue<Math::Radii<LengthPercentage>>(scan)) {
                     result.borderRadius = radii.expect();
                 }
                 eatWhitespace(scan);
@@ -355,14 +441,43 @@ struct ValueParser<Rect> {
 // MARK: Xywh ------------------------------------------------------------------
 // https://www.w3.org/TR/css-shapes-1/#funcdef-basic-shape-xywh
 
-export struct Xywh {
-    Math::Rect<Calc<PercentOr<Length>>> rect = {Percent(0), Percent(0), Percent(0), Percent(0)};
-    Math::Radii<Calc<PercentOr<Length>>> borderRadius = {Percent(0)};
+export template <typename L>
+struct XywhT {
+    L x;
+    L y;
+    L width;
+    L height;
+    Math::Radii<L> borderRadius;
 
     void repr(Io::Emit& e) const {
-        e("(xywh {} {})", rect, borderRadius);
+        e("(xywh {} {} {} {} ", x, y, width, height);
+        reprRadii(e, borderRadius);
+        e(")");
     }
 };
+
+export using Xywh = XywhT<LengthPercentage>;
+export using ComputedXywh = XywhT<PixelPercentage>;
+
+export ComputedXywh resolve(Xywh const& value, LengthContext auto const& ctx) {
+    return {
+        resolve(value.x, ctx),
+        resolve(value.y, ctx),
+        resolve(value.width, ctx),
+        resolve(value.height, ctx),
+        resolve(value.borderRadius, ctx),
+    };
+}
+
+export Xywh toSpecified(ComputedXywh const& value) {
+    return {
+        toSpecified(value.x),
+        toSpecified(value.y),
+        toSpecified(value.width),
+        toSpecified(value.height),
+        toSpecified(value.borderRadius),
+    };
+}
 
 export template <>
 struct ValueParser<Xywh> {
@@ -371,25 +486,26 @@ struct ValueParser<Xywh> {
             return Error::invalidData("unexpected end of input");
 
         if (c->prefix == Css::Token::function("xywh(")) {
-            Xywh result;
             Cursor<Css::Sst> scan = c->content;
 
             eatWhitespace(scan);
-            result.rect.x = try$(parseValue<Calc<PercentOr<Length>>>(scan));
+            auto x = try$(parseValue<LengthPercentage>(scan));
 
             eatWhitespace(scan);
-            result.rect.y = try$(parseValue<Calc<PercentOr<Length>>>(scan));
+            auto y = try$(parseValue<LengthPercentage>(scan));
 
             eatWhitespace(scan);
-            result.rect.width = try$(parseValue<Calc<PercentOr<Length>>>(scan));
+            auto width = try$(parseValue<LengthPercentage>(scan));
 
             eatWhitespace(scan);
-            result.rect.height = try$(parseValue<Calc<PercentOr<Length>>>(scan));
+            auto height = try$(parseValue<LengthPercentage>(scan));
+
+            Xywh result{x, y, width, height, {LengthPercentage::fromPercentage(0)}};
 
             eatWhitespace(scan);
             if (scan.skip(Css::Token::ident("round"))) {
                 eatWhitespace(scan);
-                if (auto radii = parseValue<Math::Radii<Calc<PercentOr<Length>>>>(scan)) {
+                if (auto radii = parseValue<Math::Radii<LengthPercentage>>(scan)) {
                     result.borderRadius = radii.expect();
                 }
                 eatWhitespace(scan);
@@ -409,17 +525,57 @@ struct ValueParser<Xywh> {
 // https://drafts.csswg.org/css-masking/#the-clip-path
 //  [ <basic-shape> || <geometry-box> ]
 
-export using BasicShapeFunction = Union<
-    Circle, Ellipse, Inset, Path, Polygon, Rect, Xywh>;
+export template <typename L, typename P>
+using BasicShapeFunctionT = Union<
+    CircleT<L, P>, EllipseT<L, P>, InsetT<L>, Path, PolygonT<L>, RectT<L>, XywhT<L>>;
 
-export struct BasicShape {
-    Opt<BasicShapeFunction> shape;
+export using BasicShapeFunction = BasicShapeFunctionT<LengthPercentage, BackgroundPosition>;
+export using ComputedBasicShapeFunction = BasicShapeFunctionT<PixelPercentage, ComputedPosition>;
+
+export template <typename L, typename P>
+struct BasicShapeT {
+    Opt<BasicShapeFunctionT<L, P>> shape;
     GeometryBox referenceBox = Keywords::BORDER_BOX;
 
     void repr(Io::Emit& e) const {
         e("(basic-shape {} {})", shape, referenceBox);
     }
 };
+
+export using BasicShape = BasicShapeT<LengthPercentage, BackgroundPosition>;
+export using ComputedBasicShape = BasicShapeT<PixelPercentage, ComputedPosition>;
+
+export ComputedBasicShape resolve(BasicShape const& value, LengthContext auto const& ctx) {
+    return {
+        value.shape.map([&](BasicShapeFunction const& shape) {
+            return shape.visit(
+                [](Path const& path) -> ComputedBasicShapeFunction {
+                    return path;
+                },
+                [&](auto const& s) -> ComputedBasicShapeFunction {
+                    return resolve(s, ctx);
+                }
+            );
+        }),
+        value.referenceBox,
+    };
+}
+
+export BasicShape toSpecified(ComputedBasicShape const& value) {
+    return {
+        value.shape.map([](ComputedBasicShapeFunction const& shape) {
+            return shape.visit(
+                [](Path const& path) -> BasicShapeFunction {
+                    return path;
+                },
+                [](auto const& s) -> BasicShapeFunction {
+                    return toSpecified(s);
+                }
+            );
+        }),
+        value.referenceBox,
+    };
+}
 
 export template <>
 struct ValueParser<BasicShape> {

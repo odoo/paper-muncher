@@ -10,10 +10,13 @@ import Karm.Logger;
 import :css;
 import :values.base;
 import :values.angle;
-import :values.calc;
+import :values.background;
+import :values.calc2;
+import :values.length;
 import :values.keywords;
 import :values.percent;
 import :values.primitives;
+import :values.unitValue;
 
 using namespace Karm::Math::Literals;
 
@@ -26,10 +29,10 @@ namespace Vaev {
 // https://drafts.csswg.org/css-transforms/#transform-origin-property
 
 export struct TransformOrigin {
-    using OneValue = Union<Keywords::Left, Keywords::Center, Keywords::Right, Calc<PercentOr<Length>>>;
+    using OneValue = Union<Keywords::Left, Keywords::Center, Keywords::Right, Keywords::Top, Keywords::Bottom, LengthPercentage>;
 
-    using XOffset = Union<Keywords::Left, Keywords::Center, Keywords::Right, Calc<PercentOr<Length>>>;
-    using YOffset = Union<Keywords::Top, Keywords::Center, Keywords::Bottom, Calc<PercentOr<Length>>>;
+    using XOffset = Union<Keywords::Left, Keywords::Center, Keywords::Right, LengthPercentage>;
+    using YOffset = Union<Keywords::Top, Keywords::Center, Keywords::Bottom, LengthPercentage>;
 
     XOffset xOffset;
     YOffset yOffset;
@@ -68,8 +71,6 @@ struct ValueParser<TransformOrigin> {
         }
 
         auto singleValue = try$(parseValue<TransformOrigin::OneValue>(c));
-        if (c.ended())
-            return Error::invalidData("unexpected end of input after single value");
 
         return singleValue.visit(
             [&](Keywords::Center) -> Res<TransformOrigin> {
@@ -105,7 +106,7 @@ struct ValueParser<TransformOrigin> {
                 });
             },
 
-            [&](Calc<PercentOr<Length>> value) -> Res<TransformOrigin> {
+            [&](LengthPercentage value) -> Res<TransformOrigin> {
                 return Ok(TransformOrigin{
                     .xOffset = std::move(value),
                     .yOffset = Keywords::CENTER, // default y-offset
@@ -128,6 +129,41 @@ struct ValueSerializer<TransformOrigin> {
     }
 };
 
+// NOTE: The computed value is "for <length> the absolute value, otherwise a percentage",
+//       so keywords are turned into percentages.
+export ComputedPosition resolve(TransformOrigin const& value, LengthContext auto const& ctx) {
+    return {
+        value.xOffset.visit(
+            [](Keywords::Left) -> PixelPercentage {
+                return Percent{0};
+            },
+            [](Keywords::Center) -> PixelPercentage {
+                return Percent{50};
+            },
+            [](Keywords::Right) -> PixelPercentage {
+                return Percent{100};
+            },
+            [&](LengthPercentage const& length) -> PixelPercentage {
+                return resolve(length, ctx);
+            }
+        ),
+        value.yOffset.visit(
+            [](Keywords::Top) -> PixelPercentage {
+                return Percent{0};
+            },
+            [](Keywords::Center) -> PixelPercentage {
+                return Percent{50};
+            },
+            [](Keywords::Bottom) -> PixelPercentage {
+                return Percent{100};
+            },
+            [&](LengthPercentage const& length) -> PixelPercentage {
+                return resolve(length, ctx);
+            }
+        ),
+    };
+}
+
 // MARK: Transform Box ---------------------------------------------------------
 // https://drafts.csswg.org/css-transforms/#transform-box
 
@@ -138,17 +174,41 @@ export using TransformBox = Union<
     Keywords::StrokeBox,
     Keywords::ViewBox>;
 
+// https://drafts.csswg.org/css-transforms/#funcdef-transform-rotate
+// rotate(), skew(), skewX() and skewY() accept <angle> | <zero>.
+Res<Angle> _parseAngleOrZero(Cursor<Css::Sst>& c) {
+    if (c.skip(Css::Token::number("0")))
+        return Ok(Angle::fromCanonical(0));
+    return parseValue<Angle>(c);
+}
+
 // MARK: Transform Functions ---------------------------------------------------
 // https://drafts.csswg.org/css-transforms/#transform-functions
 
+export struct SpecifiedTransformTypes {
+    using LengthPercentageType = LengthPercentage;
+    using NumberType = Number;
+    using AngleType = Angle;
+};
+
+export struct ComputedTransformTypes {
+    using LengthPercentageType = PixelPercentage;
+    using NumberType = f64;
+    using AngleType = Rad;
+};
+
 // https://www.w3.org/TR/css-transforms-1/#funcdef-transform-matrix
-export struct MatrixTransform {
-    Array<Calc<Number>, 6> values;
+export template <typename T>
+struct MatrixTransformT {
+    Array<typename T::NumberType, 6> values;
 
     void repr(Io::Emit& e) const {
         e("matrix({}, {}, {}, {}, {}, {})", values[0], values[1], values[2], values[3], values[4], values[5]);
     }
 };
+
+export using MatrixTransform = MatrixTransformT<SpecifiedTransformTypes>;
+export using ComputedMatrixTransform = MatrixTransformT<ComputedTransformTypes>;
 
 export template <>
 struct ValueParser<MatrixTransform> {
@@ -161,32 +221,42 @@ struct ValueParser<MatrixTransform> {
 
         Cursor<Css::Sst> content = c->content;
         eatWhitespace(content);
-        Array<Calc<Number>, 6> values;
 
-        for (usize i = 0; i < 6; ++i) {
+        auto value = [&](bool last) -> Res<Number> {
             if (content.ended())
                 return Error::invalidData("unexpected end of input");
 
-            auto value = try$(parseValue<Calc<Number>>(content));
-            values[i] = std::move(value);
-            if (i < 5)
+            auto value = try$(parseValue<Number>(content));
+            if (not last)
                 skipOmmitableComma(content);
-        }
+            return Ok(value);
+        };
+
+        auto a = try$(value(false));
+        auto b = try$(value(false));
+        auto c_ = try$(value(false));
+        auto d = try$(value(false));
+        auto e = try$(value(false));
+        auto f = try$(value(true));
 
         c.next(); // consume the function token
-        return Ok(MatrixTransform{std::move(values)});
+        return Ok(MatrixTransform{{a, b, c_, d, e, f}});
     }
 };
 
 // https://www.w3.org/TR/css-transforms-1/#funcdef-transform-translate
-export struct TranslateTransform {
-    Calc<PercentOr<Length>> x;
-    Calc<PercentOr<Length>> y;
+export template <typename T>
+struct TranslateTransformT {
+    typename T::LengthPercentageType x;
+    typename T::LengthPercentageType y;
 
     void repr(Io::Emit& e) const {
         e("translate({}, {})", x, y);
     }
 };
+
+export using TranslateTransform = TranslateTransformT<SpecifiedTransformTypes>;
+export using ComputedTranslateTransform = TranslateTransformT<ComputedTransformTypes>;
 
 export template <>
 struct ValueParser<TranslateTransform> {
@@ -197,24 +267,24 @@ struct ValueParser<TranslateTransform> {
         if (c->prefix == Css::Token::function("translateX(")) {
             Cursor<Css::Sst> content = c->content;
             eatWhitespace(content);
-            auto tx = try$(parseValue<Calc<PercentOr<Length>>>(content));
+            auto tx = try$(parseValue<LengthPercentage>(content));
             eatWhitespace(content);
             if (not content.ended()) {
                 return Error::invalidData("unexpected content after translateX function");
             }
             c.next(); // consume the function token
-            return Ok(TranslateTransform{std::move(tx), Length{0_au}});
+            return Ok(TranslateTransform{std::move(tx), LengthPercentage::fromCanonical(0)});
         }
 
         if (c->prefix == Css::Token::function("translateY(")) {
             Cursor<Css::Sst> content = c->content;
             eatWhitespace(content);
-            auto ty = try$(parseValue<Calc<PercentOr<Length>>>(content));
+            auto ty = try$(parseValue<LengthPercentage>(content));
             eatWhitespace(content);
             if (not content.ended())
                 return Error::invalidData("unexpected content after translateY function");
             c.next(); // consume the function token
-            return Ok(TranslateTransform{Length{0_au}, std::move(ty)});
+            return Ok(TranslateTransform{LengthPercentage::fromCanonical(0), std::move(ty)});
         }
 
         if (c->prefix != Css::Token::function("translate("))
@@ -223,16 +293,16 @@ struct ValueParser<TranslateTransform> {
         Cursor<Css::Sst> content = c->content;
         eatWhitespace(content);
 
-        auto tx = try$(parseValue<Calc<PercentOr<Length>>>(content));
+        auto tx = try$(parseValue<LengthPercentage>(content));
         skipOmmitableComma(content);
 
         if (content.ended()) {
             // f <ty> is not provided, ty has zero as a value.
             c.next(); // consume the function token
-            return Ok(TranslateTransform{std::move(tx), Length{0_au}});
+            return Ok(TranslateTransform{std::move(tx), LengthPercentage::fromCanonical(0)});
         }
 
-        auto ty = try$(parseValue<Calc<PercentOr<Length>>>(content));
+        auto ty = try$(parseValue<LengthPercentage>(content));
         eatWhitespace(content);
         if (not content.ended())
             return Error::invalidData("unexpected content after scale function");
@@ -243,14 +313,18 @@ struct ValueParser<TranslateTransform> {
 };
 
 // https://www.w3.org/TR/css-transforms-1/#funcdef-transform-scale
-export struct ScaleTransform {
-    Calc<Number> x;
-    Calc<Number> y;
+export template <typename T>
+struct ScaleTransformT {
+    typename T::NumberType x;
+    typename T::NumberType y;
 
     void repr(Io::Emit& e) const {
         e("scale({}, {})", x, y);
     }
 };
+
+export using ScaleTransform = ScaleTransformT<SpecifiedTransformTypes>;
+export using ComputedScaleTransform = ScaleTransformT<ComputedTransformTypes>;
 
 export template <>
 struct ValueParser<ScaleTransform> {
@@ -261,24 +335,24 @@ struct ValueParser<ScaleTransform> {
         if (c->prefix == Css::Token::function("scaleX(")) {
             Cursor<Css::Sst> content = c->content;
             eatWhitespace(content);
-            auto sx = try$(parseValue<Calc<Number>>(content));
+            auto sx = try$(parseValue<Number>(content));
             eatWhitespace(content);
             if (not content.ended()) {
                 return Error::invalidData("unexpected content after scaleX function");
             }
             c.next(); // consume the function token
-            return Ok(ScaleTransform{std::move(sx), Number{1}});
+            return Ok(ScaleTransform{std::move(sx), Number::fromCanonical(1)});
         }
 
         if (c->prefix == Css::Token::function("scaleY(")) {
             Cursor<Css::Sst> content = c->content;
             eatWhitespace(content);
-            auto sy = try$(parseValue<Calc<Number>>(content));
+            auto sy = try$(parseValue<Number>(content));
             eatWhitespace(content);
             if (not content.ended())
                 return Error::invalidData("unexpected content after scaleY function");
             c.next(); // consume the function token
-            return Ok(ScaleTransform{Number{1}, std::move(sy)});
+            return Ok(ScaleTransform{Number::fromCanonical(1), std::move(sy)});
         }
 
         if (c->prefix != Css::Token::function("scale("))
@@ -287,7 +361,7 @@ struct ValueParser<ScaleTransform> {
         Cursor<Css::Sst> content = c->content;
         eatWhitespace(content);
 
-        auto x = try$(parseValue<Calc<Number>>(content));
+        auto x = try$(parseValue<Number>(content));
         skipOmmitableComma(content);
 
         // If the second parameter is not provided, it takes a value equal to the first.
@@ -297,7 +371,7 @@ struct ValueParser<ScaleTransform> {
             return Ok(ScaleTransform{std::move(x), std::move(y)});
         }
 
-        auto y = try$(parseValue<Calc<Number>>(content));
+        auto y = try$(parseValue<Number>(content));
         eatWhitespace(content);
         if (not content.ended())
             return Error::invalidData("unexpected content after scale function");
@@ -308,13 +382,17 @@ struct ValueParser<ScaleTransform> {
 };
 
 // https://www.w3.org/TR/css-transforms-1/#funcdef-transform-rotate
-export struct RotateTransform {
-    Calc<Angle> value;
+export template <typename T>
+struct RotateTransformT {
+    typename T::AngleType value;
 
     void repr(Io::Emit& e) const {
         e("rotate({})", value);
     }
 };
+
+export using RotateTransform = RotateTransformT<SpecifiedTransformTypes>;
+export using ComputedRotateTransform = RotateTransformT<ComputedTransformTypes>;
 
 export template <>
 struct ValueParser<RotateTransform> {
@@ -328,7 +406,7 @@ struct ValueParser<RotateTransform> {
         Cursor<Css::Sst> content = c->content;
         eatWhitespace(content);
 
-        auto value = try$(parseValue<Calc<Angle>>(content));
+        auto value = try$(_parseAngleOrZero(content));
         eatWhitespace(content);
 
         if (not content.ended())
@@ -340,14 +418,18 @@ struct ValueParser<RotateTransform> {
 };
 
 // https://www.w3.org/TR/css-transforms-1/#funcdef-transform-skew
-export struct SkewTransform {
-    Calc<Angle> x;
-    Calc<Angle> y;
+export template <typename T>
+struct SkewTransformT {
+    typename T::AngleType x;
+    typename T::AngleType y;
 
     void repr(Io::Emit& e) const {
         e("skew({}, {})", x, y);
     }
 };
+
+export using SkewTransform = SkewTransformT<SpecifiedTransformTypes>;
+export using ComputedSkewTransform = SkewTransformT<ComputedTransformTypes>;
 
 export template <>
 struct ValueParser<SkewTransform> {
@@ -361,16 +443,16 @@ struct ValueParser<SkewTransform> {
         Cursor<Css::Sst> content = c->content;
         eatWhitespace(content);
 
-        auto x = try$(parseValue<Calc<Angle>>(content));
+        auto x = try$(_parseAngleOrZero(content));
         skipOmmitableComma(content);
 
         // If the second parameter is not provided, it has a zero value.
         if (content.ended()) {
             c.next(); // consume the function token
-            return Ok(SkewTransform{std::move(x), Angle::fromDegree(0.)});
+            return Ok(SkewTransform{std::move(x), Angle::fromCanonical(0)});
         }
 
-        auto y = try$(parseValue<Calc<Angle>>(content));
+        auto y = try$(_parseAngleOrZero(content));
         eatWhitespace(content);
 
         if (not content.ended())
@@ -382,13 +464,17 @@ struct ValueParser<SkewTransform> {
 };
 
 // https://www.w3.org/TR/css-transforms-1/#funcdef-transform-skewx
-export struct SkewXTransform {
-    Calc<Angle> value;
+export template <typename T>
+struct SkewXTransformT {
+    typename T::AngleType value;
 
     void repr(Io::Emit& e) const {
         e("skewX({})", value);
     }
 };
+
+export using SkewXTransform = SkewXTransformT<SpecifiedTransformTypes>;
+export using ComputedSkewXTransform = SkewXTransformT<ComputedTransformTypes>;
 
 export template <>
 struct ValueParser<SkewXTransform> {
@@ -402,7 +488,7 @@ struct ValueParser<SkewXTransform> {
         Cursor<Css::Sst> content = c->content;
         eatWhitespace(content);
 
-        auto value = try$(parseValue<Calc<Angle>>(content));
+        auto value = try$(_parseAngleOrZero(content));
         eatWhitespace(content);
 
         if (not content.ended())
@@ -414,13 +500,17 @@ struct ValueParser<SkewXTransform> {
 };
 
 // https://www.w3.org/TR/css-transforms-1/#funcdef-transform-skewy
-export struct SkewYTransform {
-    Calc<Angle> value;
+export template <typename T>
+struct SkewYTransformT {
+    typename T::AngleType value;
 
     void repr(Io::Emit& e) const {
         e("skewY({})", value);
     }
 };
+
+export using SkewYTransform = SkewYTransformT<SpecifiedTransformTypes>;
+export using ComputedSkewYTransform = SkewYTransformT<ComputedTransformTypes>;
 
 export template <>
 struct ValueParser<SkewYTransform> {
@@ -434,7 +524,7 @@ struct ValueParser<SkewYTransform> {
         Cursor<Css::Sst> content = c->content;
         eatWhitespace(content);
 
-        auto value = try$(parseValue<Calc<Angle>>(content));
+        auto value = try$(_parseAngleOrZero(content));
         eatWhitespace(content);
 
         if (not content.ended())
@@ -445,20 +535,127 @@ struct ValueParser<SkewYTransform> {
     }
 };
 
-export using TransformFunction = Union<
-    MatrixTransform,
-    TranslateTransform,
-    ScaleTransform,
-    RotateTransform,
-    SkewTransform,
-    SkewXTransform,
-    SkewYTransform>;
+export template <typename T>
+using TransformFunctionT = Union<
+    MatrixTransformT<T>,
+    TranslateTransformT<T>,
+    ScaleTransformT<T>,
+    RotateTransformT<T>,
+    SkewTransformT<T>,
+    SkewXTransformT<T>,
+    SkewYTransformT<T>>;
+
+export using TransformFunction = TransformFunctionT<SpecifiedTransformTypes>;
+export using ComputedTransformFunction = TransformFunctionT<ComputedTransformTypes>;
 
 // MARK: Transform -------------------------------------------------------------
 // https://drafts.csswg.org/css-transforms/#propdef-transform
 
 export using TransformList = Vec<TransformFunction>;
 export using Transform = Union<Keywords::None, TransformList>;
+
+export using ComputedTransformList = Vec<ComputedTransformFunction>;
+export using ComputedTransform = Union<Keywords::None, ComputedTransformList>;
+
+// https://drafts.csswg.org/css-transforms/#transform-property
+// Computed value: as specified, but with lengths made absolute.
+export ComputedTransformFunction resolve(TransformFunction const& value, LengthContext auto const& ctx) {
+    return value.visit(
+        [](MatrixTransform const& t) -> ComputedTransformFunction {
+            return ComputedMatrixTransform{{
+                resolve(t.values[0]),
+                resolve(t.values[1]),
+                resolve(t.values[2]),
+                resolve(t.values[3]),
+                resolve(t.values[4]),
+                resolve(t.values[5]),
+            }};
+        },
+        [&](TranslateTransform const& t) -> ComputedTransformFunction {
+            return ComputedTranslateTransform{resolve(t.x, ctx), resolve(t.y, ctx)};
+        },
+        [](ScaleTransform const& t) -> ComputedTransformFunction {
+            return ComputedScaleTransform{resolve(t.x), resolve(t.y)};
+        },
+        [](RotateTransform const& t) -> ComputedTransformFunction {
+            return ComputedRotateTransform{resolve(t.value)};
+        },
+        [](SkewTransform const& t) -> ComputedTransformFunction {
+            return ComputedSkewTransform{resolve(t.x), resolve(t.y)};
+        },
+        [](SkewXTransform const& t) -> ComputedTransformFunction {
+            return ComputedSkewXTransform{resolve(t.value)};
+        },
+        [](SkewYTransform const& t) -> ComputedTransformFunction {
+            return ComputedSkewYTransform{resolve(t.value)};
+        }
+    );
+}
+
+export TransformFunction toSpecified(ComputedTransformFunction const& value) {
+    auto number = [](f64 n) {
+        return Number::fromCanonical(n);
+    };
+
+    return value.visit(
+        [&](ComputedMatrixTransform const& t) -> TransformFunction {
+            return MatrixTransform{{
+                number(t.values[0]),
+                number(t.values[1]),
+                number(t.values[2]),
+                number(t.values[3]),
+                number(t.values[4]),
+                number(t.values[5]),
+            }};
+        },
+        [](ComputedTranslateTransform const& t) -> TransformFunction {
+            return TranslateTransform{toSpecified(t.x), toSpecified(t.y)};
+        },
+        [&](ComputedScaleTransform const& t) -> TransformFunction {
+            return ScaleTransform{number(t.x), number(t.y)};
+        },
+        [](ComputedRotateTransform const& t) -> TransformFunction {
+            return RotateTransform{toSpecified(t.value)};
+        },
+        [](ComputedSkewTransform const& t) -> TransformFunction {
+            return SkewTransform{toSpecified(t.x), toSpecified(t.y)};
+        },
+        [](ComputedSkewXTransform const& t) -> TransformFunction {
+            return SkewXTransform{toSpecified(t.value)};
+        },
+        [](ComputedSkewYTransform const& t) -> TransformFunction {
+            return SkewYTransform{toSpecified(t.value)};
+        }
+    );
+}
+
+export ComputedTransform resolve(Transform const& value, LengthContext auto const& ctx) {
+    return value.visit(
+        [](Keywords::None) -> ComputedTransform {
+            return Keywords::NONE;
+        },
+        [&](TransformList const& list) -> ComputedTransform {
+            ComputedTransformList result;
+            for (auto const& function : list)
+                result.pushBack(resolve(function, ctx));
+            return result;
+        }
+    );
+}
+
+export Transform toSpecified(ComputedTransform const& value) {
+    return value.visit(
+        [](Keywords::None) -> Transform {
+            return Keywords::NONE;
+        },
+        [](ComputedTransformList const& list) -> Transform {
+            TransformList result;
+            for (auto const& function : list)
+                result.pushBack(toSpecified(function));
+            return result;
+        }
+    );
+}
 
 export template <>
 struct ValueParser<Transform> {

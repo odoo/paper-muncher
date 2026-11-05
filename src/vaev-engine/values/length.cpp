@@ -32,62 +32,27 @@ export using Pixel = Distinct<f64, struct _PixelTag>;
 // 6. MARK: Distance Units: the <length> type
 // https://drafts.csswg.org/css-values/#lengths
 
-export struct Length : TypedUnitValue<Some(NumericBaseType::LENGTH)> {
-    using TypedUnitValue::TypedUnitValue;
-
-    static constexpr Length fromPx(f64 val) {
-        return Length{UnitValue{val, UnitValue::Unit::PX}};
-    }
-
-    static constexpr Length fromEm(f64 val) {
-        return Length{UnitValue{val, UnitValue::Unit::EM}};
-    }
-
-    constexpr Length() = default;
-
-    constexpr Length(Au value)
-        : TypedUnitValue(UnitValue{value.cast<f64>(), UnitValue::Unit::PX}) {}
-
-    constexpr f64 value() const {
-        return _value.value();
-    }
-
-    constexpr UnitValue::Unit unit() const {
-        return _value.unit();
-    }
-
-    // https://drafts.csswg.org/css-values/#absolute-lengths
-    constexpr bool absolute() const {
-        return _value.isAbsolute();
-    }
-
-    constexpr Opt<f64> absolutePixels() const {
-        if (not absolute())
-            return NONE;
-        return Some(_value.to(UnitValue::Unit::PX));
-    }
-};
 
 export template <>
-struct _Resolved<Length> {
+struct _Resolved<PureLength> {
     using Type = Au;
 };
 
-export Au resolve(Length const& value, LengthContext auto const& ctx) {
+export Au resolve(PureLength const& value, LengthContext auto const& ctx) {
     return Au::fromFloatNearest(value.unitValue().canonical(ctx).value());
 }
 
 // 6.2. MARK: Absolute Lengths: the cm, mm, Q, in, pt, pc, px units
 // https://drafts.csswg.org/css-values/#absolute-lengths
 
-export struct AbsoluteLength : TypedUnitValue<Some(NumericBaseType::LENGTH)> {
-    constexpr AbsoluteLength(Pixel px)
+export struct PureAbsoluteLength : TypedUnitValue<Some(NumericBaseType::LENGTH)> {
+    constexpr PureAbsoluteLength(Pixel px)
         : TypedUnitValue(UnitValue{px.value(), UnitValue::Unit::PX}) {}
 
-    constexpr AbsoluteLength(Au value)
+    constexpr PureAbsoluteLength(Au value)
         : TypedUnitValue(UnitValue{value.cast<f64>(), UnitValue::Unit::PX}) {}
 
-    constexpr explicit AbsoluteLength(UnitValue value)
+    constexpr explicit PureAbsoluteLength(UnitValue value)
         : TypedUnitValue(value) {
         if (not value.isAbsolute())
             panic("unit value is not an absolute <length>");
@@ -96,31 +61,27 @@ export struct AbsoluteLength : TypedUnitValue<Some(NumericBaseType::LENGTH)> {
     constexpr Pixel pixels() const {
         return Pixel{_value.to(UnitValue::Unit::PX)};
     }
-
-    constexpr operator Length() const {
-        return Length{_value};
-    }
 };
 
 export template <>
-struct _Resolved<AbsoluteLength> {
+struct _Resolved<PureAbsoluteLength> {
     using Type = Au;
 };
 
-export Au resolve(AbsoluteLength value) {
+export Au resolve(PureAbsoluteLength value) {
     return Au::fromFloatNearest(value.pixels().value());
 }
 
 export template <>
-struct ValueParser<AbsoluteLength> {
-    static Res<AbsoluteLength> parse(Cursor<Css::Sst>& c) {
+struct ValueParser<PureAbsoluteLength> {
+    static Res<PureAbsoluteLength> parse(Cursor<Css::Sst>& c) {
         auto save = c;
         auto value = try$(parseUnitValue(c, Some(NumericBaseType::LENGTH)));
         if (not value.isAbsolute()) {
             c = save;
             return Error::invalidData("expected <absolute-length>");
         }
-        return Ok(AbsoluteLength{value});
+        return Ok(PureAbsoluteLength{value});
     }
 };
 

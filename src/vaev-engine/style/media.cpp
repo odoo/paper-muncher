@@ -32,7 +32,7 @@ export struct DisplayArea {
 
     Vec2Au viewport = {800_au, 600_au};
 
-    Resolution resolution = Resolution::fromDppx(1);
+    PureResolution resolution = PureResolution::fromDppx(1);
 
     Scan scan = Scan::PROGRESSIVE;
     bool grid = false;
@@ -50,14 +50,14 @@ export struct DisplayArea {
     Pointer anyPointer = Pointer::FINE;
     Hover anyHover = Hover::HOVER;
 
-    static Vec2Au _toViewport(Vec2Au deviceSize, Resolution resolution) {
+    static Vec2Au _toViewport(Vec2Au deviceSize, PureResolution resolution) {
         return {
             Au{deviceSize.width / resolution.toDppx()},
             Au{deviceSize.height / resolution.toDppx()},
         };
     }
 
-    static DisplayArea forView(Vec2Au deviceSize, Resolution resolution = Resolution::fromDppx(1)) {
+    static DisplayArea forView(Vec2Au deviceSize, PureResolution resolution = PureResolution::fromDppx(1)) {
         return {
             .type = MediaType::SCREEN,
             .viewport = _toViewport(deviceSize, resolution),
@@ -65,7 +65,7 @@ export struct DisplayArea {
         };
     }
 
-    static DisplayArea forRender(Vec2Au deviceSize, Resolution resolution) {
+    static DisplayArea forRender(Vec2Au deviceSize, PureResolution resolution) {
         return {
             .type = MediaType::SCREEN,
             .viewport = _toViewport(deviceSize, resolution),
@@ -85,7 +85,7 @@ export struct DisplayArea {
         return {
             .type = MediaType::PRINT,
             .viewport = {Au{pageSize.width / settings.scale}, Au{pageSize.height / settings.scale}},
-            .resolution = Resolution::fromDppx(settings.scale),
+            .resolution = PureResolution::fromDppx(settings.scale),
         };
     }
 
@@ -146,7 +146,7 @@ export struct Media {
 
     /// 4.3. Aspect-Ratio: the aspect-ratio feature
     /// https://drafts.csswg.org/mediaqueries/#aspect-ratio
-    Number aspectRatio;
+    f64 aspectRatio;
 
     /// 4.4. Orientation: the orientation feature
     /// https://drafts.csswg.org/mediaqueries/#orientation
@@ -156,7 +156,7 @@ export struct Media {
 
     /// 5.1. Resolution: the resolution feature
     /// https://drafts.csswg.org/mediaqueries/#resolution
-    Resolution resolution;
+    PureResolution resolution;
 
     /// 5.2. Scan: the scan feature
     /// https://drafts.csswg.org/mediaqueries/#scan
@@ -250,10 +250,10 @@ export struct Media {
     // Appendix A: Deprecated Media Features
     Au deviceWidth;
     Au deviceHeight;
-    Number deviceAspectRatio;
+    f64 deviceAspectRatio;
 
     static Media from(DisplayArea const& area, ViewerPrefs const& prefs) {
-        auto ratio = [](Vec2Au size) -> Number {
+        auto ratio = [](Vec2Au size) -> f64 {
             if (size.height == 0_au)
                 return 0;
             return static_cast<f64>(size.width) / static_cast<f64>(size.height);
@@ -478,15 +478,15 @@ export using TypeFeature = DiscreteFeature<"type", MediaType, &Media::type>;
 
 /// 4.1. Width: the width feature
 /// https://drafts.csswg.org/mediaqueries/#width
-export using WidthFeature = RangeFeature<"width", Length, &Media::width>;
+export using WidthFeature = RangeFeature<"width", PureLength, &Media::width>;
 
 /// 4.2. Height: the height feature
 /// https://drafts.csswg.org/mediaqueries/#height
-export using HeightFeature = RangeFeature<"height", Length, &Media::height>;
+export using HeightFeature = RangeFeature<"height", PureLength, &Media::height>;
 
 /// 4.3. Aspect-Ratio: the aspect-ratio feature
 /// https://drafts.csswg.org/mediaqueries/#aspect-ratio
-export using AspectRatioFeature = RangeFeature<"aspect-ratio", Number, &Media::aspectRatio>;
+export using AspectRatioFeature = RangeFeature<"aspect-ratio", f64, &Media::aspectRatio>;
 
 /// 4.4. Orientation: the orientation feature
 /// https://drafts.csswg.org/mediaqueries/#orientation
@@ -496,7 +496,7 @@ export using OrientationFeature = DiscreteFeature<"orientation", Print::Orientat
 
 /// 5.1. Resolution: the resolution feature
 /// https://drafts.csswg.org/mediaqueries/#resolution
-export using ResolutionFeature = RangeFeature<"resolution", Resolution, &Media::resolution>;
+export using ResolutionFeature = RangeFeature<"resolution", PureResolution, &Media::resolution>;
 
 /// 5.2. Scan: the scan feature
 /// https://drafts.csswg.org/mediaqueries/#scan
@@ -588,9 +588,9 @@ export using PrefersColorSchemeFeature = DiscreteFeature<"prefers-color-scheme",
 export using PrefersReducedDataFeature = DiscreteFeature<"prefers-reduced-data", ReducedData, &Media::prefersReducedData>;
 
 // Appendix A: Deprecated Media Features
-export using DeviceWidthFeature = RangeFeature<"device-width", Length, &Media::deviceWidth>;
-export using DeviceHeightFeature = RangeFeature<"device-height", Length, &Media::deviceHeight>;
-export using DeviceAspectRatioFeature = RangeFeature<"device-aspect-ratio", Number, &Media::deviceAspectRatio>;
+export using DeviceWidthFeature = RangeFeature<"device-width", PureLength, &Media::deviceWidth>;
+export using DeviceHeightFeature = RangeFeature<"device-height", PureLength, &Media::deviceHeight>;
+export using DeviceAspectRatioFeature = RangeFeature<"device-aspect-ratio", f64, &Media::deviceAspectRatio>;
 
 // MARK: Media Feature ---------------------------------------------------------
 

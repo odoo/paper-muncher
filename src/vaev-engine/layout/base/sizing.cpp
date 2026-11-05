@@ -11,9 +11,9 @@ namespace Vaev::Layout {
 // https://www.w3.org/TR/css-sizing-3/#fit-content-size
 // NOTE: This is called the “shrink-to-fit” width in CSS2
 
-export Vec2Au computeFitContentSize(Tree& tree, Box& box, AvailableSpace availableSpace) {
-    auto minSize = computeIntrinsicContentSize(tree, box, IntrinsicSize::MIN_CONTENT);
-    auto maxSize = computeIntrinsicContentSize(tree, box, IntrinsicSize::MAX_CONTENT);
+export Vec2Au computeFitContentSize(Input const& input, Box& box, AvailableSpace availableSpace) {
+    auto minSize = computeIntrinsicContentSize(input, box, IntrinsicSize::MIN_CONTENT);
+    auto maxSize = computeIntrinsicContentSize(input, box, IntrinsicSize::MAX_CONTENT);
     Vec2Au size = {INDEFINITE, INDEFINITE};
 
     // If the available space in a given axis is definite,
@@ -40,12 +40,12 @@ export Vec2Au computeFitContentSize(Tree& tree, Box& box, AvailableSpace availab
     return size;
 }
 
-export Au computeFitContentInlineSize(Tree& tree, Box& box, AvailableSpaceAxis availableSpace) {
-    return computeFitContentSize(tree, box, {availableSpace, INDEFINITE}).x;
+export Au computeFitContentInlineSize(Input const& input, Box& box, AvailableSpaceAxis availableSpace) {
+    return computeFitContentSize(input, box, {availableSpace, INDEFINITE}).x;
 }
 
-export Au computeFitContentBlockSize(Tree& tree, Box& box, AvailableSpaceAxis availableSpace) {
-    return computeFitContentSize(tree, box, {INDEFINITE, availableSpace}).y;
+export Au computeFitContentBlockSize(Input const& input, Box& box, AvailableSpaceAxis availableSpace) {
+    return computeFitContentSize(input, box, {INDEFINITE, availableSpace}).y;
 }
 
 // https://www.w3.org/TR/css-sizing-3/#preferred-size-properties

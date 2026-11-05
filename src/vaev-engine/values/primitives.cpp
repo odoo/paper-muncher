@@ -52,20 +52,18 @@ struct ValueSerializer<Integer> {
 // MARK: Number ----------------------------------------------------------------
 // https://drafts.csswg.org/css-values/#numbers
 
-export using Number = f64;
-
 export template <>
-struct _Resolved<Number> {
-    using Type = Number;
+struct _Resolved<f64> {
+    using Type = f64;
 };
 
-export Number resolve(Number const& value, [[maybe_unused]] auto const& ctx = NONE) {
+export f64 resolve(f64 const& value, [[maybe_unused]] auto const& ctx = NONE) {
     return value;
 }
 
 export template <>
-struct ValueParser<Number> {
-    static Res<Number> parse(Cursor<Css::Sst>& c) {
+struct ValueParser<f64> {
+    static Res<f64> parse(Cursor<Css::Sst>& c) {
         if (c.ended())
             return Error::invalidData("unexpected end of input");
 
@@ -80,8 +78,8 @@ struct ValueParser<Number> {
 };
 
 export template <>
-struct ValueSerializer<Number> {
-    static Res<> serialize(Io::TextWriter& w, Number const& value) {
+struct ValueSerializer<f64> {
+    static Res<> serialize(Io::TextWriter& w, f64 const& value) {
         return Css::serializeNumber(w, value);
     }
 };

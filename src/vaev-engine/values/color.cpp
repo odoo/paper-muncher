@@ -204,7 +204,7 @@ export using Color = Union<
 export struct ColorMix {
     struct Side {
         Color color;
-        Opt<Percent> perc;
+        Opt<PurePercentage> perc;
 
         void repr(Io::Emit& e) const {
             e("{}", color);
@@ -307,10 +307,10 @@ struct ValueParser<Color> {
             return Error::invalidData("unexpected end of input");
 
         if (scan.peek() == Css::Token::Type::PERCENTAGE) {
-            auto perc = try$(parseValue<Percent>(scan)).value();
+            auto perc = try$(parseValue<PurePercentage>(scan)).value();
             return Ok(Math::round((perc * 255) / 100));
         } else if (scan.peek() == Css::Token::Type::NUMBER)
-            return Ok(Math::round(try$(parseValue<Number>(scan)) * 255));
+            return Ok(Math::round(try$(parseValue<f64>(scan)) * 255));
         return Error::invalidData("expected alpha channel");
     }
 
@@ -328,21 +328,21 @@ struct ValueParser<Color> {
         return Ok(Some(try$(_parseAlphaValue(scan))));
     }
 
-    static Res<Number> _parseNumPercNone(Cursor<Css::Sst>& scan, Number percOf, Number noneValue = 0) {
+    static Res<f64> _parseNumPercNone(Cursor<Css::Sst>& scan, f64 percOf, f64 noneValue = 0) {
         if (scan.ended())
             return Error::invalidData("unexpected end of input");
 
         if (scan.skip(Css::Token::ident("none"))) {
             return Ok(noneValue);
         } else if (scan.peek() == Css::Token::Type::PERCENTAGE) {
-            auto perc = try$(parseValue<Percent>(scan));
+            auto perc = try$(parseValue<PurePercentage>(scan));
             return Ok((perc.value() * percOf) / 100.0f);
         } else
-            return Ok(try$(parseValue<Number>(scan)));
+            return Ok(try$(parseValue<f64>(scan)));
     }
 
-    static Res<Array<Number, 3>> _parsePredefinedRGBParams(Cursor<Css::Sst>& scan, Number percOf = 255) {
-        Array<Number, 3> channels{};
+    static Res<Array<f64, 3>> _parsePredefinedRGBParams(Cursor<Css::Sst>& scan, f64 percOf = 255) {
+        Array<f64, 3> channels{};
         for (usize i = 0; i < 3; ++i) {
 
             if (scan.ended())
@@ -392,10 +392,10 @@ struct ValueParser<Color> {
                 return Error::invalidData("unexpected end of input");
 
             if (usingPercentages) {
-                auto perc = try$(parseValue<Percent>(scan));
+                auto perc = try$(parseValue<PurePercentage>(scan));
                 channels[i] = Math::round((perc.value() * 255) / 100.0f);
             } else {
-                channels[i] = try$(parseValue<Number>(scan));
+                channels[i] = try$(parseValue<f64>(scan));
             }
             eatWhitespace(scan);
             if (i < 2) {
@@ -428,13 +428,13 @@ struct ValueParser<Color> {
         if (scan.ended())
             return Error::invalidData("unexpected end of input");
 
-        Number hue;
+        f64 hue;
         if (scan.skip(Css::Token::ident("none")))
             hue = 0;
         else if (scan.peek() == Css::Token::DIMENSION)
-            hue = try$(parseValue<Angle>(scan)).toDegree();
+            hue = try$(parseValue<PureAngle>(scan)).toDegree();
         else if (scan.peek() == Css::Token::Type::NUMBER)
-            hue = try$(parseValue<Number>(scan));
+            hue = try$(parseValue<f64>(scan));
         else
             return Error::invalidData("expected hue");
 
@@ -462,13 +462,13 @@ struct ValueParser<Color> {
         if (scan.ended())
             return Error::invalidData("unexpected end of input");
 
-        Number hue;
+        f64 hue;
         if (scan.skip(Css::Token::ident("none")))
             hue = 0;
         else if (scan.peek() == Css::Token::DIMENSION)
-            hue = try$(parseValue<Angle>(scan)).toDegree();
+            hue = try$(parseValue<PureAngle>(scan)).toDegree();
         else if (scan.peek() == Css::Token::Type::NUMBER)
-            hue = try$(parseValue<Number>(scan));
+            hue = try$(parseValue<f64>(scan));
         else
             return Error::invalidData("expected hue");
 
@@ -478,14 +478,14 @@ struct ValueParser<Color> {
             return Error::invalidData("comma is expected separating hsl components");
         eatWhitespace(scan);
 
-        auto sat = try$(parseValue<Percent>(scan)).value() / 100.0f;
+        auto sat = try$(parseValue<PurePercentage>(scan)).value() / 100.0f;
         eatWhitespace(scan);
 
         if (not scan.skip(Css::Token::COMMA))
             return Error::invalidData("comma is expected separating hsl components");
         eatWhitespace(scan);
 
-        auto l = try$(parseValue<Percent>(scan)).value() / 100.0f;
+        auto l = try$(parseValue<PurePercentage>(scan)).value() / 100.0f;
         eatWhitespace(scan);
 
         if (scan.ended()) {
@@ -521,9 +521,9 @@ struct ValueParser<Color> {
         ) {
             auto channels = try$(_parsePredefinedRGBParams(scan, 1));
 
-            Number r = channels[0];
-            Number g = channels[1];
-            Number b = channels[2];
+            f64 r = channels[0];
+            f64 g = channels[1];
+            f64 b = channels[2];
 
             eatWhitespace(scan);
 
@@ -587,13 +587,13 @@ struct ValueParser<Color> {
     }
 
     static Res<ColorMix::Side> _parseColorMixSide(Cursor<Css::Sst>& s) {
-        Opt<Percent> percent;
+        Opt<PurePercentage> percent;
 
         if (s.ended())
             return Error::invalidData("unexpected end of input");
 
         if (s.peek() == Css::Token::Type::PERCENTAGE) {
-            percent = Some(try$(parseValue<Percent>(s)));
+            percent = Some(try$(parseValue<PurePercentage>(s)));
             eatWhitespace(s);
             return Ok(ColorMix::Side{
                 try$(parseValue<Color>(s)),
@@ -604,7 +604,7 @@ struct ValueParser<Color> {
         Color color = try$(parseValue<Color>(s));
         eatWhitespace(s);
         if (not s.ended() and s.peek() == Css::Token::Type::PERCENTAGE)
-            percent = Some(try$(parseValue<Percent>(s)).value());
+            percent = Some(try$(parseValue<PurePercentage>(s)).value());
 
         return Ok(ColorMix::Side{
             std::move(color),
@@ -708,7 +708,7 @@ struct ValueSerializer<Color> {
 
                 if (srgb.alpha < Limits<u8>::MAX) {
                     try$(w.writeStr(", "s));
-                    try$(serializeValue(w, static_cast<Number>(srgb.alpha) / 255.0));
+                    try$(serializeValue(w, static_cast<f64>(srgb.alpha) / 255.0));
                 }
 
                 try$(w.writeStr(")"s));
@@ -752,12 +752,12 @@ export Gfx::Color resolve(ColorMix const& cm, Gfx::Color currentColor) {
     Gfx::Color lhsColor = resolve(cm.lhs.color, currentColor);
     f64 lhsPerc = cm.lhs.perc
                       ? cm.lhs.perc->value()
-                      : 100 - cm.rhs.perc.unwrapOr(Percent{50}).value();
+                      : 100 - cm.rhs.perc.unwrapOr(PurePercentage{50}).value();
 
     Gfx::Color rhsColor = resolve(cm.rhs.color, currentColor);
     f64 rhsPerc = cm.rhs.perc
                       ? cm.rhs.perc->value()
-                      : 100 - cm.lhs.perc.unwrapOr(Percent{50}).value();
+                      : 100 - cm.lhs.perc.unwrapOr(PurePercentage{50}).value();
 
     if (lhsPerc == rhsPerc and lhsPerc == 0) {
         logWarn("cannot mix colors when both have zero percentages");

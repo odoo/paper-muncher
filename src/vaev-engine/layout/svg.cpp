@@ -13,14 +13,6 @@ using namespace Karm;
 
 namespace Vaev::Layout {
 
-// FIXME: already present in Resolver obj, but it doesnt make sense to instantiate one here; should also be targeted
-// by the computer refactoring
-Au resolve(PercentOr<Length> const& value, Au relative) {
-    if (auto valueLength = value.is<Length>())
-        return Au{valueLength->absolutePixels().unwrapOr(0)};
-    return Au{relative.cast<f64>() * (value.expect<Percent>().value() / 100.)};
-}
-
 Au normalizedDiagonal(Vec2Au relativeTo) {
     return Au{
         Math::sqrt(f64{(relativeTo.x.cast<f64>() * relativeTo.x.cast<f64>()) + (relativeTo.y.cast<f64>() * relativeTo.y.cast<f64>())}) / Math::sqrt(2.0)
@@ -31,7 +23,7 @@ Au normalizedDiagonal(Vec2Au relativeTo) {
 
 struct SvgFormatingContext : FormatingContext {
     // https://svgwg.org/svg2-draft/coords.html#SizingSVGInCSS
-    Opt<Number> intrinsicAspectRatio(Opt<SvgViewBox> const& vb, ComputedSize const& width, ComputedSize const& height) {
+    Opt<f64> intrinsicAspectRatio(Opt<SvgViewBox> const& vb, ComputedSize const& width, ComputedSize const& height) {
         // 1. If the width and height sizing properties on the ‘svg’ element are both absolute values:
         auto absolute = [](ComputedSize const& size) -> Opt<Pixel> {
             if (auto pp = size.is<PixelPercentage>())
@@ -73,8 +65,8 @@ struct SvgFormatingContext : FormatingContext {
         return {
             Layout::resolve(style.svg->x, relativeTo.x),
             Layout::resolve(style.svg->y, relativeTo.y),
-            Layout::resolve(style.sizing->width.is<PixelPercentage>().unwrapOr(Percentage{100}), relativeTo.x),
-            Layout::resolve(style.sizing->height.is<PixelPercentage>().unwrapOr(Percentage{100}), relativeTo.y),
+            Layout::resolve(style.sizing->width.is<PixelPercentage>().unwrapOr(Percent{100}), relativeTo.x),
+            Layout::resolve(style.sizing->height.is<PixelPercentage>().unwrapOr(Percent{100}), relativeTo.y),
         };
     }
 
@@ -114,13 +106,13 @@ struct SvgFormatingContext : FormatingContext {
         }
     }
 
-    void _commitElement(Tree& tree, Box& box, FragmentBuilder& fragBuilder, Vec2Au resolveTo) {
+    void _commitElement(Input const& input, Box& box, FragmentBuilder& fragBuilder, Vec2Au resolveTo) {
         if (box.content.is<SvgShapeElement>()) {
             _commitShape(box, fragBuilder, resolveTo);
         } else if (box.isSvgRootBox()) {
             auto resolvedRect = _resolveRectangle(*box.style, resolveTo);
             auto root = _commitRoot(
-                tree,
+                input,
                 box,
                 {resolvedRect.x, resolvedRect.y},
                 {resolvedRect.width, resolvedRect.height}
@@ -130,6 +122,8 @@ struct SvgFormatingContext : FormatingContext {
             auto resolvedRect = _resolveRectangle(*box.style, resolveTo);
 
             Input childInput{
+                .fragmentainer = input.fragmentainer,
+                .viewport = input.viewport,
                 .generateFragment = true,
                 .usedSpacings = {},
                 .knownSize = {
@@ -139,13 +133,13 @@ struct SvgFormatingContext : FormatingContext {
                 .position = {resolvedRect.x, resolvedRect.y},
             };
 
-            auto output = layoutBorderBox(tree, box, childInput);
+            auto output = layoutBorderBox(box, childInput);
             fragBuilder.addChildIfAny(output.fragment);
 
         } else if (box.isSvg()) {
-            auto nestedGroupFragBuilder = FragmentBuilder{tree, box};
+            auto nestedGroupFragBuilder = FragmentBuilder{box};
 
-            _commitChildren(tree, box, nestedGroupFragBuilder, resolveTo);
+            _commitChildren(input, box, nestedGroupFragBuilder, resolveTo);
 
             fragBuilder.addChildIfAny(Some(nestedGroupFragBuilder.buildSvgGroup()));
         } else {
@@ -153,9 +147,9 @@ struct SvgFormatingContext : FormatingContext {
         }
     }
 
-    void _commitChildren(Tree& tree, Box& group, FragmentBuilder& fragBuilder, Vec2Au resolveTo) {
+    void _commitChildren(Input const& input, Box& group, FragmentBuilder& fragBuilder, Vec2Au resolveTo) {
         for (auto& c : group.children())
-            _commitElement(tree, c, fragBuilder, resolveTo);
+            _commitElement(input, c, fragBuilder, resolveTo);
     }
 
     // https://svgwg.org/svg2-draft/coords.html#ComputingAViewportsTransform
@@ -219,18 +213,18 @@ struct SvgFormatingContext : FormatingContext {
         return Math::Trans2f::translate({(f64)translateX, (f64)translateY}).scaled({(f64)scaleX, (f64)scaleY});
     }
 
-    Rc<Fragment> _commitRoot(Tree& tree, Box& box, Vec2Au position, Vec2Au size) {
+    Rc<Fragment> _commitRoot(Input const& input, Box& box, Vec2Au position, Vec2Au size) {
         auto viewbox = box.style->svg->viewBox;
 
         Math::Trans2f trans = Math::Trans2f::translate(position.cast<f64>());
         if (viewbox)
             trans = _computeEquivalentTransformOfSVGViewport(*viewbox, position, size);
 
-        auto rootFragBuilder = FragmentBuilder{tree, box};
+        auto rootFragBuilder = FragmentBuilder{box};
 
         auto boundingBox = RectAu{position, size};
 
-        _commitChildren(tree, box, rootFragBuilder, _resolvePercentageRelative(viewbox, trans, boundingBox));
+        _commitChildren(input, box, rootFragBuilder, _resolvePercentageRelative(viewbox, trans, boundingBox));
 
         return rootFragBuilder.buildSvgRoot(trans, boundingBox);
     }
@@ -258,10 +252,10 @@ struct SvgFormatingContext : FormatingContext {
         return size;
     }
 
-    Output run(Tree& tree, Box& box, Input input, [[maybe_unused]] usize startAt, [[maybe_unused]] Opt<usize> stopAt) override {
-        tree.fc.enterMonolithicBox();
+    Output run(Box& box, Input input, [[maybe_unused]] usize startAt, [[maybe_unused]] Opt<usize> stopAt) override {
+        input.fragmentainer->enterMonolithicBox();
         Defer _ = [&] {
-            tree.fc.leaveMonolithicBox();
+            input.fragmentainer->leaveMonolithicBox();
         };
 
         auto aspectRatio = intrinsicAspectRatio(
@@ -271,10 +265,10 @@ struct SvgFormatingContext : FormatingContext {
         );
         auto size = _defaultSizing(input.knownSize, aspectRatio, input.containingBlock);
 
-        auto fragment = _commitRoot(tree, box, input.position, size);
+        auto fragment = _commitRoot(input, box, input.position, size);
 
-        if (tree.fc.allowBreak() and
-            not tree.fc.acceptsFit(
+        if (input.fragmentainer->allowBreak() and
+            not input.fragmentainer->acceptsFit(
                 input.position.y,
                 size.y,
                 input.pendingVerticalSizes

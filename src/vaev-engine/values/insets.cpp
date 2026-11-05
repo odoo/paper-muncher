@@ -5,7 +5,7 @@ import Karm.Math;
 
 import :css;
 import :values.base;
-import :values.calc;
+import :values.calc2;
 import :values.keywords;
 import :values.percent;
 
@@ -57,12 +57,36 @@ struct ValueParser<Position> {
     }
 };
 
-export using Margin = Math::Insets<Union<Keywords::Auto, Calc<PercentOr<Length>>>>;
+export using Margins = Math::Insets<Union<Keywords::Auto, LengthPercentage>>;
 
-export using Padding = Math::Insets<Calc<PercentOr<Length>>>;
+export using Paddings = Math::Insets<LengthPercentage>;
 
 // https://www.w3.org/TR/css-position-3/#propdef-inset
-export using BoxInsets = Math::Insets<Union<Keywords::Auto, Calc<PercentOr<Length>>>>;
+export using BoxInsets = Math::Insets<Union<Keywords::Auto, LengthPercentage>>;
+
+export using ComputedMargins = Math::Insets<Union<Keywords::Auto, PixelPercentage>>;
+
+export using ComputedPaddings = Math::Insets<PixelPercentage>;
+
+export using ComputedBoxInsets = Math::Insets<Union<Keywords::Auto, PixelPercentage>>;
+
+export Union<Keywords::Auto, PixelPercentage> resolve(Union<Keywords::Auto, LengthPercentage> const& value, LengthContext auto const& ctx) {
+    return value.visit([&](auto const& v) -> Union<Keywords::Auto, PixelPercentage> { return resolve(v, ctx); });
+}
+
+export Union<Keywords::Auto, LengthPercentage> toSpecified(Union<Keywords::Auto, PixelPercentage> const& value) {
+    return value.visit([](auto const& v) -> Union<Keywords::Auto, LengthPercentage> { return toSpecified(v); });
+}
+
+export template <typename T>
+auto resolve(Math::Insets<T> const& value, LengthContext auto const& ctx) -> Math::Insets<decltype(resolve(value.top, ctx))> {
+    return {resolve(value.top, ctx), resolve(value.end, ctx), resolve(value.bottom, ctx), resolve(value.start, ctx)};
+}
+
+export template <typename T>
+auto toSpecified(Math::Insets<T> const& value) -> Math::Insets<decltype(toSpecified(value.top))> {
+    return {toSpecified(value.top), toSpecified(value.end), toSpecified(value.bottom), toSpecified(value.start)};
+}
 
 export template <typename T>
 struct ValueParser<Math::Insets<T>> {
@@ -70,18 +94,22 @@ struct ValueParser<Math::Insets<T>> {
         if (c.ended())
             return Error::invalidData("unexpected end of input");
 
+        eatWhitespace(c);
         auto top = parseValue<T>(c);
         if (not top)
             return top.none();
 
+        eatWhitespace(c);
         auto right = parseValue<T>(c);
         if (not right)
             return Ok(Math::Insets<T>{top.take()});
 
+        eatWhitespace(c);
         auto bottom = parseValue<T>(c);
         if (not bottom)
             return Ok(Math::Insets<T>{top.take(), right.take()});
 
+        eatWhitespace(c);
         auto left = parseValue<T>(c);
         if (not left)
             return Ok(Math::Insets<T>{top.take(), right.take(), bottom.take()});
@@ -90,13 +118,35 @@ struct ValueParser<Math::Insets<T>> {
     }
 };
 
+// https://drafts.csswg.org/css-align-3/#column-row-gap
 export using Gap = Union<
     Keywords::Normal,
-    Calc<PercentOr<Length>>>;
+    LengthPercentage>;
+
+export using ComputedGap = Union<
+    Keywords::Normal,
+    PixelPercentage>;
+
+export ComputedGap resolve(Gap const& value, LengthContext auto const& ctx) {
+    return value.visit([&](auto const& v) -> ComputedGap { return resolve(v, ctx); });
+}
+
+export Gap toSpecified(ComputedGap const& value) {
+    return value.visit([](auto const& v) -> Gap { return toSpecified(v); });
+}
 
 export struct Gaps {
     Gap row = Keywords::NORMAL;
     Gap col = Keywords::NORMAL;
+
+    void repr(Io::Emit& e) const {
+        e("(gaps {} {})", row, col);
+    }
+};
+
+export struct ComputedGaps {
+    ComputedGap row = Keywords::NORMAL;
+    ComputedGap col = Keywords::NORMAL;
 
     void repr(Io::Emit& e) const {
         e("(gaps {} {})", row, col);

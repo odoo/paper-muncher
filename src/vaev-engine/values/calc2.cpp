@@ -18,7 +18,7 @@ import :values.keywords;
 using namespace Karm;
 using namespace Vaev::Literals;
 
-namespace Vaev::Ng {
+namespace Vaev {
 
 struct NumericType {
     Array<i32, toUnderlyingType(NumericBaseType::_LEN)> _entries{};
@@ -796,8 +796,8 @@ export Opt<NumericType> determineType(Calc const& calc, Opt<NumericBaseType> mai
                 // The atan2(A, B) function contains two comma-separated calculations,
                 // A and B. A and B can resolve to any <number>, <dimension>, or <percentage>,
                 // but must have a consistent type or else the function is invalid
-                try$(addTypes(f.children));
-                return Some(NumericType::simple(NumericBaseType::ANGLE));
+                auto childType = try$(addTypes(f.children));
+                return NumericType::simple(NumericBaseType::ANGLE).madeConsistentWith(childType);
             }
             // sign(), sin(), cos(), tan(), pow(), sqrt(), log(), exp()
             // «[ ]» (empty map).
@@ -1393,6 +1393,12 @@ struct TypedCalc {
         return {UNCHECKED, UnitValue{value, UnitValue::canonicalUnitOf(TYPE)}};
     }
 
+    static TypedCalc fromPercentage(f64 value)
+        requires(WITH_PERCENT == AcceptsPercent::YES)
+    {
+        return {UNCHECKED, UnitValue{value, UnitValue::Unit::PERCENT}};
+    }
+
     Calc const& calcTree() const {
         return _calc;
     }
@@ -1426,23 +1432,23 @@ export using FrequencyPercentage = TypedCalc<Some(NumericBaseType::FREQUENCY), A
 export using AnglePercentage = TypedCalc<Some(NumericBaseType::ANGLE), AcceptsPercent::YES>;
 export using TimePercentage = TypedCalc<Some(NumericBaseType::TIME), AcceptsPercent::YES>;
 
-} // namespace Vaev::Ng
+} // namespace Vaev
 
 namespace Vaev {
 
 template <>
-struct ValueParser<Ng::Calc> {
+struct ValueParser<Calc> {
 };
 
 template <Opt<NumericBaseType> TYPE, AcceptsPercent WITH_PERCENT>
-struct ValueParser<Ng::TypedCalc<TYPE, WITH_PERCENT>> {
-    static Res<Ng::TypedCalc<TYPE, WITH_PERCENT>> parse(Cursor<Css::Sst>& c) {
+struct ValueParser<TypedCalc<TYPE, WITH_PERCENT>> {
+    static Res<TypedCalc<TYPE, WITH_PERCENT>> parse(Cursor<Css::Sst>& c) {
         if (c.ended())
             return Error::invalidData("unexpected end of input");
 
         auto numeric = parseValue<TypedUnitValue<TYPE, WITH_PERCENT>>(c);
         if (numeric) {
-            return Ok(Ng::TypedCalc<TYPE, WITH_PERCENT>{UNCHECKED, numeric.take().unitValue()});
+            return Ok(TypedCalc<TYPE, WITH_PERCENT>{UNCHECKED, numeric.take().unitValue()});
         }
 
         if (c.peek() == Css::Sst::FUNC) {
@@ -1458,17 +1464,17 @@ struct ValueParser<Ng::TypedCalc<TYPE, WITH_PERCENT>> {
     }
 
     // https://drafts.csswg.org/css-values-4/#calc-syntax
-    static Res<Ng::TypedCalc<TYPE, WITH_PERCENT>> _parseTypedMathFunction(Cursor<Css::Sst>& c) {
+    static Res<TypedCalc<TYPE, WITH_PERCENT>> _parseTypedMathFunction(Cursor<Css::Sst>& c) {
         auto calc = try$(parseMathFunction(c));
 
-        auto type = Ng::determineType(calc, WITH_PERCENT == AcceptsPercent::YES ? TYPE : NONE);
+        auto type = determineType(calc, WITH_PERCENT == AcceptsPercent::YES ? TYPE : NONE);
         if (not type)
             return Error::invalidData("calc() type error");
 
         if (!type->matches(TYPE, WITH_PERCENT == AcceptsPercent::YES))
             return Error::invalidData("calc() does not produce the right type");
 
-        return Ok(Ng::TypedCalc<TYPE, WITH_PERCENT>{UNCHECKED, std::move(calc)});
+        return Ok(TypedCalc<TYPE, WITH_PERCENT>{UNCHECKED, std::move(calc)});
     }
 
     struct ParamParser {
@@ -1516,15 +1522,15 @@ struct ValueParser<Ng::TypedCalc<TYPE, WITH_PERCENT>> {
         }
 
         // <calc-sum>
-        Res<Ng::Calc> sum() {
+        Res<Calc> sum() {
             return _param([&] {
                 return parseCalcSum(_c);
             });
         }
 
         // [ <calc-sum> | none ]
-        Res<Opt<Ng::Calc>> sumOrNone() {
-            return _param([&] -> Res<Opt<Ng::Calc>> {
+        Res<Opt<Calc>> sumOrNone() {
+            return _param([&] -> Res<Opt<Calc>> {
                 if (parseValue<Keywords::None>(_c))
                     return Ok(NONE);
                 return Ok(Some(try$(parseCalcSum(_c))));
@@ -1532,8 +1538,8 @@ struct ValueParser<Ng::TypedCalc<TYPE, WITH_PERCENT>> {
         }
 
         // <calc-sum>#
-        Res<Vec<Ng::Calc>> sums() {
-            Vec<Ng::Calc> calcs;
+        Res<Vec<Calc>> sums() {
+            Vec<Calc> calcs;
             do {
                 calcs.pushBack(try$(sum()));
             } while (not ended());
@@ -1550,22 +1556,22 @@ struct ValueParser<Ng::TypedCalc<TYPE, WITH_PERCENT>> {
 
     using RoundingStrategy = Union<Keywords::Nearest, Keywords::Up, Keywords::Down, Keywords::ToZero>;
 
-    static Res<Ng::Calc> parseMathFunction(Cursor<Css::Sst>& c) {
+    static Res<Calc> parseMathFunction(Cursor<Css::Sst>& c) {
         if (c.ended())
             return Error::invalidData("unexpected end of input");
 
-        auto const parseFn = [](Str prefix, ParamParser& params) -> Res<Ng::Calc> {
+        auto const parseFn = [](Str prefix, ParamParser& params) -> Res<Calc> {
             // <calc()>  = calc( <calc-sum> )
             if (eqCi(prefix, "calc("s))
                 return params.sum();
 
             // <min()>   = min( <calc-sum># )
             if (eqCi(prefix, "min("s))
-                return Ok(Ng::FnNode::min(try$(params.sums())));
+                return Ok(FnNode::min(try$(params.sums())));
 
             // <max()>   = max( <calc-sum># )
             if (eqCi(prefix, "max("s))
-                return Ok(Ng::FnNode::max(try$(params.sums())));
+                return Ok(FnNode::max(try$(params.sums())));
 
             // <clamp()> = clamp( [ <calc-sum> | none ], <calc-sum>, [ <calc-sum> | none ] )
             if (eqCi(prefix, "clamp("s)) {
@@ -1574,15 +1580,15 @@ struct ValueParser<Ng::TypedCalc<TYPE, WITH_PERCENT>> {
                 auto max = try$(params.sumOrNone());
 
                 if (min and max)
-                    return Ok(Ng::FnNode::clamp(min.take(), std::move(val), max.take()));
+                    return Ok(FnNode::clamp(min.take(), std::move(val), max.take()));
 
                 // clamp(MIN, VAL, none) is equivalent to max(MIN, VAL)
                 if (min and not max)
-                    return Ok(Ng::FnNode::max({min.take(), std::move(val)}));
+                    return Ok(FnNode::max({min.take(), std::move(val)}));
 
                 // clamp(none, VAL, MAX) is equivalent to min(VAL, MAX)
                 if (not min and max)
-                    return Ok(Ng::FnNode::min({std::move(val), max.take()}));
+                    return Ok(FnNode::min({std::move(val), max.take()}));
 
                 // clamp(none, VAL, none) is equivalent to just calc(VAL)
                 return Ok(std::move(val));
@@ -1593,25 +1599,25 @@ struct ValueParser<Ng::TypedCalc<TYPE, WITH_PERCENT>> {
                 auto strategy = params.template maybe<RoundingStrategy>();
 
                 auto a = try$(params.sum());
-                Opt<Ng::Calc> b = NONE;
+                Opt<Calc> b = NONE;
                 if (not params.ended())
                     b = Some(try$(params.sum()));
 
                 if (not strategy)
-                    return Ok(Ng::FnNode::roundNearest(std::move(a), std::move(b)));
+                    return Ok(FnNode::roundNearest(std::move(a), std::move(b)));
 
                 return Ok(strategy->visit(
                     [&](Keywords::Nearest) {
-                        return Ng::FnNode::roundNearest(std::move(a), std::move(b));
+                        return FnNode::roundNearest(std::move(a), std::move(b));
                     },
                     [&](Keywords::Up) {
-                        return Ng::FnNode::roundUp(std::move(a), std::move(b));
+                        return FnNode::roundUp(std::move(a), std::move(b));
                     },
                     [&](Keywords::Down) {
-                        return Ng::FnNode::roundDown(std::move(a), std::move(b));
+                        return FnNode::roundDown(std::move(a), std::move(b));
                     },
                     [&](Keywords::ToZero) {
-                        return Ng::FnNode::roundToZero(std::move(a), std::move(b));
+                        return FnNode::roundToZero(std::move(a), std::move(b));
                     }
                 ));
             }
@@ -1620,81 +1626,81 @@ struct ValueParser<Ng::TypedCalc<TYPE, WITH_PERCENT>> {
             if (eqCi(prefix, "mod("s)) {
                 auto a = try$(params.sum());
                 auto b = try$(params.sum());
-                return Ok(Ng::FnNode::mod(std::move(a), std::move(b)));
+                return Ok(FnNode::mod(std::move(a), std::move(b)));
             }
 
             // <rem()>   = rem( <calc-sum>, <calc-sum> )
             if (eqCi(prefix, "rem("s)) {
                 auto a = try$(params.sum());
                 auto b = try$(params.sum());
-                return Ok(Ng::FnNode::rem(std::move(a), std::move(b)));
+                return Ok(FnNode::rem(std::move(a), std::move(b)));
             }
 
             // <sin()>   = sin( <calc-sum> )
             if (eqCi(prefix, "sin("s))
-                return Ok(Ng::FnNode::sin(try$(params.sum())));
+                return Ok(FnNode::sin(try$(params.sum())));
 
             // <cos()>   = cos( <calc-sum> )
             if (eqCi(prefix, "cos("s))
-                return Ok(Ng::FnNode::cos(try$(params.sum())));
+                return Ok(FnNode::cos(try$(params.sum())));
 
             // <tan()>   = tan( <calc-sum> )
             if (eqCi(prefix, "tan("s))
-                return Ok(Ng::FnNode::tan(try$(params.sum())));
+                return Ok(FnNode::tan(try$(params.sum())));
 
             // <asin()>  = asin( <calc-sum> )
             if (eqCi(prefix, "asin("s))
-                return Ok(Ng::FnNode::asin(try$(params.sum())));
+                return Ok(FnNode::asin(try$(params.sum())));
 
             // <acos()>  = acos( <calc-sum> )
             if (eqCi(prefix, "acos("s))
-                return Ok(Ng::FnNode::acos(try$(params.sum())));
+                return Ok(FnNode::acos(try$(params.sum())));
 
             // <atan()>  = atan( <calc-sum> )
             if (eqCi(prefix, "atan("s))
-                return Ok(Ng::FnNode::atan(try$(params.sum())));
+                return Ok(FnNode::atan(try$(params.sum())));
 
             // <atan2()> = atan2( <calc-sum>, <calc-sum> )
             if (eqCi(prefix, "atan2("s)) {
                 auto a = try$(params.sum());
                 auto b = try$(params.sum());
-                return Ok(Ng::FnNode::atan2(std::move(a), std::move(b)));
+                return Ok(FnNode::atan2(std::move(a), std::move(b)));
             }
 
             // <pow()>   = pow( <calc-sum>, <calc-sum> )
             if (eqCi(prefix, "pow("s)) {
                 auto a = try$(params.sum());
                 auto b = try$(params.sum());
-                return Ok(Ng::FnNode::pow(std::move(a), std::move(b)));
+                return Ok(FnNode::pow(std::move(a), std::move(b)));
             }
 
             // <sqrt()>  = sqrt( <calc-sum> )
             if (eqCi(prefix, "sqrt("s))
-                return Ok(Ng::FnNode::sqrt(try$(params.sum())));
+                return Ok(FnNode::sqrt(try$(params.sum())));
 
             // <hypot()> = hypot( <calc-sum># )
             if (eqCi(prefix, "hypot("s))
-                return Ok(Ng::FnNode::hypot(try$(params.sums())));
+                return Ok(FnNode::hypot(try$(params.sums())));
 
             // <log()>   = log( <calc-sum>, <calc-sum>? )
             if (eqCi(prefix, "log("s)) {
                 auto a = try$(params.sum());
                 if (params.ended())
-                    return Ok(Ng::FnNode::log(std::move(a), NONE));
-                return Ok(Ng::FnNode::log(std::move(a), Some(try$(params.sum()))));
+                    return Ok(FnNode::log(std::move(a), NONE));
+                return Ok(FnNode::log(std::move(a), Some(try$(params.sum()))));
             }
 
             // <exp()>   = exp( <calc-sum> )
             if (eqCi(prefix, "exp("s))
-                return Ok(Ng::FnNode::exp(try$(params.sum())));
+                return Ok(FnNode::exp(try$(params.sum())));
 
             // <abs()>   = abs( <calc-sum> )
             if (eqCi(prefix, "abs("s))
-                return Ok(Ng::FnNode::abs(try$(params.sum())));
+                return Ok(FnNode::abs(try$(params.sum())));
 
             // <sign()>  = sign( <calc-sum> )
             if (eqCi(prefix, "sign("s))
-                return Ok(Ng::FnNode::sign(try$(params.sum())));
+                return Ok(FnNode::sign(try$(params.sum())));
 
             return Error::invalidData("unknown math function");
         };
@@ -1721,14 +1727,14 @@ struct ValueParser<Ng::TypedCalc<TYPE, WITH_PERCENT>> {
     // https://drafts.csswg.org/css-values-4/#calc-syntax
     // In addition, whitespace is required on both sides of the + and - operators.
     // (The * and / operators can be used without white space around them.)
-    static Res<Ng::Calc> parseCalcSum(Cursor<Css::Sst>& c) {
+    static Res<Calc> parseCalcSum(Cursor<Css::Sst>& c) {
         if (c.ended())
             return Error::invalidData("unexpected end of input");
 
         eatWhitespace(c);
 
         auto fst = try$(parseCalcProduct(c));
-        Vec<Ng::Calc> children{};
+        Vec<Calc> children{};
 
         while (true) {
             auto save = c;
@@ -1755,7 +1761,7 @@ struct ValueParser<Ng::TypedCalc<TYPE, WITH_PERCENT>> {
                 children.pushBack(std::move(fst));
 
             if (negate)
-                children.pushBack(Ng::NegateNode{makeBox<Ng::Calc>(std::move(term))});
+                children.pushBack(NegateNode{makeBox<Calc>(std::move(term))});
             else
                 children.pushBack(std::move(term));
         }
@@ -1763,18 +1769,18 @@ struct ValueParser<Ng::TypedCalc<TYPE, WITH_PERCENT>> {
         if (isEmpty(children))
             return Ok(std::move(fst));
 
-        return Ok(Ng::SumNode{std::move(children)});
+        return Ok(SumNode{std::move(children)});
     }
 
     // <calc-product> = <calc-value> [ [ '*' | / ] <calc-value> ]*
-    static Res<Ng::Calc> parseCalcProduct(Cursor<Css::Sst>& c) {
+    static Res<Calc> parseCalcProduct(Cursor<Css::Sst>& c) {
         if (c.ended())
             return Error::invalidData("unexpected end of input");
 
         eatWhitespace(c);
 
         auto fst = try$(parseCalcValue(c));
-        Vec<Ng::Calc> children{};
+        Vec<Calc> children{};
 
         while (true) {
             auto save = c;
@@ -1794,7 +1800,7 @@ struct ValueParser<Ng::TypedCalc<TYPE, WITH_PERCENT>> {
                 children.pushBack(std::move(fst));
 
             if (invert)
-                children.pushBack(Ng::InvertNode{makeBox<Ng::Calc>(std::move(factor))});
+                children.pushBack(InvertNode{makeBox<Calc>(std::move(factor))});
             else
                 children.pushBack(std::move(factor));
         }
@@ -1802,12 +1808,12 @@ struct ValueParser<Ng::TypedCalc<TYPE, WITH_PERCENT>> {
         if (isEmpty(children))
             return Ok(std::move(fst));
 
-        return Ok(Ng::ProductNode{std::move(children)});
+        return Ok(ProductNode{std::move(children)});
     }
 
     // <calc-value> = <number> | <dimension> | <percentage> |
     //           <calc-keyword> | ( <calc-sum> ) | <math-function>
-    static Res<Ng::Calc> parseCalcValue(Cursor<Css::Sst>& c) {
+    static Res<Calc> parseCalcValue(Cursor<Css::Sst>& c) {
         eatWhitespace(c);
 
         if (c.ended())
@@ -1838,7 +1844,7 @@ struct ValueParser<Ng::TypedCalc<TYPE, WITH_PERCENT>> {
 
     // <calc-keyword> = e | pi | infinity | -infinity | NaN
     static Res<UnitValue> parseCalcKeyword(Cursor<Css::Sst>& c) {
-        Number value = 0.0;
+        f64 value = 0.0;
         if (c.skip(Css::Token::ident("e"))) {
             value = Math::E;
         } else if (c.skip(Css::Token::ident("pi"))) {
@@ -1859,24 +1865,24 @@ struct ValueParser<Ng::TypedCalc<TYPE, WITH_PERCENT>> {
 };
 
 template <Opt<NumericBaseType> TYPE, AcceptsPercent WITH_PERCENT>
-struct ValueSerializer<Ng::TypedCalc<TYPE, WITH_PERCENT>> {
-    static Res<> serialize(Io::TextWriter& w, Ng::TypedCalc<TYPE, WITH_PERCENT> const& value) {
-        return Ng::serializeMathFunction(w, value.calcTree());
+struct ValueSerializer<TypedCalc<TYPE, WITH_PERCENT>> {
+    static Res<> serialize(Io::TextWriter& w, TypedCalc<TYPE, WITH_PERCENT> const& value) {
+        return serializeMathFunction(w, value.calcTree());
     }
 };
 
 // FIXME: Make Pixel and Percentage backed by f32.
 export struct LinearPixelPercentage {
     Pixel px;
-    Percentage percentage;
+    Percent percentage;
 
     void repr(Io::Emit& e) const {
         e("({} + {})", px, percentage);
     }
 };
 
-export Number resolve(Ng::Number const& value) {
-    auto simplified = Ng::simplify(value.calcTree(), NONE, NONE);
+export f64 resolve(Number const& value) {
+    auto simplified = simplify(value.calcTree(), NONE, NONE);
 
     if (auto n = simplified.is<UnitValue>(); n and n->unit() == UnitValue::Unit::NONE) {
         return n->value();
@@ -1885,8 +1891,27 @@ export Number resolve(Ng::Number const& value) {
     }
 }
 
-export Percentage resolve(Ng::Percentage const& value) {
-    auto simplified = Ng::simplify(
+export Rad resolve(Angle const& value) {
+    auto simplified = simplify(
+        value.calcTree(),
+        NONE,
+        Some(NumericBaseType::ANGLE),
+        NONE
+    );
+
+    if (auto n = simplified.is<UnitValue>(); n and n->baseType() == NumericBaseType::ANGLE) {
+        return Rad{n->to(UnitValue::Unit::RAD)};
+    } else {
+        panic("calc didn't simplify to a single value of expected unit");
+    }
+}
+
+export Angle toSpecified(Rad const& angle) {
+    return Angle{UNCHECKED, UnitValue{angle.value(), UnitValue::Unit::RAD}};
+}
+
+export Percent resolve(Percentage const& value) {
+    auto simplified = simplify(
         value.calcTree(),
         NONE,
         Some(NumericBaseType::PERCENT),
@@ -1894,14 +1919,14 @@ export Percentage resolve(Ng::Percentage const& value) {
     );
 
     if (auto n = simplified.is<UnitValue>(); n and n->unit() == UnitValue::Unit::PERCENT) {
-        return Percentage{n->value()};
+        return Percent{n->value()};
     } else {
         panic("calc didn't simplify to a single value of expected unit");
     }
 }
 
-export Number resolve(Ng::Percentage const& value, f64 percentBasis) {
-    auto simplified = Ng::simplify(
+export f64 resolve(Percentage const& value, f64 percentBasis) {
+    auto simplified = simplify(
         value.calcTree(),
         NONE,
         NONE,
@@ -1915,8 +1940,8 @@ export Number resolve(Ng::Percentage const& value, f64 percentBasis) {
     }
 }
 
-export Pixel resolve(Ng::Length const& value, LengthContext auto const& ctx) {
-    auto simplified = Ng::simplify(
+export Pixel resolve(Length const& value, LengthContext auto const& ctx) {
+    auto simplified = simplify(
         value.calcTree(),
         ctx,
         Some(NumericBaseType::LENGTH),
@@ -1930,11 +1955,30 @@ export Pixel resolve(Ng::Length const& value, LengthContext auto const& ctx) {
     }
 }
 
-export using PixelPercentage = Union<Pixel, Percentage, LinearPixelPercentage, Box<Ng::Calc>>;
+export Length toSpecified(Pixel const& px) {
+    return Length{UNCHECKED, UnitValue{px.value(), UnitValue::Unit::PX}};
+}
+
+export Pixel resolve(LengthPercentage const& value, LengthContext auto const& ctx, f64 percentBasis) {
+    auto simplified = simplify(
+        value.calcTree(),
+        ctx,
+        Some(NumericBaseType::LENGTH),
+        Some(percentBasis)
+    );
+
+    if (auto n = simplified.template is<UnitValue>(); n and n->unit() == UnitValue::Unit::PX) {
+        return Pixel{n->value()};
+    } else {
+        panic("calc didn't simplify to a single value of expected unit");
+    }
+}
+
+export using PixelPercentage = Union<Pixel, Percent, LinearPixelPercentage, Box<Calc>>;
 
 // https://drafts.csswg.org/css-values-4/#calc-computed-value
-export PixelPercentage resolve(Ng::LengthPercentage const& value, LengthContext auto const& ctx) {
-    auto simplified = Ng::simplify(
+export PixelPercentage resolve(LengthPercentage const& value, LengthContext auto const& ctx) {
+    auto simplified = simplify(
         value.calcTree(),
         ctx,
         Some(NumericBaseType::LENGTH),
@@ -1947,34 +1991,34 @@ export PixelPercentage resolve(Ng::LengthPercentage const& value, LengthContext 
         }
 
         if (numeric.unit() == UnitValue::Unit::PERCENT) {
-            return Percentage{numeric.value()};
+            return Percent{numeric.value()};
         }
     }
 
     // NOTE: Children are sorted by simplification, so the percentage comes first.
-    if (auto sum = simplified.template is<Ng::SumNode>(); sum and sum->children.len() == 2) {
+    if (auto sum = simplified.template is<SumNode>(); sum and sum->children.len() == 2) {
         auto maybePercent = sum->children[0].template is<UnitValue>();
         auto maybePx = sum->children[1].template is<UnitValue>();
         if (maybePercent and maybePx and maybePercent->unit() == UnitValue::Unit::PERCENT and maybePx->unit() == UnitValue::Unit::PX) {
-            return LinearPixelPercentage{Pixel{maybePx->value()}, Percentage{maybePercent->value()}};
+            return LinearPixelPercentage{Pixel{maybePx->value()}, Percent{maybePercent->value()}};
         }
     }
 
-    return makeBox<Ng::Calc>(std::move(simplified));
+    return makeBox<Calc>(std::move(simplified));
 }
 
-export Ng::LengthPercentage toSpecified(PixelPercentage const& value) {
+export LengthPercentage toSpecified(PixelPercentage const& value) {
     return value.visit(
-        [](Pixel const& px) -> Ng::LengthPercentage {
-            return Ng::LengthPercentage{UNCHECKED, UnitValue{px.value(), UnitValue::Unit::PX}};
+        [](Pixel const& px) -> LengthPercentage {
+            return LengthPercentage{UNCHECKED, UnitValue{px.value(), UnitValue::Unit::PX}};
         },
-        [](Percentage const& percentage) -> Ng::LengthPercentage {
-            return Ng::LengthPercentage{UNCHECKED, UnitValue{percentage.value(), UnitValue::Unit::PERCENT}};
+        [](Percent const& percentage) -> LengthPercentage {
+            return LengthPercentage{UNCHECKED, UnitValue{percentage.value(), UnitValue::Unit::PERCENT}};
         },
-        [](LinearPixelPercentage const& lin) -> Ng::LengthPercentage {
-            return Ng::LengthPercentage{
+        [](LinearPixelPercentage const& lin) -> LengthPercentage {
+            return LengthPercentage{
                 UNCHECKED,
-                Ng::SumNode{
+                SumNode{
                     .children = {
                         UnitValue{lin.percentage.value(), UnitValue::Unit::PERCENT},
                         UnitValue{lin.px.value(), UnitValue::Unit::PX},
@@ -1982,8 +2026,8 @@ export Ng::LengthPercentage toSpecified(PixelPercentage const& value) {
                 }
             };
         },
-        [](Box<Ng::Calc> const& calc) -> Ng::LengthPercentage {
-            return Ng::LengthPercentage{UNCHECKED, *calc};
+        [](Box<Calc> const& calc) -> LengthPercentage {
+            return LengthPercentage{UNCHECKED, *calc};
         }
     );
 }
@@ -1994,14 +2038,14 @@ export Au resolve(PixelPercentage const& value, Au relative) {
         [](Pixel const& px) {
             return Au::fromFloatNearest(px.value());
         },
-        [&](Percentage const& percentage) {
+        [&](Percent const& percentage) {
             return Au::fromFloatNearest(relative.cast<f32>() * (percentage.value() / 100.));
         },
         [&](LinearPixelPercentage const& lin) {
             return Au::fromFloatNearest(lin.px.value() + relative.cast<f32>() * (lin.percentage.value() / 100.));
         },
-        [&](Box<Ng::Calc> const& calc) {
-            auto simplified = Ng::simplify(
+        [&](Box<Calc> const& calc) {
+            auto simplified = simplify(
                 *calc,
                 NONE,
                 Some(NumericBaseType::LENGTH),
@@ -2022,7 +2066,7 @@ export Opt<Au> resolve(PixelPercentage const& value, Opt<Au> relative) {
         [](Pixel const& px) {
             return Some(Au::fromFloatNearest(px.value()));
         },
-        [&](Percentage const& percentage) -> Opt<Au> {
+        [&](Percent const& percentage) -> Opt<Au> {
             if (auto const [r] = relative)
                 return Some(Au::fromFloatNearest(r.cast<f32>() * (percentage.value() / 100.)));
 
@@ -2034,8 +2078,8 @@ export Opt<Au> resolve(PixelPercentage const& value, Opt<Au> relative) {
 
             return NONE;
         },
-        [&](Box<Ng::Calc> const& calc) -> Opt<Au> {
-            auto simplified = Ng::simplify(
+        [&](Box<Calc> const& calc) -> Opt<Au> {
+            auto simplified = simplify(
                 *calc,
                 NONE,
                 Some(NumericBaseType::LENGTH),

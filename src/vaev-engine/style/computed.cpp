@@ -20,58 +20,55 @@ struct FontProps {
 };
 
 struct TransformProps {
-    Transform transform = Keywords::NONE;
-    TransformOrigin origin = {
-        .xOffset = Calc<PercentOr<Length>>{Percent{0}},
-        .yOffset = Calc<PercentOr<Length>>{Percent{0}},
-    };
+    ComputedTransform transform = Keywords::NONE;
+    ComputedPosition origin = {Percent{0}, Percent{0}};
     TransformBox box = Keywords::BORDER_BOX;
 
     bool has() const {
-        return transform != Keywords::NONE;
+        return not transform.is<Keywords::None>();
     }
 };
 
 export struct TableProps {
     CaptionSide captionSide = CaptionSide::TOP;
-    BorderSpacing spacing = {0_au, 0_au};
+    ComputedBorderSpacing spacing;
     BorderCollapse collapse = BorderCollapse::SEPARATE;
 };
 
 export struct SvgProps {
-    PercentOr<Length> x = Length{0_au};
-    PercentOr<Length> y = Length{0_au};
-    PercentOr<Length> cx = Length{0_au};
-    PercentOr<Length> cy = Length{0_au};
-    PercentOr<Length> r = Length{0_au};
+    PixelPercentage x = Pixel{0};
+    PixelPercentage y = Pixel{0};
+    PixelPercentage cx = Pixel{0};
+    PixelPercentage cy = Pixel{0};
+    PixelPercentage r = Pixel{0};
 
     Union<String, None> d = NONE;
     Opt<SvgViewBox> viewBox = NONE;
 };
 
 export struct SvgPaintProps {
-    Number fillOpacity = 1;
-    PercentOr<Length> strokeWidth = Length{1_au};
-    Number strokeOpacity = 1;
+    f64 fillOpacity = 1;
+    PixelPercentage strokeWidth = Pixel{1};
+    f64 strokeOpacity = 1;
     SvgPaint fill = Some(Gfx::BLACK);
     SvgPaint stroke = NONE;
 };
 
-using ClipProps = Opt<BasicShape>;
+using ClipProps = Opt<ComputedBasicShape>;
 
 export struct Inherited {};
 
 // https://www.w3.org/TR/css-cascade/#computed
 export struct ComputedValues {
-    Cow<Gaps> gaps;
+    Cow<ComputedGaps> gaps;
     Cow<BackgroundProps> backgrounds;
     Cow<BorderProps> borders;
-    Cow<Margin> margin = Margin(Calc<PercentOr<Length>>(Length())); // FIXME
+    Cow<ComputedMargins> margin = ComputedMargins(Keywords::AUTO);
     Cow<OutlineProps> outline;
-    Cow<Padding> padding = Padding(Length{}); // FIXME
+    Cow<ComputedPaddings> padding = ComputedPaddings(Pixel{});
     Cow<SizingProps> sizing;
     Cow<InlineProps> inline_;
-    Cow<BoxInsets> insets = BoxInsets(Keywords::AUTO); // FIXME
+    Cow<ComputedBoxInsets> insets = ComputedBoxInsets(Keywords::AUTO);
     Cow<ClipProps> clip;
     Cow<TransformProps> transform;
     Cow<TableProps> table;

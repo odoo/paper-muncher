@@ -8,7 +8,6 @@ import Karm.Core;
 
 import :css;
 import :values.base;
-import :values.calc;
 import :values.calc2;
 import :values.keywords;
 import :values.length;
@@ -25,8 +24,8 @@ export using BoxSizing = Union<Keywords::ContentBox, Keywords::BorderBox>;
 
 // https://www.w3.org/TR/css-sizing-3/#propdef-width
 // https://www.w3.org/TR/css-sizing-3/#propdef-height
-export using Size = Union<Keywords::Auto, Ng::LengthPercentage, Keywords::Stretch, Keywords::MinContent, Keywords::MaxContent, Keywords::FitContent>;
-export using MaxSize = Union<Keywords::None, Ng::LengthPercentage, Keywords::Stretch, Keywords::MinContent, Keywords::MaxContent, Keywords::FitContent>;
+export using Size = Union<Keywords::Auto, LengthPercentage, Keywords::Stretch, Keywords::MinContent, Keywords::MaxContent, Keywords::FitContent>;
+export using MaxSize = Union<Keywords::None, LengthPercentage, Keywords::Stretch, Keywords::MinContent, Keywords::MaxContent, Keywords::FitContent>;
 
 export using ComputedSize = Union<Keywords::Auto, PixelPercentage, Keywords::Stretch, Keywords::MinContent, Keywords::MaxContent, Keywords::FitContent>;
 export using ComputedMaxSize = Union<Keywords::None, PixelPercentage, Keywords::Stretch, Keywords::MinContent, Keywords::MaxContent, Keywords::FitContent>;

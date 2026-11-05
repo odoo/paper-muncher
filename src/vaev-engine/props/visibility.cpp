@@ -62,35 +62,42 @@ export struct VisibilityProperty : Property {
 
 // https://www.w3.org/TR/css-color-4/#propdef-opacity
 export struct OpacityProperty : Property {
-    using Value = Union<Ng::Number, Ng::Percentage>;
+    using Value = Union<Number, Percentage>;
 
     struct Registration : Property::Registration {
         Registration() : Property::Registration(Properties::OPACITY) {}
 
         Rc<Property> initial() const override {
-            return makeRc<OpacityProperty>(self(), Ng::Number::fromCanonical(1));
+            return makeRc<OpacityProperty>(self(), Number::fromCanonical(1));
         }
 
         Rc<Property> load(ComputedValues const& c) const override {
-            return makeRc<OpacityProperty>(self(), Ng::Number::fromCanonical(c.opacity));
+            return makeRc<OpacityProperty>(self(), Number::fromCanonical(c.opacity));
         }
 
         Res<Rc<Property>> parse(Cursor<Css::Sst>& c) const override {
+            // NOTE: A literal <percentage> is equivalent to the <number> it maps to,
+            //       only math functions keep their percentages.
+            if (not c.ended() and c.peek() == Css::Token::PERCENTAGE) {
+                auto percentage = try$(parseValue<Percentage>(c));
+                return Ok(makeRc<OpacityProperty>(self(), Number::fromCanonical(resolve(percentage).value() / 100.)));
+            }
+
             return Ok(makeRc<OpacityProperty>(self(), try$(parseValue<Value>(c))));
         }
     };
 
-    Union<Ng::Number, Ng::Percentage> _value;
+    Union<Number, Percentage> _value;
 
     OpacityProperty(Rc<Property::Registration> registration, Value const& value)
         : Property(registration), _value(std::move(value)) {}
 
     void apply([[maybe_unused]] ComputedValues const& parent, ComputedValues& c, [[maybe_unused]] ComputationContext const& cx) const override {
         auto specifiedNumber = _value.visit(
-            [](Ng::Number const& n) {
+            [](Number const& n) {
                 return resolve(n);
             },
-            [](Ng::Percentage const& percent) {
+            [](Percentage const& percent) {
                 // Percentages:	map to the range [0,1]
                 return resolve(percent, 1);
             }
@@ -122,7 +129,7 @@ export struct ClipPathProperty : Property {
 
         Rc<Property> load(ComputedValues const& c) const override {
             if (auto const& [clip] = *c.clip)
-                return makeRc<ClipPathProperty>(self(), clip);
+                return makeRc<ClipPathProperty>(self(), toSpecified(clip));
             return makeRc<ClipPathProperty>(self(), Keywords::NONE);
         }
 
@@ -138,7 +145,7 @@ export struct ClipPathProperty : Property {
 
     void apply([[maybe_unused]] ComputedValues const& parent, ComputedValues& c, [[maybe_unused]] ComputationContext const& cx) const override {
         if (auto clipShape = _value.is<BasicShape>())
-            c.clip.cow() = Some(*clipShape);
+            c.clip.cow() = Some(resolve(*clipShape, cx));
         else
             c.clip.cow() = NONE;
     }

@@ -8,39 +8,36 @@ import Karm.Math;
 
 import :css;
 import :values.base;
-import :values.calc;
+import :values.calc2;
 import :values.keywords;
 import :values.length;
+import :values.unitValue;
 
-using namespace Karm::Math::Literals;
+using namespace Vaev::Literals;
 
 namespace Vaev {
 
 // MARK: Line Width -------------------------------------------------------------
 // https://drafts.csswg.org/css-backgrounds/#typedef-line-width
 
-export constexpr Au THIN_VALUE = 1_au;
-export constexpr Au MEDIUM_VALUE = 3_au;
-export constexpr Au THICK_VALUE = 5_au;
-
 export using LineWidth = Union<
     Keywords::Thin,
     Keywords::Medium,
     Keywords::Thick,
-    Calc<Length>>;
+    Length>;
 
-export Au resolve(LineWidth const& value, auto const& ctx) {
+export Pixel resolve(LineWidth const& value, LengthContext auto const& ctx) {
     return value.visit(
         [](Keywords::Thin const&) {
-            return THIN_VALUE;
+            return 1_px;
         },
         [](Keywords::Medium const&) {
-            return MEDIUM_VALUE;
+            return 3_px;
         },
         [](Keywords::Thick const&) {
-            return THICK_VALUE;
+            return 5_px;
         },
-        [&](auto const& length) {
+        [&](Length const& length) {
             return resolve(length, ctx);
         }
     );
@@ -65,7 +62,7 @@ struct ValueParser<LineWidth> {
             return Ok(Keywords::THICK);
         }
 
-        return Ok(try$(parseValue<Calc<Length>>(c)));
+        return Ok(try$(parseValue<Length>(c)));
     }
 };
 

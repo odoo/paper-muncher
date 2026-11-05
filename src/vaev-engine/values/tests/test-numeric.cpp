@@ -8,7 +8,7 @@ import Karm.Math;
 using namespace Karm;
 using namespace Karm::Literals;
 
-namespace Vaev::Ng::Tests {
+namespace Vaev::Tests {
 
 // MARK: Helpers ---------------------------------------------------------------
 
@@ -79,12 +79,12 @@ static Res<Opt<f64>> _usedOpt(Str input, Opt<f64> basis) {
 
 // Computed <number>.
 static Res<f64> _num(Str input) {
-    return Ok(static_cast<f64>(resolve(try$(_parse<Ng::Number>(input)))));
+    return Ok(static_cast<f64>(resolve(try$(_parse<Number>(input)))));
 }
 
 // Computed <percentage>.
 static Res<f64> _pct(Str input) {
-    return Ok(resolve(try$(_parse<Ng::Percentage>(input))).value());
+    return Ok(resolve(try$(_parse<Percentage>(input))).value());
 }
 
 static bool _near(f64 a, f64 b) {
@@ -241,8 +241,8 @@ test$("calc-sign-signed-zero-and-nan") {
 }
 
 test$("calc-sign-is-number") {
-    assert$(_valid<Ng::Number>("sign(1px)"));
-    assert$(_valid<Ng::Number>("sign(1deg)"));
+    assert$(_valid<Number>("sign(1px)"));
+    assert$(_valid<Number>("sign(1deg)"));
     assertNot$(_valid<Length>("sign(1px)"));
     return Ok();
 }
@@ -555,19 +555,19 @@ test$("calc-number-context") {
     assert$(_near(try$(_num("calc(1px / 1px)")), 1));
     assert$(_near(try$(_num("calc(1in / 1px)")), 96));
     assert$(_near(try$(_num("calc(1e2)")), 100));
-    assertNot$(_valid<Ng::Number>("calc(50%)"));
-    assertNot$(_valid<Ng::Number>("calc(1px)"));
+    assertNot$(_valid<Number>("calc(50%)"));
+    assertNot$(_valid<Number>("calc(1px)"));
     return Ok();
 }
 
 test$("calc-percentage-context") {
-    assert$(_valid<Ng::Percentage>("calc(50%)"));
+    assert$(_valid<Percentage>("calc(50%)"));
     assertEq$(try$(_pct("calc(50% * 2)")), 100.0);
     assertEq$(try$(_pct("calc(50% + 10%)")), 60.0);
     assertEq$(try$(_pct("min(20%, 10%)")), 10.0);
-    assertNot$(_valid<Ng::Percentage>("calc(1px)"));
-    assertNot$(_valid<Ng::Percentage>("calc(1% + 1px)"));
-    assertNot$(_valid<Ng::Percentage>("calc(10% * 10%)"));
+    assertNot$(_valid<Percentage>("calc(1px)"));
+    assertNot$(_valid<Percentage>("calc(1% + 1px)"));
+    assertNot$(_valid<Percentage>("calc(10% * 10%)"));
     return Ok();
 }
 
@@ -664,11 +664,11 @@ test$("calc-parse-rejects-bad-arity") {
     assertNot$(_valid<Length>("calc(1px * pow(2))"));
     assertNot$(_valid<Length>("calc(1px * sqrt())"));
     assertNot$(_valid<Length>("calc(1px * atan2(1))"));
-    assertNot$(_valid<Ng::Number>("log(8,)"));
-    assertNot$(_valid<Ng::Number>("abs()"));
-    assertNot$(_valid<Ng::Number>("abs(1, 2)"));
-    assertNot$(_valid<Ng::Number>("sign()"));
-    assertNot$(_valid<Ng::Number>("sign(1, 2)"));
+    assertNot$(_valid<Number>("log(8,)"));
+    assertNot$(_valid<Number>("abs()"));
+    assertNot$(_valid<Number>("abs(1, 2)"));
+    assertNot$(_valid<Number>("sign()"));
+    assertNot$(_valid<Number>("sign(1, 2)"));
     return Ok();
 }
 
@@ -682,8 +682,8 @@ test$("calc-parse-rejects-junk") {
     assertNot$(_valid<Length>("min(1px 2px)"));
     assertNot$(_valid<Length>("clamp(none none, 1px, 2px)"));
     assertNot$(_valid<Length>("clamp(none, 1px, none none)"));
-    assertNot$(_valid<Ng::Number>("log(8 2)"));
-    assertNot$(_valid<Ng::Number>("atan2(1 2)"));
+    assertNot$(_valid<Number>("log(8 2)"));
+    assertNot$(_valid<Number>("atan2(1 2)"));
     return Ok();
 }
 
@@ -716,7 +716,7 @@ test$("calc-parse-round-invalid") {
              "up 1, 2"s, "up up, 1, 2"s, "up + 1, 2"s, "1, up, 2"s, "up"s, "up, "s,
          }) {
         auto input = Io::format("round({})", args);
-        if (_valid<Ng::Number>(input.str()))
+        if (_valid<Number>(input.str()))
             return Error::invalidData("accepted invalid round()");
     }
     assertNot$(_valid<LengthPercentage>("round(0px)"));
@@ -733,7 +733,7 @@ test$("calc-parse-mod-rem-invalid") {
                  "1 2"s, "1, , 2"s, "1"s, "1, 2, 3"s, "0px"s, "1, 1%"s, "1, 0px"s, "1, 0deg"s,
              }) {
             auto input = Io::format("{}({})", fn, args);
-            if (_valid<Ng::Number>(input.str()))
+            if (_valid<Number>(input.str()))
                 return Error::invalidData("accepted invalid mod()/rem()");
         }
         assertNot$(_valid<LengthPercentage>(Io::format("{}(0px, 0s)", fn).str()));
@@ -752,4 +752,4 @@ test$("calc-parse-dimension-with-exponent", XFAIL) {
     return Ok();
 }
 
-} // namespace Vaev::Ng::Tests
+} // namespace Vaev::Tests

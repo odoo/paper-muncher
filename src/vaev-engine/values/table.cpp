@@ -9,8 +9,10 @@ import Karm.Math;
 
 import :css;
 import :values.base;
+import :values.calc2;
 import :values.length;
 import :values.percent;
+import :values.unitValue;
 
 using namespace Karm;
 using namespace Karm::Math::Literals;
@@ -106,6 +108,23 @@ export struct BorderSpacing {
     }
 };
 
+export struct ComputedBorderSpacing {
+    Pixel horizontal = Pixel{0};
+    Pixel vertical = Pixel{0};
+
+    void repr(Io::Emit& e) const {
+        e("({}, {})", horizontal, vertical);
+    }
+};
+
+export ComputedBorderSpacing resolve(BorderSpacing const& value, LengthContext auto const& ctx) {
+    return {resolve(value.horizontal, ctx), resolve(value.vertical, ctx)};
+}
+
+export BorderSpacing toSpecified(ComputedBorderSpacing const& value) {
+    return {toSpecified(value.horizontal), toSpecified(value.vertical)};
+}
+
 export template <>
 struct ValueParser<BorderSpacing> {
     static Res<BorderSpacing> parse(Cursor<Css::Sst>& c) {
@@ -135,13 +154,20 @@ struct ValueSerializer<BorderSpacing> {
     static Res<> serialize(Io::TextWriter& w, BorderSpacing const& value) {
         // If component values can be omitted or replaced with a shorter representation
         // without changing the meaning of the value, omit/replace them.
-        try$(serializeValue(w, value.horizontal));
+        Io::StringWriter horizontal;
+        try$(serializeValue(horizontal, value.horizontal));
+        Io::StringWriter vertical;
+        try$(serializeValue(vertical, value.vertical));
 
-        if (value.horizontal == value.vertical)
+        auto h = horizontal.take();
+        auto v = vertical.take();
+        try$(w.writeStr(h.str()));
+
+        if (h == v)
             return Ok();
 
         try$(w.writeRune(' '));
-        try$(serializeValue(w, value.vertical));
+        try$(w.writeStr(v.str()));
 
         return Ok();
     }

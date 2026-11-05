@@ -3,14 +3,18 @@ export module Vaev.Engine:values.outline;
 import Karm.Gfx;
 import Karm.Math;
 
+import :values.calc2;
 import :values.color;
+import :values.length;
 import :values.lineWidth;
+
+using namespace Vaev::Literals;
 
 namespace Vaev {
 
 export struct SpecifiedOutline {
     LineWidth width = Keywords::MEDIUM;
-    Calc<Length> offset = 0_au;
+    Length offset = Length::fromCanonical(0);
     Union<Keywords::Auto, Gfx::BorderStyle> style = Gfx::BorderStyle::NONE;
     Union<Keywords::Auto, Color> color = Keywords::AUTO;
 
@@ -21,15 +25,15 @@ export struct SpecifiedOutline {
 
 // https://drafts.csswg.org/css-ui/#outline
 export struct OutlineProps {
-    LineWidth width = Keywords::MEDIUM;
-    Calc<Length> offset = 0_au;
+    Pixel width = 3_px;
+    Pixel offset = Pixel{0};
     Union<Keywords::Auto, Gfx::BorderStyle> style = Gfx::BorderStyle::NONE;
     Color color = Gfx::BLUE500;
 
     operator SpecifiedOutline() const {
         return {
-            width,
-            offset,
+            toSpecified(width),
+            toSpecified(offset),
             style,
             Color{color}
         };

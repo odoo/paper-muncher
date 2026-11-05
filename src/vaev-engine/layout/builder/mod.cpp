@@ -74,22 +74,19 @@ static Gfx::ProseStyle _proseStyleFromStyle(Style::ComputedValues const& style) 
 }
 
 static Gfx::SpanStyle _spanStyleFromStyle(Style::ComputedValues const& style) {
-    Resolver resolver{};
-
     // FIXME: Assert bounds at parse time to respect inherits.
     auto usedLineHeight = style.inline_->lineHeight.visit(
         [](Keywords::Normal) -> Opt<Au> {
             return NONE;
         },
-        [&](Number number) -> Opt<Au> {
+        [&](f64 number) -> Opt<Au> {
             if (number < 0)
                 return NONE;
 
             return Some(style.font->size * number);
         },
-        [&](Calc<PercentOr<Length>> const& length) -> Opt<Au> {
-            auto oneEm = resolver.resolve(Length::fromEm(1));
-            auto result = resolver.resolve(length, oneEm);
+        [&](Pixel const& length) -> Opt<Au> {
+            auto result = Au::fromFloatNearest(length.value());
 
             if (result < 0_au)
                 return NONE;
@@ -105,8 +102,8 @@ static Gfx::SpanStyle _spanStyleFromStyle(Style::ComputedValues const& style) {
         },
         .color = Some(style.color),
         // FIXME: Should be done during prose layout
-        .marginLeft = resolver.resolve(style.margin->start, 0_au),
-        .marginRight = resolver.resolve(style.margin->end, 0_au),
+        .marginLeft = Layout::resolve(style.margin->start, 0_au),
+        .marginRight = Layout::resolve(style.margin->end, 0_au),
         .lineHeight = usedLineHeight,
         .wordwrap = _allowsWrap(style.text->whiteSpace),
         .collapsibleWhitespace = _collapsesWhitespace(style.text->whiteSpace),

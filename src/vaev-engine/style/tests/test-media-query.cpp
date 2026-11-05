@@ -17,7 +17,7 @@ static Media const TEST_MEDIA = {
     .aspectRatio = 16.0 / 9.0,
     .orientation = Print::Orientation::LANDSCAPE,
 
-    .resolution = Resolution::fromDpi(96),
+    .resolution = PureResolution::fromDpi(96),
     .scan = Scan::PROGRESSIVE,
     .grid = false,
     .update = Update::NONE,

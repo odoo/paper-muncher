@@ -31,7 +31,7 @@ export struct ColumnWidthProperty : Property {
                         return Keywords::AUTO;
                     },
                     [](Au width) -> ColumnWidth {
-                        return Calc<Length>{width};
+                        return toSpecified(Pixel{width.cast<f64>()});
                     }
                 )
             );
@@ -54,8 +54,8 @@ export struct ColumnWidthProperty : Property {
             [](Keywords::Auto) -> Union<Keywords::Auto, Au> {
                 return Keywords::AUTO;
             },
-            [&](Calc<Length> const& width) -> Union<Keywords::Auto, Au> {
-                return resolve(width, cx);
+            [&](Length const& width) -> Union<Keywords::Auto, Au> {
+                return Au::fromFloatNearest(resolve(width, cx).value());
             }
         );
     }
@@ -87,7 +87,7 @@ export struct ColumnHeightProperty : Property {
                         return Keywords::AUTO;
                     },
                     [](Au height) -> ColumnHeight {
-                        return Calc<Length>{height};
+                        return toSpecified(Pixel{height.cast<f64>()});
                     }
                 )
             );
@@ -110,8 +110,8 @@ export struct ColumnHeightProperty : Property {
             [](Keywords::Auto) -> Union<Keywords::Auto, Au> {
                 return Keywords::AUTO;
             },
-            [&](Calc<Length> const& height) -> Union<Keywords::Auto, Au> {
-                return resolve(height, cx);
+            [&](Length const& height) -> Union<Keywords::Auto, Au> {
+                return Au::fromFloatNearest(resolve(height, cx).value());
             }
         );
     }
@@ -178,7 +178,7 @@ export struct ColumnsProperty : Property {
                     return Keywords::AUTO;
                 },
                 [](Au width) -> ColumnWidth {
-                    return Calc<Length>{width};
+                    return toSpecified(Pixel{width.cast<f64>()});
                 }
             );
 
@@ -187,7 +187,7 @@ export struct ColumnsProperty : Property {
                     return Keywords::AUTO;
                 },
                 [](Au height) -> ColumnHeight {
-                    return Calc<Length>{height};
+                    return toSpecified(Pixel{height.cast<f64>()});
                 }
             );
 

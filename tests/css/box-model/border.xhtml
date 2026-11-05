@@ -35,4 +35,152 @@
 
     </test>
 
+<test name="border-radii-elliptical">
+    <container>
+        <html lang="en" xmlns="http://www.w3.org/1999/xhtml">
+
+        <head>
+            <style>
+                * {
+                    margin: 0;
+                }
+
+                body {
+                    font-size: 10px;
+                }
+
+                div {
+                    width: 100px;
+                    height: 100px;
+                    background-color: green;
+                }
+            </style>
+        </head>
+        <body>
+        <section>
+            <slot/>
+        </section>
+        </body>
+
+        </html>
+    </container>
+
+    <rendering>
+        <div style="border-top-left-radius: 50px 20px; border-bottom-right-radius: 50px 20px"></div>
+    </rendering>
+
+    <rendering>
+        <div style="border-radius: 50px 0 50px 0 / 20px 0 20px 0"></div>
+    </rendering>
+
+    <rendering>
+        <div style="border-radius: 50px / 20px; border-top-right-radius: 0; border-bottom-left-radius: 0"></div>
+    </rendering>
+
+    <rendering>
+        <div style="border-top-left-radius: 5em 2em; border-bottom-right-radius: 5em 2em"></div>
+    </rendering>
+
+    <error>
+        <div style="border-top-left-radius: 20px 50px; border-bottom-right-radius: 20px 50px"></div>
+    </error>
+
+</test>
+
+<test name="border-radii-three-values">
+    <container>
+        <html lang="en" xmlns="http://www.w3.org/1999/xhtml">
+
+        <head>
+            <style>
+                * {
+                    margin: 0;
+                }
+
+                body {
+                    font-size: 10px;
+                }
+
+                div {
+                    width: 100px;
+                    height: 100px;
+                    background-color: green;
+                }
+            </style>
+        </head>
+        <body>
+        <section>
+            <slot/>
+        </section>
+        </body>
+
+        </html>
+    </container>
+
+    <rendering>
+        <div style="border-radius: 10px 30px 50px 30px"></div>
+    </rendering>
+
+    <rendering>
+        <div style="border-radius: 10px 30px 50px"></div>
+    </rendering>
+
+    <rendering>
+        <div style="border-radius: 1em 3em 5em"></div>
+    </rendering>
+
+    <error>
+        <div style="border-radius: 10px 30px 50px 0"></div>
+    </error>
+
+</test>
+
+<test name="border-radii-calc">
+    <container>
+        <html lang="en" xmlns="http://www.w3.org/1999/xhtml">
+
+        <head>
+            <style>
+                * {
+                    margin: 0;
+                }
+
+                body {
+                    font-size: 10px;
+                }
+
+                div {
+                    width: 100px;
+                    height: 100px;
+                    background-color: green;
+                }
+            </style>
+        </head>
+        <body>
+        <section>
+            <slot/>
+        </section>
+        </body>
+
+        </html>
+    </container>
+
+    <rendering>
+        <div style="border-radius: 15px"></div>
+    </rendering>
+
+    <rendering>
+        <div style="border-radius: calc(10% + 5px)"></div>
+    </rendering>
+
+    <rendering>
+        <div style="border-radius: calc(1em + 5%)"></div>
+    </rendering>
+
+    <error>
+        <div style="border-radius: 10px"></div>
+    </error>
+
+</test>
+
 </tests>

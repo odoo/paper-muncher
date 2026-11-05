@@ -2,7 +2,7 @@ export module Vaev.Engine:values.multicol;
 
 import Karm.Core;
 
-import :values.calc;
+import :values.calc2;
 import :values.keywords;
 
 using namespace Karm;
@@ -13,13 +13,13 @@ namespace Vaev {
 // FIXME: Enforce the [0,∞] range.
 export using ColumnWidth = Union<
     Keywords::Auto,
-    Calc<Length>>;
+    Length>;
 
 // https://drafts.csswg.org/css-multicol-2/#ch
 // FIXME: Enforce the [0,∞] range.
 export using ColumnHeight = Union<
     Keywords::Auto,
-    Calc<Length>>;
+    Length>;
 
 // https://drafts.csswg.org/css-multicol-2/#cc
 // FIXME: Enforce the [1,∞] range.

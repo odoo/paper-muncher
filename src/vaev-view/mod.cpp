@@ -86,7 +86,7 @@ struct Viewport : Ui::View<Viewport> {
 
         auto prefs = Style::ViewerPrefs::forRender();
         prefs.colorScheme = _props.prefersColorScheme.unwrapOr(Ui::darkMode ? ColorScheme::DARK : ColorScheme::LIGHT);
-        _webview->changeArea(Style::DisplayArea::forRender(bound.size(), Resolution::fromDppx(_props.scale)));
+        _webview->changeArea(Style::DisplayArea::forRender(bound.size(), PureResolution::fromDppx(_props.scale)));
         _webview->changePrefs(prefs);
 
         _listener.updateContentBound(_webview->scrollableOverflow());

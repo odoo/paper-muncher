@@ -25,7 +25,7 @@ export struct OutlineWidthProperty : Property {
         }
 
         Rc<Property> load(ComputedValues const& c) const override {
-            return makeRc<OutlineWidthProperty>(self(), c.outline->width);
+            return makeRc<OutlineWidthProperty>(self(), toSpecified(c.outline->width));
         }
 
         Res<Rc<Property>> parse(Cursor<Css::Sst>& c) const override {
@@ -39,7 +39,7 @@ export struct OutlineWidthProperty : Property {
         : Property(registration), _value(value) {}
 
     void apply([[maybe_unused]] ComputedValues const& parent, ComputedValues& c, [[maybe_unused]] ComputationContext const& cx) const override {
-        c.outline.cow().width = _value;
+        c.outline.cow().width = resolve(_value, cx);
     }
 
     Res<> serialize(Io::TextWriter& w) const override {
@@ -150,25 +150,25 @@ export struct OutlineOffsetProperty : Property {
         Registration() : Property::Registration(Properties::OUTLINE_OFFSET) {}
 
         Rc<Property> initial() const override {
-            return makeRc<OutlineOffsetProperty>(self(), Calc<Length>{0_au});
+            return makeRc<OutlineOffsetProperty>(self(), Length::fromCanonical(0));
         }
 
         Rc<Property> load(ComputedValues const& c) const override {
-            return makeRc<OutlineOffsetProperty>(self(), c.outline->offset);
+            return makeRc<OutlineOffsetProperty>(self(), toSpecified(c.outline->offset));
         }
 
         Res<Rc<Property>> parse(Cursor<Css::Sst>& c) const override {
-            return Ok(makeRc<OutlineOffsetProperty>(self(), try$(parseValue<Calc<Length>>(c))));
+            return Ok(makeRc<OutlineOffsetProperty>(self(), try$(parseValue<Length>(c))));
         }
     };
 
-    Calc<Length> _value;
+    Length _value;
 
-    OutlineOffsetProperty(Rc<Property::Registration> registration, Calc<Length> value)
+    OutlineOffsetProperty(Rc<Property::Registration> registration, Length value)
         : Property(registration), _value(value) {}
 
     void apply([[maybe_unused]] ComputedValues const& parent, ComputedValues& c, [[maybe_unused]] ComputationContext const& cx) const override {
-        c.outline.cow().offset = _value;
+        c.outline.cow().offset = resolve(_value, cx);
     }
 
     Res<> serialize(Io::TextWriter& w) const override {
@@ -195,23 +195,35 @@ export struct OutlineProperty : Property {
         }
 
         Res<Rc<Property>> parse(Cursor<Css::Sst>& c) const override {
+            // https://drafts.csswg.org/css-ui/#outline
+            // [ <'outline-width'> || <'outline-style'> || <'outline-color'> ], each at most once.
             SpecifiedOutline value;
+            bool widthSet = false;
             bool styleSet = false;
+            bool colorSet = false;
             while (not c.ended()) {
-                auto width = parseValue<Calc<Length>>(c);
+                auto width = parseValue<LineWidth>(c);
                 if (width) {
+                    if (widthSet)
+                        return Error::invalidData("duplicated outline width");
                     value.width = width.expect();
+                    widthSet = true;
                     continue;
                 }
 
                 auto color = parseValue<Color>(c);
                 if (color) {
+                    if (colorSet)
+                        return Error::invalidData("duplicated outline color");
                     value.color = color.expect();
+                    colorSet = true;
                     continue;
                 }
 
                 auto style = parseValue<Gfx::BorderStyle>(c);
                 if (style) {
+                    if (styleSet)
+                        return Error::invalidData("duplicated outline style");
                     value.style = style.expect();
                     styleSet = true;
                     continue;

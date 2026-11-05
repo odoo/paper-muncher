@@ -25,7 +25,7 @@ export struct FlexBasisProperty : Property {
         }
 
         Rc<Property> load(ComputedValues const& c) const override {
-            return makeRc<FlexBasisProperty>(self(), c.flex->basis);
+            return makeRc<FlexBasisProperty>(self(), toSpecified(c.flex->basis));
         }
 
         Res<Rc<Property>> parse(Cursor<Css::Sst>& c) const override {
@@ -39,7 +39,7 @@ export struct FlexBasisProperty : Property {
         : Property(registration), _value(value) {}
 
     void apply([[maybe_unused]] ComputedValues const& parent, ComputedValues& c, [[maybe_unused]] ComputationContext const& cx) const override {
-        c.flex.cow().basis = _value;
+        c.flex.cow().basis = resolve(_value, cx);
     }
 
     Res<> serialize(Io::TextWriter& w) const override {
@@ -93,7 +93,7 @@ export struct FlexGrowProperty : Property {
         Registration() : Property::Registration(Properties::FLEX_GROW) {}
 
         Rc<Property> initial() const override {
-            return makeRc<FlexGrowProperty>(self(), Number{0});
+            return makeRc<FlexGrowProperty>(self(), f64{0});
         }
 
         Rc<Property> load(ComputedValues const& c) const override {
@@ -101,13 +101,13 @@ export struct FlexGrowProperty : Property {
         }
 
         Res<Rc<Property>> parse(Cursor<Css::Sst>& c) const override {
-            return Ok(makeRc<FlexGrowProperty>(self(), try$(parseValue<Number>(c))));
+            return Ok(makeRc<FlexGrowProperty>(self(), try$(parseValue<f64>(c))));
         }
     };
 
-    Number _value;
+    f64 _value;
 
-    FlexGrowProperty(Rc<Property::Registration> registration, Number value)
+    FlexGrowProperty(Rc<Property::Registration> registration, f64 value)
         : Property(registration), _value(value) {}
 
     void apply([[maybe_unused]] ComputedValues const& parent, ComputedValues& c, [[maybe_unused]] ComputationContext const& cx) const override {
@@ -129,7 +129,7 @@ export struct FlexShrinkProperty : Property {
         Registration() : Property::Registration(Properties::FLEX_SHRINK) {}
 
         Rc<Property> initial() const override {
-            return makeRc<FlexShrinkProperty>(self(), Number{1});
+            return makeRc<FlexShrinkProperty>(self(), f64{1});
         }
 
         Rc<Property> load(ComputedValues const& c) const override {
@@ -137,13 +137,13 @@ export struct FlexShrinkProperty : Property {
         }
 
         Res<Rc<Property>> parse(Cursor<Css::Sst>& c) const override {
-            return Ok(makeRc<FlexShrinkProperty>(self(), try$(parseValue<Number>(c))));
+            return Ok(makeRc<FlexShrinkProperty>(self(), try$(parseValue<f64>(c))));
         }
     };
 
-    Number _value;
+    f64 _value;
 
-    FlexShrinkProperty(Rc<Property::Registration> registration, Number value)
+    FlexShrinkProperty(Rc<Property::Registration> registration, f64 value)
         : Property(registration), _value(value) {}
 
     void apply([[maybe_unused]] ComputedValues const& parent, ComputedValues& c, [[maybe_unused]] ComputationContext const& cx) const override {
@@ -265,7 +265,7 @@ export struct FlexProperty : Property {
         }
 
         Rc<Property> load(ComputedValues const& c) const override {
-            return makeRc<FlexProperty>(self(), FlexItemProps{c.flex->basis, c.flex->grow, c.flex->shrink});
+            return makeRc<FlexProperty>(self(), FlexItemProps{toSpecified(c.flex->basis), c.flex->grow, c.flex->shrink});
         }
 
         Res<Rc<Property>> parse(Cursor<Css::Sst>& c) const override {
@@ -284,16 +284,16 @@ export struct FlexProperty : Property {
 
             // default values if these parameters are omitted
             value.flexGrow = value.flexShrink = 1;
-            value.flexBasis = Calc<PercentOr<Length>>(Length{});
+            value.flexBasis = LengthPercentage::fromCanonical(0);
 
             auto parseGrowShrink = [](Cursor<Css::Sst>& c, FlexItemProps& value) -> Res<> {
-                auto grow = parseValue<Number>(c);
+                auto grow = parseValue<f64>(c);
                 if (not grow)
                     return Error::invalidData("expected flex item grow");
 
                 value.flexGrow = grow.expect();
 
-                auto shrink = parseValue<Number>(c);
+                auto shrink = parseValue<f64>(c);
                 if (shrink)
                     value.flexShrink = shrink.expect();
 

@@ -54,10 +54,10 @@ Opt<Gfx::Color> resolve(SvgPaint color, Gfx::Color currentColor) {
 
 // https://svgwg.org/svg2-draft/coords.html#ViewBoxAttribute
 export struct SvgViewBox {
-    Number minX;
-    Number minY;
-    Number width;
-    Number height;
+    f64 minX;
+    f64 minY;
+    f64 width;
+    f64 height;
 
     void repr(Io::Emit& e) const {
         e("(ViewBox minX={} minY={} width={} height={})", minX, minY, width, height);

@@ -47,13 +47,13 @@ export struct FontWidth {
         _LEN,
     };
 
-    static Percent toPercent(_Named stretch) {
-        return Percent{static_cast<int>(stretch) / 10.0};
+    static PurePercentage toPercent(_Named stretch) {
+        return PurePercentage{static_cast<int>(stretch) / 10.0};
     }
 
     using enum _Named;
 
-    Percent _val;
+    PurePercentage _val;
 
     constexpr FontWidth()
         : FontWidth(NORMAL) {
@@ -63,7 +63,7 @@ export struct FontWidth {
         : _val(toPercent(named)) {
     }
 
-    constexpr FontWidth(Percent value)
+    constexpr FontWidth(PurePercentage value)
         : _val(value) {
     }
 
@@ -83,11 +83,11 @@ export struct FontWidth {
         return _val <=> other._val;
     }
 
-    Percent operator-(FontWidth const& other) const {
+    PurePercentage operator-(FontWidth const& other) const {
         return _val - other._val;
     }
 
-    FontWidth operator+(Percent value) const {
+    FontWidth operator+(PurePercentage value) const {
         return FontWidth{_val + value};
     }
 };
@@ -118,7 +118,7 @@ struct ValueParser<FontWidth> {
             return Ok(FontWidth::ULTRA_EXPANDED);
         }
 
-        return Ok(try$(parseValue<Percent>(c)));
+        return Ok(try$(parseValue<PurePercentage>(c)));
     }
 };
 
@@ -138,13 +138,13 @@ export struct FontStyle {
     Gfx::FontStyle val;
 
     // The lack of an <angle> represents 14deg.
-    Angle obliqueAngle = Angle::fromDegree(14.0);
+    PureAngle obliqueAngle = PureAngle::fromDegree(14.0);
 
     constexpr FontStyle(Gfx::FontStyle named = NORMAL)
         : val(named) {
     }
 
-    constexpr FontStyle(Angle angle)
+    constexpr FontStyle(PureAngle angle)
         : val(OBLIQUE), obliqueAngle(angle) {}
 
     void repr(Io::Emit& e) const {
@@ -170,7 +170,7 @@ struct ValueParser<FontStyle> {
         } else if (c.skip(Css::Token::ident("italic"))) {
             return Ok(FontStyle::ITALIC);
         } else if (c.skip(Css::Token::ident("oblique"))) {
-            auto angle = parseValue<Angle>(c);
+            auto angle = parseValue<PureAngle>(c);
             if (angle)
                 return Ok(angle.expect());
 
@@ -200,7 +200,7 @@ struct ValueSerializer<FontStyle> {
             return Ok();
 
         try$(w.writeRune(' '));
-        return serializeValue(w, Angle::fromDegree(value.obliqueAngle.toDegree()));
+        return serializeValue(w, PureAngle::fromDegree(value.obliqueAngle.toDegree()));
     }
 };
 
@@ -307,8 +307,8 @@ struct ValueSerializer<FontWeight> {
 // https://www.w3.org/TR/css-fonts-4/#font-size-prop
 
 using FontSize = Union<
-    Length,
-    Percent,
+    PureLength,
+    PurePercentage,
     Keywords::XxSmall,
     Keywords::XSmall,
     Keywords::Small,
@@ -337,10 +337,10 @@ concept FontSizeContext = LengthContext<T> and requires(T t) {
 
 Au resolve(FontSize const& value, FontSizeContext auto const& ctx) {
     return value.visit(
-        [&](Length const& v) {
+        [&](PureLength const& v) {
             return resolve(v, ctx);
         },
-        [&](Percent const& v) {
+        [&](PurePercentage const& v) {
             return Au::fromFloatNearest(ctx.parentFontSize * (v.value() / 100.0));
         },
         [&](Keywords::XxSmall) {

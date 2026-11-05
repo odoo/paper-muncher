@@ -50,12 +50,12 @@ void advanceUntil(MutCursor<Box>& cursor, auto pred) {
         cursor.next();
 }
 
-UsedBorder resolve(Tree const& tree, Box const& box, BorderEdge const edge) {
+UsedBorder resolve(Box const& box, BorderEdge const edge) {
     auto& border = box.style->borders->get(edge);
     return UsedBorder{
         border.style == Gfx::BorderStyle::NONE
             ? 0_au
-            : Layout::resolve(tree, box, border.width),
+            : Layout::resolve(border.width),
         border.style,
         resolve(border.color, box.style->color),
     };
@@ -497,7 +497,6 @@ export struct TableFormatingContext : FormatingContext {
     }
 
     void addAxisAndGroupBorder(
-        Tree& tree,
         Vec<UsedBorder>& borders,
         AxisAndGroupsIdxs const& axisAndGroupsIdxs,
         BorderEdge edge,
@@ -506,12 +505,12 @@ export struct TableFormatingContext : FormatingContext {
     ) {
         if (axisAndGroupsIdxs.axisIdx) {
             borders.pushBack(
-                resolve(tree, axis[axisAndGroupsIdxs.axisIdx.expect()].el, edge)
+                resolve(axis[axisAndGroupsIdxs.axisIdx.expect()].el, edge)
             );
         }
         if (axisAndGroupsIdxs.groupIdx) {
             borders.pushBack(
-                resolve(tree, groups[axisAndGroupsIdxs.groupIdx.expect()].el, edge)
+                resolve(groups[axisAndGroupsIdxs.groupIdx.expect()].el, edge)
             );
         }
     }
@@ -549,7 +548,7 @@ export struct TableFormatingContext : FormatingContext {
     }
 
     // https://www.w3.org/TR/css-tables-3/#border-conflict-resolution-algorithm
-    void resolveConflictForBordersAtHorizontalAxis(Tree& tree, usize i) {
+    void resolveConflictForBordersAtHorizontalAxis(usize i) {
         usize start = 0;
         while (start < grid.size.x) {
             auto const& top = grid.at(start, i);
@@ -581,14 +580,14 @@ export struct TableFormatingContext : FormatingContext {
 
             for (usize j = start; j <= end; j += colSpanAt(j, i))
                 if (grid.at(j, i).box)
-                    borders.pushBack(resolve(tree, *grid.at(j, i).box, BorderEdge::BOTTOM));
+                    borders.pushBack(resolve(*grid.at(j, i).box, BorderEdge::BOTTOM));
 
             for (usize j = start; j <= end; j += colSpanAt(j, i + 1))
                 if (grid.at(j, i + 1).box)
-                    borders.pushBack(resolve(tree, *grid.at(j, i + 1).box, BorderEdge::TOP));
+                    borders.pushBack(resolve(*grid.at(j, i + 1).box, BorderEdge::TOP));
 
-            addAxisAndGroupBorder(tree, borders, rowGroupIdxs[i], BorderEdge::BOTTOM, rows, rowGroups);
-            addAxisAndGroupBorder(tree, borders, rowGroupIdxs[i + 1], BorderEdge::TOP, rows, rowGroups);
+            addAxisAndGroupBorder(borders, rowGroupIdxs[i], BorderEdge::BOTTOM, rows, rowGroups);
+            addAxisAndGroupBorder(borders, rowGroupIdxs[i + 1], BorderEdge::TOP, rows, rowGroups);
 
             auto finalBorder = harmonizeConflictingBorders(borders);
 
@@ -605,7 +604,7 @@ export struct TableFormatingContext : FormatingContext {
     }
 
     // https://www.w3.org/TR/css-tables-3/#border-conflict-resolution-algorithm
-    void resolveConflictForBordersAtVerticalAxis(Tree& tree, usize j) {
+    void resolveConflictForBordersAtVerticalAxis(usize j) {
         usize start = 0;
         while (start < grid.size.y) {
             auto const& left = grid.at(j, start);
@@ -637,14 +636,14 @@ export struct TableFormatingContext : FormatingContext {
 
             for (usize i = start; i <= end; i += rowSpanAt(j, i))
                 if (grid.at(j, i).box)
-                    borders.pushBack(resolve(tree, *grid.at(j, i).box, BorderEdge::END));
+                    borders.pushBack(resolve(*grid.at(j, i).box, BorderEdge::END));
 
             for (usize i = start; i <= end; i += rowSpanAt(j + 1, i))
                 if (grid.at(j + 1, i).box)
-                    borders.pushBack(resolve(tree, *grid.at(j + 1, i).box, BorderEdge::START));
+                    borders.pushBack(resolve(*grid.at(j + 1, i).box, BorderEdge::START));
 
-            addAxisAndGroupBorder(tree, borders, colGroupIdxs[j], BorderEdge::END, cols, colGroups);
-            addAxisAndGroupBorder(tree, borders, colGroupIdxs[j + 1], BorderEdge::START, cols, colGroups);
+            addAxisAndGroupBorder(borders, colGroupIdxs[j], BorderEdge::END, cols, colGroups);
+            addAxisAndGroupBorder(borders, colGroupIdxs[j + 1], BorderEdge::START, cols, colGroups);
 
             auto finalBorder = harmonizeConflictingBorders(borders);
 
@@ -660,11 +659,11 @@ export struct TableFormatingContext : FormatingContext {
         }
     }
 
-    void resolveConflictForTableBordersAtHorizontalAxis(Tree& tree, Box& box, BorderEdge edge) {
+    void resolveConflictForTableBordersAtHorizontalAxis(Box& box, BorderEdge edge) {
         if (grid.size.x == 0 or grid.size.y == 0)
             return;
 
-        UsedBorder tableBorder = resolve(tree, box, edge);
+        UsedBorder tableBorder = resolve(box, edge);
         usize const i = edge == BorderEdge::TOP ? 0 : grid.size.y - 1;
 
         usize j = 0;
@@ -676,12 +675,12 @@ export struct TableFormatingContext : FormatingContext {
             }
 
             Vec<UsedBorder> borders = {
-                resolve(tree, *grid.at(j, i).box, edge),
+                resolve(*grid.at(j, i).box, edge),
                 tableBorder
             };
 
-            addAxisAndGroupBorder(tree, borders, rowGroupIdxs[i], edge, rows, rowGroups);
-            addAxisAndGroupBorder(tree, borders, colGroupIdxs[j], edge, cols, colGroups);
+            addAxisAndGroupBorder(borders, rowGroupIdxs[i], edge, rows, rowGroups);
+            addAxisAndGroupBorder(borders, colGroupIdxs[j], edge, cols, colGroups);
 
             auto finalBorder = harmonizeConflictingBorders(borders);
 
@@ -696,11 +695,11 @@ export struct TableFormatingContext : FormatingContext {
         }
     }
 
-    void resolveConflictForTableBordersAtVerticalAxis(Tree& tree, Box& box, BorderEdge edge) {
+    void resolveConflictForTableBordersAtVerticalAxis(Box& box, BorderEdge edge) {
         if (grid.size.x == 0 or grid.size.y == 0)
             return;
 
-        UsedBorder tableBorder = resolve(tree, box, edge);
+        UsedBorder tableBorder = resolve(box, edge);
         usize const j = edge == BorderEdge::START ? 0 : grid.size.x - 1;
 
         usize i = 0;
@@ -712,12 +711,12 @@ export struct TableFormatingContext : FormatingContext {
             }
 
             Vec<UsedBorder> borders = {
-                resolve(tree, *grid.at(j, i).box, edge),
+                resolve(*grid.at(j, i).box, edge),
                 tableBorder
             };
 
-            addAxisAndGroupBorder(tree, borders, rowGroupIdxs[i], edge, rows, rowGroups);
-            addAxisAndGroupBorder(tree, borders, colGroupIdxs[j], edge, cols, colGroups);
+            addAxisAndGroupBorder(borders, rowGroupIdxs[i], edge, rows, rowGroups);
+            addAxisAndGroupBorder(borders, colGroupIdxs[j], edge, cols, colGroups);
 
             auto finalBorder = harmonizeConflictingBorders(borders);
 
@@ -779,13 +778,13 @@ export struct TableFormatingContext : FormatingContext {
         };
     }
 
-    void computeBordersStructsCollapse(Tree& tree, Box& box) {
+    void computeBordersStructsCollapse(Box& box) {
         bordersStyleGrid.init(grid.size, box.style->color);
 
         for (usize i = 0; i + 1 < grid.size.y; ++i)
-            resolveConflictForBordersAtHorizontalAxis(tree, i);
+            resolveConflictForBordersAtHorizontalAxis(i);
         for (usize j = 0; j + 1 < grid.size.x; ++j)
-            resolveConflictForBordersAtVerticalAxis(tree, j);
+            resolveConflictForBordersAtVerticalAxis(j);
 
         for (usize i = 0; i < grid.size.y; ++i) {
             for (usize j = 0; j < grid.size.x; ++j) {
@@ -796,13 +795,13 @@ export struct TableFormatingContext : FormatingContext {
             }
         }
 
-        resolveConflictForTableBordersAtHorizontalAxis(tree, box, BorderEdge::TOP);
-        resolveConflictForTableBordersAtHorizontalAxis(tree, box, BorderEdge::BOTTOM);
-        resolveConflictForTableBordersAtVerticalAxis(tree, box, BorderEdge::START);
-        resolveConflictForTableBordersAtVerticalAxis(tree, box, BorderEdge::END);
+        resolveConflictForTableBordersAtHorizontalAxis(box, BorderEdge::TOP);
+        resolveConflictForTableBordersAtHorizontalAxis(box, BorderEdge::BOTTOM);
+        resolveConflictForTableBordersAtVerticalAxis(box, BorderEdge::START);
+        resolveConflictForTableBordersAtVerticalAxis(box, BorderEdge::END);
     }
 
-    void computeBordersStructsSeparate(Tree& tree) {
+    void computeBordersStructsSeparate() {
         for (usize i = 0; i < grid.size.y; ++i) {
             for (usize j = 0; j < grid.size.x; ++j) {
                 auto& cell = grid.at(j, i);
@@ -813,7 +812,7 @@ export struct TableFormatingContext : FormatingContext {
                 if (cell.anchorIdx != Math::Vec2u{j, i})
                     continue;
 
-                auto cellBorder = computeBorders(tree, *cell.box);
+                auto cellBorder = computeBorders(*cell.box);
 
                 for (usize k = 0; k < cell.colSpan; ++k) {
                     bordersGrid.widthAt(i, j + k).top = cellBorder.top;
@@ -828,14 +827,14 @@ export struct TableFormatingContext : FormatingContext {
         }
     }
 
-    void computeBordersStructs(Tree& tree, Box& box) {
+    void computeBordersStructs(Box& box) {
         bordersGrid.init(grid.size);
 
         if (useBordersCollapse) {
             bordersStyleGrid.init(grid.size, box.style->color);
-            computeBordersStructsCollapse(tree, box);
+            computeBordersStructsCollapse(box);
         } else
-            computeBordersStructsSeparate(tree);
+            computeBordersStructsSeparate();
     }
 
     // https://www.w3.org/TR/CSS22/tables.html#borders
@@ -974,15 +973,15 @@ export struct TableFormatingContext : FormatingContext {
     }
 
     // MARK: Auto Table Layout -------------------------------------------------
-    Pair<Au> getCellMinMaxAutoWidth(Tree& tree, Box& box, TableCell& cell, Au tableComputedWidth, UsedSpacings usedSpacings) {
+    Pair<Au> getCellMinMaxAutoWidth(Input const& input, Box& box, TableCell& cell, Au tableComputedWidth, UsedSpacings usedSpacings) {
         auto cellMinOutput = computeIntrinsicContentSize(
-            tree,
+            input,
             box,
             IntrinsicSize::MIN_CONTENT
         );
 
         auto cellMaxOutput = computeIntrinsicContentSize(
-            tree,
+            input,
             box,
             IntrinsicSize::MAX_CONTENT
         );
@@ -1013,7 +1012,7 @@ export struct TableFormatingContext : FormatingContext {
         return {cellMinWidth, cellMaxWidth};
     };
 
-    void computeAutoWidthOfCellsSpan1(Tree& tree, Vec<Au>& minColWidth, Vec<Au>& maxColWidth, Au tableWidth) {
+    void computeAutoWidthOfCellsSpan1(Input const& input, Vec<Au>& minColWidth, Vec<Au>& maxColWidth, Au tableWidth) {
         for (usize i = 0; i < grid.size.y; ++i) {
             for (usize j = 0; j < grid.size.x; ++j) {
                 auto cell = grid.at(j, i);
@@ -1029,11 +1028,11 @@ export struct TableFormatingContext : FormatingContext {
                     continue;
 
                 UsedSpacings usedSpacings{
-                    .padding = computePaddings(tree, *cell.box, {tableUsedWidth, 0_au}),
+                    .padding = computePaddings(*cell.box, {tableUsedWidth, 0_au}),
                     .borders = buildBordersWidthsForCell(i, j, cell.rowSpan, colSpan)
                 };
 
-                auto [cellMinWidth, cellMaxWidth] = getCellMinMaxAutoWidth(tree, *cell.box, cell, tableWidth, usedSpacings);
+                auto [cellMinWidth, cellMaxWidth] = getCellMinMaxAutoWidth(input, *cell.box, cell, tableWidth, usedSpacings);
 
                 minColWidth[j] = max(minColWidth[j], cellMinWidth);
                 maxColWidth[j] = max(maxColWidth[j], cellMaxWidth);
@@ -1041,7 +1040,7 @@ export struct TableFormatingContext : FormatingContext {
         }
     }
 
-    void computeAutoWidthOfCellsSpanN(Tree& tree, Vec<Au>& minColWidth, Vec<Au>& maxColWidth, Au tableWidth) {
+    void computeAutoWidthOfCellsSpanN(Input const& input, Vec<Au>& minColWidth, Vec<Au>& maxColWidth, Au tableWidth) {
         for (usize i = 0; i < grid.size.y; ++i) {
             for (usize j = 0; j < grid.size.x; ++j) {
                 auto cell = grid.at(j, i);
@@ -1057,11 +1056,11 @@ export struct TableFormatingContext : FormatingContext {
                     continue;
 
                 UsedSpacings usedSpacings{
-                    .padding = computePaddings(tree, *cell.box, {tableUsedWidth, 0_au}),
+                    .padding = computePaddings(*cell.box, {tableUsedWidth, 0_au}),
                     .borders = buildBordersWidthsForCell(i, j, cell.rowSpan, colSpan)
                 };
 
-                auto [cellMinWidth, cellMaxWidth] = getCellMinMaxAutoWidth(tree, *cell.box, cell, tableWidth, usedSpacings);
+                auto [cellMinWidth, cellMaxWidth] = getCellMinMaxAutoWidth(input, *cell.box, cell, tableWidth, usedSpacings);
 
                 Au currSumMinColWidth{0};
                 Au currSumMaxColWidth{0};
@@ -1137,16 +1136,16 @@ export struct TableFormatingContext : FormatingContext {
         }
     }
 
-    Pair<Vec<Au>> computeMinMaxAutoWidths(Tree& tree, usize size, Au tableWidth) {
+    Pair<Vec<Au>> computeMinMaxAutoWidths(Input const& input, usize size, Au tableWidth) {
         Vec<Au> minColWidth{};
         minColWidth.resize(size);
 
         Vec<Au> maxColWidth{};
         maxColWidth.resize(size);
 
-        computeAutoWidthOfCellsSpan1(tree, minColWidth, maxColWidth, tableWidth);
+        computeAutoWidthOfCellsSpan1(input, minColWidth, maxColWidth, tableWidth);
         computeAutoWidthOfCols(minColWidth, maxColWidth, tableWidth);
-        computeAutoWidthOfCellsSpanN(tree, minColWidth, maxColWidth, tableWidth);
+        computeAutoWidthOfCellsSpanN(input, minColWidth, maxColWidth, tableWidth);
         computeAutoWidthOfColGroups(minColWidth, tableWidth);
 
         return {minColWidth, maxColWidth};
@@ -1154,14 +1153,14 @@ export struct TableFormatingContext : FormatingContext {
 
     Opt<Pair<Vec<Au>>> intrinsicSizes;
 
-    Pair<Vec<Au>> computeIntrinsicMinMaxAutoWidths(Tree& tree, usize size) {
+    Pair<Vec<Au>> computeIntrinsicMinMaxAutoWidths(Input const& input, usize size) {
         if (not intrinsicSizes)
-            intrinsicSizes = Some(computeMinMaxAutoWidths(tree, size, 0_au));
+            intrinsicSizes = Some(computeMinMaxAutoWidths(input, size, 0_au));
         return *intrinsicSizes;
     }
 
     // https://www.w3.org/TR/CSS22/tables.html#auto-table-layout
-    void computeAutoColWidths(Tree& tree, Opt<Au> knownSizeX, Au capmin, Au containingBlockX) {
+    void computeAutoColWidths(Input const& input, Opt<Au> knownSizeX, Au capmin, Au containingBlockX) {
         // FIXME: This is a rough approximation of the algorithm.
         //        We need to distinguish between percentage-based and fixed lengths:
         //         - Percentage-based sizes are fixed and cannot have extra space distributed to them.
@@ -1173,7 +1172,7 @@ export struct TableFormatingContext : FormatingContext {
         //        We will need a way to retrieve the percentage value, which is also not yet implemented.
 
         if (knownSizeX) {
-            auto [minWithoutPerc, maxWithoutPerc] = computeIntrinsicMinMaxAutoWidths(tree, grid.size.x);
+            auto [minWithoutPerc, maxWithoutPerc] = computeIntrinsicMinMaxAutoWidths(input, grid.size.x);
 
             tableUsedWidth = max(capmin, *knownSizeX);
 
@@ -1184,7 +1183,7 @@ export struct TableFormatingContext : FormatingContext {
                 return;
             }
 
-            auto [minWithPerc, maxWithPerc] = computeMinMaxAutoWidths(tree, grid.size.x, *knownSizeX);
+            auto [minWithPerc, maxWithPerc] = computeMinMaxAutoWidths(input, grid.size.x, *knownSizeX);
 
             auto sumMaxWithoutPerc = iter(maxWithoutPerc) | Sum();
             Vec<Au>& distWOPToUse = sumMaxWithoutPerc < tableUsedWidth ? maxWithoutPerc : minWithoutPerc;
@@ -1231,7 +1230,7 @@ export struct TableFormatingContext : FormatingContext {
                 colWidth = distWPToUse;
             }
         } else {
-            auto [minColWidth, maxColWidth] = computeIntrinsicMinMaxAutoWidths(tree, grid.size.x);
+            auto [minColWidth, maxColWidth] = computeIntrinsicMinMaxAutoWidths(input, grid.size.x);
             auto sumMaxColWidths = iter(maxColWidth) | Sum();
             auto sumMinColWidths = iter(minColWidth) | Sum();
 
@@ -1250,7 +1249,7 @@ export struct TableFormatingContext : FormatingContext {
     // https://www.w3.org/TR/CSS22/tables.html#height-layout
     Vec<Au> rowHeight;
 
-    Pair<bool, Au> computeRowHeights(Tree& tree) {
+    Pair<bool, Au> computeRowHeights(Input const& input) {
         // NOTE: CSS 2.2 does not define how the height of table cells and
         //       table rows is calculated when their height is
         //       specified using percentage values.
@@ -1316,7 +1315,7 @@ export struct TableFormatingContext : FormatingContext {
                 }
 
                 UsedSpacings usedSpacings{
-                    .padding = computePaddings(tree, *cell.box, {tableUsedWidth, 0_au}),
+                    .padding = computePaddings(*cell.box, {tableUsedWidth, 0_au}),
                     .borders = buildBordersWidthsForCell(i, j, rowSpan, cell.colSpan)
                 };
 
@@ -1325,9 +1324,10 @@ export struct TableFormatingContext : FormatingContext {
                     cellWidth += colWidth[j + k];
 
                 auto cellOutput = layoutBorderBox(
-                    tree,
                     *cell.box,
                     {
+                        .fragmentainer = input.fragmentainer,
+                        .viewport = input.viewport,
                         .usedSpacings = usedSpacings,
                         .knownSize = {Some(cellWidth), NONE},
                         .containingBlock = {tableUsedWidth, 0_au},
@@ -1372,13 +1372,13 @@ export struct TableFormatingContext : FormatingContext {
 
     bool useBordersCollapse = false;
 
-    void build(Tree& tree, Box& box) override {
+    void build(Box& box) override {
         useBordersCollapse = box.style->table->collapse == BorderCollapse::COLLAPSE;
 
         if (not useBordersCollapse)
             spacing = {
-                resolve(tree, box, box.style->table->spacing.horizontal),
-                resolve(tree, box, box.style->table->spacing.vertical),
+                Layout::resolve(box.style->table->spacing.horizontal),
+                Layout::resolve(box.style->table->spacing.vertical),
             };
 
         buildHTMLTable(box);
@@ -1386,7 +1386,7 @@ export struct TableFormatingContext : FormatingContext {
         rowGroupIdxs = AxisAndGroupsIdxs::build(rows, rowGroups, grid.size.y);
         colGroupIdxs = AxisAndGroupsIdxs::build(cols, colGroups, grid.size.x);
 
-        computeBordersStructs(tree, box);
+        computeBordersStructs(box);
 
         startPositionOfRow.clear();
         startPositionOfRow.resize(grid.size.y, 0_au);
@@ -1396,10 +1396,10 @@ export struct TableFormatingContext : FormatingContext {
 
     Opt<AutoLayoutCacheKey> lastAutoLayoutInput;
 
-    void computeWidthAndHeight(Tree& tree, Box& box, Input const& input) {
-        tree.fc.enterMonolithicBox();
+    void computeWidthAndHeight(Box& box, Input const& input) {
+        input.fragmentainer->enterMonolithicBox();
         Defer _ = [&] {
-            tree.fc.leaveMonolithicBox();
+            input.fragmentainer->leaveMonolithicBox();
         };
 
         // NOTE: When "table-layout: fixed" is set but "width: auto", the specs suggest
@@ -1420,13 +1420,13 @@ export struct TableFormatingContext : FormatingContext {
 
             if (input.intrinsic == IntrinsicSize::AUTO) {
                 computeAutoColWidths(
-                    tree,
+                    input,
                     input.knownSize.width,
                     input.capmin.unwrapOr(0_au),
                     input.containingBlock.x
                 );
             } else {
-                auto [minContent, maxContent] = computeIntrinsicMinMaxAutoWidths(tree, grid.size.x);
+                auto [minContent, maxContent] = computeIntrinsicMinMaxAutoWidths(input, grid.size.x);
                 if (input.intrinsic == IntrinsicSize::MIN_CONTENT)
                     colWidth = minContent;
                 else if (input.intrinsic == IntrinsicSize::MAX_CONTENT) {
@@ -1441,7 +1441,7 @@ export struct TableFormatingContext : FormatingContext {
             computeFixedColWidths(*box.style, *input.knownSize.width);
         }
 
-        auto [hasAutoHeightRows, totalNonAutoHeight] = computeRowHeights(tree);
+        auto [hasAutoHeightRows, totalNonAutoHeight] = computeRowHeights(input);
         auto usedVerticalSpace = (iter(rowHeight) | Sum()) + spacing.y * (grid.size.y + 1);
 
         // NOSPEC: The exact row height distribution is undefined in CSS2.2 but browsers seem to agree on the algorithm below.
@@ -1506,7 +1506,7 @@ export struct TableFormatingContext : FormatingContext {
         };
     }
 
-    Tuple<Output, Au> layoutCell(Tree& tree, Input& input, TableCell& cell, usize startFrag, usize i, usize j, Au currPositionX, usize breakpointIndexOffset) {
+    Tuple<Output, Au> layoutCell(Input& input, TableCell& cell, usize startFrag, usize i, usize j, Au currPositionX, usize breakpointIndexOffset) {
         // breakpoint traversing for a cell that started in the previous fragmentainer is not trivial
         // since it started in the previous fragmentainer, its breakpoint must be of type ADVANCE_WITH_CHILDREN and thus
         // children info will be available at startFrag
@@ -1529,7 +1529,7 @@ export struct TableFormatingContext : FormatingContext {
         // - its started position must be row starting the fragment
         // - its size cant be the one computed in the build phase, thus is NONE
         auto rowSpan = cell.rowSpan;
-        bool boxStartedInPrevFragment = tree.fc.allowBreak() and breakpointsForCell.prevIteration;
+        bool boxStartedInPrevFragment = input.fragmentainer->allowBreak() and breakpointsForCell.prevIteration;
         Au startPositionY = startPositionOfRow[boxStartedInPrevFragment ? startFrag : cell.anchorIdx.y];
 
         Opt<Au> verticalSize;
@@ -1546,15 +1546,17 @@ export struct TableFormatingContext : FormatingContext {
         //
         //       (See https://www.w3.org/TR/CSS22/tables.html#height-layout)
         UsedSpacings usedSpacings{
-            .padding = computePaddings(tree, *cell.box, tableBoxSize),
+            .padding = computePaddings(*cell.box, tableBoxSize),
             .borders = useBordersCollapse
                            ? buildBordersWidthsForCell(cell.anchorIdx.y, cell.anchorIdx.x, rowSpan, cell.colSpan)
-                           : computeBorders(tree, *cell.box),
+                           : computeBorders(*cell.box),
         };
 
         Vec2Au position = {currPositionX, startPositionY};
 
         Input childInput{
+            .fragmentainer = input.fragmentainer,
+            .viewport = input.viewport,
             .generateFragment = input.generateFragment,
             .usedSpacings = usedSpacings,
             .knownSize = {
@@ -1568,17 +1570,17 @@ export struct TableFormatingContext : FormatingContext {
         };
 
         if (cell.box->style->position == Keywords::RELATIVE) {
-            childInput.position += relativePositionOffset(tree, *cell.box, input.containingBlock);
+            childInput.position += relativePositionOffset(*cell.box, input.containingBlock);
         }
 
-        auto outputCell = layoutBorderBox(tree, *cell.box, childInput);
+        auto outputCell = layoutBorderBox(*cell.box, childInput);
         if (outputCell.fragment and useBordersCollapse) {
             if (auto frag = outputCell.fragment->is<BoxFragment>()) {
                 frag->usedBorders = Some(buildUsedCollapsedBordersForCell(cell.anchorIdx.y, cell.anchorIdx.x, rowSpan, cell.colSpan));
             }
         }
 
-        if (tree.fc.isDiscoveryMode()) {
+        if (input.fragmentainer->isDiscoveryMode()) {
             if (oneOf(cell.box->style->break_->inside, BreakInside::AVOID, BreakInside::AVOID_PAGE)) {
                 outputCell.breakpoint.expect().withAppeal(Breakpoint::Appeal::AVOID);
             }
@@ -1600,11 +1602,11 @@ export struct TableFormatingContext : FormatingContext {
         Vec<bool> isBottom = {};
     };
 
-    RowOutput layoutRow(Tree& tree, Input input, FragmentBuilder& fragBuilder, usize startFrag, usize i, Vec2Au currPosition, bool isBreakpointedRow, usize breakpointIndexOffset) {
+    RowOutput layoutRow(Input input, FragmentBuilder& fragBuilder, usize startFrag, usize i, Vec2Au currPosition, bool isBreakpointedRow, usize breakpointIndexOffset) {
         startPositionOfRow[i] = currPosition.y;
 
         RowOutput outputRow;
-        if (tree.fc.isDiscoveryMode()) {
+        if (input.fragmentainer->isDiscoveryMode()) {
             outputRow.breakpoints = Buf<Opt<Breakpoint>>::init(grid.size.x, NONE);
             outputRow.isBottom = Buf<bool>::init(grid.size.x, false);
         }
@@ -1621,13 +1623,13 @@ export struct TableFormatingContext : FormatingContext {
 
             bool isBottomCell = cell.anchorIdx.y + cell.rowSpan - 1 == i;
 
-            if (not tree.fc.isDiscoveryMode() and not(isBottomCell or isBreakpointedRow)) {
+            if (not input.fragmentainer->isDiscoveryMode() and not(isBottomCell or isBreakpointedRow)) {
                 continue;
             }
 
-            auto [outputCell, cellHeight] = layoutCell(tree, input, cell, startFrag, i, j, currPosition.x, breakpointIndexOffset);
+            auto [outputCell, cellHeight] = layoutCell(input, cell, startFrag, i, j, currPosition.x, breakpointIndexOffset);
 
-            if (tree.fc.isDiscoveryMode()) {
+            if (input.fragmentainer->isDiscoveryMode()) {
                 if (isBottomCell)
                     outputRow.sizeY = max(outputRow.sizeY, cellHeight);
 
@@ -1754,11 +1756,11 @@ export struct TableFormatingContext : FormatingContext {
         return true;
     }
 
-    Tuple<bool, Opt<Breakpoint>> layoutRows(Tree& tree, Box& box, Input input, FragmentBuilder& fragBuilder, usize startAt, usize stopAt, Au currPositionX, Au& currPositionY, bool shouldRepeatHeaderAndFooter) {
+    Tuple<bool, Opt<Breakpoint>> layoutRows(Box& box, Input input, FragmentBuilder& fragBuilder, usize startAt, usize stopAt, Au currPositionX, Au& currPositionY, bool shouldRepeatHeaderAndFooter) {
         bool completelyLaidOut = false;
         Opt<Breakpoint> rowBreakpoint = NONE;
 
-        if (tree.fc.isDiscoveryMode()) {
+        if (input.fragmentainer->isDiscoveryMode()) {
             completelyLaidOut = true;
             rowBreakpoint = Some(Breakpoint());
 
@@ -1768,7 +1770,7 @@ export struct TableFormatingContext : FormatingContext {
 
         for (usize i = startAt; i < stopAt; i++) {
             auto rowOutput = layoutRow(
-                tree, input, fragBuilder,
+                input, fragBuilder,
                 startAt,
                 i,
                 Vec2Au{currPositionX, currPositionY},
@@ -1776,9 +1778,9 @@ export struct TableFormatingContext : FormatingContext {
                 shouldRepeatHeaderAndFooter ? dataRowsInterval.x : 0
             );
 
-            if (tree.fc.isDiscoveryMode()) {
+            if (input.fragmentainer->isDiscoveryMode()) {
                 if (
-                    not handleUnforcedBreakpointsInsideAndAfterRow(box, rowBreakpoint.expect(), rowOutput, i, tree.fc.size()) or
+                    not handleUnforcedBreakpointsInsideAndAfterRow(box, rowBreakpoint.expect(), rowOutput, i, input.fragmentainer->size()) or
                     not handlePossibleForcedBreakpointAfterRow(rowBreakpoint.expect(), rowOutput.allBottomsAndCompletelyLaidOut, (i + 1 == stopAt), i)
                 ) {
                     completelyLaidOut = false;
@@ -1793,10 +1795,9 @@ export struct TableFormatingContext : FormatingContext {
         return {completelyLaidOut, rowBreakpoint};
     }
 
-    void layoutHeaderFooterRows(Tree& tree, Input input, FragmentBuilder& fragBuilder, usize startFrag, Au currPositionX, Au& currPositionY, usize start, usize len) {
+    void layoutHeaderFooterRows(Input input, FragmentBuilder& fragBuilder, usize startFrag, Au currPositionX, Au& currPositionY, usize start, usize len) {
         for (usize i = 0; i < len; i++) {
             auto _ = layoutRow(
-                tree,
                 input.withBreakpointTraverser(BreakpointTraverser()),
                 fragBuilder,
                 startFrag, start + i,
@@ -1806,10 +1807,10 @@ export struct TableFormatingContext : FormatingContext {
         }
     }
 
-    Tuple<usize, usize> computeLayoutIntervals(Tree& tree, bool shouldRepeatHeaderAndFooter, usize startAtTable, Opt<usize> stopAtTable) {
+    Tuple<usize, usize> computeLayoutIntervals(Input const& input, bool shouldRepeatHeaderAndFooter, usize startAtTable, Opt<usize> stopAtTable) {
         usize startAt = startAtTable + (shouldRepeatHeaderAndFooter ? dataRowsInterval.x : 0);
         usize stopAt;
-        if (tree.fc.isDiscoveryMode()) {
+        if (input.fragmentainer->isDiscoveryMode()) {
             stopAt = shouldRepeatHeaderAndFooter
                          ? dataRowsInterval.y + 1
                          : grid.size.y;
@@ -1822,22 +1823,22 @@ export struct TableFormatingContext : FormatingContext {
         return {startAt, stopAt};
     }
 
-    Output run(Tree& tree, Box& box, Input input, usize startAtTable, Opt<usize> stopAtTable) override {
-        auto fragBuilder = FragmentBuilder{tree, box};
+    Output run(Box& box, Input input, usize startAtTable, Opt<usize> stopAtTable) override {
+        auto fragBuilder = FragmentBuilder{box};
 
         // TODO: - vertical and horizontal alignment
         //       - borders collapse
         // TODO: in every row, at least one cell must be an anchor, or else this row is 'skipable'
 
-        computeWidthAndHeight(tree, box, input);
+        computeWidthAndHeight(box, input);
 
         // if shouldRepeatHeaderAndFooter, header and footer are never alone in the fragmentainer and we wont set
         // breakpoints on them;
         // otherwise, they only appear once, might be alone in the fragmentainer and can be broken into pages
         bool shouldRepeatHeaderAndFooter =
-            tree.fc.allowBreak() and
-            max(headerSize.y, footerSize.y) * 4 <= tree.fc.size().y and
-            headerSize.y + footerSize.y * 2 <= tree.fc.size().y;
+            input.fragmentainer->allowBreak() and
+            max(headerSize.y, footerSize.y) * 4 <= input.fragmentainer->size().y and
+            headerSize.y + footerSize.y * 2 <= input.fragmentainer->size().y;
 
         Au currPositionX{input.position.x};
         Au currPositionY{input.position.y};
@@ -1845,12 +1846,12 @@ export struct TableFormatingContext : FormatingContext {
         currPositionY += spacing.y;
 
         auto [startAt, stopAt] = computeLayoutIntervals(
-            tree, shouldRepeatHeaderAndFooter, startAtTable, stopAtTable
+            input, shouldRepeatHeaderAndFooter, startAtTable, stopAtTable
         );
 
         if (shouldRepeatHeaderAndFooter)
             layoutHeaderFooterRows(
-                tree, input, fragBuilder,
+                input, fragBuilder,
                 startAt,
                 currPositionX, currPositionY,
                 0,
@@ -1858,19 +1859,19 @@ export struct TableFormatingContext : FormatingContext {
             );
 
         auto [completelyLaidOut, breakpoint] = layoutRows(
-            tree, box, input, fragBuilder,
+            box, input, fragBuilder,
             startAt, stopAt,
             currPositionX, currPositionY,
             shouldRepeatHeaderAndFooter
         );
 
-        if (tree.fc.isDiscoveryMode() and shouldRepeatHeaderAndFooter) {
+        if (input.fragmentainer->isDiscoveryMode() and shouldRepeatHeaderAndFooter) {
             breakpoint.expect().endIdx -= dataRowsInterval.x;
         }
 
         if (shouldRepeatHeaderAndFooter)
             layoutHeaderFooterRows(
-                tree, input, fragBuilder,
+                input, fragBuilder,
                 startAt,
                 currPositionX, currPositionY,
                 grid.size.y - numOfFooterRows,
@@ -1886,7 +1887,7 @@ export struct TableFormatingContext : FormatingContext {
             .fragment = fragBuilder.buildBoxFromInput(input, size),
             .size = size,
             .completelyLaidOut = completelyLaidOut,
-            .breakpoint = tree.fc.isDiscoveryMode() ? Opt{breakpoint} : NONE,
+            .breakpoint = input.fragmentainer->isDiscoveryMode() ? Opt{breakpoint} : NONE,
         };
     }
 };

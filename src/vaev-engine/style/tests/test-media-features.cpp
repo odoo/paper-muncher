@@ -16,7 +16,7 @@ static Media const TEST_MEDIA = {
     .aspectRatio = 16.0 / 9.0,
     .orientation = Print::Orientation::LANDSCAPE,
 
-    .resolution = Resolution::fromDpi(96),
+    .resolution = PureResolution::fromDpi(96),
     .scan = Scan::PROGRESSIVE,
     .grid = false,
     .update = Update::NONE,
@@ -87,11 +87,11 @@ test$("feature-orientation") {
 }
 
 test$("feature-resolution") {
-    assert$(ResolutionFeature::min(Resolution::fromDpi(96)).match(TEST_MEDIA));
+    assert$(ResolutionFeature::min(PureResolution::fromDpi(96)).match(TEST_MEDIA));
 
-    assert$(ResolutionFeature::max(Resolution::fromDpi(96)).match(TEST_MEDIA));
+    assert$(ResolutionFeature::max(PureResolution::fromDpi(96)).match(TEST_MEDIA));
 
-    assert$(ResolutionFeature::exact(Resolution::fromDpi(96)).match(TEST_MEDIA));
+    assert$(ResolutionFeature::exact(PureResolution::fromDpi(96)).match(TEST_MEDIA));
 
     return Ok();
 }

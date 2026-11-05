@@ -247,7 +247,7 @@ export struct RowGapProperty : Property {
         }
 
         Rc<Property> load(ComputedValues const& c) const override {
-            return makeRc<RowGapProperty>(self(), c.gaps->row);
+            return makeRc<RowGapProperty>(self(), toSpecified(c.gaps->row));
         }
 
         Res<Rc<Property>> parse(Cursor<Css::Sst>& c) const override {
@@ -261,7 +261,7 @@ export struct RowGapProperty : Property {
         : Property(registration), _value(value) {}
 
     void apply([[maybe_unused]] ComputedValues const& parent, ComputedValues& c, [[maybe_unused]] ComputationContext const& cx) const override {
-        c.gaps.cow().row = _value;
+        c.gaps.cow().row = resolve(_value, cx);
     }
 
     Res<> serialize(Io::TextWriter& w) const override {
@@ -288,7 +288,7 @@ export struct ColumnGapProperty : Property {
         }
 
         Rc<Property> load(ComputedValues const& c) const override {
-            return makeRc<ColumnGapProperty>(self(), c.gaps->col);
+            return makeRc<ColumnGapProperty>(self(), toSpecified(c.gaps->col));
         }
 
         Res<Rc<Property>> parse(Cursor<Css::Sst>& c) const override {
@@ -302,7 +302,7 @@ export struct ColumnGapProperty : Property {
         : Property(registration), _value(value) {}
 
     void apply([[maybe_unused]] ComputedValues const& parent, ComputedValues& c, [[maybe_unused]] ComputationContext const& cx) const override {
-        c.gaps.cow().col = _value;
+        c.gaps.cow().col = resolve(_value, cx);
     }
 
     Res<> serialize(Io::TextWriter& w) const override {
@@ -334,7 +334,7 @@ export struct GapProperty : Property {
         }
 
         Rc<Property> load(ComputedValues const& c) const override {
-            return makeRc<GapProperty>(self(), *c.gaps);
+            return makeRc<GapProperty>(self(), Gaps{toSpecified(c.gaps->row), toSpecified(c.gaps->col)});
         }
 
         Res<Rc<Property>> parse(Cursor<Css::Sst>& c) const override {
@@ -355,8 +355,8 @@ export struct GapProperty : Property {
 
     Longhands expand(RegisteredPropertySet& registry, ComputedValues const&, ComputedValues&) const override {
         return {
-            makeRc<RowGapProperty>(registry.resolveRegistration(Properties::MARGIN_TOP, {}).expect(), _value.row),
-            makeRc<ColumnGapProperty>(registry.resolveRegistration(Properties::MARGIN_TOP, {}).expect(), _value.col),
+            makeRc<RowGapProperty>(registry.resolveRegistration(Properties::ROW_GAP, {}).expect(), _value.row),
+            makeRc<ColumnGapProperty>(registry.resolveRegistration(Properties::COLUMN_GAP, {}).expect(), _value.col),
         };
     }
 

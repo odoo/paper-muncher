@@ -5,11 +5,14 @@ import Karm.Math;
 
 import :css;
 import :values.base;
-import :values.calc;
+import :values.calc2;
 import :values.color;
 import :values.length;
 import :values.lineWidth;
 import :values.percent;
+import :values.unitValue;
+
+using namespace Vaev::Literals;
 
 namespace Vaev {
 
@@ -59,12 +62,12 @@ export struct SpecifiedBorder {
 };
 
 export struct ComputedBorder {
-    LineWidth width = Keywords::MEDIUM;
+    Pixel width = 3_px;
     Gfx::BorderStyle style = Gfx::BorderStyle::NONE;
     Color color = Gfx::BLACK;
 
     operator SpecifiedBorder() const {
-        return {width, style, color};
+        return {toSpecified(width), style, color};
     }
 
     void repr(Io::Emit& e) const {
@@ -87,25 +90,39 @@ export using UsedBorders = Math::Insets<UsedBorder>;
 export template <>
 struct ValueParser<SpecifiedBorder> {
     static Res<SpecifiedBorder> parse(Cursor<Css::Sst>& c) {
+        // https://drafts.csswg.org/css-backgrounds/#border-shorthands
+        // <line-width> || <line-style> || <color>, each at most once.
         SpecifiedBorder border;
+        bool widthSet = false;
+        bool styleSet = false;
+        bool colorSet = false;
         while (not c.ended()) {
             eatWhitespace(c);
 
             auto width = parseValue<LineWidth>(c);
             if (width) {
+                if (widthSet)
+                    return Error::invalidData("duplicated border width");
                 border.width = width.expect();
+                widthSet = true;
                 continue;
             }
 
             auto color = parseValue<Color>(c);
             if (color) {
+                if (colorSet)
+                    return Error::invalidData("duplicated border color");
                 border.color = color.expect();
+                colorSet = true;
                 continue;
             }
 
             auto style = parseValue<Gfx::BorderStyle>(c);
             if (style) {
+                if (styleSet)
+                    return Error::invalidData("duplicated border style");
                 border.style = style.expect();
+                styleSet = true;
                 continue;
             }
 
@@ -124,9 +141,15 @@ export enum struct BorderEdge {
     END,
 };
 
+// NOTE: Math::Radii::repr() needs T to be constructible from 0, which PixelPercentage isn't.
+export template <typename T>
+void reprRadii(Io::Emit& e, Math::Radii<T> const& radii) {
+    e("(radii {} {} {} {} {} {} {} {})", radii.a, radii.b, radii.c, radii.d, radii.e, radii.f, radii.g, radii.h);
+}
+
 export struct BorderProps {
     ComputedBorder top, start, bottom, end;
-    Math::Radii<Calc<PercentOr<Length>>> radii = {Length{0_au}};
+    Math::Radii<PixelPercentage> radii = {Pixel{0}};
 
     ComputedBorder const& get(BorderEdge edge) const {
         switch (edge) {
@@ -147,7 +170,8 @@ export struct BorderProps {
         e(" start={}", start);
         e(" bottom={}", bottom);
         e(" end={}", end);
-        e(" radii={}", radii);
+        e(" radii=");
+        reprRadii(e, radii);
         e(")");
     }
 };
@@ -158,21 +182,27 @@ struct ValueParser<Math::Radii<T>> {
         if (c.ended())
             return Error::invalidData("unexpected end of input");
 
-        auto value1 = parseValue<PercentOr<Length>>(c);
+        eatWhitespace(c);
+        auto value1 = parseValue<T>(c);
         if (not value1)
             return parsePostSlash(c, NONE);
 
-        auto value2 = parseValue<PercentOr<Length>>(c);
+        eatWhitespace(c);
+        auto value2 = parseValue<T>(c);
         if (not value2)
             return parsePostSlash(c, Some(Math::Radii<T>{value1.take()}));
 
-        auto value3 = parseValue<PercentOr<Length>>(c);
+        eatWhitespace(c);
+        auto value3 = parseValue<T>(c);
         if (not value3)
             return parsePostSlash(c, Some(Math::Radii<T>{value1.take(), value2.take()}));
 
-        auto value4 = parseValue<PercentOr<Length>>(c);
-        if (not value4)
-            return parsePostSlash(c, Some(Math::Radii<T>{value1.take(), value2.take(), value3.take(), value2.take()}));
+        eatWhitespace(c);
+        auto value4 = parseValue<T>(c);
+        if (not value4) {
+            auto topEndAndBottomStart = value2.take();
+            return parsePostSlash(c, Some(Math::Radii<T>{value1.take(), topEndAndBottomStart, value3.take(), topEndAndBottomStart}));
+        }
 
         return parsePostSlash(c, Some(Math::Radii<T>{value1.take(), value2.take(), value3.take(), value4.take()}));
     }
@@ -188,15 +218,16 @@ struct ValueParser<Math::Radii<T>> {
         if (c.ended() or c.peek().token.data != "/"s)
             return maybeRadii.okOr(Error::invalidData("expected border radius"));
 
-        auto radii = maybeRadii.unwrapOr(Math::Radii<T>{Length{0_au}});
+        auto radii = maybeRadii.unwrapOr(Math::Radii<T>{T::fromCanonical(0)});
         c.next();
         eatWhitespace(c);
-        auto value1 = parseValue<PercentOr<Length>>(c);
+        auto value1 = parseValue<T>(c);
         if (not value1) {
             return Ok(std::move(radii));
         }
 
-        auto value2 = parseValue<PercentOr<Length>>(c);
+        eatWhitespace(c);
+        auto value2 = parseValue<T>(c);
         if (not value2) {
             radii.a = value1.expect();
             radii.d = value1.expect();
@@ -206,7 +237,7 @@ struct ValueParser<Math::Radii<T>> {
         }
 
         eatWhitespace(c);
-        auto value3 = parseValue<PercentOr<Length>>(c);
+        auto value3 = parseValue<T>(c);
         if (not value3) {
             radii.a = value1.expect();
             radii.d = value2.expect();
@@ -216,7 +247,7 @@ struct ValueParser<Math::Radii<T>> {
         }
 
         eatWhitespace(c);
-        auto value4 = parseValue<PercentOr<Length>>(c);
+        auto value4 = parseValue<T>(c);
         if (not value4) {
             radii.a = value1.expect();
             radii.d = value2.expect();
@@ -234,5 +265,31 @@ struct ValueParser<Math::Radii<T>> {
         return Ok(std::move(radii));
     }
 };
+
+export Math::Radii<PixelPercentage> resolve(Math::Radii<LengthPercentage> const& value, LengthContext auto const& ctx) {
+    return {
+        resolve(value.a, ctx),
+        resolve(value.b, ctx),
+        resolve(value.c, ctx),
+        resolve(value.d, ctx),
+        resolve(value.e, ctx),
+        resolve(value.f, ctx),
+        resolve(value.g, ctx),
+        resolve(value.h, ctx),
+    };
+}
+
+export Math::Radii<LengthPercentage> toSpecified(Math::Radii<PixelPercentage> const& value) {
+    return {
+        toSpecified(value.a),
+        toSpecified(value.b),
+        toSpecified(value.c),
+        toSpecified(value.d),
+        toSpecified(value.e),
+        toSpecified(value.f),
+        toSpecified(value.g),
+        toSpecified(value.h),
+    };
+}
 
 } // namespace Vaev

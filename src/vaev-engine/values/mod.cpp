@@ -8,7 +8,6 @@ export import :values.baseline;
 export import :values.basicShape;
 export import :values.borders;
 export import :values.breaks;
-export import :values.calc;
 export import :values.calc2;
 export import :values.color;
 export import :values.content;

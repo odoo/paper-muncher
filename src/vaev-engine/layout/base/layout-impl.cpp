@@ -54,18 +54,18 @@ static Opt<Rc<FormatingContext>> _constructFormatingContext(Box& box) {
     }
 }
 
-Output _dispatchFormatingContext(Tree& tree, Box& box, Input input, usize startAt, Opt<usize> stopAt) {
+Output _dispatchFormatingContext(Box& box, Input input, usize startAt, Opt<usize> stopAt) {
     if (box.formatingContext == NONE) {
         box.formatingContext = _constructFormatingContext(box);
         if (box.formatingContext)
-            box.formatingContext.expect()->build(tree, box);
+            box.formatingContext.expect()->build(box);
     }
     if (auto& [formatingContext] = box.formatingContext)
-        return formatingContext->run(tree, box, input, startAt, stopAt);
+        return formatingContext->run(box, input, startAt, stopAt);
     return Output{};
 }
 
-InsetsAu computeMargins(Tree& tree, Box& box, Vec2Au containingBlock) {
+InsetsAu computeMargins(Box& box, Vec2Au containingBlock) {
     // Boxes that make up a table do not have margins.
     if (box.style->display.isTableInternal())
         return {};
@@ -73,10 +73,10 @@ InsetsAu computeMargins(Tree& tree, Box& box, Vec2Au containingBlock) {
     InsetsAu res;
     auto margin = box.style->margin;
 
-    res.top = resolve(tree, box, margin->top, containingBlock.height);
-    res.end = resolve(tree, box, margin->end, containingBlock.width);
-    res.bottom = resolve(tree, box, margin->bottom, containingBlock.height);
-    res.start = resolve(tree, box, margin->start, containingBlock.width);
+    res.top = Layout::resolve(margin->top, containingBlock.width);
+    res.end = Layout::resolve(margin->end, containingBlock.width);
+    res.bottom = Layout::resolve(margin->bottom, containingBlock.width);
+    res.start = Layout::resolve(margin->start, containingBlock.width);
 
     return res;
 }
@@ -88,7 +88,7 @@ Au _snapLengthAsBorderWidth(Au v) {
     return floor(v);
 }
 
-InsetsAu computeBorders(Tree& tree, Box& box) {
+InsetsAu computeBorders(Box& box) {
     // NOTE: In borders collapse mode, we assume that the table box borders are 'transfered' to the cells
     if (box.style->display == Display::TABLE_BOX and box.style->table->collapse == BorderCollapse::COLLAPSE) {
         return InsetsAu{};
@@ -98,21 +98,21 @@ InsetsAu computeBorders(Tree& tree, Box& box) {
     auto borders = box.style->borders;
 
     if (borders->top.style != Gfx::BorderStyle::NONE)
-        res.top = _snapLengthAsBorderWidth(resolve(tree, box, borders->top.width));
+        res.top = _snapLengthAsBorderWidth(Layout::resolve(borders->top.width));
 
     if (borders->end.style != Gfx::BorderStyle::NONE)
-        res.end = _snapLengthAsBorderWidth(resolve(tree, box, borders->end.width));
+        res.end = _snapLengthAsBorderWidth(Layout::resolve(borders->end.width));
 
     if (borders->bottom.style != Gfx::BorderStyle::NONE)
-        res.bottom = _snapLengthAsBorderWidth(resolve(tree, box, borders->bottom.width));
+        res.bottom = _snapLengthAsBorderWidth(Layout::resolve(borders->bottom.width));
 
     if (borders->start.style != Gfx::BorderStyle::NONE)
-        res.start = _snapLengthAsBorderWidth(resolve(tree, box, borders->start.width));
+        res.start = _snapLengthAsBorderWidth(Layout::resolve(borders->start.width));
 
     return res;
 }
 
-InsetsAu computePaddings(Tree& tree, Box& box, Vec2Au containingBlock) {
+InsetsAu computePaddings(Box& box, Vec2Au containingBlock) {
     // In a table only table cell have padding
     if (box.style->display.isTableInternal() and box.style->display != Display::TABLE_CELL)
         return {};
@@ -120,39 +120,40 @@ InsetsAu computePaddings(Tree& tree, Box& box, Vec2Au containingBlock) {
     InsetsAu res;
     auto padding = box.style->padding;
 
-    res.top = resolve(tree, box, padding->top, containingBlock.width);
-    res.end = resolve(tree, box, padding->end, containingBlock.width);
-    res.bottom = resolve(tree, box, padding->bottom, containingBlock.width);
-    res.start = resolve(tree, box, padding->start, containingBlock.width);
+    res.top = Layout::resolve(padding->top, containingBlock.width);
+    res.end = Layout::resolve(padding->end, containingBlock.width);
+    res.bottom = Layout::resolve(padding->bottom, containingBlock.width);
+    res.start = Layout::resolve(padding->start, containingBlock.width);
 
     return res;
 }
 
-Math::Radii<Au> computeRadii(Tree& tree, Box& box, Vec2Au size) {
+Math::Radii<Au> computeRadii(Box& box, Vec2Au size) {
     auto radii = box.style->borders->radii;
     Math::Radii<Au> res;
 
-    res.a = resolve(tree, box, radii.a, size.height);
-    res.b = resolve(tree, box, radii.b, size.width);
-    res.c = resolve(tree, box, radii.c, size.width);
-    res.d = resolve(tree, box, radii.d, size.height);
-    res.e = resolve(tree, box, radii.e, size.height);
-    res.f = resolve(tree, box, radii.f, size.width);
-    res.g = resolve(tree, box, radii.g, size.width);
-    res.h = resolve(tree, box, radii.h, size.height);
+    res.a = Layout::resolve(radii.a, size.height);
+    res.b = Layout::resolve(radii.b, size.width);
+    res.c = Layout::resolve(radii.c, size.width);
+    res.d = Layout::resolve(radii.d, size.height);
+    res.e = Layout::resolve(radii.e, size.height);
+    res.f = Layout::resolve(radii.f, size.width);
+    res.g = Layout::resolve(radii.g, size.width);
+    res.h = Layout::resolve(radii.h, size.height);
 
     return res;
 }
 
-Vec2Au computeIntrinsicContentSize(Tree& tree, Box& box, IntrinsicSize intrinsic, Opt<Au> capmin) {
+Vec2Au computeIntrinsicContentSize(Input const& input, Box& box, IntrinsicSize intrinsic, Opt<Au> capmin) {
     if (intrinsic == IntrinsicSize::AUTO) {
         panic("bad argument");
     }
 
     auto output = _dispatchFormatingContext(
-        tree,
         box,
         {
+            .fragmentainer = input.fragmentainer,
+            .viewport = input.viewport,
             .intrinsic = intrinsic,
             .knownSize = {NONE, NONE},
             .capmin = capmin,
@@ -164,7 +165,7 @@ Vec2Au computeIntrinsicContentSize(Tree& tree, Box& box, IntrinsicSize intrinsic
     return output.size;
 }
 
-Opt<Au> computeSpecifiedBorderBoxWidth(Tree& tree, Box& box, ComputedSize size, Vec2Au containingBlock, Au horizontalBorderBox, Opt<Au> capmin) {
+Opt<Au> computeSpecifiedBorderBoxWidth(Input const& input, Box& box, ComputedSize size, Vec2Au containingBlock, Au horizontalBorderBox, Opt<Au> capmin) {
     if (auto calc = size.is<PixelPercentage>()) {
         auto specifiedWidth = Layout::resolve(*calc, containingBlock.x);
         if (box.style->boxSizing == Keywords::CONTENT_BOX) {
@@ -174,15 +175,15 @@ Opt<Au> computeSpecifiedBorderBoxWidth(Tree& tree, Box& box, ComputedSize size, 
     }
 
     if (size.is<Keywords::MinContent>()) {
-        auto intrinsicSize = computeIntrinsicContentSize(tree, box, IntrinsicSize::MIN_CONTENT, capmin);
+        auto intrinsicSize = computeIntrinsicContentSize(input, box, IntrinsicSize::MIN_CONTENT, capmin);
         return Some(intrinsicSize.x + horizontalBorderBox);
     } else if (size.is<Keywords::MaxContent>()) {
-        auto intrinsicSize = computeIntrinsicContentSize(tree, box, IntrinsicSize::MAX_CONTENT, capmin);
+        auto intrinsicSize = computeIntrinsicContentSize(input, box, IntrinsicSize::MAX_CONTENT, capmin);
         return Some(intrinsicSize.x + horizontalBorderBox);
     } else if (size.is<Keywords::FitContent>()) {
-        auto minIntrinsicSize = computeIntrinsicContentSize(tree, box, IntrinsicSize::MIN_CONTENT, capmin);
-        auto maxIntrinsicSize = computeIntrinsicContentSize(tree, box, IntrinsicSize::MAX_CONTENT, capmin);
-        auto stretchIntrinsicSize = computeIntrinsicContentSize(tree, box, IntrinsicSize::STRETCH_TO_FIT, capmin);
+        auto minIntrinsicSize = computeIntrinsicContentSize(input, box, IntrinsicSize::MIN_CONTENT, capmin);
+        auto maxIntrinsicSize = computeIntrinsicContentSize(input, box, IntrinsicSize::MAX_CONTENT, capmin);
+        auto stretchIntrinsicSize = computeIntrinsicContentSize(input, box, IntrinsicSize::STRETCH_TO_FIT, capmin);
 
         return Some(clamp(stretchIntrinsicSize.x, minIntrinsicSize.x, maxIntrinsicSize.x) + horizontalBorderBox);
     } else if (size.is<Keywords::Auto>()) {
@@ -221,22 +222,22 @@ Opt<Au> computeSpecifiedBorderBoxHeight(Box& box, ComputedSize size, Vec2Au cont
     }
 }
 
-BoxMetrics computeBoxMetrics(Tree& tree, Box& box, Vec2Au position, Vec2Au size, UsedSpacings const& usedSpacings) {
+BoxMetrics computeBoxMetrics(Box& box, Vec2Au position, Vec2Au size, UsedSpacings const& usedSpacings) {
     return BoxMetrics{
         .padding = usedSpacings.padding,
         .borders = usedSpacings.borders,
-        .outlineOffset = resolve(tree, box, box.style->outline->offset),
-        .outlineWidth = resolve(tree, box, box.style->outline->width),
+        .outlineOffset = Layout::resolve(box.style->outline->offset),
+        .outlineWidth = Layout::resolve(box.style->outline->width),
         .position = position - usedSpacings.borders.topStart() - usedSpacings.padding.topStart(),
         .borderSize = size + usedSpacings.borders.all() + usedSpacings.padding.all(),
         .margin = usedSpacings.margin,
-        .radii = computeRadii(tree, box, size + usedSpacings.borders.all() + usedSpacings.padding.all()),
+        .radii = computeRadii(box, size + usedSpacings.borders.all() + usedSpacings.padding.all()),
     };
 }
 
-Opt<Rc<Fragment>> createBoxFragmentIfRequested(Tree& tree, Box& box, Input input, Vec2Au size, Vec<Rc<Fragment>> children) {
+Opt<Rc<Fragment>> createBoxFragmentIfRequested(Box& box, Input input, Vec2Au size, Vec<Rc<Fragment>> children) {
     if (input.generateFragment) {
-        auto boxMetrics = computeBoxMetrics(tree, box, input.position, size, input.usedSpacings);
+        auto boxMetrics = computeBoxMetrics(box, input.position, size, input.usedSpacings);
         return Some(makeRc<BoxFragment>(box, boxMetrics, std::move(children)));
     }
 
@@ -262,12 +263,12 @@ static Res<None, Output> _shouldAbortFragmentingBeforeLayout(Fragmentainer& fc, 
     return Ok(NONE);
 }
 
-Output layoutContentBox(Tree& tree, Box& box, Input input) {
-    auto startAt = tree.fc.allowBreak() ? input.breakpointTraverser.getStart().unwrapOr(0uz) : 0uz;
-    auto stopAt = tree.fc.allowBreak() and not tree.fc.isDiscoveryMode() ? input.breakpointTraverser.getEnd() : NONE;
-    try$(_shouldAbortFragmentingBeforeLayout(tree.fc, input));
+Output layoutContentBox(Box& box, Input input) {
+    auto startAt = input.fragmentainer->allowBreak() ? input.breakpointTraverser.getStart().unwrapOr(0uz) : 0uz;
+    auto stopAt = input.fragmentainer->allowBreak() and not input.fragmentainer->isDiscoveryMode() ? input.breakpointTraverser.getEnd() : NONE;
+    try$(_shouldAbortFragmentingBeforeLayout(*input.fragmentainer, input));
     auto out = _dispatchFormatingContext(
-        tree, box, input, startAt, stopAt
+        box, input, startAt, stopAt
     );
 
     Vec<Rc<PlaceholderFragment>> outOfFlowStash;
@@ -288,7 +289,7 @@ Output layoutContentBox(Tree& tree, Box& box, Input input) {
                 };
                 containingBlock = containingBlock.grow(input.usedSpacings.padding);
 
-                auto childOutput = layoutAbsolutePositioned(tree, oofChild->originatingBox(), containingBlock, oofChild->staticPosRect, input.pageNumber);
+                auto childOutput = layoutAbsolutePositioned(input, oofChild->originatingBox(), containingBlock, oofChild->staticPosRect, input.pageNumber);
                 auto childFragment = childOutput.fragment.expect();
 
                 pending.pushBack(childOutput.outOfFlowStash);
@@ -330,34 +331,34 @@ Input _adaptToContentBox(Input input, UsedSpacings const& usedSpacings) {
     return input;
 }
 
-Output layoutBorderBox(Tree& tree, Box& box, Input input) {
+Output layoutBorderBox(Box& box, Input input) {
     input = _adaptToContentBox(input, input.usedSpacings);
-    auto output = layoutContentBox(tree, box, input);
+    auto output = layoutContentBox(box, input);
     output.size = output.size + input.usedSpacings.borders.all() + input.usedSpacings.padding.all();
     return output;
 }
 
-Output layoutRoot(Tree& tree, Input input) {
+Output layoutRoot(Box& root, Input input) {
     UsedSpacings usedSpacings{
-        .padding = computePaddings(tree, tree.root, input.containingBlock),
-        .borders = computeBorders(tree, tree.root),
+        .padding = computePaddings(root, input.containingBlock),
+        .borders = computeBorders(root),
     };
 
     input.usedSpacings = usedSpacings;
 
     if (not input.knownSize.width)
         input.knownSize.width = computeSpecifiedBorderBoxWidth(
-            tree, tree.root, tree.root.style->sizing->width, input.containingBlock,
+            input, root, root.style->sizing->width, input.containingBlock,
             usedSpacings.borders.horizontal() + usedSpacings.padding.horizontal()
         );
 
     if (not input.knownSize.height)
         input.knownSize.height = computeSpecifiedBorderBoxHeight(
-            tree.root, tree.root.style->sizing->height, input.containingBlock,
+            root, root.style->sizing->height, input.containingBlock,
             usedSpacings.borders.vertical() + usedSpacings.padding.vertical()
         );
 
-    auto out = layoutBorderBox(tree, tree.root, input);
+    auto out = layoutBorderBox(root, input);
 
     if (input.generateFragment) {
         auto pending = std::move(out.outOfFlowStash);
@@ -365,7 +366,7 @@ Output layoutRoot(Tree& tree, Input input) {
         for (usize i = 0; i < pending.len(); ++i) {
             auto oofChild = pending[i];
 
-            auto childOutput = layoutAbsolutePositioned(tree, oofChild->originatingBox(), input.containingBlock, oofChild->staticPosRect, input.pageNumber);
+            auto childOutput = layoutAbsolutePositioned(input, oofChild->originatingBox(), input.containingBlock, oofChild->staticPosRect, input.pageNumber);
             auto childFragment = childOutput.fragment.expect();
 
             pending.pushBack(childOutput.outOfFlowStash);

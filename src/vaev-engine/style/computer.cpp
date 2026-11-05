@@ -407,7 +407,7 @@ export struct Computer {
             if (listStyleType == CustomIdent{"disc"_sym} or
                 listStyleType == CustomIdent{"circle"_sym} or
                 listStyleType == CustomIdent{"square"_sym}) {
-                values.cow().transform.cow().transform = TransformList{ScaleTransform{1.25, 1.25}};
+                values.cow().transform.cow().transform = ComputedTransformList{ComputedScaleTransform{1.25, 1.25}};
             }
         }
 

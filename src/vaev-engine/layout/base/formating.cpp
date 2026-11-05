@@ -11,18 +11,12 @@ using namespace Karm;
 
 namespace Vaev::Layout {
 
-export struct Tree {
-    Box root;
-    Style::Viewport viewport = {};
-    Fragmentainer fc = {};
-};
-
 struct FormatingContext {
     virtual ~FormatingContext() = default;
 
-    virtual void build(Tree&, Box&) {};
+    virtual void build(Box&) {};
 
-    virtual Output run(Tree& tree, Box& box, Input input, usize startAt, Opt<usize> stopAt) = 0;
+    virtual Output run(Box& box, Input input, usize startAt, Opt<usize> stopAt) = 0;
 };
 
 } // namespace Vaev::Layout

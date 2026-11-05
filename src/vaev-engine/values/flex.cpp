@@ -8,6 +8,7 @@ import Karm.Core;
 
 import :css;
 import :values.base;
+import :values.calc2;
 import :values.keywords;
 import :values.sizing;
 import :values.unitValue;
@@ -19,17 +20,6 @@ namespace Vaev {
 // MARK: Flexible Length -------------------------------------------------------
 // https://drafts.csswg.org/css-grid/#typedef-flex
 
-export struct Flex : TypedUnitValue<Some(NumericBaseType::FLEX)> {
-    using TypedUnitValue::TypedUnitValue;
-
-    static constexpr Flex fromFr(f64 val) {
-        return Flex{UnitValue{val, UnitValue::Unit::FR}};
-    }
-
-    constexpr f64 toFr() const {
-        return _value.to(UnitValue::Unit::FR);
-    }
-};
 
 // MARK: FlexDirection ---------------------------------------------------------
 // https://drafts.csswg.org/css-flexbox-1/#flex-direction-property
@@ -96,11 +86,27 @@ export using FlexBasis = Union<
     Keywords::MinContent,
     Keywords::MaxContent,
     Keywords::FitContent,
-    Calc<PercentOr<Length>>>;
+    LengthPercentage>;
+
+export using ComputedFlexBasis = Union<
+    Keywords::Auto,
+    Keywords::Content,
+    Keywords::MinContent,
+    Keywords::MaxContent,
+    Keywords::FitContent,
+    PixelPercentage>;
+
+export ComputedFlexBasis resolve(FlexBasis const& value, LengthContext auto const& ctx) {
+    return value.visit([&](auto const& v) -> ComputedFlexBasis { return resolve(v, ctx); });
+}
+
+export FlexBasis toSpecified(ComputedFlexBasis const& value) {
+    return value.visit([](auto const& v) -> FlexBasis { return toSpecified(v); });
+}
 
 export struct FlexItemProps {
     FlexBasis flexBasis = Keywords::AUTO;
-    Number flexGrow, flexShrink;
+    f64 flexGrow, flexShrink;
 
     void repr(Io::Emit& e) const {
         e("({} {} {})", flexBasis, flexGrow, flexShrink);
@@ -113,9 +119,9 @@ export struct FlexProps {
     FlexWrap wrap = FlexWrap::NOWRAP;
 
     // FlexItem
-    FlexBasis basis = Keywords::AUTO;
-    Number grow = 0;
-    Number shrink = 1;
+    ComputedFlexBasis basis = Keywords::AUTO;
+    f64 grow = 0;
+    f64 shrink = 1;
 
     bool isRowOriented() const {
         return direction == FlexDirection::ROW or
