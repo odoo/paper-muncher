@@ -33,15 +33,15 @@ bool isSegmentBreak(Rune rune) {
 
 // http://drafts.csswg.org/css-text/#white-space-property
 static bool _allowsWrap(WhiteSpace whiteSpace) {
-    return oneOf(whiteSpace, WhiteSpace::NORMAL, WhiteSpace::PRE_WRAP, WhiteSpace::BREAK_SPACES, WhiteSpace::PRE_LINE);
+    return oneOf(whiteSpace, Keywords::NORMAL, Keywords::PRE_WRAP, Keywords::BREAK_SPACES, Keywords::PRE_LINE);
 }
 
 static bool _collapsesWhitespace(WhiteSpace whiteSpace) {
-    return oneOf(whiteSpace, WhiteSpace::NORMAL, WhiteSpace::NOWRAP, WhiteSpace::PRE_LINE);
+    return oneOf(whiteSpace, Keywords::NORMAL, Keywords::NOWRAP, Keywords::PRE_LINE);
 }
 
 static bool _discardsWhitespaceOnlyTextAtContentStart(WhiteSpace whiteSpace) {
-    return oneOf(whiteSpace, WhiteSpace::NORMAL, WhiteSpace::NOWRAP);
+    return oneOf(whiteSpace, Keywords::NORMAL, Keywords::NOWRAP);
 }
 
 static Gfx::ProseStyle _proseStyleFromStyle(Style::ComputedValues const& style) {
@@ -49,26 +49,20 @@ static Gfx::ProseStyle _proseStyleFromStyle(Style::ComputedValues const& style) 
         .multiline = true,
     };
 
-    switch (style.text->align) {
-    case TextAlign::START:
-    case TextAlign::LEFT:
-        proseStyle.align = Gfx::TextAlign::LEFT;
-        break;
-
-    case TextAlign::END:
-    case TextAlign::RIGHT:
-        proseStyle.align = Gfx::TextAlign::RIGHT;
-        break;
-
-    case TextAlign::CENTER:
-    case TextAlign::BLOCK_CENTER:
-        proseStyle.align = Gfx::TextAlign::CENTER;
-        break;
-
-    default:
-        // FIXME: Implement the rest
-        break;
-    }
+    style.text->align.visit(
+        [&](Meta::Contains<Keywords::Start, Keywords::Left> auto) {
+            proseStyle.align = Gfx::TextAlign::LEFT;
+        },
+        [&](Meta::Contains<Keywords::End, Keywords::Right> auto) {
+            proseStyle.align = Gfx::TextAlign::RIGHT;
+        },
+        [&](Meta::Contains<Keywords::Center, Keywords::VaevBlockCenter> auto) {
+            proseStyle.align = Gfx::TextAlign::CENTER;
+        },
+        [](auto) {
+            // FIXME: Implement the rest
+        }
+    );
 
     return proseStyle;
 }
@@ -111,20 +105,17 @@ static Gfx::SpanStyle _spanStyleFromStyle(Style::ComputedValues const& style) {
 }
 
 void _transformAndAppendRuneToProse(Rc<Gfx::Prose> prose, Rune rune, TextTransform transform) {
-    switch (transform) {
-    case TextTransform::UPPERCASE:
-        prose->append(toAsciiUpper(rune));
-        break;
-
-    case TextTransform::LOWERCASE:
-        prose->append(toAsciiLower(rune));
-        break;
-
-    case TextTransform::NONE:
-    default:
-        prose->append(rune);
-        break;
-    }
+    transform.visit(
+        [&](Keywords::Uppercase) {
+            prose->append(toAsciiUpper(rune));
+        },
+        [&](Keywords::Lowercase) {
+            prose->append(toAsciiLower(rune));
+        },
+        [&](Keywords::None) {
+            prose->append(rune);
+        }
+    );
 }
 
 // https://www.w3.org/TR/css-text-3/#white-space-phase-1
@@ -135,7 +126,7 @@ void _appendTextToInlineBox(Io::SScan scan, Rc<Style::ComputedValues const> pare
 
     // A sequence of collapsible spaces at the beginning of a line is removed.
     if (not rootInlineBox.isActive()) {
-        if (whitespace == WhiteSpace::PRE_LINE)
+        if (whitespace == Keywords::PRE_LINE)
             scan.eat(Re::blank());
         else if (whiteSpacesAreCollapsible)
             scan.eat(Re::space());
@@ -158,7 +149,7 @@ void _appendTextToInlineBox(Io::SScan scan, Rc<Style::ComputedValues const> pare
         // Preserve pre-line segment breaks. Prose collapses other whitespace
         // across text and inline boundaries.
         if (whiteSpacesAreCollapsible) {
-            if (whitespace == WhiteSpace::PRE_LINE and isSegmentBreak(rune)) {
+            if (whitespace == Keywords::PRE_LINE and isSegmentBreak(rune)) {
                 // A CRLF sequence represents one segment break.
                 if (rune == '\r' and not scan.ended() and scan.peek() == '\n')
                     scan.next();
@@ -753,7 +744,7 @@ static void _buildTableBox(BuilderContext tableWrapperBc, Gc::Ref<Dom::Element> 
 
     Box tableBox = {tableBoxStyle, Some(el)};
 
-    bool captionsOnTop = tableBoxStyle->table->captionSide == CaptionSide::TOP;
+    bool captionsOnTop = tableBoxStyle->table->captionSide == Keywords::TOP;
     if (captionsOnTop) {
         searchAndBuildCaption();
     }

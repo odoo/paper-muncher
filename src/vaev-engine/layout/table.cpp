@@ -1373,7 +1373,7 @@ export struct TableFormatingContext : FormatingContext {
     bool useBordersCollapse = false;
 
     void build(Box& box) override {
-        useBordersCollapse = box.style->table->collapse == BorderCollapse::COLLAPSE;
+        useBordersCollapse = box.style->table->collapse == Keywords::COLLAPSE;
 
         if (not useBordersCollapse)
             spacing = {
@@ -1408,7 +1408,7 @@ export struct TableFormatingContext : FormatingContext {
         //
         //      However, Chrome does not implement this exception, and we are not implementing it either.
         bool shouldRunAutoAlgorithm =
-            box.style->tableLayout == TableLayout::AUTO or
+            box.style->tableLayout == Keywords::AUTO or
             not input.knownSize.width;
         Opt<AutoLayoutCacheKey> cacheKey;
 
@@ -1581,7 +1581,7 @@ export struct TableFormatingContext : FormatingContext {
         }
 
         if (input.fragmentainer->isDiscoveryMode()) {
-            if (oneOf(cell.box->style->break_->inside, BreakInside::AVOID, BreakInside::AVOID_PAGE)) {
+            if (oneOf(cell.box->style->break_->inside, Keywords::AVOID, Keywords::AVOID_PAGE)) {
                 outputCell.breakpoint.expect().withAppeal(Breakpoint::Appeal::AVOID);
             }
         }
@@ -1683,25 +1683,25 @@ export struct TableFormatingContext : FormatingContext {
         // if row is self-contained, the <tr> it belongs to has size 1
         bool forcedBreakAfterCurrRow =
             rowGroupIdxs[i].axisIdx and
-            rows[rowGroupIdxs[i].axisIdx.expect()].el.style->break_->after == BreakBetween::PAGE;
+            rows[rowGroupIdxs[i].axisIdx.expect()].el.style->break_->after == Keywords::PAGE;
 
         bool forcedBreakBeforeNextRow =
             i + 1 <= dataRowsInterval.y and
             rowGroupIdxs[i + 1].axisIdx and
-            rows[rowGroupIdxs[i + 1].axisIdx.expect()].el.style->break_->before == BreakBetween::PAGE;
+            rows[rowGroupIdxs[i + 1].axisIdx.expect()].el.style->break_->before == Keywords::PAGE;
 
         bool limitOfCurrRowGroup = i + 1 <= dataRowsInterval.y and rowGroupIdxs[i].groupIdx != rowGroupIdxs[i + 1].groupIdx;
 
         bool forcedBreakAfterCurrRowGroup =
             limitOfCurrRowGroup and
             rowGroupIdxs[i].groupIdx and
-            rowGroups[rowGroupIdxs[i].groupIdx.expect()].el.style->break_->after == BreakBetween::PAGE;
+            rowGroups[rowGroupIdxs[i].groupIdx.expect()].el.style->break_->after == Keywords::PAGE;
 
         bool forcedBreakBeforeNextRowGroup =
             limitOfCurrRowGroup and
             i + 1 <= dataRowsInterval.y and
             rowGroupIdxs[i + 1].groupIdx and
-            rowGroups[rowGroupIdxs[i + 1].groupIdx.expect()].el.style->break_->before == BreakBetween::PAGE;
+            rowGroups[rowGroupIdxs[i + 1].groupIdx.expect()].el.style->break_->before == Keywords::PAGE;
 
         if (forcedBreakAfterCurrRow or forcedBreakBeforeNextRow or
             forcedBreakAfterCurrRowGroup or forcedBreakBeforeNextRowGroup) {
@@ -1715,15 +1715,15 @@ export struct TableFormatingContext : FormatingContext {
     bool handleUnforcedBreakpointsInsideAndAfterRow(Box& box, Breakpoint& currentBreakpoint, RowOutput outputRow, usize i, Vec2Au fragmentainerSize) {
         bool rowIsFreelyFragmentable = isFreelyFragmentableRow(i, fragmentainerSize);
 
-        bool avoidBreakInsideTable = oneOf(box.style->break_->inside, BreakInside::AVOID, BreakInside::AVOID_PAGE);
+        bool avoidBreakInsideTable = oneOf(box.style->break_->inside, Keywords::AVOID, Keywords::AVOID_PAGE);
 
         bool avoidBreakInsideRow =
             rowGroupIdxs[i].axisIdx and
-            oneOf(rows[rowGroupIdxs[i].axisIdx.expect()].el.style->break_->inside, BreakInside::AVOID, BreakInside::AVOID_PAGE);
+            oneOf(rows[rowGroupIdxs[i].axisIdx.expect()].el.style->break_->inside, Keywords::AVOID, Keywords::AVOID_PAGE);
 
         bool avoidBreakInsideRowGroup =
             rowGroupIdxs[i].groupIdx and
-            oneOf(rowGroups[rowGroupIdxs[i].groupIdx.expect()].el.style->break_->inside, BreakInside::AVOID, BreakInside::AVOID_PAGE);
+            oneOf(rowGroups[rowGroupIdxs[i].groupIdx.expect()].el.style->break_->inside, Keywords::AVOID, Keywords::AVOID_PAGE);
 
         if (rowIsFreelyFragmentable) {
             // breakpoint inside of row, take in consideration ALL breakpoints

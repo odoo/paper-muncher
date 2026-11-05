@@ -64,11 +64,15 @@ export using Paddings = Math::Insets<LengthPercentage>;
 // https://www.w3.org/TR/css-position-3/#propdef-inset
 export using BoxInsets = Math::Insets<Union<Keywords::Auto, LengthPercentage>>;
 
-export using ComputedMargins = Math::Insets<Union<Keywords::Auto, PixelPercentage>>;
+namespace Style {
 
-export using ComputedPaddings = Math::Insets<PixelPercentage>;
+export using Margins = Math::Insets<Union<Keywords::Auto, PixelPercentage>>;
 
-export using ComputedBoxInsets = Math::Insets<Union<Keywords::Auto, PixelPercentage>>;
+export using Paddings = Math::Insets<PixelPercentage>;
+
+export using BoxInsets = Math::Insets<Union<Keywords::Auto, PixelPercentage>>;
+
+} // namespace Style
 
 export Union<Keywords::Auto, PixelPercentage> resolve(Union<Keywords::Auto, LengthPercentage> const& value, LengthContext auto const& ctx) {
     return value.visit([&](auto const& v) -> Union<Keywords::Auto, PixelPercentage> { return resolve(v, ctx); });
@@ -123,15 +127,19 @@ export using Gap = Union<
     Keywords::Normal,
     LengthPercentage>;
 
-export using ComputedGap = Union<
+namespace Style {
+
+export using Gap = Union<
     Keywords::Normal,
     PixelPercentage>;
 
-export ComputedGap resolve(Gap const& value, LengthContext auto const& ctx) {
-    return value.visit([&](auto const& v) -> ComputedGap { return resolve(v, ctx); });
+} // namespace Style
+
+export Style::Gap resolve(Gap const& value, LengthContext auto const& ctx) {
+    return value.visit([&](auto const& v) -> Style::Gap { return resolve(v, ctx); });
 }
 
-export Gap toSpecified(ComputedGap const& value) {
+export Gap toSpecified(Style::Gap const& value) {
     return value.visit([](auto const& v) -> Gap { return toSpecified(v); });
 }
 
@@ -144,13 +152,12 @@ export struct Gaps {
     }
 };
 
-export struct ComputedGaps {
-    ComputedGap row = Keywords::NORMAL;
-    ComputedGap col = Keywords::NORMAL;
+namespace Style {
 
-    void repr(Io::Emit& e) const {
-        e("(gaps {} {})", row, col);
-    }
+export struct Gaps {
+    Style::Gap row = Keywords::NORMAL;
+    Style::Gap col = Keywords::NORMAL;
 };
 
+} // namespace Style
 } // namespace Vaev

@@ -90,7 +90,7 @@ Au _snapLengthAsBorderWidth(Au v) {
 
 InsetsAu computeBorders(Box& box) {
     // NOTE: In borders collapse mode, we assume that the table box borders are 'transfered' to the cells
-    if (box.style->display == Display::TABLE_BOX and box.style->table->collapse == BorderCollapse::COLLAPSE) {
+    if (box.style->display == Display::TABLE_BOX and box.style->table->collapse == Keywords::COLLAPSE) {
         return InsetsAu{};
     }
 
@@ -165,7 +165,7 @@ Vec2Au computeIntrinsicContentSize(Input const& input, Box& box, IntrinsicSize i
     return output.size;
 }
 
-Opt<Au> computeSpecifiedBorderBoxWidth(Input const& input, Box& box, ComputedSize size, Vec2Au containingBlock, Au horizontalBorderBox, Opt<Au> capmin) {
+Opt<Au> computeSpecifiedBorderBoxWidth(Input const& input, Box& box, Style::Size size, Vec2Au containingBlock, Au horizontalBorderBox, Opt<Au> capmin) {
     if (auto calc = size.is<PixelPercentage>()) {
         auto specifiedWidth = Layout::resolve(*calc, containingBlock.x);
         if (box.style->boxSizing == Keywords::CONTENT_BOX) {
@@ -194,7 +194,7 @@ Opt<Au> computeSpecifiedBorderBoxWidth(Input const& input, Box& box, ComputedSiz
     }
 }
 
-Opt<Au> computeSpecifiedBorderBoxHeight(Box& box, ComputedSize size, Vec2Au containingBlock, Au verticalBorderBox) {
+Opt<Au> computeSpecifiedBorderBoxHeight(Box& box, Style::Size size, Vec2Au containingBlock, Au verticalBorderBox) {
     if (auto calc = size.is<PixelPercentage>()) {
         auto specifiedHeight = Layout::resolve(*calc, containingBlock.y);
         if (box.style->boxSizing == Keywords::CONTENT_BOX) {

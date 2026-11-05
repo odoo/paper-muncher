@@ -118,7 +118,7 @@ export struct TransformProperty : Property {
         }
 
         Rc<Property> initial() const override {
-            return makeRc<TransformProperty>(self(), Transform{Keywords::NONE});
+            return makeRc<TransformProperty>(self(), Vaev::Transform{Keywords::NONE});
         }
 
         Rc<Property> load(ComputedValues const& c) const override {
@@ -217,13 +217,13 @@ export struct TransformProperty : Property {
         }
 
         Res<Rc<Property>> parse(Cursor<Css::Sst>& c) const override {
-            return Ok(makeRc<TransformProperty>(self(), try$(parseValue<Transform>(c))));
+            return Ok(makeRc<TransformProperty>(self(), try$(parseValue<Vaev::Transform>(c))));
         }
     };
 
-    Transform _value;
+    Vaev::Transform _value;
 
-    TransformProperty(Rc<Property::Registration> registration, Transform value)
+    TransformProperty(Rc<Property::Registration> registration, Vaev::Transform value)
         : Property(registration), _value(value) {}
 
     void apply([[maybe_unused]] ComputedValues const& parent, ComputedValues& c, [[maybe_unused]] ComputationContext const& cx) const override {

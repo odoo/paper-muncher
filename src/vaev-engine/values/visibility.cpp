@@ -1,17 +1,15 @@
 export module Vaev.Engine:values.visibility;
 
 import Karm.Core;
+import :values.keywords;
 
 using namespace Karm;
 
 namespace Vaev {
 
-export enum struct Visibility : u8 {
-    VISIBLE,
-    HIDDEN,
-    COLLAPSE,
-
-    _LEN
-};
+export using Visibility = Union<
+    Keywords::Visible,
+    Keywords::Hidden,
+    Keywords::Collapse>;
 
 } // namespace Vaev

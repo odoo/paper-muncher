@@ -1,6 +1,7 @@
 export module Vaev.Engine:values.text;
 
 import Karm.Core;
+import :values.keywords;
 
 using namespace Karm;
 
@@ -12,61 +13,43 @@ namespace Vaev {
 // MARK: Text Alignment --------------------------------------------------------
 // https://drafts.csswg.org/css-text/#text-align-property
 
-export enum struct TextAlign {
-    START,
-    END,
-    LEFT,
-    RIGHT,
-    CENTER,
-    JUSTIFY,
-    MATCH_PARENT,
-    JUSTIFY_ALL,
-
-    // NOTE: Non standard block centering value, used for <center> elements and supported by all major browsers
-    BLOCK_CENTER,
-
-    _LEN,
-};
+export using TextAlign = Union<
+    Keywords::Start,
+    Keywords::End,
+    Keywords::Left,
+    Keywords::Right,
+    Keywords::Center,
+    Keywords::Justify,
+    Keywords::MatchParent,
+    Keywords::JustifyAll,
+    Keywords::VaevBlockCenter>;
 
 // MARK: Text Transform --------------------------------------------------------
 // https://drafts.csswg.org/css-text-4/#text-transform
 
-export enum struct TextTransform {
-    NONE, //< https://drafts.csswg.org/css-text-4/#valdef-text-transform-none
-
-    UPPERCASE, //< https://drafts.csswg.org/css-text-4/#valdef-text-transform-uppercase
-    LOWERCASE, //< https://drafts.csswg.org/css-text-4/#valdef-text-transform-lowercase
-
-    _LEN,
-};
+export using TextTransform = Union<
+    Keywords::None,
+    Keywords::Uppercase,
+    Keywords::Lowercase>;
 
 // MARK: White Space -----------------------------------------------------------
 // https://drafts.csswg.org/css-text/#white-space-property
 
-export enum struct WhiteSpace {
-    NORMAL, //< https://drafts.csswg.org/css-text/#valdef-white-space-normal
+export using WhiteSpace = Union<
+    Keywords::Normal,
+    Keywords::Pre,
+    Keywords::Nowrap,
+    Keywords::PreWrap,
+    Keywords::BreakSpaces,
+    Keywords::PreLine>;
 
-    PRE,          //< https://drafts.csswg.org/css-text/#valdef-white-space-pre
-    NOWRAP,       //< https://drafts.csswg.org/css-text/#valdef-white-space-nowrap
-    PRE_WRAP,     //< https://drafts.csswg.org/css-text/#valdef-white-space-pre-wrap
-    BREAK_SPACES, //< https://drafts.csswg.org/css-text/#valdef-white-space-break-spaces
-    PRE_LINE,     //< https://drafts.csswg.org/css-text/#valdef-white-space-pre-line
+namespace Style {
 
-    _LEN,
+export struct Text {
+    TextAlign align = Keywords::START;
+    TextTransform transform = Keywords::NONE;
+    WhiteSpace whiteSpace = Keywords::NORMAL;
 };
 
-export struct TextProps {
-    TextAlign align = TextAlign::START;
-    TextTransform transform = TextTransform::NONE;
-    WhiteSpace whiteSpace = WhiteSpace::NORMAL;
-
-    void repr(Io::Emit& e) const {
-        e("(text");
-        e(" align: {}", align);
-        e(" transform: {}", transform);
-        e(" whiteSpace: {}", whiteSpace);
-        e(")");
-    }
-};
-
+} // namespace Style
 } // namespace Vaev

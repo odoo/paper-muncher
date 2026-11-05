@@ -4,6 +4,7 @@ import Karm.Core;
 
 import :css;
 import :values.base;
+import :values.keywords;
 
 using namespace Karm;
 
@@ -11,14 +12,11 @@ namespace Vaev {
 
 // MARK: Overflow
 // https://www.w3.org/TR/css-overflow/#overflow-control
-export enum struct Overflow : u8 {
-    VISIBLE,
-    HIDDEN,
-    SCROLL,
-    AUTO,
-
-    _LEN
-};
+export using Overflow = Union<
+    Keywords::Visible,
+    Keywords::Hidden,
+    Keywords::Scroll,
+    Keywords::Auto>;
 
 export template <>
 struct ValueParser<Overflow> {
@@ -28,25 +26,25 @@ struct ValueParser<Overflow> {
 
         if (c.skip(Css::Token::ident("overlay")))
             // https://www.w3.org/TR/css-overflow/#valdef-overflow-overlay
-            return Ok(Overflow::AUTO);
+            return Ok(Keywords::AUTO);
         else if (c.skip(Css::Token::ident("visible")))
-            return Ok(Overflow::VISIBLE);
+            return Ok(Keywords::VISIBLE);
         else if (c.skip(Css::Token::ident("hidden")))
-            return Ok(Overflow::HIDDEN);
+            return Ok(Keywords::HIDDEN);
         else if (c.skip(Css::Token::ident("scroll")))
-            return Ok(Overflow::SCROLL);
+            return Ok(Keywords::SCROLL);
         else if (c.skip(Css::Token::ident("auto")))
-            return Ok(Overflow::AUTO);
+            return Ok(Keywords::AUTO);
         else
             return Error::invalidData("expected overflow value");
     }
 };
 
 export struct Overflows {
-    Overflow x = Overflow::VISIBLE;
-    Overflow y = Overflow::VISIBLE;
-    Overflow block = Overflow::VISIBLE;
-    Overflow inline_ = Overflow::VISIBLE;
+    Overflow x = Keywords::VISIBLE;
+    Overflow y = Keywords::VISIBLE;
+    Overflow block = Keywords::VISIBLE;
+    Overflow inline_ = Keywords::VISIBLE;
 
     void repr(Io::Emit& e) const {
         e("(overflows");

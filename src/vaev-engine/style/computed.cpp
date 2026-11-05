@@ -11,7 +11,7 @@ using namespace Karm;
 
 namespace Vaev::Style {
 
-struct FontProps {
+struct Fonts {
     Vec<FontFamily> families = {"sans-serif"_sym};
     Gfx::FontWeight weight = Gfx::FontWeight::REGULAR;
     FontWidth width = FontWidth::NORMAL;
@@ -19,9 +19,9 @@ struct FontProps {
     Au size;
 };
 
-struct TransformProps {
-    ComputedTransform transform = Keywords::NONE;
-    ComputedPosition origin = {Percent{0}, Percent{0}};
+struct Transforms {
+    Transform transform = Keywords::NONE;
+    Position origin = {Percent{0}, Percent{0}};
     TransformBox box = Keywords::BORDER_BOX;
 
     bool has() const {
@@ -29,13 +29,13 @@ struct TransformProps {
     }
 };
 
-export struct TableProps {
-    CaptionSide captionSide = CaptionSide::TOP;
-    ComputedBorderSpacing spacing;
-    BorderCollapse collapse = BorderCollapse::SEPARATE;
+export struct Table {
+    CaptionSide captionSide = Keywords::TOP;
+    BorderSpacing spacing;
+    BorderCollapse collapse = Keywords::SEPARATE;
 };
 
-export struct SvgProps {
+export struct SvgGeometry {
     PixelPercentage x = Pixel{0};
     PixelPercentage y = Pixel{0};
     PixelPercentage cx = Pixel{0};
@@ -46,7 +46,7 @@ export struct SvgProps {
     Opt<SvgViewBox> viewBox = NONE;
 };
 
-export struct SvgPaintProps {
+export struct SvgPainting {
     f64 fillOpacity = 1;
     PixelPercentage strokeWidth = Pixel{1};
     f64 strokeOpacity = 1;
@@ -54,33 +54,33 @@ export struct SvgPaintProps {
     SvgPaint stroke = NONE;
 };
 
-using ClipProps = Opt<ComputedBasicShape>;
+using Clip = Opt<BasicShape>;
 
 export struct Inherited {};
 
 // https://www.w3.org/TR/css-cascade/#computed
 export struct ComputedValues {
-    Cow<ComputedGaps> gaps;
-    Cow<BackgroundProps> backgrounds;
-    Cow<BorderProps> borders;
-    Cow<ComputedMargins> margin = ComputedMargins(Keywords::AUTO);
-    Cow<OutlineProps> outline;
-    Cow<ComputedPaddings> padding = ComputedPaddings(Pixel{});
-    Cow<SizingProps> sizing;
-    Cow<InlineProps> inline_;
-    Cow<ComputedBoxInsets> insets = ComputedBoxInsets(Keywords::AUTO);
-    Cow<ClipProps> clip;
-    Cow<TransformProps> transform;
-    Cow<TableProps> table;
-    Cow<FontProps> font;
-    Cow<TextProps> text;
-    Cow<FlexProps> flex;
-    Cow<BreakProps> break_;
-    Cow<SvgProps> svg;
-    Cow<SvgPaintProps> svgPaint;
-    Cow<CounterProps> counters;
-    Cow<ListProps> list;
-    Cow<ColumnProps> column;
+    Cow<Gaps> gaps;
+    Cow<Backgrounds> backgrounds;
+    Cow<Borders> borders;
+    Cow<Margins> margin = Margins(Keywords::AUTO);
+    Cow<Outline> outline;
+    Cow<Paddings> padding = Paddings(Pixel{});
+    Cow<Sizing> sizing;
+    Cow<Inline> inline_;
+    Cow<BoxInsets> insets = BoxInsets(Keywords::AUTO);
+    Cow<Clip> clip;
+    Cow<Transforms> transform;
+    Cow<Table> table;
+    Cow<Fonts> font;
+    Cow<Text> text;
+    Cow<Flex> flex;
+    Cow<Breaks> break_;
+    Cow<SvgGeometry> svg;
+    Cow<SvgPainting> svgPaint;
+    Cow<Counters> counters;
+    Cow<List> list;
+    Cow<Columns> column;
 
     Cow<Map<Symbol, Css::Content>> customProps;
     Rc<Gfx::Fontface> fontFace;
@@ -91,19 +91,19 @@ export struct ComputedValues {
     Gfx::Color color;
     Content content = Keywords::NORMAL;
     Integer order;
-    AlignProps aligns;
+    Style::Aligns aligns;
     Display display;
     f32 opacity;
 
     // Small Field
-    Float float_ = Float::NONE;
-    Clear clear = Clear::NONE;
-    Visibility visibility;
+    Float float_ = Keywords::NONE;
+    Clear clear = Keywords::NONE;
+    Visibility visibility = Keywords::VISIBLE;
     WritingMode writingMode = Keywords::HORIZONTAL_TB;
     Direction direction = Keywords::LTR;
-    Position position = Keywords::STATIC;
+    Vaev::Position position = Keywords::STATIC;
     BoxSizing boxSizing = Keywords::CONTENT_BOX;
-    TableLayout tableLayout = TableLayout::AUTO;
+    TableLayout tableLayout = Keywords::AUTO;
 
     ComputedValues() : fontFace(Gfx::Fontface::fallback()) {}
 

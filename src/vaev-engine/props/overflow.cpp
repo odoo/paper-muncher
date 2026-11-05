@@ -21,7 +21,7 @@ export struct OverflowXProperty : Property {
         Registration() : Property::Registration(Properties::OVERFLOW_X) {}
 
         Rc<Property> initial() const override {
-            return makeRc<OverflowXProperty>(self(), Overflow::VISIBLE);
+            return makeRc<OverflowXProperty>(self(), Keywords::VISIBLE);
         }
 
         Rc<Property> load(ComputedValues const& c) const override {
@@ -57,7 +57,7 @@ export struct OverflowYProperty : Property {
         Registration() : Property::Registration(Properties::OVERFLOW_Y) {}
 
         Rc<Property> initial() const override {
-            return makeRc<OverflowYProperty>(self(), Overflow::VISIBLE);
+            return makeRc<OverflowYProperty>(self(), Keywords::VISIBLE);
         }
 
         Rc<Property> load(ComputedValues const& c) const override {
@@ -93,7 +93,7 @@ export struct OverflowBlockProperty : Property {
         Registration() : Property::Registration(Properties::OVERFLOW_BLOCK) {}
 
         Rc<Property> initial() const override {
-            return makeRc<OverflowBlockProperty>(self(), Overflow::VISIBLE);
+            return makeRc<OverflowBlockProperty>(self(), Keywords::VISIBLE);
         }
 
         Rc<Property> load(ComputedValues const& c) const override {
@@ -129,7 +129,7 @@ export struct OverflowInlineProperty : Property {
         Registration() : Property::Registration(Properties::OVERFLOW_INLINE) {}
 
         Rc<Property> initial() const override {
-            return makeRc<OverflowInlineProperty>(self(), Overflow::VISIBLE);
+            return makeRc<OverflowInlineProperty>(self(), Keywords::VISIBLE);
         }
 
         Rc<Property> load(ComputedValues const& c) const override {
@@ -166,7 +166,7 @@ export struct OverflowProperty : Property {
             : Property::Registration(Properties::OVERFLOW, SHORTHAND) {}
 
         Rc<Property> initial() const override {
-            return makeRc<OverflowProperty>(self(), Pair{Overflow::VISIBLE, Overflow::VISIBLE});
+            return makeRc<OverflowProperty>(self(), Pair<Overflow>{Keywords::VISIBLE, Keywords::VISIBLE});
         }
 
         Rc<Property> load(ComputedValues const& c) const override {
@@ -178,7 +178,7 @@ export struct OverflowProperty : Property {
             if (c.ended())
                 return Error::invalidData("unexpected end of input");
 
-            Pair<Overflow> value;
+            Pair<Overflow> value{Keywords::VISIBLE, Keywords::VISIBLE};
             value.v0 = try$(parseValue<Overflow>(c));
 
             eatWhitespace(c);

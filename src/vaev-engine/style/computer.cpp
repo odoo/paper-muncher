@@ -66,7 +66,7 @@ export struct Computer {
         for (auto el : _iterElementInScope(element)) {
             auto maybeCounterIncrement =
                 iter(el.computedValues()->counters->increment) |
-                FindFirst([&](CounterProps::Increment const& increment) {
+                FindFirst([&](Style::Counters::Increment const& increment) {
                     return increment.name == counter;
                 });
 
@@ -84,7 +84,7 @@ export struct Computer {
             // 3. If el sets this counter with counter-set, then add that integer value to num and break this loop.
             auto maybeCounterSet =
                 iter(el.computedValues()->counters->set) |
-                FindFirst([&](CounterProps::Set const& set) {
+                FindFirst([&](Style::Counters::Set const& set) {
                     return set.name == counter;
                 });
 
@@ -279,13 +279,13 @@ export struct Computer {
         // https://html.spec.whatwg.org/multipage/obsolete.html#attr-table-align
         if (auto const& [align] = el->getAttribute(Html::ALIGN_ATTR)) {
             if (align == "left") {
-                values.cow().text.cow().align = TextAlign::LEFT;
+                values.cow().text.cow().align = Keywords::LEFT;
             } else if (align == "right") {
-                values.cow().text.cow().align = TextAlign::RIGHT;
+                values.cow().text.cow().align = Keywords::RIGHT;
             } else if (align == "center") {
-                values.cow().text.cow().align = TextAlign::BLOCK_CENTER;
+                values.cow().text.cow().align = Keywords::VAEV_BLOCK_CENTER;
             } else if (align == "justify") {
-                values.cow().text.cow().align = TextAlign::JUSTIFY;
+                values.cow().text.cow().align = Keywords::JUSTIFY;
             }
         }
     }
@@ -407,7 +407,7 @@ export struct Computer {
             if (listStyleType == CustomIdent{"disc"_sym} or
                 listStyleType == CustomIdent{"circle"_sym} or
                 listStyleType == CustomIdent{"square"_sym}) {
-                values.cow().transform.cow().transform = ComputedTransformList{ComputedScaleTransform{1.25, 1.25}};
+                values.cow().transform.cow().transform = Style::TransformList{Style::ScaleTransform{1.25, 1.25}};
             }
         }
 

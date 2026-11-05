@@ -32,13 +32,13 @@ export struct LineHeightProperty : Property {
         }
 
         Res<Rc<Property>> parse(Cursor<Css::Sst>& c) const override {
-            return Ok(makeRc<LineHeightProperty>(self(), try$(parseValue<LineHeight>(c))));
+            return Ok(makeRc<LineHeightProperty>(self(), try$(parseValue<Vaev::LineHeight>(c))));
         }
     };
 
-    LineHeight _value;
+    Vaev::LineHeight _value;
 
-    LineHeightProperty(Rc<Property::Registration> registration, LineHeight value)
+    LineHeightProperty(Rc<Property::Registration> registration, Vaev::LineHeight value)
         : Property(registration), _value(value) {}
 
     void apply([[maybe_unused]] ComputedValues const& parent, ComputedValues& c, [[maybe_unused]] ComputationContext const& cx) const override {
@@ -176,13 +176,13 @@ export struct BaselineShiftProperty : Property {
         }
 
         Res<Rc<Property>> parse(Cursor<Css::Sst>& c) const override {
-            return Ok(makeRc<BaselineShiftProperty>(self(), try$(parseValue<BaselineShift>(c))));
+            return Ok(makeRc<BaselineShiftProperty>(self(), try$(parseValue<Vaev::BaselineShift>(c))));
         }
     };
 
-    BaselineShift _value;
+    Vaev::BaselineShift _value;
 
-    BaselineShiftProperty(Rc<Property::Registration> registration, BaselineShift value)
+    BaselineShiftProperty(Rc<Property::Registration> registration, Vaev::BaselineShift value)
         : Property(registration), _value(value) {}
 
     void apply([[maybe_unused]] ComputedValues const& parent, ComputedValues& c, [[maybe_unused]] ComputationContext const& cx) const override {
@@ -203,7 +203,7 @@ export struct VerticalAlignProperty : Property {
     struct Value {
         Opt<BaselineSource> baselineSource = NONE;
         Opt<AlignmentBaseline> alignmentBaseline = NONE;
-        Opt<BaselineShift> baselineShift = NONE;
+        Opt<Vaev::BaselineShift> baselineShift = NONE;
     };
 
     struct Registration : Property::Registration {
@@ -256,7 +256,7 @@ export struct VerticalAlignProperty : Property {
                     return Error::invalidData("duplicated value type");
                 }
 
-                auto maybeBaselineShift = parseValue<BaselineShift>(c);
+                auto maybeBaselineShift = parseValue<Vaev::BaselineShift>(c);
                 if (maybeBaselineShift) {
                     if (not value.baselineShift) {
                         value.baselineShift = Some(maybeBaselineShift.expect());

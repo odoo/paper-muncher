@@ -72,7 +72,7 @@ test$("vaev-css-build-display") {
 }
 
 test$("vaev-css-build-margin") {
-    auto testCase = [&](Str input, Margins expected) -> Res<> {
+    auto testCase = [&](Str input, Vaev::Margins expected) -> Res<> {
         auto registry = defaultRegistry();
         auto res = registry.parseValue(Properties::MARGIN, input, {});
         assert$(res);
@@ -86,12 +86,12 @@ test$("vaev-css-build-margin") {
 
     try$(testCase(
         "30px;",
-        Margins{LengthPercentage::fromCanonical(30)}
+        Vaev::Margins{LengthPercentage::fromCanonical(30)}
     ));
 
     try$(testCase(
         "1px 2px;",
-        Margins{
+        Vaev::Margins{
             LengthPercentage::fromCanonical(1),
             LengthPercentage::fromCanonical(2),
         }
@@ -99,7 +99,7 @@ test$("vaev-css-build-margin") {
 
     try$(testCase(
         "1px /* x */ 2px;",
-        Margins{
+        Vaev::Margins{
             LengthPercentage::fromCanonical(1),
             LengthPercentage::fromCanonical(2),
         }
@@ -107,7 +107,7 @@ test$("vaev-css-build-margin") {
 
     try$(testCase(
         "1px 2px 3px;",
-        Margins{
+        Vaev::Margins{
             LengthPercentage::fromCanonical(1),
             LengthPercentage::fromCanonical(2),
             LengthPercentage::fromCanonical(3),
@@ -116,7 +116,7 @@ test$("vaev-css-build-margin") {
 
     try$(testCase(
         "1px 2px 3px 4px;",
-        Margins{
+        Vaev::Margins{
             LengthPercentage::fromCanonical(1),
             LengthPercentage::fromCanonical(2),
             LengthPercentage::fromCanonical(3),

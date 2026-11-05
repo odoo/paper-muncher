@@ -120,7 +120,7 @@ struct PaginationContext {
     Layout::RunningPositionMap runningPosition = {};
 };
 
-static InsetsAu _resolvePageMargin(Print::Margins marginSetting, ComputedMargins const& margin, RectAu pageRect) {
+static InsetsAu _resolvePageMargin(Print::Margins marginSetting, Style::Margins const& margin, RectAu pageRect) {
     return marginSetting.visit(
         [&](Print::MarginOption option) -> InsetsAu {
             switch (option) {

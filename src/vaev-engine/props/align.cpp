@@ -251,13 +251,13 @@ export struct RowGapProperty : Property {
         }
 
         Res<Rc<Property>> parse(Cursor<Css::Sst>& c) const override {
-            return Ok(makeRc<RowGapProperty>(self(), try$(parseValue<Gap>(c))));
+            return Ok(makeRc<RowGapProperty>(self(), try$(parseValue<Vaev::Gap>(c))));
         }
     };
 
-    Gap _value;
+    Vaev::Gap _value;
 
-    RowGapProperty(Rc<Property::Registration> registration, Gap value)
+    RowGapProperty(Rc<Property::Registration> registration, Vaev::Gap value)
         : Property(registration), _value(value) {}
 
     void apply([[maybe_unused]] ComputedValues const& parent, ComputedValues& c, [[maybe_unused]] ComputationContext const& cx) const override {
@@ -292,13 +292,13 @@ export struct ColumnGapProperty : Property {
         }
 
         Res<Rc<Property>> parse(Cursor<Css::Sst>& c) const override {
-            return Ok(makeRc<ColumnGapProperty>(self(), try$(parseValue<Gap>(c))));
+            return Ok(makeRc<ColumnGapProperty>(self(), try$(parseValue<Vaev::Gap>(c))));
         }
     };
 
-    Gap _value;
+    Vaev::Gap _value;
 
-    ColumnGapProperty(Rc<Property::Registration> registration, Gap value)
+    ColumnGapProperty(Rc<Property::Registration> registration, Vaev::Gap value)
         : Property(registration), _value(value) {}
 
     void apply([[maybe_unused]] ComputedValues const& parent, ComputedValues& c, [[maybe_unused]] ComputationContext const& cx) const override {
@@ -326,7 +326,7 @@ export struct GapProperty : Property {
         Rc<Property> initial() const override {
             return makeRc<GapProperty>(
                 self(),
-                Gaps{
+                Vaev::Gaps{
                     Keywords::NORMAL,
                     Keywords::NORMAL,
                 }
@@ -334,23 +334,23 @@ export struct GapProperty : Property {
         }
 
         Rc<Property> load(ComputedValues const& c) const override {
-            return makeRc<GapProperty>(self(), Gaps{toSpecified(c.gaps->row), toSpecified(c.gaps->col)});
+            return makeRc<GapProperty>(self(), Vaev::Gaps{toSpecified(c.gaps->row), toSpecified(c.gaps->col)});
         }
 
         Res<Rc<Property>> parse(Cursor<Css::Sst>& c) const override {
-            auto rowGap = try$(parseValue<Gap>(c));
+            auto rowGap = try$(parseValue<Vaev::Gap>(c));
             eatWhitespace(c);
-            auto colGap = parseValue<Gap>(c);
+            auto colGap = parseValue<Vaev::Gap>(c);
 
             if (not colGap)
-                return Ok(makeRc<GapProperty>(self(), Gaps{rowGap, rowGap}));
-            return Ok(makeRc<GapProperty>(self(), Gaps{rowGap, colGap.take()}));
+                return Ok(makeRc<GapProperty>(self(), Vaev::Gaps{rowGap, rowGap}));
+            return Ok(makeRc<GapProperty>(self(), Vaev::Gaps{rowGap, colGap.take()}));
         }
     };
 
-    Gaps _value;
+    Vaev::Gaps _value;
 
-    GapProperty(Rc<Property::Registration> registration, Gaps value)
+    GapProperty(Rc<Property::Registration> registration, Vaev::Gaps value)
         : Property(registration), _value(value) {}
 
     Longhands expand(RegisteredPropertySet& registry, ComputedValues const&, ComputedValues&) const override {

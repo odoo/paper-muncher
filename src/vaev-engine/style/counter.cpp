@@ -56,7 +56,7 @@ export struct CounterSet {
     }
 
     // https://drafts.csswg.org/css-lists/#instantiating-counters
-    Counter& instantiateCounter(Dom::ElementHandle el, CounterProps::Reset const& reset, Integer initial) {
+    Counter& instantiateCounter(Dom::ElementHandle el, Style::Counters::Reset const& reset, Integer initial) {
         // 1. Let counters be element’s CSS counters set.
 
         // 2. Let innermost counter be the last counter in counters with the name name.
@@ -73,13 +73,13 @@ export struct CounterSet {
     }
 
     // https://drafts.csswg.org/css-lists/#propdef-counter-increment
-    void increment(Dom::ElementHandle el, CounterProps::Increment const& increment) {
+    void increment(Dom::ElementHandle el, Style::Counters::Increment const& increment) {
         auto [counter, _] = innerMost(increment.name);
         if (not counter) {
             // If there is not currently a counter of the given name on the element,
             // the element instantiates a new counter of the given name with a starting
             // value of 0 before setting or incrementing its value.
-            CounterProps::Reset counterReset{increment.name, false};
+            Style::Counters::Reset counterReset{increment.name, false};
             counter = Some(instantiateCounter(el, counterReset, 0));
         }
 
@@ -87,13 +87,13 @@ export struct CounterSet {
     }
 
     // https://drafts.csswg.org/css-lists/#propdef-counter-set
-    void set(Dom::ElementHandle el, CounterProps::Set const& set) {
+    void set(Dom::ElementHandle el, Style::Counters::Set const& set) {
         auto [counter, _] = innerMost(set.name);
         if (not counter) {
             // If there is not currently a counter of the given name on the element,
             // the element instantiates a new counter of the given name with a starting
             // value of 0 before setting or incrementing its value.
-            CounterProps::Reset counterReset{set.name, false};
+            Style::Counters::Reset counterReset{set.name, false};
             counter = Some(instantiateCounter(el, counterReset, 0));
         }
 

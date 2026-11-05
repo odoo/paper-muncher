@@ -55,9 +55,9 @@ Res<None, Output> processBreakpointsAfterChild(Fragmentainer const& fc, Fragment
     // BREAK CLASS A
     if (not isLastChild) {
         bool breakIsAvoided =
-            oneOf(parentBox.style->break_->inside, BreakInside::AVOID, BreakInside::AVOID_PAGE) or
-            oneOf(childBox.style->break_->after, BreakBetween::AVOID, BreakBetween::AVOID_PAGE) or
-            (not isLastChild and oneOf(parentBox.children()[childIndex + 1].style->break_->before, BreakBetween::AVOID, BreakBetween::AVOID_PAGE));
+            oneOf(parentBox.style->break_->inside, Keywords::AVOID, Keywords::AVOID_PAGE) or
+            oneOf(childBox.style->break_->after, Keywords::AVOID, Keywords::AVOID_PAGE) or
+            (not isLastChild and oneOf(parentBox.children()[childIndex + 1].style->break_->before, Keywords::AVOID, Keywords::AVOID_PAGE));
 
         currentBreakpoint.overrideIfBetter(
             Breakpoint::classB(
@@ -68,7 +68,7 @@ Res<None, Output> processBreakpointsAfterChild(Fragmentainer const& fc, Fragment
     }
 
     // FORCED BREAK
-    if (childBox.style->break_->after == BreakBetween::PAGE) {
+    if (childBox.style->break_->after == Keywords::PAGE) {
         return Output{
             .fragment = fragBuilder.buildBoxFromInput(input, currentBoxSize),
             .size = currentBoxSize,
@@ -313,14 +313,14 @@ struct BlockFormatingContext : FormatingContext {
                     fragBuilder,
                     i,
                     Vec2Au{inlineSize, blockSize},
-                    c.style->break_->before == BreakBetween::PAGE,
+                    c.style->break_->before == Keywords::PAGE,
                     startAt,
                     input
                 )
             );
 
             // TODO: Implement floating
-            // if (c.style->float_ != Float::NONE)
+            // if (c.style->float_ != Keywords::NONE)
             //     continue;
 
             auto childContainingBlock = Vec2Au{inlineSize, input.knownSize.height.unwrapOr(0_au)};
@@ -366,7 +366,7 @@ struct BlockFormatingContext : FormatingContext {
                 _resolveAutoHorizontalMargins(c, childInput, usedSpacings, input.knownSize.width);
 
             childInput.position = input.position + Vec2Au{usedSpacings.margin.start, blockSize};
-            if (box.style->text->align == TextAlign::BLOCK_CENTER)
+            if (box.style->text->align == Keywords::VAEV_BLOCK_CENTER)
                 childInput.position.x += inlineSize / 2 - layoutBorderBox(c, childInput.withGenerateFragment(false)).width() / 2;
 
             if (c.isPseudoElement(Dom::PseudoElement::MARKER)) {
@@ -394,7 +394,7 @@ struct BlockFormatingContext : FormatingContext {
                 *input.fragmentainer,
                 currentBreakpoint,
                 i,
-                oneOf(box.style->break_->inside, BreakInside::AVOID, BreakInside::AVOID_PAGE),
+                oneOf(box.style->break_->inside, Keywords::AVOID, Keywords::AVOID_PAGE),
                 output.breakpoint
             );
 

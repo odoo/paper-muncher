@@ -27,18 +27,13 @@ export using ColumnCount = Union<
     Keywords::Auto,
     Integer>;
 
-export struct ColumnProps {
+namespace Style {
+
+export struct Columns {
     Union<Keywords::Auto, Au> width = Keywords::AUTO;
     Union<Keywords::Auto, Au> height = Keywords::AUTO;
     ColumnCount count = Keywords::AUTO;
-
-    void repr(Io::Emit& e) const {
-        e("(column");
-        e(" width={}", width);
-        e(" height={}", height);
-        e(" count={}", count);
-        e(")");
-    }
 };
 
+} // namespace Style
 } // namespace Vaev

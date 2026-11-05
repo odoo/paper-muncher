@@ -17,23 +17,27 @@ export using LineHeight = Union<Keywords::Normal, Number, LengthPercentage>;
 
 // NOTE: The computed value of a <length-percentage> is an absolute length,
 //       so percentages are resolved against the element's own font size.
-export using ComputedLineHeight = Union<Keywords::Normal, f64, Pixel>;
+namespace Style {
 
-export ComputedLineHeight resolve(LineHeight const& value, LengthContext auto const& ctx) {
+export using LineHeight = Union<Keywords::Normal, f64, Pixel>;
+
+} // namespace Style
+
+export Style::LineHeight resolve(LineHeight const& value, LengthContext auto const& ctx) {
     return value.visit(
-        [](Keywords::Normal const& normal) -> ComputedLineHeight {
+        [](Keywords::Normal const& normal) -> Style::LineHeight {
             return normal;
         },
-        [](Number const& number) -> ComputedLineHeight {
+        [](Number const& number) -> Style::LineHeight {
             return resolve(number);
         },
-        [&](LengthPercentage const& length) -> ComputedLineHeight {
+        [&](LengthPercentage const& length) -> Style::LineHeight {
             return resolve(length, ctx, ctx.fontSize);
         }
     );
 }
 
-export LineHeight toSpecified(ComputedLineHeight const& value) {
+export LineHeight toSpecified(Style::LineHeight const& value) {
     return value.visit(
         [](Keywords::Normal const& normal) -> LineHeight {
             return normal;

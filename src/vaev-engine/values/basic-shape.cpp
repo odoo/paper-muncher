@@ -61,13 +61,17 @@ using ShapeRadiusT = Union<
     Keywords::FarthestSide>;
 
 export using ShapeRadius = ShapeRadiusT<LengthPercentage>;
-export using ComputedShapeRadius = ShapeRadiusT<PixelPercentage>;
+namespace Style {
 
-export ComputedShapeRadius resolve(ShapeRadius const& value, LengthContext auto const& ctx) {
-    return value.visit([&](auto const& v) -> ComputedShapeRadius { return resolve(v, ctx); });
+export using ShapeRadius = ShapeRadiusT<PixelPercentage>;
+
+} // namespace Style
+
+export Style::ShapeRadius resolve(ShapeRadius const& value, LengthContext auto const& ctx) {
+    return value.visit([&](auto const& v) -> Style::ShapeRadius { return resolve(v, ctx); });
 }
 
-export ShapeRadius toSpecified(ComputedShapeRadius const& value) {
+export ShapeRadius toSpecified(Style::ShapeRadius const& value) {
     return value.visit([](auto const& v) -> ShapeRadius { return toSpecified(v); });
 }
 
@@ -85,13 +89,17 @@ struct CircleT {
 };
 
 export using Circle = CircleT<LengthPercentage, BackgroundPosition>;
-export using ComputedCircle = CircleT<PixelPercentage, ComputedPosition>;
+namespace Style {
 
-export ComputedCircle resolve(Circle const& value, LengthContext auto const& ctx) {
+export using Circle = CircleT<PixelPercentage, Style::Position>;
+
+} // namespace Style
+
+export Style::Circle resolve(Circle const& value, LengthContext auto const& ctx) {
     return {resolve(value.radius, ctx), resolve(value.position, ctx)};
 }
 
-export Circle toSpecified(ComputedCircle const& value) {
+export Circle toSpecified(Style::Circle const& value) {
     return {toSpecified(value.radius), toSpecified(value.position)};
 }
 
@@ -143,13 +151,17 @@ struct EllipseT {
 };
 
 export using Ellipse = EllipseT<LengthPercentage, BackgroundPosition>;
-export using ComputedEllipse = EllipseT<PixelPercentage, ComputedPosition>;
+namespace Style {
 
-export ComputedEllipse resolve(Ellipse const& value, LengthContext auto const& ctx) {
+export using Ellipse = EllipseT<PixelPercentage, Style::Position>;
+
+} // namespace Style
+
+export Style::Ellipse resolve(Ellipse const& value, LengthContext auto const& ctx) {
     return {resolve(value.rx, ctx), resolve(value.ry, ctx), resolve(value.position, ctx)};
 }
 
-export Ellipse toSpecified(ComputedEllipse const& value) {
+export Ellipse toSpecified(Style::Ellipse const& value) {
     return {toSpecified(value.rx), toSpecified(value.ry), toSpecified(value.position)};
 }
 
@@ -204,13 +216,17 @@ struct InsetT {
 };
 
 export using Inset = InsetT<LengthPercentage>;
-export using ComputedInset = InsetT<PixelPercentage>;
+namespace Style {
 
-export ComputedInset resolve(Inset const& value, LengthContext auto const& ctx) {
+export using Inset = InsetT<PixelPercentage>;
+
+} // namespace Style
+
+export Style::Inset resolve(Inset const& value, LengthContext auto const& ctx) {
     return {resolve(value.insets, ctx), resolve(value.borderRadius, ctx)};
 }
 
-export Inset toSpecified(ComputedInset const& value) {
+export Inset toSpecified(Style::Inset const& value) {
     return {toSpecified(value.insets), toSpecified(value.borderRadius)};
 }
 
@@ -311,16 +327,20 @@ struct PolygonT {
 };
 
 export using Polygon = PolygonT<LengthPercentage>;
-export using ComputedPolygon = PolygonT<PixelPercentage>;
+namespace Style {
 
-export ComputedPolygon resolve(Polygon const& value, LengthContext auto const& ctx) {
-    ComputedPolygon result{value.fillRule, {}};
+export using Polygon = PolygonT<PixelPercentage>;
+
+} // namespace Style
+
+export Style::Polygon resolve(Polygon const& value, LengthContext auto const& ctx) {
+    Style::Polygon result{value.fillRule, {}};
     for (auto const& [x, y] : value.points)
         result.points.emplaceBack(resolve(x, ctx), resolve(y, ctx));
     return result;
 }
 
-export Polygon toSpecified(ComputedPolygon const& value) {
+export Polygon toSpecified(Style::Polygon const& value) {
     Polygon result{value.fillRule, {}};
     for (auto const& [x, y] : value.points)
         result.points.emplaceBack(toSpecified(x), toSpecified(y));
@@ -380,13 +400,17 @@ struct RectT {
 };
 
 export using Rect = RectT<LengthPercentage>;
-export using ComputedRect = RectT<PixelPercentage>;
+namespace Style {
 
-export ComputedRect resolve(Rect const& value, LengthContext auto const& ctx) {
+export using Rect = RectT<PixelPercentage>;
+
+} // namespace Style
+
+export Style::Rect resolve(Rect const& value, LengthContext auto const& ctx) {
     return {resolve(value.insets, ctx), resolve(value.borderRadius, ctx)};
 }
 
-export Rect toSpecified(ComputedRect const& value) {
+export Rect toSpecified(Style::Rect const& value) {
     return {toSpecified(value.insets), toSpecified(value.borderRadius)};
 }
 
@@ -457,9 +481,13 @@ struct XywhT {
 };
 
 export using Xywh = XywhT<LengthPercentage>;
-export using ComputedXywh = XywhT<PixelPercentage>;
+namespace Style {
 
-export ComputedXywh resolve(Xywh const& value, LengthContext auto const& ctx) {
+export using Xywh = XywhT<PixelPercentage>;
+
+} // namespace Style
+
+export Style::Xywh resolve(Xywh const& value, LengthContext auto const& ctx) {
     return {
         resolve(value.x, ctx),
         resolve(value.y, ctx),
@@ -469,7 +497,7 @@ export ComputedXywh resolve(Xywh const& value, LengthContext auto const& ctx) {
     };
 }
 
-export Xywh toSpecified(ComputedXywh const& value) {
+export Xywh toSpecified(Style::Xywh const& value) {
     return {
         toSpecified(value.x),
         toSpecified(value.y),
@@ -530,7 +558,11 @@ using BasicShapeFunctionT = Union<
     CircleT<L, P>, EllipseT<L, P>, InsetT<L>, Path, PolygonT<L>, RectT<L>, XywhT<L>>;
 
 export using BasicShapeFunction = BasicShapeFunctionT<LengthPercentage, BackgroundPosition>;
-export using ComputedBasicShapeFunction = BasicShapeFunctionT<PixelPercentage, ComputedPosition>;
+namespace Style {
+
+export using BasicShapeFunction = BasicShapeFunctionT<PixelPercentage, Style::Position>;
+
+} // namespace Style
 
 export template <typename L, typename P>
 struct BasicShapeT {
@@ -543,16 +575,20 @@ struct BasicShapeT {
 };
 
 export using BasicShape = BasicShapeT<LengthPercentage, BackgroundPosition>;
-export using ComputedBasicShape = BasicShapeT<PixelPercentage, ComputedPosition>;
+namespace Style {
 
-export ComputedBasicShape resolve(BasicShape const& value, LengthContext auto const& ctx) {
+export using BasicShape = BasicShapeT<PixelPercentage, Style::Position>;
+
+} // namespace Style
+
+export Style::BasicShape resolve(BasicShape const& value, LengthContext auto const& ctx) {
     return {
         value.shape.map([&](BasicShapeFunction const& shape) {
             return shape.visit(
-                [](Path const& path) -> ComputedBasicShapeFunction {
+                [](Path const& path) -> Style::BasicShapeFunction {
                     return path;
                 },
-                [&](auto const& s) -> ComputedBasicShapeFunction {
+                [&](auto const& s) -> Style::BasicShapeFunction {
                     return resolve(s, ctx);
                 }
             );
@@ -561,9 +597,9 @@ export ComputedBasicShape resolve(BasicShape const& value, LengthContext auto co
     };
 }
 
-export BasicShape toSpecified(ComputedBasicShape const& value) {
+export BasicShape toSpecified(Style::BasicShape const& value) {
     return {
-        value.shape.map([](ComputedBasicShapeFunction const& shape) {
+        value.shape.map([](Style::BasicShapeFunction const& shape) {
             return shape.visit(
                 [](Path const& path) -> BasicShapeFunction {
                     return path;

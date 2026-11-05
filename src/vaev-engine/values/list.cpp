@@ -22,11 +22,14 @@ export using ListPosition = Union<Keywords::Inside, Keywords::Outside>;
 // https://www.w3.org/TR/css-lists-3/#marker-side
 export using MarkerSide = Union<Keywords::MatchSelf, Keywords::MatchParent>;
 
-struct ListProps {
+namespace Style {
+
+struct List {
     ListImage image = Keywords::NONE;
     ListType type = CustomIdent{"disc"_sym};
     ListPosition position = Keywords::OUTSIDE;
     MarkerSide markerSide = Keywords::MATCH_SELF;
 };
 
+} // namespace Style
 } // namespace Vaev

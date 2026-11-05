@@ -13,6 +13,7 @@ import :values.calc2;
 import :values.length;
 import :values.percent;
 import :values.unitValue;
+import :values.keywords;
 
 using namespace Karm;
 using namespace Karm::Math::Literals;
@@ -22,80 +23,26 @@ namespace Vaev {
 // MARK: Table Layout ----------------------------------------------------------
 // https://www.w3.org/TR/CSS21/tables.html#propdef-table-layout
 
-export enum struct TableLayout {
-    AUTO,
-    FIXED,
+export using TableLayout = Union<
+    Keywords::Auto,
+    Keywords::Fixed>;
 
-    _LEN
-};
-
-export template <>
-struct ValueParser<TableLayout> {
-    static Res<TableLayout> parse(Cursor<Css::Sst>& c) {
-        if (c.ended())
-            return Error::invalidData("unexpected end of input");
-
-        if (c.skip(Css::Token::ident("auto"))) {
-            return Ok(TableLayout::AUTO);
-        } else if (c.skip(Css::Token::ident("fixed"))) {
-            return Ok(TableLayout::FIXED);
-        }
-
-        return Error::invalidData("expected table layout value");
-    }
-};
 
 // MARK: Caption Side ----------------------------------------------------------
 // https://www.w3.org/TR/CSS21/tables.html#caption-position
 
-export enum struct CaptionSide {
-    TOP,
-    BOTTOM,
+export using CaptionSide = Union<
+    Keywords::Top,
+    Keywords::Bottom>;
 
-    _LEN
-};
-
-export template <>
-struct ValueParser<CaptionSide> {
-    static Res<CaptionSide> parse(Cursor<Css::Sst>& c) {
-        if (c.ended())
-            return Error::invalidData("unexpected end of input");
-
-        if (c.skip(Css::Token::ident("top"))) {
-            return Ok(CaptionSide::TOP);
-        } else if (c.skip(Css::Token::ident("bottom"))) {
-            return Ok(CaptionSide::BOTTOM);
-        }
-
-        return Error::invalidData("expected caption side value");
-    }
-};
 
 // MARK: Border Collapse -------------------------------------------------------
 // https://www.w3.org/TR/CSS22/tables.html#propdef-border-collapse
 
-export enum struct BorderCollapse {
-    SEPARATE,
-    COLLAPSE,
+export using BorderCollapse = Union<
+    Keywords::Separate,
+    Keywords::Collapse>;
 
-    _LEN
-};
-
-export template <>
-struct ValueParser<BorderCollapse> {
-    static Res<BorderCollapse> parse(Cursor<Css::Sst>& c) {
-        if (c.ended())
-            return Error::invalidData("unexpected end of input");
-
-        if (c.skip(Css::Token::ident("collapse"))) {
-            return Ok(BorderCollapse::COLLAPSE);
-        } else if (c.skip(Css::Token::ident("separate"))) {
-            return Ok(BorderCollapse::SEPARATE);
-        }
-
-        return Error::invalidData("expected border collapse value");
-    }
-};
 
 // MARK: Border Spacing --------------------------------------------------------
 // https://www.w3.org/TR/CSS22/tables.html#propdef-border-spacing
@@ -108,20 +55,19 @@ export struct BorderSpacing {
     }
 };
 
-export struct ComputedBorderSpacing {
+namespace Style {
+
+export struct BorderSpacing {
     Pixel horizontal = Pixel{0};
     Pixel vertical = Pixel{0};
-
-    void repr(Io::Emit& e) const {
-        e("({}, {})", horizontal, vertical);
-    }
 };
 
-export ComputedBorderSpacing resolve(BorderSpacing const& value, LengthContext auto const& ctx) {
+} // namespace Style
+export Style::BorderSpacing resolve(BorderSpacing const& value, LengthContext auto const& ctx) {
     return {resolve(value.horizontal, ctx), resolve(value.vertical, ctx)};
 }
 
-export BorderSpacing toSpecified(ComputedBorderSpacing const& value) {
+export BorderSpacing toSpecified(Style::BorderSpacing const& value) {
     return {toSpecified(value.horizontal), toSpecified(value.vertical)};
 }
 

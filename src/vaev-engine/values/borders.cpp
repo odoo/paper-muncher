@@ -61,20 +61,19 @@ export struct SpecifiedBorder {
     }
 };
 
-export struct ComputedBorder {
+namespace Style {
+
+export struct Border {
     Pixel width = 3_px;
     Gfx::BorderStyle style = Gfx::BorderStyle::NONE;
-    Color color = Gfx::BLACK;
+    Style::Color color = Gfx::BLACK;
 
     operator SpecifiedBorder() const {
-        return {toSpecified(width), style, color};
-    }
-
-    void repr(Io::Emit& e) const {
-        e("(computed-border {} {} {})", width, style, color);
+        return {toSpecified(width), style, toSpecified(color)};
     }
 };
 
+} // namespace Style
 export struct UsedBorder {
     Au width = 0_au;
     Gfx::BorderStyle style = Gfx::BorderStyle::NONE;
@@ -147,11 +146,13 @@ void reprRadii(Io::Emit& e, Math::Radii<T> const& radii) {
     e("(radii {} {} {} {} {} {} {} {})", radii.a, radii.b, radii.c, radii.d, radii.e, radii.f, radii.g, radii.h);
 }
 
-export struct BorderProps {
-    ComputedBorder top, start, bottom, end;
+namespace Style {
+
+export struct Borders {
+    Style::Border top, start, bottom, end;
     Math::Radii<PixelPercentage> radii = {Pixel{0}};
 
-    ComputedBorder const& get(BorderEdge edge) const {
+    Style::Border const& get(BorderEdge edge) const {
         switch (edge) {
         case BorderEdge::TOP:
             return top;
@@ -163,19 +164,9 @@ export struct BorderProps {
             return end;
         }
     }
-
-    void repr(Io::Emit& e) const {
-        e("(borders");
-        e(" top={}", top);
-        e(" start={}", start);
-        e(" bottom={}", bottom);
-        e(" end={}", end);
-        e(" radii=");
-        reprRadii(e, radii);
-        e(")");
-    }
 };
 
+} // namespace Style
 export template <typename T>
 struct ValueParser<Math::Radii<T>> {
     static Res<Math::Radii<T>> parse(Cursor<Css::Sst>& c) {

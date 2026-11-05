@@ -131,7 +131,7 @@ struct ValueSerializer<TransformOrigin> {
 
 // NOTE: The computed value is "for <length> the absolute value, otherwise a percentage",
 //       so keywords are turned into percentages.
-export ComputedPosition resolve(TransformOrigin const& value, LengthContext auto const& ctx) {
+export Style::Position resolve(TransformOrigin const& value, LengthContext auto const& ctx) {
     return {
         value.xOffset.visit(
             [](Keywords::Left) -> PixelPercentage {
@@ -191,12 +191,15 @@ export struct SpecifiedTransformTypes {
     using AngleType = Angle;
 };
 
-export struct ComputedTransformTypes {
+namespace Style {
+
+export struct TransformTypes {
     using LengthPercentageType = PixelPercentage;
     using NumberType = f64;
     using AngleType = Rad;
 };
 
+} // namespace Style
 // https://www.w3.org/TR/css-transforms-1/#funcdef-transform-matrix
 export template <typename T>
 struct MatrixTransformT {
@@ -208,7 +211,11 @@ struct MatrixTransformT {
 };
 
 export using MatrixTransform = MatrixTransformT<SpecifiedTransformTypes>;
-export using ComputedMatrixTransform = MatrixTransformT<ComputedTransformTypes>;
+namespace Style {
+
+export using MatrixTransform = MatrixTransformT<Style::TransformTypes>;
+
+} // namespace Style
 
 export template <>
 struct ValueParser<MatrixTransform> {
@@ -256,7 +263,11 @@ struct TranslateTransformT {
 };
 
 export using TranslateTransform = TranslateTransformT<SpecifiedTransformTypes>;
-export using ComputedTranslateTransform = TranslateTransformT<ComputedTransformTypes>;
+namespace Style {
+
+export using TranslateTransform = TranslateTransformT<Style::TransformTypes>;
+
+} // namespace Style
 
 export template <>
 struct ValueParser<TranslateTransform> {
@@ -324,7 +335,11 @@ struct ScaleTransformT {
 };
 
 export using ScaleTransform = ScaleTransformT<SpecifiedTransformTypes>;
-export using ComputedScaleTransform = ScaleTransformT<ComputedTransformTypes>;
+namespace Style {
+
+export using ScaleTransform = ScaleTransformT<Style::TransformTypes>;
+
+} // namespace Style
 
 export template <>
 struct ValueParser<ScaleTransform> {
@@ -392,7 +407,11 @@ struct RotateTransformT {
 };
 
 export using RotateTransform = RotateTransformT<SpecifiedTransformTypes>;
-export using ComputedRotateTransform = RotateTransformT<ComputedTransformTypes>;
+namespace Style {
+
+export using RotateTransform = RotateTransformT<Style::TransformTypes>;
+
+} // namespace Style
 
 export template <>
 struct ValueParser<RotateTransform> {
@@ -429,7 +448,11 @@ struct SkewTransformT {
 };
 
 export using SkewTransform = SkewTransformT<SpecifiedTransformTypes>;
-export using ComputedSkewTransform = SkewTransformT<ComputedTransformTypes>;
+namespace Style {
+
+export using SkewTransform = SkewTransformT<Style::TransformTypes>;
+
+} // namespace Style
 
 export template <>
 struct ValueParser<SkewTransform> {
@@ -474,7 +497,11 @@ struct SkewXTransformT {
 };
 
 export using SkewXTransform = SkewXTransformT<SpecifiedTransformTypes>;
-export using ComputedSkewXTransform = SkewXTransformT<ComputedTransformTypes>;
+namespace Style {
+
+export using SkewXTransform = SkewXTransformT<Style::TransformTypes>;
+
+} // namespace Style
 
 export template <>
 struct ValueParser<SkewXTransform> {
@@ -510,7 +537,11 @@ struct SkewYTransformT {
 };
 
 export using SkewYTransform = SkewYTransformT<SpecifiedTransformTypes>;
-export using ComputedSkewYTransform = SkewYTransformT<ComputedTransformTypes>;
+namespace Style {
+
+export using SkewYTransform = SkewYTransformT<Style::TransformTypes>;
+
+} // namespace Style
 
 export template <>
 struct ValueParser<SkewYTransform> {
@@ -546,7 +577,11 @@ using TransformFunctionT = Union<
     SkewYTransformT<T>>;
 
 export using TransformFunction = TransformFunctionT<SpecifiedTransformTypes>;
-export using ComputedTransformFunction = TransformFunctionT<ComputedTransformTypes>;
+namespace Style {
+
+export using TransformFunction = TransformFunctionT<Style::TransformTypes>;
+
+} // namespace Style
 
 // MARK: Transform -------------------------------------------------------------
 // https://drafts.csswg.org/css-transforms/#propdef-transform
@@ -554,15 +589,20 @@ export using ComputedTransformFunction = TransformFunctionT<ComputedTransformTyp
 export using TransformList = Vec<TransformFunction>;
 export using Transform = Union<Keywords::None, TransformList>;
 
-export using ComputedTransformList = Vec<ComputedTransformFunction>;
-export using ComputedTransform = Union<Keywords::None, ComputedTransformList>;
+namespace Style {
+
+export using TransformList = Vec<Style::TransformFunction>;
+
+export using Transform = Union<Keywords::None, Style::TransformList>;
+
+} // namespace Style
 
 // https://drafts.csswg.org/css-transforms/#transform-property
 // Computed value: as specified, but with lengths made absolute.
-export ComputedTransformFunction resolve(TransformFunction const& value, LengthContext auto const& ctx) {
+export Style::TransformFunction resolve(TransformFunction const& value, LengthContext auto const& ctx) {
     return value.visit(
-        [](MatrixTransform const& t) -> ComputedTransformFunction {
-            return ComputedMatrixTransform{{
+        [](MatrixTransform const& t) -> Style::TransformFunction {
+            return Style::MatrixTransform{{
                 resolve(t.values[0]),
                 resolve(t.values[1]),
                 resolve(t.values[2]),
@@ -571,34 +611,34 @@ export ComputedTransformFunction resolve(TransformFunction const& value, LengthC
                 resolve(t.values[5]),
             }};
         },
-        [&](TranslateTransform const& t) -> ComputedTransformFunction {
-            return ComputedTranslateTransform{resolve(t.x, ctx), resolve(t.y, ctx)};
+        [&](TranslateTransform const& t) -> Style::TransformFunction {
+            return Style::TranslateTransform{resolve(t.x, ctx), resolve(t.y, ctx)};
         },
-        [](ScaleTransform const& t) -> ComputedTransformFunction {
-            return ComputedScaleTransform{resolve(t.x), resolve(t.y)};
+        [](ScaleTransform const& t) -> Style::TransformFunction {
+            return Style::ScaleTransform{resolve(t.x), resolve(t.y)};
         },
-        [](RotateTransform const& t) -> ComputedTransformFunction {
-            return ComputedRotateTransform{resolve(t.value)};
+        [](RotateTransform const& t) -> Style::TransformFunction {
+            return Style::RotateTransform{resolve(t.value)};
         },
-        [](SkewTransform const& t) -> ComputedTransformFunction {
-            return ComputedSkewTransform{resolve(t.x), resolve(t.y)};
+        [](SkewTransform const& t) -> Style::TransformFunction {
+            return Style::SkewTransform{resolve(t.x), resolve(t.y)};
         },
-        [](SkewXTransform const& t) -> ComputedTransformFunction {
-            return ComputedSkewXTransform{resolve(t.value)};
+        [](SkewXTransform const& t) -> Style::TransformFunction {
+            return Style::SkewXTransform{resolve(t.value)};
         },
-        [](SkewYTransform const& t) -> ComputedTransformFunction {
-            return ComputedSkewYTransform{resolve(t.value)};
+        [](SkewYTransform const& t) -> Style::TransformFunction {
+            return Style::SkewYTransform{resolve(t.value)};
         }
     );
 }
 
-export TransformFunction toSpecified(ComputedTransformFunction const& value) {
+export TransformFunction toSpecified(Style::TransformFunction const& value) {
     auto number = [](f64 n) {
         return Number::fromCanonical(n);
     };
 
     return value.visit(
-        [&](ComputedMatrixTransform const& t) -> TransformFunction {
+        [&](Style::MatrixTransform const& t) -> TransformFunction {
             return MatrixTransform{{
                 number(t.values[0]),
                 number(t.values[1]),
@@ -608,34 +648,34 @@ export TransformFunction toSpecified(ComputedTransformFunction const& value) {
                 number(t.values[5]),
             }};
         },
-        [](ComputedTranslateTransform const& t) -> TransformFunction {
+        [](Style::TranslateTransform const& t) -> TransformFunction {
             return TranslateTransform{toSpecified(t.x), toSpecified(t.y)};
         },
-        [&](ComputedScaleTransform const& t) -> TransformFunction {
+        [&](Style::ScaleTransform const& t) -> TransformFunction {
             return ScaleTransform{number(t.x), number(t.y)};
         },
-        [](ComputedRotateTransform const& t) -> TransformFunction {
+        [](Style::RotateTransform const& t) -> TransformFunction {
             return RotateTransform{toSpecified(t.value)};
         },
-        [](ComputedSkewTransform const& t) -> TransformFunction {
+        [](Style::SkewTransform const& t) -> TransformFunction {
             return SkewTransform{toSpecified(t.x), toSpecified(t.y)};
         },
-        [](ComputedSkewXTransform const& t) -> TransformFunction {
+        [](Style::SkewXTransform const& t) -> TransformFunction {
             return SkewXTransform{toSpecified(t.value)};
         },
-        [](ComputedSkewYTransform const& t) -> TransformFunction {
+        [](Style::SkewYTransform const& t) -> TransformFunction {
             return SkewYTransform{toSpecified(t.value)};
         }
     );
 }
 
-export ComputedTransform resolve(Transform const& value, LengthContext auto const& ctx) {
+export Style::Transform resolve(Transform const& value, LengthContext auto const& ctx) {
     return value.visit(
-        [](Keywords::None) -> ComputedTransform {
+        [](Keywords::None) -> Style::Transform {
             return Keywords::NONE;
         },
-        [&](TransformList const& list) -> ComputedTransform {
-            ComputedTransformList result;
+        [&](TransformList const& list) -> Style::Transform {
+            Style::TransformList result;
             for (auto const& function : list)
                 result.pushBack(resolve(function, ctx));
             return result;
@@ -643,12 +683,12 @@ export ComputedTransform resolve(Transform const& value, LengthContext auto cons
     );
 }
 
-export Transform toSpecified(ComputedTransform const& value) {
+export Transform toSpecified(Style::Transform const& value) {
     return value.visit(
         [](Keywords::None) -> Transform {
             return Keywords::NONE;
         },
-        [](ComputedTransformList const& list) -> Transform {
+        [](Style::TransformList const& list) -> Transform {
             TransformList result;
             for (auto const& function : list)
                 result.pushBack(toSpecified(function));

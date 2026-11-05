@@ -8,7 +8,7 @@ using namespace Karm;
 
 namespace Vaev::Paint {
 
-Math::Vec2f resolveBackgroundPosition(ComputedPosition const& position, RectAu const& referenceBox) {
+Math::Vec2f resolveBackgroundPosition(Style::Position const& position, RectAu const& referenceBox) {
     return {
         Layout::resolve(position.x, referenceBox.width).cast<f64>(),
         Layout::resolve(position.y, referenceBox.height).cast<f64>(),

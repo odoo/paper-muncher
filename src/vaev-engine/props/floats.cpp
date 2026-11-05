@@ -20,7 +20,7 @@ export struct FloatProperty : Property {
         Registration() : Property::Registration(Properties::FLOAT) {}
 
         Rc<Property> initial() const override {
-            return makeRc<FloatProperty>(self(), Float::NONE);
+            return makeRc<FloatProperty>(self(), Keywords::NONE);
         }
 
         Rc<Property> load(ComputedValues const& c) const override {
@@ -55,7 +55,7 @@ export struct ClearProperty : Property {
         Registration() : Property::Registration(Properties::CLEAR) {}
 
         Rc<Property> initial() const override {
-            return makeRc<ClearProperty>(self(), Clear::NONE);
+            return makeRc<ClearProperty>(self(), Keywords::NONE);
         }
 
         Rc<Property> load(ComputedValues const& c) const override {

@@ -19,7 +19,7 @@ export struct VisibilityProperty : Property {
         Registration() : Property::Registration(Properties::VISIBILITY) {}
 
         Rc<Property> initial() const override {
-            return makeRc<VisibilityProperty>(self(), Visibility::VISIBLE);
+            return makeRc<VisibilityProperty>(self(), Keywords::VISIBLE);
         }
 
         Rc<Property> load(ComputedValues const& c) const override {
@@ -27,18 +27,7 @@ export struct VisibilityProperty : Property {
         }
 
         Res<Rc<Property>> parse(Cursor<Css::Sst>& c) const override {
-            Visibility value;
-            if (c.skip(Css::Token::ident("visible"))) {
-                value = Visibility::VISIBLE;
-            } else if (c.skip(Css::Token::ident("hidden"))) {
-                value = Visibility::HIDDEN;
-            } else if (c.skip(Css::Token::ident("collapse"))) {
-                value = Visibility::COLLAPSE;
-            } else {
-                return Error::invalidData("expected visibility");
-            }
-
-            return Ok(makeRc<VisibilityProperty>(self(), value));
+            return Ok(makeRc<VisibilityProperty>(self(), try$(parseValue<Visibility>(c))));
         }
     };
 
@@ -118,7 +107,7 @@ export struct OpacityProperty : Property {
 
 // https://drafts.csswg.org/css-masking/#the-clip-path
 export struct ClipPathProperty : Property {
-    using Value = Union</* Url, */ BasicShape, Keywords::None>;
+    using Value = Union</* Url, */ Vaev::BasicShape, Keywords::None>;
 
     struct Registration : Property::Registration {
         Registration() : Property::Registration(Properties::CLIP_PATH) {}
@@ -144,7 +133,7 @@ export struct ClipPathProperty : Property {
         : Property(registration), _value(value) {}
 
     void apply([[maybe_unused]] ComputedValues const& parent, ComputedValues& c, [[maybe_unused]] ComputationContext const& cx) const override {
-        if (auto clipShape = _value.is<BasicShape>())
+        if (auto clipShape = _value.is<Vaev::BasicShape>())
             c.clip.cow() = Some(resolve(*clipShape, cx));
         else
             c.clip.cow() = NONE;

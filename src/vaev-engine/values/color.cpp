@@ -778,4 +778,43 @@ export Gfx::Color resolve(ColorMix const& cm, Gfx::Color currentColor) {
     return resColor;
 }
 
+namespace Style {
+
+// https://drafts.csswg.org/css-color-4/#resolving-color-values
+// currentcolor computes to itself, so it inherits as a keyword,
+// every other color computes to an absolute color.
+export using Color = Union<Gfx::Color, Keywords::CurrentColor>;
+
+} // namespace Style
+
+// NOTE: currentColor is only used to resolve color-mix() functions referencing currentcolor.
+export Style::Color toComputed(Color const& value, Gfx::Color currentColor) {
+    return value.visit(
+        [](Gfx::Color const& srgb) -> Style::Color {
+            return srgb;
+        },
+        [](Keywords::CurrentColor) -> Style::Color {
+            return Keywords::CURRENT_COLOR;
+        },
+        [&](auto const&) -> Style::Color {
+            return resolve(value, currentColor);
+        }
+    );
+}
+
+export Color toSpecified(Style::Color const& value) {
+    return value.visit([](auto const& v) -> Color { return v; });
+}
+
+export Gfx::Color resolve(Style::Color const& value, Gfx::Color currentColor) {
+    return value.visit(
+        [](Gfx::Color const& srgb) {
+            return srgb;
+        },
+        [&](Keywords::CurrentColor) {
+            return currentColor;
+        }
+    );
+}
+
 } // namespace Vaev

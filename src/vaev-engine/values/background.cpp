@@ -78,20 +78,19 @@ export struct BackgroundPosition {
 
 // https://drafts.csswg.org/css-values/#position
 // The computed value is a pair of offsets from the top left origin.
-export struct ComputedPosition {
+namespace Style {
+
+export struct Position {
     PixelPercentage x;
     PixelPercentage y;
 
-    static ComputedPosition center() {
+    static Style::Position center() {
         return {Percent{50}, Percent{50}};
-    }
-
-    void repr(Io::Emit& e) const {
-        e("({} {})", x, y);
     }
 };
 
-export ComputedPosition resolve(BackgroundPosition const& value, LengthContext auto const& ctx) {
+} // namespace Style
+export Style::Position resolve(BackgroundPosition const& value, LengthContext auto const& ctx) {
     auto offset = [&](bool isCenter, bool isFromEnd, LengthPercentage const& length) -> PixelPercentage {
         if (isCenter)
             return Percent{50};
@@ -129,7 +128,7 @@ export ComputedPosition resolve(BackgroundPosition const& value, LengthContext a
     };
 }
 
-export BackgroundPosition toSpecified(ComputedPosition const& value) {
+export BackgroundPosition toSpecified(Style::Position const& value) {
     return {toSpecified(value.x), toSpecified(value.y)};
 }
 
@@ -365,9 +364,26 @@ export struct SpecifiedBackground {
     }
 };
 
-export struct BackgroundProps {
-    Color color = TRANSPARENT;
-    Vec<BackgroundLayer> layers = {};
+namespace Style {
+
+export struct BackgroundLayer {
+    Opt<Image> image;
+    BackgroundAttachment attachment = Keywords::FIXED;
+    Style::Position position = {Percent{0}, Percent{0}};
+    BackgroundRepeat repeat;
+};
+
+} // namespace Style
+
+export BackgroundLayer toSpecified(Style::BackgroundLayer const& value) {
+    return {value.image, value.attachment, toSpecified(value.position), value.repeat};
+}
+
+namespace Style {
+
+export struct Backgrounds {
+    Style::Color color = TRANSPARENT;
+    Vec<Style::BackgroundLayer> layers = {};
 
     bool imageIsNone() const {
         return iter(layers) |
@@ -377,18 +393,15 @@ export struct BackgroundProps {
     }
 
     operator SpecifiedBackground() const {
+        Vec<Vaev::BackgroundLayer> specifiedLayers;
+        for (auto const& layer : layers)
+            specifiedLayers.pushBack(toSpecified(layer));
         return {
-            color,
-            layers,
+            toSpecified(color),
+            std::move(specifiedLayers),
         };
-    }
-
-    void repr(Io::Emit& e) const {
-        e("(background");
-        e(" color={}", color);
-        e(" layers={}", layers);
-        e(")");
     }
 };
 
+} // namespace Style
 } // namespace Vaev

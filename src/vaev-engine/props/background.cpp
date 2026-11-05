@@ -28,21 +28,21 @@ export struct BackgroundColorProperty : Property {
         }
 
         Rc<Property> load(ComputedValues const& c) const override {
-            return makeRc<BackgroundColorProperty>(self(), c.backgrounds->color);
+            return makeRc<BackgroundColorProperty>(self(), toSpecified(c.backgrounds->color));
         }
 
         Res<Rc<Property>> parse(Cursor<Css::Sst>& c) const override {
-            return Ok(makeRc<BackgroundColorProperty>(self(), try$(parseValue<Color>(c))));
+            return Ok(makeRc<BackgroundColorProperty>(self(), try$(parseValue<Vaev::Color>(c))));
         }
     };
 
-    Color _value;
+    Vaev::Color _value;
 
-    BackgroundColorProperty(Rc<Property::Registration> registration, Color value)
+    BackgroundColorProperty(Rc<Property::Registration> registration, Vaev::Color value)
         : Property(registration), _value(value) {}
 
     void apply([[maybe_unused]] ComputedValues const& parent, ComputedValues& c, [[maybe_unused]] ComputationContext const& cx) const override {
-        c.backgrounds.cow().color = _value;
+        c.backgrounds.cow().color = toComputed(_value, c.color);
     }
 
     Res<> serialize(Io::TextWriter& w) const override {
@@ -218,7 +218,7 @@ export struct BackgroundProperty : Property {
 
         Res<Rc<Property>> parse(Cursor<Css::Sst>& c) const override {
             SpecifiedBackground value;
-            value.color = try$(parseValue<Color>(c));
+            value.color = try$(parseValue<Vaev::Color>(c));
             return Ok(makeRc<BackgroundProperty>(self(), std::move(value)));
         }
     };
@@ -261,13 +261,13 @@ export struct ColorProperty : Property {
         }
 
         Res<Rc<Property>> parse(Cursor<Css::Sst>& c) const override {
-            return Ok(makeRc<ColorProperty>(self(), try$(parseValue<Color>(c))));
+            return Ok(makeRc<ColorProperty>(self(), try$(parseValue<Vaev::Color>(c))));
         }
     };
 
-    Color _value;
+    Vaev::Color _value;
 
-    ColorProperty(Rc<Property::Registration> registration, Color value)
+    ColorProperty(Rc<Property::Registration> registration, Vaev::Color value)
         : Property(registration), _value(value) {}
 
     void apply(ComputedValues const& parent, ComputedValues& c, [[maybe_unused]] ComputationContext const& cx) const override {

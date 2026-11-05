@@ -25,21 +25,21 @@ export struct BorderTopColorProperty : Property {
         }
 
         Rc<Property> load(ComputedValues const& c) const override {
-            return makeRc<BorderTopColorProperty>(self(), c.borders->top.color);
+            return makeRc<BorderTopColorProperty>(self(), toSpecified(c.borders->top.color));
         }
 
         Res<Rc<Property>> parse(Cursor<Css::Sst>& c) const override {
-            return Ok(makeRc<BorderTopColorProperty>(self(), try$(parseValue<Color>(c))));
+            return Ok(makeRc<BorderTopColorProperty>(self(), try$(parseValue<Vaev::Color>(c))));
         }
     };
 
-    Color _value;
+    Vaev::Color _value;
 
-    BorderTopColorProperty(Rc<Property::Registration> registration, Color value)
+    BorderTopColorProperty(Rc<Property::Registration> registration, Vaev::Color value)
         : Property(registration), _value(value) {}
 
     void apply([[maybe_unused]] ComputedValues const& parent, ComputedValues& c, [[maybe_unused]] ComputationContext const& cx) const override {
-        c.borders.cow().top.color = _value;
+        c.borders.cow().top.color = toComputed(_value, c.color);
     }
 
     Res<> serialize(Io::TextWriter& w) const override {
@@ -61,21 +61,21 @@ export struct BorderRightColorProperty : Property {
         }
 
         Rc<Property> load(ComputedValues const& c) const override {
-            return makeRc<BorderRightColorProperty>(self(), c.borders->end.color);
+            return makeRc<BorderRightColorProperty>(self(), toSpecified(c.borders->end.color));
         }
 
         Res<Rc<Property>> parse(Cursor<Css::Sst>& c) const override {
-            return Ok(makeRc<BorderRightColorProperty>(self(), try$(parseValue<Color>(c))));
+            return Ok(makeRc<BorderRightColorProperty>(self(), try$(parseValue<Vaev::Color>(c))));
         }
     };
 
-    Color _value;
+    Vaev::Color _value;
 
-    BorderRightColorProperty(Rc<Property::Registration> registration, Color value)
+    BorderRightColorProperty(Rc<Property::Registration> registration, Vaev::Color value)
         : Property(registration), _value(value) {}
 
     void apply([[maybe_unused]] ComputedValues const& parent, ComputedValues& c, [[maybe_unused]] ComputationContext const& cx) const override {
-        c.borders.cow().end.color = _value;
+        c.borders.cow().end.color = toComputed(_value, c.color);
     }
 
     Res<> serialize(Io::TextWriter& w) const override {
@@ -97,21 +97,21 @@ export struct BorderBottomColorProperty : Property {
         }
 
         Rc<Property> load(ComputedValues const& c) const override {
-            return makeRc<BorderBottomColorProperty>(self(), c.borders->bottom.color);
+            return makeRc<BorderBottomColorProperty>(self(), toSpecified(c.borders->bottom.color));
         }
 
         Res<Rc<Property>> parse(Cursor<Css::Sst>& c) const override {
-            return Ok(makeRc<BorderBottomColorProperty>(self(), try$(parseValue<Color>(c))));
+            return Ok(makeRc<BorderBottomColorProperty>(self(), try$(parseValue<Vaev::Color>(c))));
         }
     };
 
-    Color _value;
+    Vaev::Color _value;
 
-    BorderBottomColorProperty(Rc<Property::Registration> registration, Color value)
+    BorderBottomColorProperty(Rc<Property::Registration> registration, Vaev::Color value)
         : Property(registration), _value(value) {}
 
     void apply([[maybe_unused]] ComputedValues const& parent, ComputedValues& c, [[maybe_unused]] ComputationContext const& cx) const override {
-        c.borders.cow().bottom.color = _value;
+        c.borders.cow().bottom.color = toComputed(_value, c.color);
     }
 
     Res<> serialize(Io::TextWriter& w) const override {
@@ -133,21 +133,21 @@ export struct BorderLeftColorProperty : Property {
         }
 
         Rc<Property> load(ComputedValues const& c) const override {
-            return makeRc<BorderLeftColorProperty>(self(), c.borders->start.color);
+            return makeRc<BorderLeftColorProperty>(self(), toSpecified(c.borders->start.color));
         }
 
         Res<Rc<Property>> parse(Cursor<Css::Sst>& c) const override {
-            return Ok(makeRc<BorderLeftColorProperty>(self(), try$(parseValue<Color>(c))));
+            return Ok(makeRc<BorderLeftColorProperty>(self(), try$(parseValue<Vaev::Color>(c))));
         }
     };
 
-    Color _value;
+    Vaev::Color _value;
 
-    BorderLeftColorProperty(Rc<Property::Registration> registration, Color value)
+    BorderLeftColorProperty(Rc<Property::Registration> registration, Vaev::Color value)
         : Property(registration), _value(value) {}
 
     void apply([[maybe_unused]] ComputedValues const& parent, ComputedValues& c, [[maybe_unused]] ComputationContext const& cx) const override {
-        c.borders.cow().start.color = _value;
+        c.borders.cow().start.color = toComputed(_value, c.color);
     }
 
     Res<> serialize(Io::TextWriter& w) const override {
@@ -165,30 +165,29 @@ export struct BorderColorProperty : Property {
             : Property::Registration(Properties::BORDER_COLOR, SHORTHAND) {}
 
         Rc<Property> initial() const override {
-            return makeRc<BorderColorProperty>(self(), Math::Insets<Color>{BLACK});
+            return makeRc<BorderColorProperty>(self(), Math::Insets<Vaev::Color>{BLACK});
         }
 
         Rc<Property> load(ComputedValues const& c) const override {
             return makeRc<BorderColorProperty>(
                 self(),
-                Math::Insets{
-                    c.borders->start.color,
-                    c.borders->end.color,
-                    c.borders->top.color,
-                    c.borders->bottom.color,
+                Math::Insets<Vaev::Color>{
+                    toSpecified(c.borders->top.color),
+                    toSpecified(c.borders->end.color),
+                    toSpecified(c.borders->bottom.color),
+                    toSpecified(c.borders->start.color),
                 }
-                    .cast<Color>()
             );
         }
 
         Res<Rc<Property>> parse(Cursor<Css::Sst>& c) const override {
-            return Ok(makeRc<BorderColorProperty>(self(), try$(parseValue<Math::Insets<Color>>(c))));
+            return Ok(makeRc<BorderColorProperty>(self(), try$(parseValue<Math::Insets<Vaev::Color>>(c))));
         }
     };
 
-    Math::Insets<Color> _value;
+    Math::Insets<Vaev::Color> _value;
 
-    BorderColorProperty(Rc<Property::Registration> registration, Math::Insets<Color> value)
+    BorderColorProperty(Rc<Property::Registration> registration, Math::Insets<Vaev::Color> value)
         : Property(registration), _value(value) {}
 
     Longhands expand(RegisteredPropertySet& registry, ComputedValues const&, ComputedValues&) const override {
@@ -1004,7 +1003,7 @@ export struct BorderCollapseProperty : Property {
             : Property::Registration(Properties::BORDER_COLLAPSE, {INHERITED, BULK_INHERITED}) {}
 
         Rc<Property> initial() const override {
-            return makeRc<BorderCollapseProperty>(self(), BorderCollapse::SEPARATE);
+            return makeRc<BorderCollapseProperty>(self(), Keywords::SEPARATE);
         }
 
         Rc<Property> load(ComputedValues const& c) const override {
@@ -1041,7 +1040,7 @@ export struct BorderSpacingProperty : Property {
             : Property::Registration(Properties::BORDER_SPACING, {INHERITED, BULK_INHERITED}) {}
 
         Rc<Property> initial() const override {
-            return makeRc<BorderSpacingProperty>(self(), BorderSpacing{Length::fromCanonical(0), Length::fromCanonical(0)});
+            return makeRc<BorderSpacingProperty>(self(), Vaev::BorderSpacing{Length::fromCanonical(0), Length::fromCanonical(0)});
         }
 
         Rc<Property> load(ComputedValues const& c) const override {
@@ -1049,13 +1048,13 @@ export struct BorderSpacingProperty : Property {
         }
 
         Res<Rc<Property>> parse(Cursor<Css::Sst>& c) const override {
-            return Ok(makeRc<BorderSpacingProperty>(self(), try$(parseValue<BorderSpacing>(c))));
+            return Ok(makeRc<BorderSpacingProperty>(self(), try$(parseValue<Vaev::BorderSpacing>(c))));
         }
     };
 
-    BorderSpacing _value;
+    Vaev::BorderSpacing _value;
 
-    BorderSpacingProperty(Rc<Property::Registration> registration, BorderSpacing value)
+    BorderSpacingProperty(Rc<Property::Registration> registration, Vaev::BorderSpacing value)
         : Property(registration), _value(value) {}
 
     void apply([[maybe_unused]] ComputedValues const& parent, ComputedValues& c, [[maybe_unused]] ComputationContext const& cx) const override {

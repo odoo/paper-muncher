@@ -46,10 +46,28 @@ export enum struct SvgMeetOrSlice {
 // https://svgwg.org/svg2-draft/painting.html#SpecifyingPaint
 export using SvgPaint = Opt<Color>;
 
-Opt<Gfx::Color> resolve(SvgPaint color, Gfx::Color currentColor) {
-    if (color == NONE)
-        return NONE;
-    return Some(Vaev::resolve(color.expect(), currentColor));
+namespace Style {
+
+export using SvgPaint = Opt<Color>;
+
+} // namespace Style
+
+export Style::SvgPaint toComputed(SvgPaint const& value, Gfx::Color currentColor) {
+    return value.map([&](Color const& color) {
+        return toComputed(color, currentColor);
+    });
+}
+
+export SvgPaint toSpecified(Style::SvgPaint const& value) {
+    return value.map([](Style::Color const& color) {
+        return toSpecified(color);
+    });
+}
+
+export Opt<Gfx::Color> resolve(Style::SvgPaint const& value, Gfx::Color currentColor) {
+    return value.map([&](Style::Color const& color) {
+        return resolve(color, currentColor);
+    });
 }
 
 // https://svgwg.org/svg2-draft/coords.html#ViewBoxAttribute

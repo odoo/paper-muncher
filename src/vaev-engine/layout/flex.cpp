@@ -90,11 +90,11 @@ struct FlexAxis {
         return isRowOriented ? value.vertical() : value.horizontal();
     }
 
-    ComputedSize mainAxis(Cow<SizingProps> sizing) const {
+    Style::Size mainAxis(Cow<Style::Sizing> sizing) const {
         return isRowOriented ? sizing->width : sizing->height;
     }
 
-    ComputedSize crossAxis(Cow<SizingProps> sizing) const {
+    Style::Size crossAxis(Cow<Style::Sizing> sizing) const {
         return isRowOriented ? sizing->height : sizing->width;
     }
 
@@ -134,7 +134,7 @@ struct FlexAxis {
 
 struct FlexItem {
     Box* box;
-    FlexProps flexItemProps;
+    Style::Flex flexItemProps;
     FlexAxis fa;
 
     Math::Insets<Au> borders;
@@ -266,7 +266,7 @@ struct FlexItem {
     // https://www.w3.org/TR/css-flexbox-1/#valdef-flex-basis-auto
     void computeFlexBaseSize(Opt<Au> mainContainerSize, IntrinsicSize containerSizing) {
         // A NONE return here indicates a CONTENT case for the flex basis
-        auto getDefiniteFlexBasisSize = [](FlexProps& flexItemProps, FlexAxis& fa, Box* box) -> Opt<PixelPercentage> {
+        auto getDefiniteFlexBasisSize = [](Style::Flex& flexItemProps, FlexAxis& fa, Box* box) -> Opt<PixelPercentage> {
             if (flexItemProps.basis.is<Keywords::Content>())
                 return NONE;
 
@@ -355,8 +355,8 @@ struct FlexItem {
     }
 
     Pair<Au> getMinMaxPrefferedSize(bool isWidth, Vec2Au containerSize) const {
-        ComputedSize minSizeToResolve = isWidth ? box->style->sizing->minWidth : box->style->sizing->minHeight;
-        ComputedMaxSize maxSizeToResolve = isWidth ? box->style->sizing->maxWidth : box->style->sizing->maxHeight;
+        Style::Size minSizeToResolve = isWidth ? box->style->sizing->minWidth : box->style->sizing->minHeight;
+        Style::MaxSize maxSizeToResolve = isWidth ? box->style->sizing->maxWidth : box->style->sizing->maxHeight;
 
         auto visitor = Visitor{
             [&](PixelPercentage const& v) {
@@ -643,11 +643,11 @@ struct FlexLine {
 };
 
 struct FlexFormatingContext : FormatingContext {
-    FlexProps _flex;
+    Style::Flex _flex;
     FlexAxis fa{_flex.isRowOriented()};
 
     // https://www.w3.org/TR/css-flexbox-1/#layout-algorithm
-    FlexFormatingContext(FlexProps flex) : _flex(flex) {}
+    FlexFormatingContext(Style::Flex flex) : _flex(flex) {}
 
     // XX. MARK: Generate flex items ----------------------------------
     Vec<FlexItem> _items = {};
@@ -699,7 +699,7 @@ struct FlexFormatingContext : FormatingContext {
     void _determineCrossSpaceForIntrinsicSizes(Input input) {
 
         // https://www.w3.org/TR/css-flexbox-1/#intrinsic-cross-sizes
-        if (not _flex.isRowOriented() and _flex.wrap == FlexWrap::WRAP) {
+        if (not _flex.isRowOriented() and _flex.wrap == Keywords::WRAP) {
             auto newInitiallyAvailableCrossSpace = Limits<Au>::MIN;
             for (auto& item : _items) {
                 newInitiallyAvailableCrossSpace = max(
@@ -833,7 +833,7 @@ struct FlexFormatingContext : FormatingContext {
         // The current state of the draft singles out the
         // Multi-line min-content (https://drafts.csswg.org/css-flexbox-1/#intrinsic-main-sizes-multiline)
         // while expecting other cases to be handled by the "web-compatible" algorithm
-        if (_flex.wrap == FlexWrap::WRAP and input.intrinsic == IntrinsicSize::MIN_CONTENT) {
+        if (_flex.wrap == Keywords::WRAP and input.intrinsic == IntrinsicSize::MIN_CONTENT) {
             _computeIntrinsicSizeMinMultiline();
         } else if (input.intrinsic != IntrinsicSize::AUTO) {
             _computeIntrinsicSizeWebCompat(input.intrinsic == IntrinsicSize::MIN_CONTENT);
@@ -874,7 +874,7 @@ struct FlexFormatingContext : FormatingContext {
     }
 
     void _collectFlexItemsIntoFlexLines() {
-        if (_flex.wrap == FlexWrap::NOWRAP) {
+        if (_flex.wrap == Keywords::NOWRAP) {
             _lines.emplaceBack(_items, fa.isRowOriented);
         } else {
             _collectFlexItemsInfoFlexLinesWrap();

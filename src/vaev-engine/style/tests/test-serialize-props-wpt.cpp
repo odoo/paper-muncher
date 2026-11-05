@@ -5755,10 +5755,6 @@ test$("vaev-style-wpt-css-css-text-parsing-text-align-valid") {
     try$(_expectSerialized(_driver, "text-align", "right", "right"));
     try$(_expectSerialized(_driver, "text-align", "center", "center"));
     try$(_expectSerialized(_driver, "text-align", "justify", "justify"));
-    return Ok();
-}
-
-test$("vaev-style-wpt-css-css-text-parsing-text-align-valid-xfail", XFAIL) {
     try$(_expectSerialized(_driver, "text-align", "match-parent", "match-parent"));
     try$(_expectSerialized(_driver, "text-align", "justify-all", "justify-all"));
     return Ok();

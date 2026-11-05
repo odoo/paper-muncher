@@ -312,7 +312,7 @@ export struct SvgShapeFragment : Fragment {
         return objectBoundingBox();
     }
 
-    Opt<Gfx::Fill> resolveFill(Style::SvgPaintProps const& svgPaint) {
+    Opt<Gfx::Fill> resolveFill(Style::SvgPainting const& svgPaint) {
         if (Math::epsilonEq(svgPaint.fillOpacity, 0.))
             return NONE;
 
@@ -330,7 +330,7 @@ export struct SvgShapeFragment : Fragment {
         return NONE;
     }
 
-    Opt<Gfx::Stroke> resolveStroke(Style::SvgPaintProps const& svgPaint) {
+    Opt<Gfx::Stroke> resolveStroke(Style::SvgPainting const& svgPaint) {
         if (Math::epsilonEq(svgPaint.strokeOpacity, 0.))
             return NONE;
 
@@ -740,7 +740,7 @@ export struct BoxFragment : Fragment {
                 outline.style = outlineStyle.style.expect<Gfx::BorderStyle>();
             }
 
-            outline.fill = resolve(outlineStyle.color, style().color);
+            outline.fill = outlineStyle.color;
 
             outOfBandOutlines.pushBack(OutOfBandOutline{
                 .outline = outline,

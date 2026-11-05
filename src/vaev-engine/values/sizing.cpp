@@ -27,64 +27,61 @@ export using BoxSizing = Union<Keywords::ContentBox, Keywords::BorderBox>;
 export using Size = Union<Keywords::Auto, LengthPercentage, Keywords::Stretch, Keywords::MinContent, Keywords::MaxContent, Keywords::FitContent>;
 export using MaxSize = Union<Keywords::None, LengthPercentage, Keywords::Stretch, Keywords::MinContent, Keywords::MaxContent, Keywords::FitContent>;
 
-export using ComputedSize = Union<Keywords::Auto, PixelPercentage, Keywords::Stretch, Keywords::MinContent, Keywords::MaxContent, Keywords::FitContent>;
-export using ComputedMaxSize = Union<Keywords::None, PixelPercentage, Keywords::Stretch, Keywords::MinContent, Keywords::MaxContent, Keywords::FitContent>;
+namespace Style {
 
-export ComputedSize resolve(Size const& value, LengthContext auto const& ctx) {
-    return value.visit([&](auto const& v) -> ComputedSize { return resolve(v, ctx); });
+export using Size = Union<Keywords::Auto, PixelPercentage, Keywords::Stretch, Keywords::MinContent, Keywords::MaxContent, Keywords::FitContent>;
+
+export using MaxSize = Union<Keywords::None, PixelPercentage, Keywords::Stretch, Keywords::MinContent, Keywords::MaxContent, Keywords::FitContent>;
+
+} // namespace Style
+
+export Style::Size resolve(Size const& value, LengthContext auto const& ctx) {
+    return value.visit([&](auto const& v) -> Style::Size { return resolve(v, ctx); });
 }
 
-export ComputedMaxSize resolve(MaxSize const& value, LengthContext auto const& ctx) {
-    return value.visit([&](auto const& v) -> ComputedMaxSize { return resolve(v, ctx); });
+export Style::MaxSize resolve(MaxSize const& value, LengthContext auto const& ctx) {
+    return value.visit([&](auto const& v) -> Style::MaxSize { return resolve(v, ctx); });
 }
 
-export Size toSpecified(ComputedSize const& value) {
+export Size toSpecified(Style::Size const& value) {
     return value.visit([](auto const& v) -> Size { return toSpecified(v); });
 }
 
-export MaxSize toSpecified(ComputedMaxSize const& value) {
+export MaxSize toSpecified(Style::MaxSize const& value) {
     return value.visit([](auto const& v) -> MaxSize { return toSpecified(v); });
 }
 
-export struct SizingProps {
-    ComputedSize width = Keywords::AUTO, height = Keywords::AUTO;
-    ComputedSize minWidth = Keywords::AUTO, minHeight = Keywords::AUTO;
-    ComputedMaxSize maxWidth = Keywords::NONE, maxHeight = Keywords::NONE;
+namespace Style {
 
-    ComputedSize& size(Axis axis) {
+export struct Sizing {
+    Style::Size width = Keywords::AUTO, height = Keywords::AUTO;
+    Style::Size minWidth = Keywords::AUTO, minHeight = Keywords::AUTO;
+    Style::MaxSize maxWidth = Keywords::NONE, maxHeight = Keywords::NONE;
+
+    Style::Size& size(Axis axis) {
         return axis == Axis::HORIZONTAL ? width : height;
     }
 
-    ComputedSize const& size(Axis axis) const {
+    Style::Size const& size(Axis axis) const {
         return axis == Axis::HORIZONTAL ? width : height;
     }
 
-    ComputedSize& minSize(Axis axis) {
+    Style::Size& minSize(Axis axis) {
         return axis == Axis::HORIZONTAL ? minWidth : minHeight;
     }
 
-    ComputedSize const& minSize(Axis axis) const {
+    Style::Size const& minSize(Axis axis) const {
         return axis == Axis::HORIZONTAL ? minWidth : minHeight;
     }
 
-    ComputedMaxSize& maxSize(Axis axis) {
+    Style::MaxSize& maxSize(Axis axis) {
         return axis == Axis::HORIZONTAL ? maxWidth : maxHeight;
     }
 
-    ComputedMaxSize const& maxSize(Axis axis) const {
+    Style::MaxSize const& maxSize(Axis axis) const {
         return axis == Axis::HORIZONTAL ? maxWidth : maxHeight;
-    }
-
-    void repr(Io::Emit& e) const {
-        e("(sizing");
-        e(" width={}", width);
-        e(" height={}", height);
-        e(" minWidth={}", minWidth);
-        e(" minHeight={}", minHeight);
-        e(" maxWidth={}", maxWidth);
-        e(" maxHeight={}", maxHeight);
-        e(")");
     }
 };
 
+} // namespace Style
 } // namespace Vaev

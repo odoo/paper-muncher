@@ -57,12 +57,12 @@ Math::Radiif resolveRadii(Math::Radii<PixelPercentage> const& baseRadii, RectAu 
 }
 
 // https://drafts.csswg.org/css-shapes-1/#typedef-basic-shape
-Tuple<Math::Path, Gfx::FillRule> resolvedClipShape(ComputedBasicShapeFunction const& shape, RectAu referenceBox) {
+Tuple<Math::Path, Gfx::FillRule> resolvedClipShape(Style::BasicShapeFunction const& shape, RectAu referenceBox) {
     Math::Path path;
     Gfx::FillRule fillRule = {};
 
     shape.visit(
-        [&](ComputedPolygon const& polygon) {
+        [&](Style::Polygon const& polygon) {
             path.moveTo(
                 referenceBox.xy.cast<f64>() +
                 Math::Vec2f(
@@ -81,7 +81,7 @@ Tuple<Math::Path, Gfx::FillRule> resolvedClipShape(ComputedBasicShapeFunction co
             }
             fillRule = polygon.fillRule;
         },
-        [&](ComputedCircle const& circle) {
+        [&](Style::Circle const& circle) {
             auto center = resolveBackgroundPosition(
                 circle.position,
                 referenceBox
@@ -113,7 +113,7 @@ Tuple<Math::Path, Gfx::FillRule> resolvedClipShape(ComputedBasicShapeFunction co
             }
             path.ellipse(Math::Ellipsef(center + referenceBox.xy.cast<f64>(), radius));
         },
-        [&](ComputedInset const& inset) {
+        [&](Style::Inset const& inset) {
             Math::Insetsf resolved;
             resolved.start = Layout::resolve(inset.insets.start, referenceBox.width).cast<f64>();
             resolved.end = Layout::resolve(inset.insets.end, referenceBox.width).cast<f64>();
@@ -124,7 +124,7 @@ Tuple<Math::Path, Gfx::FillRule> resolvedClipShape(ComputedBasicShapeFunction co
 
             path.rect(referenceBox.cast<f64>().shrink(resolved), resolvedRadii);
         },
-        [&](ComputedXywh const& xywh) {
+        [&](Style::Xywh const& xywh) {
             Math::Rectf resolvedRect;
             resolvedRect.x = Layout::resolve(xywh.x, referenceBox.width).cast<f64>();
             resolvedRect.y = Layout::resolve(xywh.y, referenceBox.height).cast<f64>();
@@ -135,7 +135,7 @@ Tuple<Math::Path, Gfx::FillRule> resolvedClipShape(ComputedBasicShapeFunction co
 
             path.rect(resolvedRect.offset(referenceBox.xy.cast<f64>()), resolvedRadii);
         },
-        [&](ComputedRect const& rect) {
+        [&](Style::Rect const& rect) {
             Math::Insetsf resolvedInsets;
             resolvedInsets.top = Layout::resolve(rect.insets.top, referenceBox.height).cast<f64>();
             resolvedInsets.end = Layout::resolve(rect.insets.end, referenceBox.width).cast<f64>();
@@ -152,7 +152,7 @@ Tuple<Math::Path, Gfx::FillRule> resolvedClipShape(ComputedBasicShapeFunction co
 
             path.rect(resultBox, resolvedRadii);
         },
-        [&](ComputedEllipse const& ellipse) {
+        [&](Style::Ellipse const& ellipse) {
             auto center = resolveBackgroundPosition(
                 ellipse.position,
                 referenceBox

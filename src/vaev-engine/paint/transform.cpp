@@ -42,7 +42,7 @@ RectAu resolveTransformReference(Rc<Layout::Fragment>& fragment, TransformBox bo
 }
 
 // https://www.w3.org/TR/css-transforms-1/#transform-origin-property
-Vec2Au resolveTransformOrigin(ComputedPosition const& origin, RectAu referenceBox) {
+Vec2Au resolveTransformOrigin(Style::Position const& origin, RectAu referenceBox) {
     return {
         referenceBox.start() + Layout::resolve(origin.x, referenceBox.width),
         referenceBox.top() + Layout::resolve(origin.y, referenceBox.height),
@@ -50,14 +50,14 @@ Vec2Au resolveTransformOrigin(ComputedPosition const& origin, RectAu referenceBo
 }
 
 // https://www.w3.org/TR/css-transforms-1/#transform-property
-Math::Trans2f resolveTransform(Slice<ComputedTransformFunction> transforms, RectAu referenceBox, Vec2Au origin) {
+Math::Trans2f resolveTransform(Slice<Style::TransformFunction> transforms, RectAu referenceBox, Vec2Au origin) {
     auto result = Math::Trans2f::translate(
         origin.cast<f64>()
     );
 
     for (auto const& transform : transforms) {
         auto trans = transform.visit(
-            [&](ComputedMatrixTransform const& t) {
+            [&](Style::MatrixTransform const& t) {
                 return Math::Trans2f{
                     t.values[0],
                     t.values[1],
@@ -67,31 +67,31 @@ Math::Trans2f resolveTransform(Slice<ComputedTransformFunction> transforms, Rect
                     t.values[5],
                 };
             },
-            [&](ComputedTranslateTransform const& t) {
+            [&](Style::TranslateTransform const& t) {
                 return Math::Trans2f::translate({
                     Layout::resolve(t.x, referenceBox.width).cast<f64>(),
                     Layout::resolve(t.y, referenceBox.height).cast<f64>(),
                 });
             },
-            [&](ComputedScaleTransform const& t) {
+            [&](Style::ScaleTransform const& t) {
                 return Math::Trans2f::scale({t.x, t.y});
             },
-            [&](ComputedRotateTransform const& t) {
+            [&](Style::RotateTransform const& t) {
                 return Math::Trans2f::rotate(t.value.value());
             },
-            [&](ComputedSkewTransform const& t) {
+            [&](Style::SkewTransform const& t) {
                 return Math::Trans2f::skew({
                     Math::tan(t.x.value()),
                     Math::tan(t.y.value()),
                 });
             },
-            [&](ComputedSkewXTransform const& t) {
+            [&](Style::SkewXTransform const& t) {
                 return Math::Trans2f::skew({
                     Math::tan(t.value.value()),
                     0,
                 });
             },
-            [&](ComputedSkewYTransform const& t) {
+            [&](Style::SkewYTransform const& t) {
                 return Math::Trans2f::skew({
                     0,
                     Math::tan(t.value.value()),
@@ -109,7 +109,7 @@ Math::Trans2f resolveTransform(Rc<Layout::Fragment>& fragment, Math::Rectf viewB
     auto const& transform = *fragment->style().transform;
     auto referenceBox = resolveTransformReference(fragment, transform.box, viewBox.cast<Au>());
     auto origin = resolveTransformOrigin(transform.origin, referenceBox);
-    return resolveTransform(transform.transform.expect<ComputedTransformList>(), referenceBox, origin);
+    return resolveTransform(transform.transform.expect<Style::TransformList>(), referenceBox, origin);
 }
 
 void applyTransform(Rc<Layout::Fragment>& fragment, Gfx::Canvas& g, Math::Rectf viewBox) {

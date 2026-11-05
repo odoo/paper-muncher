@@ -23,9 +23,9 @@ Au normalizedDiagonal(Vec2Au relativeTo) {
 
 struct SvgFormatingContext : FormatingContext {
     // https://svgwg.org/svg2-draft/coords.html#SizingSVGInCSS
-    Opt<f64> intrinsicAspectRatio(Opt<SvgViewBox> const& vb, ComputedSize const& width, ComputedSize const& height) {
+    Opt<f64> intrinsicAspectRatio(Opt<SvgViewBox> const& vb, Style::Size const& width, Style::Size const& height) {
         // 1. If the width and height sizing properties on the ‘svg’ element are both absolute values:
-        auto absolute = [](ComputedSize const& size) -> Opt<Pixel> {
+        auto absolute = [](Style::Size const& size) -> Opt<Pixel> {
             if (auto pp = size.is<PixelPercentage>())
                 return pp->is<Pixel>();
             return NONE;

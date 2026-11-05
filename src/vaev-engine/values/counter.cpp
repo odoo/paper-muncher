@@ -175,7 +175,9 @@ struct ValueParser<CountersFunc> {
 
 // https://www.w3.org/TR/css-lists-3/#counter-reset
 // https://www.w3.org/TR/css-lists-3/#increment-set
-export struct CounterProps {
+namespace Style {
+
+export struct Counters {
     struct Reset {
         CustomIdent name;
         bool reversed;
@@ -202,9 +204,10 @@ export struct CounterProps {
     Vec<Set> set;
 };
 
+} // namespace Style
 export template <>
-struct ValueParser<CounterProps::Reset> {
-    static Res<CounterProps::Reset> parse(Cursor<Css::Sst>& c) {
+struct ValueParser<Style::Counters::Reset> {
+    static Res<Style::Counters::Reset> parse(Cursor<Css::Sst>& c) {
         if (c.ended())
             return Error::invalidData("unexpected end of input");
 
@@ -221,18 +224,18 @@ struct ValueParser<CounterProps::Reset> {
         }
 
         auto value = try$(parseValue<Integer>(c));
-        return Ok(CounterProps::Reset{name, reversed, Some(value)});
+        return Ok(Style::Counters::Reset{name, reversed, Some(value)});
     }
 };
 
 export template <>
-struct ValueParser<CounterProps::Increment> {
-    static Res<CounterProps::Increment> parse(Cursor<Css::Sst>& c) {
+struct ValueParser<Style::Counters::Increment> {
+    static Res<Style::Counters::Increment> parse(Cursor<Css::Sst>& c) {
         if (c.ended())
             return Error::invalidData("unexpected end of input");
         CustomIdent name = try$(parseValue<CustomIdent>(c));
         auto value = try$(parseValue<Integer>(c));
-        return Ok(CounterProps::Increment{name, Some(value)});
+        return Ok(Style::Counters::Increment{name, Some(value)});
     }
 };
 

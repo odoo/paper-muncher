@@ -91,7 +91,7 @@ export struct OutlineStyleProperty : Property {
 
 // https://drafts.csswg.org/css-ui/#outline-color
 export struct OutlineColorProperty : Property {
-    using Value = Union<Keywords::Auto, Color>;
+    using Value = Union<Keywords::Auto, Vaev::Color>;
 
     struct Registration : Property::Registration {
         Registration() : Property::Registration(Properties::OUTLINE_COLOR) {}
@@ -106,7 +106,7 @@ export struct OutlineColorProperty : Property {
         }
 
         Rc<Property> load(ComputedValues const& c) const override {
-            return makeRc<OutlineColorProperty>(self(), Color{c.outline->color});
+            return makeRc<OutlineColorProperty>(self(), Vaev::Color{c.outline->color});
         }
 
         Res<Rc<Property>> parse(Cursor<Css::Sst>& c) const override {
@@ -126,10 +126,10 @@ export struct OutlineColorProperty : Property {
                 // When outline-style is auto, outline-color: auto computes to auto and represents the accent color.
                 // Otherwise, outline-color: auto computes to currentColor.
                 return c.outline->style == Keywords::AUTO
-                           ? resolve(Color{SystemColor::ACCENT_COLOR}, c.color)
+                           ? resolve(Vaev::Color{SystemColor::ACCENT_COLOR}, c.color)
                            : c.color;
             },
-            [&](Color color) {
+            [&](Vaev::Color color) {
                 return resolve(color, c.color);
             }
         );
@@ -211,7 +211,7 @@ export struct OutlineProperty : Property {
                     continue;
                 }
 
-                auto color = parseValue<Color>(c);
+                auto color = parseValue<Vaev::Color>(c);
                 if (color) {
                     if (colorSet)
                         return Error::invalidData("duplicated outline color");

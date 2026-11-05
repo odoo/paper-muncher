@@ -130,7 +130,7 @@ struct Box : Meta::NoCopy {
 
     // https://drafts.csswg.org/css2/#floats
     bool isFloating() const {
-        return style->float_ != Float::NONE;
+        return style->float_ != Keywords::NONE;
     }
 
     // https://www.w3.org/TR/CSS22/zindex.html
@@ -139,8 +139,8 @@ struct Box : Meta::NoCopy {
         return style->clip->has() or
                style->transform->has() or
                style->opacity != 1.0 or
-               style->overflows.block != Overflow::VISIBLE or
-               style->overflows.inline_ != Overflow::VISIBLE or
+               style->overflows.block != Keywords::VISIBLE or
+               style->overflows.inline_ != Keywords::VISIBLE or
                isSvgRootBox() or
                isSvgForeignObjectBox();
     }

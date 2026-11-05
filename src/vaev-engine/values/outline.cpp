@@ -24,20 +24,23 @@ export struct SpecifiedOutline {
 };
 
 // https://drafts.csswg.org/css-ui/#outline
-export struct OutlineProps {
+namespace Style {
+
+export struct Outline {
     Pixel width = 3_px;
     Pixel offset = Pixel{0};
     Union<Keywords::Auto, Gfx::BorderStyle> style = Gfx::BorderStyle::NONE;
-    Color color = Gfx::BLUE500;
+    Gfx::Color color = Gfx::BLUE500;
 
     operator SpecifiedOutline() const {
         return {
             toSpecified(width),
             toSpecified(offset),
             style,
-            Color{color}
+            Vaev::Color{color}
         };
     }
 };
 
+} // namespace Style
 } // namespace Vaev
