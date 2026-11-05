@@ -1310,12 +1310,16 @@ export struct TableFormatingContext : FormatingContext {
                     .borders = buildBordersWidthsForCell(i, j, rowSpan, cell.colSpan)
                 };
 
+                Au cellWidth = spacing.x * (cell.colSpan - 1);
+                for (usize k = 0; k < cell.colSpan; ++k)
+                    cellWidth += colWidth[j + k];
+
                 auto cellOutput = layoutBorderBox(
                     tree,
                     *cell.box,
                     {
                         .usedSpacings = usedSpacings,
-                        .knownSize = {Some(colWidth[j]), NONE},
+                        .knownSize = {Some(cellWidth), NONE},
                         .containingBlock = {tableUsedWidth, 0_au},
                     }
                 );

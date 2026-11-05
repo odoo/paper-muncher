@@ -3041,4 +3041,66 @@
     </rendering>
 </test>
 
+<test name="table: colspan cell height uses the width of all spanned columns" width="200px" height="100px">
+    <container>
+        <html xmlns="http://www.w3.org/1999/xhtml" lang="en">
+
+        <head>
+            <style>
+                body {
+                    margin: 0;
+                }
+
+                td {
+                    padding: 0;
+                    border: 0;
+                    font-size: 0;
+                }
+
+                table {
+                    border-spacing: 0;
+                    table-layout: fixed;
+                    width: 200px;
+                }
+
+                .item {
+                    display: inline-block;
+                    width: 40px;
+                    height: 20px;
+                    background: black;
+                }
+
+                .after {
+                    height: 20px;
+                    background: blue;
+                }
+            </style>
+        </head>
+
+        <body>
+            <slot />
+        </body>
+
+        </html>
+    </container>
+
+    <rendering>
+        <div style="position: absolute; top: 0px; left: 0px; width: 160px; height: 20px; background: black;"></div>
+        <div style="position: absolute; top: 20px; left: 0px; width: 200px; height: 20px; background: blue;"></div>
+    </rendering>
+
+    <rendering>
+        <table>
+            <tr>
+                <td></td>
+                <td></td>
+            </tr>
+            <tr>
+                <td colspan="2"><div class="item"></div><div class="item"></div><div class="item"></div><div class="item"></div></td>
+            </tr>
+        </table>
+        <div class="after"></div>
+    </rendering>
+</test>
+
 </tests>
