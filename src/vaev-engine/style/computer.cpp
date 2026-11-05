@@ -15,12 +15,14 @@ import :style.cascaded;
 import :style.computed;
 import :style.counter;
 import :style.layers;
+import :style.mpc;
 import :style.ruleIndex;
 import :style.stylesheet;
 
 namespace Vaev::Style {
 
 static auto debugCounters = Debug::Flag::debug("web-css-counters", "Log all the registered CSS counters");
+static auto debugMpc = Debug::Flag::debug("web-css-mpc", "Log the matched property cache statistics");
 
 export struct Computer {
     Gc::Heap& _heap;
@@ -36,68 +38,7 @@ export struct Computer {
     Viewport _viewport{.small = _area.viewport};
     Opt<Rc<ComputedValues>> _rootComputedValues = NONE;
 
-    struct MpcKey {
-        struct NonOwned {
-            ComputedValues const& parent;
-            Slice<MatchingRule> matchingRules;
-
-            void hash(Meta::Derive<Hasher> auto& h) const {
-                Karm::hash(h, reinterpret_cast<usize>(&parent));
-
-                for (auto const& m : matchingRules) {
-                    Karm::hash(h, reinterpret_cast<usize>(&m.rule));
-                    Karm::hash(h, m.specificity.a);
-                    Karm::hash(h, m.specificity.b);
-                    Karm::hash(h, m.specificity.c);
-                }
-            }
-        };
-
-        ComputedValues const* parent;
-        Vec<Pair<StyleRule const*, Specificity>> matchingRules = {};
-
-        static MpcKey fromNonOwned(NonOwned key) {
-            Vec<Pair<StyleRule const*, Specificity>> tempMatching(key.matchingRules.len());
-            for (auto const& m : key.matchingRules)
-                tempMatching.pushBack({&m.rule, m.specificity});
-
-            return MpcKey{
-                .parent = &key.parent,
-                .matchingRules = std::move(tempMatching),
-            };
-        }
-
-        bool operator==(MpcKey const& other) const = default;
-
-        bool operator==(NonOwned other) const {
-            if (parent != &other.parent or matchingRules.len() != other.matchingRules.len())
-                return false;
-
-            for (usize i = 0; i < matchingRules.len(); i++) {
-                auto const [rule, specificity] = matchingRules[i];
-                auto const& otherMatch = other.matchingRules[i];
-                if (rule != &otherMatch.rule or specificity != otherMatch.specificity)
-                    return false;
-            }
-
-            return true;
-        }
-
-        void hash(Meta::Derive<Hasher> auto& h) const {
-            Karm::hash(h, reinterpret_cast<usize>(parent));
-
-            for (auto const& [rule, spec] : matchingRules) {
-                Karm::hash(h, reinterpret_cast<usize>(rule));
-                Karm::hash(h, spec.a);
-                Karm::hash(h, spec.b);
-                Karm::hash(h, spec.c);
-            }
-        }
-    };
-
-    // Matched property cache to avoid ComputedValues dedup when not necessary.
-    // FIXME: Investigate if an LRU would be better.
-    Map<MpcKey, Cow<ComputedValues>> _mpc = {};
+    MatchedPropertyCache _mpc = {};
 
     // MARK: Counters ----------------------------------------------------------
 
@@ -393,22 +334,18 @@ export struct Computer {
             _applySvgElementSizingRules(el, cascadedValues);
     }
 
-    bool _isMpcEligible(Gc::Ref<Dom::Element> el, Opt<Symbol> pseudoElement) {
-        return not pseudoElement and el->namespaceUri() == Html::NAMESPACE and not el->containsStylingAttribute();
-    }
-
     // https://drafts.csswg.org/css-cascade/#cascade-origin
     Rc<ComputedValues const> computeValues(ComputedValues const& parent, Gc::Ref<Dom::Element> el, Opt<Symbol> pseudoElement = NONE) {
         auto matchingRules = _ruleIndex.match(el, pseudoElement, _ancestorFilter);
 
         bool isRootElement = pseudoElement == NONE and el->parentNode()->is<Dom::Document>();
-        bool cacheEligible = _isMpcEligible(el, pseudoElement);
+        bool cacheEligible = _mpc.eligible(el, pseudoElement);
 
         CascadedValues cascadedValues;
 
         Opt<Cow<ComputedValues>> cached = NONE;
         if (cacheEligible)
-            cached = _mpc.lookup(MpcKey::NonOwned{parent, matchingRules});
+            cached = _mpc.lookup(parent, matchingRules);
 
         Cow<ComputedValues> values = cached.unwrapOrElse([&] {
             auto v = _registeredPropertySet.inheritsComputedValues(parent);
@@ -456,11 +393,7 @@ export struct Computer {
             cascadedValues.apply(Property::ComputationPhase::LATE, parent, values, cx);
 
             if (cacheEligible)
-                _mpc.put(MpcKey::fromNonOwned({
-                             .parent = parent,
-                             .matchingRules = matchingRules,
-                         }),
-                         values);
+                _mpc.put(parent, matchingRules, values);
         }
 
         if (not pseudoElement)
@@ -612,6 +545,7 @@ export struct Computer {
         }
 
         _propagateBodyBackgroundToHtml(doc);
+        logDebugIf(debugMpc, "{}", _mpc);
     }
 
     void build() {
