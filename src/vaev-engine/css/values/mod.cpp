@@ -20,7 +20,6 @@ export import :css.values.lineHeight;
 export import :css.values.lineWidth;
 export import :css.values.list;
 export import :css.values.media;
-export import :css.values.overflow;
 export import :css.values.page;
 export import :css.values.primitives;
 export import :css.values.sizing;
