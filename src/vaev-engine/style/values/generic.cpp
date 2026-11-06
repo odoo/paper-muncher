@@ -9,15 +9,6 @@ using namespace Karm;
 
 namespace Vaev::Style {
 
-// MARK: Unions ----------------------------------------------------------------
-// A union computes alternative by alternative, so the computed value of
-// Union<Ts...> is Union<Computed<Ts>...>, and back. Unions that need more than
-// that (e.g. line-height, color) have their own, more specialized, overloads.
-//
-// NOTE: Overloads for the alternatives are found by ordinary lookup (the
-//       partitions imported above) and by argument-dependent lookup on the
-//       computation context, which lives in Vaev::Style.
-
 export template <typename... Ts>
 auto toComputed(Union<Ts...> const& value, auto const& ctx);
 
