@@ -35,7 +35,7 @@ export struct DisplayArea {
 
     Math::Vec2<Pixel> viewport = {800_px, 600_px};
 
-    Css::PureResolution resolution = Css::PureResolution::fromDppx(1);
+    Dppx resolution = 1_dppx;
 
     Css::Scan scan = Css::Scan::PROGRESSIVE;
     bool grid = false;
@@ -53,14 +53,14 @@ export struct DisplayArea {
     Css::Pointer anyPointer = Css::Pointer::FINE;
     Css::Hover anyHover = Css::Hover::HOVER;
 
-    static Math::Vec2<Pixel> _toViewport(Math::Vec2f deviceSize, Css::PureResolution resolution) {
+    static Math::Vec2<Pixel> _toViewport(Math::Vec2f deviceSize, Dppx resolution) {
         return {
-            Pixel{deviceSize.width / resolution.toDppx()},
-            Pixel{deviceSize.height / resolution.toDppx()},
+            Pixel{deviceSize.width / resolution.value()},
+            Pixel{deviceSize.height / resolution.value()},
         };
     }
 
-    static DisplayArea forView(Math::Vec2f deviceSize, Css::PureResolution resolution = Css::PureResolution::fromDppx(1)) {
+    static DisplayArea forView(Math::Vec2f deviceSize, Dppx resolution = 1_dppx) {
         return {
             .type = Css::MediaType::SCREEN,
             .viewport = _toViewport(deviceSize, resolution),
@@ -68,7 +68,7 @@ export struct DisplayArea {
         };
     }
 
-    static DisplayArea forRender(Math::Vec2f deviceSize, Css::PureResolution resolution) {
+    static DisplayArea forRender(Math::Vec2f deviceSize, Dppx resolution) {
         return {
             .type = Css::MediaType::SCREEN,
             .viewport = _toViewport(deviceSize, resolution),
@@ -88,12 +88,12 @@ export struct DisplayArea {
         return {
             .type = Css::MediaType::PRINT,
             .viewport = {Pixel{static_cast<f64>(pageSize.width) / settings.scale}, Pixel{static_cast<f64>(pageSize.height) / settings.scale}},
-            .resolution = Css::PureResolution::fromDppx(settings.scale),
+            .resolution = Dppx{settings.scale},
         };
     }
 
     f64 scale() const {
-        return resolution.toDppx();
+        return resolution.value();
     }
 
     Math::Vec2f deviceSize() const {
@@ -159,7 +159,7 @@ export struct Media {
 
     /// 5.1. Resolution: the resolution feature
     /// https://drafts.csswg.org/mediaqueries/#resolution
-    Css::PureResolution resolution;
+    Dppx resolution;
 
     /// 5.2. Scan: the scan feature
     /// https://drafts.csswg.org/mediaqueries/#scan
@@ -317,6 +317,10 @@ export struct Media {
 // Media features are compared in their specified form.
 static Css::PureLength _featureValue(Pixel value) {
     return Css::PureLength::fromPx(value.value());
+}
+
+static Css::PureResolution _featureValue(Dppx value) {
+    return Css::PureResolution::fromDppx(value.value());
 }
 
 template <typename T>

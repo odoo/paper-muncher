@@ -17,6 +17,8 @@ import Karm.Font;
 import :webview;
 import :layout.values;
 
+using namespace Vaev::Literals;
+
 namespace Vaev::Loader {
 
 Async::Task<Gfx::Snapshot> _fetchImageContentAsync(Http::Client& client, Ref::Url url, Async::CancellationToken ct) {
@@ -34,7 +36,7 @@ Async::Task<Gfx::Snapshot> _fetchImageContentAsync(Http::Client& client, Ref::Ur
 
         // FIXME: Properly determine the size of the SVG
         // https://www.w3.org/TR/SVG2/coords.html#SizingSVGInCSS
-        webview->changeArea(Style::DisplayArea::forRender({}, Css::PureResolution::fromDppx(1)));
+        webview->changeArea(Style::DisplayArea::forRender({}, 1_dppx));
         webview->changePrefs(Style::ViewerPrefs::forRender());
         co_trya$(webview->loadLocationAsync(url, Ref::Uti::PUBLIC_OPEN, ct));
         webview->computeStyle();
@@ -46,7 +48,7 @@ Async::Task<Gfx::Snapshot> _fetchImageContentAsync(Http::Client& client, Ref::Ur
         auto width = Layout::resolve(root->computedValues()->sizing->width.unwrapOr<Style::PixelPercentage>(Style::Pixel{300}), 300_au);
         auto height = Layout::resolve(root->computedValues()->sizing->height.unwrapOr<Style::PixelPercentage>(Style::Pixel{300}), 300_au);
 
-        webview->changeArea(Style::DisplayArea::forRender(Layout::Vec2Au{width, height}.cast<f64>(), Css::PureResolution::fromDppx(1)));
+        webview->changeArea(Style::DisplayArea::forRender(Layout::Vec2Au{width, height}.cast<f64>(), 1_dppx));
         co_return Ok(webview->snapshot());
     } else {
         auto image = Karm::Image::load(data);

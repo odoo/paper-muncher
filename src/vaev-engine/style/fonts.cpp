@@ -32,10 +32,10 @@ export struct FontFace {
     Vec<Css::FontFeature> features;
     Vec<Css::FontVariation> variations;
 
-    Opt<Css::PurePercentage> ascentOverride = NONE;
-    Opt<Css::PurePercentage> descentOverride = NONE;
-    Opt<Css::PurePercentage> lineGapOverride = NONE;
-    Opt<Css::PurePercentage> sizeAdjust = NONE;
+    Opt<Percent> ascentOverride = NONE;
+    Opt<Percent> descentOverride = NONE;
+    Opt<Percent> lineGapOverride = NONE;
+    Opt<Percent> sizeAdjust = NONE;
 
     Css::FontDisplay display = Css::FontDisplay::AUTO;
 
@@ -66,10 +66,10 @@ export struct FontFace {
 
     Gfx::FontAdjust adjustments() const {
         return {
-            .ascent = ascentOverride.unwrapOr(Css::PurePercentage{100}).value() / 100,
-            .descent = descentOverride.unwrapOr(Css::PurePercentage{100}).value() / 100,
-            .linegap = lineGapOverride.unwrapOr(Css::PurePercentage{100}).value() / 100,
-            .sizeAdjust = sizeAdjust.unwrapOr(Css::PurePercentage{100}).value() / 100,
+            .ascent = ascentOverride.unwrapOr(Percent{100}).value() / 100,
+            .descent = descentOverride.unwrapOr(Percent{100}).value() / 100,
+            .linegap = lineGapOverride.unwrapOr(Percent{100}).value() / 100,
+            .sizeAdjust = sizeAdjust.unwrapOr(Percent{100}).value() / 100,
         };
     }
 };
@@ -397,7 +397,7 @@ export struct AscentOverrideFontDescriptor {
     static Opt<Css::PurePercentage> initial() { return NONE; }
 
     void apply(FontFace& f) const {
-        f.ascentOverride = value;
+        f.ascentOverride = value.map([](auto v) { return Percent{v.value()}; });
     }
 
     Res<> parse(Cursor<Css::Sst>& c) {
@@ -422,7 +422,7 @@ export struct DescentOverrideStyleProp {
     static Opt<Css::PurePercentage> initial() { return NONE; }
 
     void apply(FontFace& f) const {
-        f.descentOverride = value;
+        f.descentOverride = value.map([](auto v) { return Percent{v.value()}; });
     }
 
     Res<> parse(Cursor<Css::Sst>& c) {
@@ -446,7 +446,7 @@ export struct LineGapOverrideFontDescriptor {
     static Opt<Css::PurePercentage> initial() { return NONE; }
 
     void apply(FontFace& f) const {
-        f.lineGapOverride = value;
+        f.lineGapOverride = value.map([](auto v) { return Percent{v.value()}; });
     }
 
     Res<> parse(Cursor<Css::Sst>& c) {
@@ -470,7 +470,7 @@ export struct SizeAdjustFontDescriptor {
     static Css::PurePercentage initial() { return Css::PurePercentage{100}; }
 
     void apply(FontFace& f) const {
-        f.sizeAdjust = Some(value);
+        f.sizeAdjust = Some(Percent{value.value()});
     }
 
     Res<> parse(Cursor<Css::Sst>& c) {

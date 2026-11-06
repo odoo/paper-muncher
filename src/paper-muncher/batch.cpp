@@ -130,7 +130,7 @@ export struct Option {
         auto height = this->height ? this->height->toPx() : 600.0;
         return Vaev::Style::DisplayArea::forRender(
             {width, height},
-            this->scale
+            Vaev::Style::Dppx{this->scale.toDppx()}
         );
     }
 };
