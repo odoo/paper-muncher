@@ -5,20 +5,13 @@ import Karm.Math;
 
 import :css.values.calc;
 import :css.values.insets;
+import :style.values.generic;
 import :style.values.numeric;
 import :values.unitValue;
 
 using namespace Karm;
 
 namespace Vaev::Style {
-
-export Union<Keywords::Auto, PixelPercentage> toComputed(Union<Keywords::Auto, Css::LengthPercentage> const& value, LengthContext auto const& ctx) {
-    return value.visit([&](auto const& v) -> Union<Keywords::Auto, PixelPercentage> { return toComputed(v, ctx); });
-}
-
-export Union<Keywords::Auto, Css::LengthPercentage> toSpecified(Union<Keywords::Auto, PixelPercentage> const& value) {
-    return value.visit([](auto const& v) -> Union<Keywords::Auto, Css::LengthPercentage> { return toSpecified(v); });
-}
 
 export template <typename T>
 auto toComputed(Math::Insets<T> const& value, LengthContext auto const& ctx) -> Math::Insets<decltype(toComputed(value.top, ctx))> {
@@ -33,14 +26,6 @@ auto toSpecified(Math::Insets<T> const& value) -> Math::Insets<decltype(toSpecif
 export using Gap = Union<
     Keywords::Normal,
     PixelPercentage>;
-
-export Gap toComputed(Css::Gap const& value, LengthContext auto const& ctx) {
-    return value.visit([&](auto const& v) -> Gap { return toComputed(v, ctx); });
-}
-
-export Css::Gap toSpecified(Gap const& value) {
-    return value.visit([](auto const& v) -> Css::Gap { return toSpecified(v); });
-}
 
 } // namespace Vaev::Style
 

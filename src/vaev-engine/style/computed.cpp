@@ -13,6 +13,28 @@ using namespace Karm;
 
 namespace Vaev::Style {
 
+// MARK: Computed value types --------------------------------------------------
+
+export using Size = Union<Keywords::Auto, PixelPercentage, Keywords::Stretch, Keywords::MinContent, Keywords::MaxContent, Keywords::FitContent>;
+
+export using MaxSize = Union<Keywords::None, PixelPercentage, Keywords::Stretch, Keywords::MinContent, Keywords::MaxContent, Keywords::FitContent>;
+
+export using BaselineShift = Union<
+    PixelPercentage,
+    Keywords::Sub,
+    Keywords::Super,
+    Keywords::Top,
+    Keywords::Center,
+    Keywords::Bottom>;
+
+export using FlexBasis = Union<
+    Keywords::Auto,
+    Keywords::Content,
+    Keywords::MinContent,
+    Keywords::MaxContent,
+    Keywords::FitContent,
+    PixelPercentage>;
+
 struct Fonts {
     Vec<FontFamily> families = {"sans-serif"_sym};
     Gfx::FontWeight weight = Gfx::FontWeight::REGULAR;

@@ -9,6 +9,7 @@ import Karm.Core;
 import :css.values.basicShape;
 import :style.values.background;
 import :style.values.borders;
+import :style.values.generic;
 import :style.values.insets;
 import :style.values.numeric;
 import :values.insets;
@@ -19,14 +20,6 @@ using namespace Karm;
 namespace Vaev::Style {
 
 export using ShapeRadius = Css::ShapeRadiusT<PixelPercentage>;
-
-export ShapeRadius toComputed(Css::ShapeRadius const& value, LengthContext auto const& ctx) {
-    return value.visit([&](auto const& v) -> ShapeRadius { return toComputed(v, ctx); });
-}
-
-export Css::ShapeRadius toSpecified(ShapeRadius const& value) {
-    return value.visit([](auto const& v) -> Css::ShapeRadius { return toSpecified(v); });
-}
 
 export using Circle = Css::CircleT<PixelPercentage, Position>;
 
