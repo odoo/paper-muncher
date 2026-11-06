@@ -15,6 +15,8 @@ import :loader.loader;
 import :layout;
 import :paint;
 import :values;
+import :css.values;
+import :style.values;
 import :driver.print;
 
 using namespace Karm;

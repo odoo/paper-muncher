@@ -2,16 +2,11 @@ export module Vaev.Engine:values.float_;
 
 import Karm.Core;
 
-import :css;
-import :values.base;
-import :values.length;
 import :values.keywords;
 
 using namespace Karm;
 
-namespace Vaev::Css {
-
-// MARK: Clear & Float ---------------------------------------------------------
+namespace Vaev {
 
 export using Float = Union<
     Keywords::None,
@@ -28,5 +23,4 @@ export using Clear = Union<
     Keywords::InlineStart,
     Keywords::InlineEnd>;
 
-} // namespace Vaev::Css
-
+} // namespace Vaev

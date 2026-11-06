@@ -3,6 +3,8 @@ export module Vaev.Engine:layout.positioned;
 import Karm.Math;
 
 import :values;
+import :css.values;
+import :style.values;
 import :layout.layout;
 import :layout.values;
 

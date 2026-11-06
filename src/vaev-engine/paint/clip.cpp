@@ -7,7 +7,7 @@ import :paint.background;
 
 namespace Vaev::Paint {
 
-Pair<RectAu, RadiiAu> resolveClipGeometryBox(Rc<Layout::Fragment>& fragment, Css::GeometryBox box, RectAu viewBox) {
+Pair<RectAu, RadiiAu> resolveClipGeometryBox(Rc<Layout::Fragment>& fragment, GeometryBox box, RectAu viewBox) {
     RadiiAu metricsRadii = 0_au;
     if (auto boxFragment = fragment.is<Layout::BoxFragment>())
         metricsRadii = boxFragment->metrics.radii;

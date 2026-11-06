@@ -55,23 +55,23 @@ export struct Computer {
     }
 
     // https://drafts.csswg.org/css-lists/#instantiate-counter:~:text=dynamically%20calculate%20the%20initial%20value
-    Css::Integer _dynamicallyCalculateCounterInitialValue(Css::CustomIdent counter, Dom::Element& element) {
+    Integer _dynamicallyCalculateCounterInitialValue(CustomIdent counter, Dom::Element& element) {
         // 1. Let num be 0.
-        Css::Integer num = 0;
+        Integer num = 0;
 
         // 2. Let lastNonZeroIncrementNegated be 0.
-        Css::Integer lastNonZeroIncrementNegated = 0;
+        Integer lastNonZeroIncrementNegated = 0;
 
         // 3. For each element or pseudo-element el that increments or sets the same counter in the same scope:
         for (auto el : _iterElementInScope(element)) {
             auto maybeCounterIncrement =
                 iter(el.computedValues()->counters->increment) |
-                FindFirst([&](Style::Counters::Increment const& increment) {
+                FindFirst([&](Css::CounterIncrement const& increment) {
                     return increment.name == counter;
                 });
 
             // 1. Let incrementNegated be el’s counter-increment integer value for this counter, multiplied by -1.
-            Css::Integer incrementNegated =
+            Integer incrementNegated =
                 maybeCounterIncrement
                     .unwrapOr({counter, Some(1)})
                     .value.unwrapOr(1) *
@@ -84,7 +84,7 @@ export struct Computer {
             // 3. If el sets this counter with counter-set, then add that integer value to num and break this loop.
             auto maybeCounterSet =
                 iter(el.computedValues()->counters->set) |
-                FindFirst([&](Style::Counters::Set const& set) {
+                FindFirst([&](Css::CounterSet const& set) {
                     return set.name == counter;
                 });
 
@@ -114,7 +114,7 @@ export struct Computer {
 
         // 2. New counters are instantiated (counter-reset).
         for (auto& counterReset : countersStyle.reset) {
-            Css::Integer initial = counterReset.value.unwrapOrElse([&] {
+            Integer initial = counterReset.value.unwrapOrElse([&] {
                 return counterReset.reversed ? _dynamicallyCalculateCounterInitialValue(counterReset.name, element) : 0;
             });
             counters.instantiateCounter(elementHandle, counterReset, initial);
@@ -127,7 +127,7 @@ export struct Computer {
             }
         } else if (style.display == Css::Display::Item::YES) {
             // https://www.w3.org/TR/css-lists-3/#list-item-counter
-            counters.increment(elementHandle, {.name = Css::CustomIdent{"list-item"_sym}, .value = Some(1)});
+            counters.increment(elementHandle, {.name = CustomIdent{"list-item"_sym}, .value = Some(1)});
         }
 
         // 4. Counter values are explicitly set (counter-set).
@@ -404,9 +404,9 @@ export struct Computer {
         if (pseudoElement == Dom::PseudoElement::MARKER and
             values->content.is<Keywords::Normal>()) {
             auto listStyleType = parent.list->type;
-            if (listStyleType == Css::CustomIdent{"disc"_sym} or
-                listStyleType == Css::CustomIdent{"circle"_sym} or
-                listStyleType == Css::CustomIdent{"square"_sym}) {
+            if (listStyleType == CustomIdent{"disc"_sym} or
+                listStyleType == CustomIdent{"circle"_sym} or
+                listStyleType == CustomIdent{"square"_sym}) {
                 values.cow().transform.cow().transform = Style::TransformList{Style::ScaleTransform{1.25, 1.25}};
             }
         }
@@ -483,7 +483,7 @@ export struct Computer {
 
         // If the computed value of background-image on the
         // root element is none and its background-color is transparent
-        if (rootBackground->color == Css::TRANSPARENT and rootBackground->imageIsNone()) {
+        if (rootBackground->color == TRANSPARENT and rootBackground->imageIsNone()) {
             // User agents must instead propagate the computed values of the
             // background properties from that element’s first HTML BODY
             // or XHTML body child element.

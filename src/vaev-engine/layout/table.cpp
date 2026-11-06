@@ -10,6 +10,8 @@ import Karm.Logger;
 import :dom.element;
 import :dom.names;
 import :values;
+import :css.values;
+import :style.values;
 import :layout.layout;
 import :layout.positioned;
 import :layout.values;
@@ -27,21 +29,21 @@ Opt<Str> _retrieveDomAttr(Box const& box, Dom::QualifiedName const& attr) {
 // https://html.spec.whatwg.org/multipage/tables.html#the-col-element
 Opt<u16> retrieveSpanFromDom(Box const& box) {
     auto attr = try$(_retrieveDomAttr(box, Html::SPAN_ATTR));
-    auto value = try$(Css::parseValue<Css::Integer>(attr).ok());
+    auto value = try$(Css::parseValue<Integer>(attr).ok());
     return Some(clamp(value, 1, 1000));
 }
 
 // https://html.spec.whatwg.org/multipage/tables.html#attributes-common-to-td-and-th-elements
 Opt<u16> retrieveColSpanFromDom(Box const& box) {
     auto attr = try$(_retrieveDomAttr(box, Html::COLSPAN_ATTR));
-    auto value = try$(Css::parseValue<Css::Integer>(attr).ok());
+    auto value = try$(Css::parseValue<Integer>(attr).ok());
     return Some(clamp(value, 1, 1000));
 }
 
 // https://html.spec.whatwg.org/multipage/tables.html#attributes-common-to-td-and-th-elements
 Opt<u16> retrieveRowSpanFromDom(Box const& box) {
     auto attr = try$(_retrieveDomAttr(box, Html::ROWSPAN_ATTR));
-    auto value = try$(Css::parseValue<Css::Integer>(attr).ok());
+    auto value = try$(Css::parseValue<Integer>(attr).ok());
     return Some(clamp(value, 0, 65534));
 }
 
@@ -50,7 +52,7 @@ void advanceUntil(MutCursor<Box>& cursor, auto pred) {
         cursor.next();
 }
 
-Css::UsedBorder resolve(Box const& box, Css::BorderEdge const edge) {
+Css::UsedBorder resolve(Box const& box, Style::BorderEdge const edge) {
     auto& border = box.style->borders->get(edge);
     return Css::UsedBorder{
         border.style == Gfx::BorderStyle::NONE
@@ -499,7 +501,7 @@ export struct TableFormatingContext : FormatingContext {
     void addAxisAndGroupBorder(
         Vec<Css::UsedBorder>& borders,
         AxisAndGroupsIdxs const& axisAndGroupsIdxs,
-        Css::BorderEdge edge,
+        Style::BorderEdge edge,
         Vec<TableAxis> const& axis,
         Vec<TableGroup> const& groups
     ) {
@@ -580,14 +582,14 @@ export struct TableFormatingContext : FormatingContext {
 
             for (usize j = start; j <= end; j += colSpanAt(j, i))
                 if (grid.at(j, i).box)
-                    borders.pushBack(resolve(*grid.at(j, i).box, Css::BorderEdge::BOTTOM));
+                    borders.pushBack(resolve(*grid.at(j, i).box, Style::BorderEdge::BOTTOM));
 
             for (usize j = start; j <= end; j += colSpanAt(j, i + 1))
                 if (grid.at(j, i + 1).box)
-                    borders.pushBack(resolve(*grid.at(j, i + 1).box, Css::BorderEdge::TOP));
+                    borders.pushBack(resolve(*grid.at(j, i + 1).box, Style::BorderEdge::TOP));
 
-            addAxisAndGroupBorder(borders, rowGroupIdxs[i], Css::BorderEdge::BOTTOM, rows, rowGroups);
-            addAxisAndGroupBorder(borders, rowGroupIdxs[i + 1], Css::BorderEdge::TOP, rows, rowGroups);
+            addAxisAndGroupBorder(borders, rowGroupIdxs[i], Style::BorderEdge::BOTTOM, rows, rowGroups);
+            addAxisAndGroupBorder(borders, rowGroupIdxs[i + 1], Style::BorderEdge::TOP, rows, rowGroups);
 
             auto finalBorder = harmonizeConflictingBorders(borders);
 
@@ -636,14 +638,14 @@ export struct TableFormatingContext : FormatingContext {
 
             for (usize i = start; i <= end; i += rowSpanAt(j, i))
                 if (grid.at(j, i).box)
-                    borders.pushBack(resolve(*grid.at(j, i).box, Css::BorderEdge::END));
+                    borders.pushBack(resolve(*grid.at(j, i).box, Style::BorderEdge::END));
 
             for (usize i = start; i <= end; i += rowSpanAt(j + 1, i))
                 if (grid.at(j + 1, i).box)
-                    borders.pushBack(resolve(*grid.at(j + 1, i).box, Css::BorderEdge::START));
+                    borders.pushBack(resolve(*grid.at(j + 1, i).box, Style::BorderEdge::START));
 
-            addAxisAndGroupBorder(borders, colGroupIdxs[j], Css::BorderEdge::END, cols, colGroups);
-            addAxisAndGroupBorder(borders, colGroupIdxs[j + 1], Css::BorderEdge::START, cols, colGroups);
+            addAxisAndGroupBorder(borders, colGroupIdxs[j], Style::BorderEdge::END, cols, colGroups);
+            addAxisAndGroupBorder(borders, colGroupIdxs[j + 1], Style::BorderEdge::START, cols, colGroups);
 
             auto finalBorder = harmonizeConflictingBorders(borders);
 
@@ -659,12 +661,12 @@ export struct TableFormatingContext : FormatingContext {
         }
     }
 
-    void resolveConflictForTableBordersAtHorizontalAxis(Box& box, Css::BorderEdge edge) {
+    void resolveConflictForTableBordersAtHorizontalAxis(Box& box, Style::BorderEdge edge) {
         if (grid.size.x == 0 or grid.size.y == 0)
             return;
 
         Css::UsedBorder tableBorder = resolve(box, edge);
-        usize const i = edge == Css::BorderEdge::TOP ? 0 : grid.size.y - 1;
+        usize const i = edge == Style::BorderEdge::TOP ? 0 : grid.size.y - 1;
 
         usize j = 0;
         while (j < grid.size.x) {
@@ -684,7 +686,7 @@ export struct TableFormatingContext : FormatingContext {
 
             auto finalBorder = harmonizeConflictingBorders(borders);
 
-            if (edge == Css::BorderEdge::TOP) {
+            if (edge == Style::BorderEdge::TOP) {
                 paintCellTop(i, j, finalBorder);
             } else {
                 auto sj = grid.at(j, i).anchorIdx.x;
@@ -695,12 +697,12 @@ export struct TableFormatingContext : FormatingContext {
         }
     }
 
-    void resolveConflictForTableBordersAtVerticalAxis(Box& box, Css::BorderEdge edge) {
+    void resolveConflictForTableBordersAtVerticalAxis(Box& box, Style::BorderEdge edge) {
         if (grid.size.x == 0 or grid.size.y == 0)
             return;
 
         Css::UsedBorder tableBorder = resolve(box, edge);
-        usize const j = edge == Css::BorderEdge::START ? 0 : grid.size.x - 1;
+        usize const j = edge == Style::BorderEdge::START ? 0 : grid.size.x - 1;
 
         usize i = 0;
         while (i < grid.size.y) {
@@ -720,7 +722,7 @@ export struct TableFormatingContext : FormatingContext {
 
             auto finalBorder = harmonizeConflictingBorders(borders);
 
-            if (edge == Css::BorderEdge::START) {
+            if (edge == Style::BorderEdge::START) {
                 paintCellStart(i, j, finalBorder);
             } else {
                 auto si = grid.at(j, i).anchorIdx.y;
@@ -795,10 +797,10 @@ export struct TableFormatingContext : FormatingContext {
             }
         }
 
-        resolveConflictForTableBordersAtHorizontalAxis(box, Css::BorderEdge::TOP);
-        resolveConflictForTableBordersAtHorizontalAxis(box, Css::BorderEdge::BOTTOM);
-        resolveConflictForTableBordersAtVerticalAxis(box, Css::BorderEdge::START);
-        resolveConflictForTableBordersAtVerticalAxis(box, Css::BorderEdge::END);
+        resolveConflictForTableBordersAtHorizontalAxis(box, Style::BorderEdge::TOP);
+        resolveConflictForTableBordersAtHorizontalAxis(box, Style::BorderEdge::BOTTOM);
+        resolveConflictForTableBordersAtVerticalAxis(box, Style::BorderEdge::START);
+        resolveConflictForTableBordersAtVerticalAxis(box, Style::BorderEdge::END);
     }
 
     void computeBordersStructsSeparate() {

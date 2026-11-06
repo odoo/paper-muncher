@@ -2,6 +2,8 @@ export module Vaev.Engine:layout.formating;
 
 import Karm.Math;
 import :values;
+import :css.values;
+import :style.values;
 import :layout.box;
 import :layout.breaks;
 import :layout.input;

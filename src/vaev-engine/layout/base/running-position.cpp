@@ -8,7 +8,9 @@ import Karm.Core;
 import Karm.Math;
 
 import :values.insets;
-import :values.content;
+import :css.values.insets;
+import :style.values.insets;
+import :css.values.content;
 import :layout.box;
 
 using namespace Karm;
@@ -19,10 +21,10 @@ namespace Vaev::Layout {
 
 export struct RunningPositionInfo {
     usize pageNumber;
-    Css::RunningPosition running;
+    RunningPosition running;
     Dom::OriginatingElement element;
 
-    RunningPositionInfo(usize page, Css::RunningPosition running, Dom::OriginatingElement element)
+    RunningPositionInfo(usize page, RunningPosition running, Dom::OriginatingElement element)
         : pageNumber(page), running(running), element(element) {
     }
 
@@ -33,12 +35,12 @@ export struct RunningPositionInfo {
 
 // Mapping the different Running positions to their respective names and their page.
 struct RunningPositionMap {
-    Map<Css::CustomIdent, Vec<RunningPositionInfo>> content;
+    Map<CustomIdent, Vec<RunningPositionInfo>> content;
 
     void add(usize pageNumber, Layout::Box& box) {
         auto& style = box.style;
 
-        if (auto position = style->position.is<Css::RunningPosition>()) {
+        if (auto position = style->position.is<RunningPosition>()) {
             auto const origin = box.origin;
             if (not box.origin)
                 return;

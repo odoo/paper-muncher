@@ -12,6 +12,8 @@ import Karm.Logger;
 import :style;
 import :layout;
 import :values;
+import :css.values;
+import :style.values;
 import :dom.document;
 import :paint;
 import :css;

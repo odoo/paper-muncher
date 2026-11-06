@@ -21,7 +21,7 @@ export struct PositionProperty : Property {
         Registration() : Property::Registration(Properties::POSITION) {}
 
         Rc<Property> initial() const override {
-            return makeRc<PositionProperty>(self(), Css::Position{Keywords::STATIC});
+            return makeRc<PositionProperty>(self(), Vaev::Position{Keywords::STATIC});
         }
 
         Rc<Property> load(ComputedValues const& c) const override {
@@ -29,13 +29,13 @@ export struct PositionProperty : Property {
         }
 
         Res<Rc<Property>> parse(Cursor<Css::Sst>& c) const override {
-            return Ok(makeRc<PositionProperty>(self(), try$(parseValue<Css::Position>(c))));
+            return Ok(makeRc<PositionProperty>(self(), try$(parseValue<Vaev::Position>(c))));
         }
     };
 
-    Css::Position _value;
+    Vaev::Position _value;
 
-    PositionProperty(Rc<Property::Registration> registration, Css::Position value)
+    PositionProperty(Rc<Property::Registration> registration, Vaev::Position value)
         : Property(registration), _value(value) {}
 
     void apply([[maybe_unused]] ComputedValues const& parent, ComputedValues& c, [[maybe_unused]] ComputationContext const& cx) const override {
@@ -205,7 +205,7 @@ export struct ZIndexProperty : Property {
         Registration() : Property::Registration(Properties::Z_INDEX) {}
 
         Rc<Property> initial() const override {
-            return makeRc<ZIndexProperty>(self(), Css::ZIndex{Keywords::AUTO});
+            return makeRc<ZIndexProperty>(self(), ZIndex{Keywords::AUTO});
         }
 
         Rc<Property> load(ComputedValues const& c) const override {
@@ -213,13 +213,13 @@ export struct ZIndexProperty : Property {
         }
 
         Res<Rc<Property>> parse(Cursor<Css::Sst>& c) const override {
-            return Ok(makeRc<ZIndexProperty>(self(), try$(parseValue<Css::ZIndex>(c))));
+            return Ok(makeRc<ZIndexProperty>(self(), try$(parseValue<ZIndex>(c))));
         }
     };
 
-    Css::ZIndex _value;
+    ZIndex _value;
 
-    ZIndexProperty(Rc<Property::Registration> registration, Css::ZIndex value)
+    ZIndexProperty(Rc<Property::Registration> registration, ZIndex value)
         : Property(registration), _value(value) {}
 
     void apply([[maybe_unused]] ComputedValues const& parent, ComputedValues& c, [[maybe_unused]] ComputationContext const& cx) const override {

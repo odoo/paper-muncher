@@ -28,8 +28,8 @@ namespace Properties {
 export struct RegisteredPropertySet;
 
 export struct ComputationContext :
-    Css::RelativeLengthContextData,
-    Css::FontSizeContextData {
+    Style::RelativeLengthContextData,
+    Style::FontSizeContextData {
 
     void populateUsingViewport(Viewport const& vp) {
         viewportSmallWidth = vp.small.width.cast<f64>();

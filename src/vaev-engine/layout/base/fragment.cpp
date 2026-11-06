@@ -5,6 +5,10 @@ import Karm.Font;
 import Karm.Math;
 
 import :values.length;
+import :css.values.length;
+import :style.values.length;
+import :css.values.length;
+import :style.values.length;
 import :layout.box;
 
 using namespace Karm;

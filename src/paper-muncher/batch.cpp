@@ -175,8 +175,8 @@ struct HeaderFooterDecorator : Vaev::Driver::PageDecorator {
         auto [headerHeight, footerHeight] = _memo.lookup(infos.pageDecoration.size()).expect();
 
         Vaev::Style::CounterSet pageCounters;
-        pageCounters.instantiateCounter(nullptr, {Vaev::Css::CustomIdent{"page"_sym}, false}, static_cast<Vaev::Css::Integer>(infos.pageNumber));
-        pageCounters.instantiateCounter(nullptr, {Vaev::Css::CustomIdent{"pages"_sym}, false}, static_cast<Vaev::Css::Integer>(pageCount));
+        pageCounters.instantiateCounter(nullptr, {Vaev::CustomIdent{"page"_sym}, false}, static_cast<Vaev::Integer>(infos.pageNumber));
+        pageCounters.instantiateCounter(nullptr, {Vaev::CustomIdent{"pages"_sym}, false}, static_cast<Vaev::Integer>(pageCount));
 
         if (auto& [w] = headerWebView) {
             w->changeArea(area.withViewport({decorationWidth, headerHeight}));

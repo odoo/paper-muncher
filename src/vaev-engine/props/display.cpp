@@ -88,7 +88,7 @@ export struct OrderProperty : Property {
         Registration() : Property::Registration(Properties::ORDER) {}
 
         Rc<Property> initial() const override {
-            return makeRc<OrderProperty>(self(), Css::Integer{0});
+            return makeRc<OrderProperty>(self(), Integer{0});
         }
 
         Rc<Property> load(ComputedValues const& c) const override {
@@ -96,13 +96,13 @@ export struct OrderProperty : Property {
         }
 
         Res<Rc<Property>> parse(Cursor<Css::Sst>& c) const override {
-            return Ok(makeRc<OrderProperty>(self(), try$(parseValue<Css::Integer>(c))));
+            return Ok(makeRc<OrderProperty>(self(), try$(parseValue<Integer>(c))));
         }
     };
 
-    Css::Integer _value;
+    Integer _value;
 
-    OrderProperty(Rc<Property::Registration> registration, Css::Integer value)
+    OrderProperty(Rc<Property::Registration> registration, Integer value)
         : Property(registration), _value(value) {}
 
     void apply([[maybe_unused]] ComputedValues const& parent, ComputedValues& c, [[maybe_unused]] ComputationContext const& cx) const override {

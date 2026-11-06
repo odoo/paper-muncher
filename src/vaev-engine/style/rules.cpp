@@ -195,14 +195,14 @@ export struct FontFaceRule {
 
 // https://drafts.csswg.org/css-counter-styles-3/#the-counter-style-rule
 struct CounterRule {
-    Css::CustomIdent name;
+    CustomIdent name;
     Vec<CounterDescriptor> descriptors;
 
     static CounterRule parse(Css::Sst const& sst) {
         auto& prefix = sst.prefix.expect();
         Cursor<Css::Sst> prefixContent = prefix->content;
         eatWhitespace(prefixContent);
-        auto name = parseValue<Css::CustomIdent>(prefixContent).expect();
+        auto name = parseValue<CustomIdent>(prefixContent).expect();
         auto descriptors = parseDeclarations<CounterDescriptor>(sst);
 
         return {

@@ -99,7 +99,7 @@ struct Box : Meta::NoCopy {
     }
 
     bool isRunningPositionedBox() const {
-        return style->position.is<Css::RunningPosition>().has();
+        return style->position.is<RunningPosition>().has();
     }
 
     bool isRootElementPrincipalBox() const {
@@ -125,7 +125,7 @@ struct Box : Meta::NoCopy {
 
         return style->position == Keywords::ABSOLUTE or
                style->position == Keywords::FIXED or
-               style->position.is<Css::RunningPosition>();
+               style->position.is<RunningPosition>();
     }
 
     // https://drafts.csswg.org/css2/#floats

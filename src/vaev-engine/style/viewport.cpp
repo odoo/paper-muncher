@@ -1,7 +1,11 @@
 export module Vaev.Engine:style.viewport;
 
 import :values.length;
-import :values.resolution;
+import :css.values.length;
+import :style.values.length;
+import :css.values.length;
+import :style.values.length;
+import :css.values.resolution;
 
 namespace Vaev::Style {
 

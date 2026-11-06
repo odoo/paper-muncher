@@ -9,6 +9,8 @@ import Karm.Ref;
 import Karm.Gfx;
 
 import :values;
+import :css.values;
+import :style.values;
 import :css;
 
 namespace Vaev::Style {

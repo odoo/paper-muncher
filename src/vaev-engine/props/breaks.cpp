@@ -29,13 +29,13 @@ export struct BreakAfterProperty : Property {
         }
 
         Res<Rc<Property>> parse(Cursor<Css::Sst>& c) const override {
-            return Ok(makeRc<BreakAfterProperty>(self(), try$(parseValue<Css::BreakBetween>(c))));
+            return Ok(makeRc<BreakAfterProperty>(self(), try$(parseValue<BreakBetween>(c))));
         }
     };
 
-    Css::BreakBetween _value;
+    BreakBetween _value;
 
-    BreakAfterProperty(Rc<Property::Registration> registration, Css::BreakBetween value)
+    BreakAfterProperty(Rc<Property::Registration> registration, BreakBetween value)
         : Property(registration), _value(value) {}
 
     void apply([[maybe_unused]] ComputedValues const& parent, ComputedValues& c, [[maybe_unused]] ComputationContext const& cx) const override {
@@ -65,13 +65,13 @@ export struct BreakBeforeProperty : Property {
         }
 
         Res<Rc<Property>> parse(Cursor<Css::Sst>& c) const override {
-            return Ok(makeRc<BreakBeforeProperty>(self(), try$(parseValue<Css::BreakBetween>(c))));
+            return Ok(makeRc<BreakBeforeProperty>(self(), try$(parseValue<BreakBetween>(c))));
         }
     };
 
-    Css::BreakBetween _value;
+    BreakBetween _value;
 
-    BreakBeforeProperty(Rc<Property::Registration> registration, Css::BreakBetween value)
+    BreakBeforeProperty(Rc<Property::Registration> registration, BreakBetween value)
         : Property(registration), _value(value) {}
 
     void apply([[maybe_unused]] ComputedValues const& parent, ComputedValues& c, [[maybe_unused]] ComputationContext const& cx) const override {
@@ -101,13 +101,13 @@ export struct BreakInsideProperty : Property {
         }
 
         Res<Rc<Property>> parse(Cursor<Css::Sst>& c) const override {
-            return Ok(makeRc<BreakInsideProperty>(self(), try$(parseValue<Css::BreakInside>(c))));
+            return Ok(makeRc<BreakInsideProperty>(self(), try$(parseValue<BreakInside>(c))));
         }
     };
 
-    Css::BreakInside _value;
+    BreakInside _value;
 
-    BreakInsideProperty(Rc<Property::Registration> registration, Css::BreakInside value)
+    BreakInsideProperty(Rc<Property::Registration> registration, BreakInside value)
         : Property(registration), _value(value) {}
 
     void apply([[maybe_unused]] ComputedValues const& parent, ComputedValues& c, [[maybe_unused]] ComputationContext const& cx) const override {
@@ -126,7 +126,7 @@ export struct BreakInsideProperty : Property {
 // MARK: Page Break Aliases --------------------------------------------------
 
 // https://www.w3.org/TR/css-break-3/#page-break-properties
-static Res<Css::BreakBetween> _parseLegacyPageBreak(Cursor<Css::Sst>& c) {
+static Res<BreakBetween> _parseLegacyPageBreak(Cursor<Css::Sst>& c) {
     if (c.skip(Css::Token::ident("auto")))
         return Ok(Keywords::AUTO);
     if (c.skip(Css::Token::ident("always")))
@@ -140,7 +140,7 @@ static Res<Css::BreakBetween> _parseLegacyPageBreak(Cursor<Css::Sst>& c) {
     return Error::invalidData("expected auto, always, avoid, left or right");
 }
 
-static void _reprLegacyPageBreak(Io::Emit& e, Css::BreakBetween value) {
+static void _reprLegacyPageBreak(Io::Emit& e, BreakBetween value) {
     if (value == Keywords::PAGE)
         e("always");
     else
@@ -165,9 +165,9 @@ export struct PageBreakAfterProperty : Property {
         }
     };
 
-    Css::BreakBetween _value;
+    BreakBetween _value;
 
-    PageBreakAfterProperty(Rc<Property::Registration> registration, Css::BreakBetween value)
+    PageBreakAfterProperty(Rc<Property::Registration> registration, BreakBetween value)
         : Property(registration), _value(value) {}
 
     Longhands expand(RegisteredPropertySet& registry, ComputedValues const&, ComputedValues&) const override {
@@ -199,9 +199,9 @@ export struct PageBreakBeforeProperty : Property {
         }
     };
 
-    Css::BreakBetween _value;
+    BreakBetween _value;
 
-    PageBreakBeforeProperty(Rc<Property::Registration> registration, Css::BreakBetween value)
+    PageBreakBeforeProperty(Rc<Property::Registration> registration, BreakBetween value)
         : Property(registration), _value(value) {}
 
     Longhands expand(RegisteredPropertySet& registry, ComputedValues const&, ComputedValues&) const override {
@@ -237,9 +237,9 @@ export struct PageBreakInsideProperty : Property {
         }
     };
 
-    Css::BreakInside _value;
+    BreakInside _value;
 
-    PageBreakInsideProperty(Rc<Property::Registration> registration, Css::BreakInside value)
+    PageBreakInsideProperty(Rc<Property::Registration> registration, BreakInside value)
         : Property(registration), _value(value) {}
 
     Longhands expand(RegisteredPropertySet& registry, ComputedValues const&, ComputedValues&) const override {

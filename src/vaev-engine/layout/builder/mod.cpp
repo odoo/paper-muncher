@@ -14,6 +14,8 @@ import Karm.Gfx;
 import Karm.Logger;
 
 import :values;
+import :css.values;
+import :style.values;
 import :style;
 import :dom.element;
 import :layout.values;
@@ -32,15 +34,15 @@ bool isSegmentBreak(Rune rune) {
 }
 
 // http://drafts.csswg.org/css-text/#white-space-property
-static bool _allowsWrap(Css::WhiteSpace whiteSpace) {
+static bool _allowsWrap(WhiteSpace whiteSpace) {
     return oneOf(whiteSpace, Keywords::NORMAL, Keywords::PRE_WRAP, Keywords::BREAK_SPACES, Keywords::PRE_LINE);
 }
 
-static bool _collapsesWhitespace(Css::WhiteSpace whiteSpace) {
+static bool _collapsesWhitespace(WhiteSpace whiteSpace) {
     return oneOf(whiteSpace, Keywords::NORMAL, Keywords::NOWRAP, Keywords::PRE_LINE);
 }
 
-static bool _discardsWhitespaceOnlyTextAtContentStart(Css::WhiteSpace whiteSpace) {
+static bool _discardsWhitespaceOnlyTextAtContentStart(WhiteSpace whiteSpace) {
     return oneOf(whiteSpace, Keywords::NORMAL, Keywords::NOWRAP);
 }
 
@@ -104,7 +106,7 @@ static Gfx::SpanStyle _spanStyleFromStyle(Style::ComputedValues const& style) {
     };
 }
 
-void _transformAndAppendRuneToProse(Rc<Gfx::Prose> prose, Rune rune, Css::TextTransform transform) {
+void _transformAndAppendRuneToProse(Rc<Gfx::Prose> prose, Rune rune, TextTransform transform) {
     transform.visit(
         [&](Keywords::Uppercase) {
             prose->append(toAsciiUpper(rune));
@@ -937,15 +939,15 @@ static void _buildPseudoElement(BuilderContext bc, Gc::Ref<Dom::PseudoElement> p
     auto generateInnerContent = [&](BuilderContext& innerBc) {
         if (pseudoElement->type == Dom::PseudoElement::MARKER and style->content.is<Keywords::Normal>()) {
             String marker = ""s;
-            if (listStyleType == Css::CustomIdent{"disc"_sym}) {
+            if (listStyleType == CustomIdent{"disc"_sym}) {
                 marker = "\u2022"s;
-            } else if (listStyleType == Css::CustomIdent{"circle"_sym}) {
+            } else if (listStyleType == CustomIdent{"circle"_sym}) {
                 marker = "\u25E6"s;
-            } else if (listStyleType == Css::CustomIdent{"square"_sym}) {
+            } else if (listStyleType == CustomIdent{"square"_sym}) {
                 marker = "\u25AA"s;
-            } else if (listStyleType == Css::CustomIdent{"decimal"_sym}) {
+            } else if (listStyleType == CustomIdent{"decimal"_sym}) {
                 auto value =
-                    pseudoElement->element()->counters.innerMostValue(Css::CustomIdent{"list-item"_sym});
+                    pseudoElement->element()->counters.innerMostValue(CustomIdent{"list-item"_sym});
                 marker = Io::format("{}.", value);
             }
             _buildText(innerBc, marker.str(), style);
@@ -1047,7 +1049,7 @@ export Box buildElement(Gc::Ref<Dom::PseudoElement> el, usize pageNumber, Runnin
         }
     } else if (auto it = style->content.is<Css::CounterFunc>()) {
         auto prose = makeRc<Gfx::Prose>(proseStyle, spanStyle);
-        if (it->name == Css::CustomIdent{"page"_sym}) {
+        if (it->name == CustomIdent{"page"_sym}) {
             // FIXME: Special case for the page counter for now, remove this once we figure out the pseudo element tree for page margins
             prose->append(Io::toStr(pageNumber).str());
         } else {

@@ -7,6 +7,8 @@ import Karm.Logger;
 import Karm.Debug;
 
 import :values;
+import :css.values;
+import :style.values;
 import :css;
 
 using namespace Karm;
@@ -40,9 +42,9 @@ export struct DisplayArea {
     Css::OverflowBlock overflowBlock = Css::OverflowBlock::SCROLL;
     Css::OverflowInline overflowInline = Css::OverflowInline::SCROLL;
 
-    Css::Integer color = 8;
-    Css::Integer colorIndex = 0;
-    Css::Integer monochrome = 0;
+    Integer color = 8;
+    Integer colorIndex = 0;
+    Integer monochrome = 0;
     Css::ColorGamut colorGamut = Css::ColorGamut::SRGB;
 
     Css::Pointer pointer = Css::Pointer::FINE;
@@ -182,15 +184,15 @@ export struct Media {
 
     // 6.1. Color: the color feature
     /// https://drafts.csswg.org/mediaqueries/#color
-    Css::Integer color;
+    Integer color;
 
     /// 6.2. Color Index: the color-index feature
     /// https://drafts.csswg.org/mediaqueries/#color-index
-    Css::Integer colorIndex;
+    Integer colorIndex;
 
     /// 6.3. Monochrome: the monochrome feature
     /// https://drafts.csswg.org/mediaqueries/#monochrome
-    Css::Integer monochrome;
+    Integer monochrome;
 
     /// 6.4. Color Gamut: the color-gamut feature
     /// https://drafts.csswg.org/mediaqueries/#color-gamut
@@ -522,15 +524,15 @@ export using OverflowInlineFeature = DiscreteFeature<"overflow-inline", Css::Ove
 
 // 6.1. Color: the color feature
 /// https://drafts.csswg.org/mediaqueries/#color
-export using ColorFeature = RangeFeature<"color", Css::Integer, &Media::color>;
+export using ColorFeature = RangeFeature<"color", Integer, &Media::color>;
 
 /// 6.2. Color Index: the color-index feature
 /// https://drafts.csswg.org/mediaqueries/#color-index
-export using ColorIndexFeature = RangeFeature<"color-index", Css::Integer, &Media::colorIndex>;
+export using ColorIndexFeature = RangeFeature<"color-index", Integer, &Media::colorIndex>;
 
 /// 6.3. Monochrome: the monochrome feature
 /// https://drafts.csswg.org/mediaqueries/#monochrome
-export using MonochromeFeature = RangeFeature<"monochrome", Css::Integer, &Media::monochrome>;
+export using MonochromeFeature = RangeFeature<"monochrome", Integer, &Media::monochrome>;
 
 /// 6.4. Color Gamut: the color-gamut feature
 /// https://drafts.csswg.org/mediaqueries/#color-gamut

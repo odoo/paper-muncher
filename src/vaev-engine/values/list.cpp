@@ -1,20 +1,10 @@
-module;
-
-#include <karm/macros>
-
 export module Vaev.Engine:values.list;
 
-import :values.primitives;
+import Karm.Core;
+
 import :values.keywords;
-import :values.counter;
 
-namespace Vaev::Css {
-
-// https://www.w3.org/TR/css-lists-3/#image-markers
-export using ListImage = Union<Keywords::None, Image>;
-
-// https://www.w3.org/TR/css-lists-3/#text-markers
-export using ListType = Union<Keywords::None, CustomIdent, CounterSymbolsFunc, String>;
+namespace Vaev {
 
 // https://www.w3.org/TR/css-lists-3/#list-style-position-property
 export using ListPosition = Union<Keywords::Inside, Keywords::Outside>;
@@ -22,16 +12,4 @@ export using ListPosition = Union<Keywords::Inside, Keywords::Outside>;
 // https://www.w3.org/TR/css-lists-3/#marker-side
 export using MarkerSide = Union<Keywords::MatchSelf, Keywords::MatchParent>;
 
-} // namespace Vaev::Css
-
-namespace Vaev::Style {
-
-struct List {
-    Css::ListImage image = Keywords::NONE;
-    Css::ListType type = Css::CustomIdent{"disc"_sym};
-    Css::ListPosition position = Keywords::OUTSIDE;
-    Css::MarkerSide markerSide = Keywords::MATCH_SELF;
-};
-
-} // namespace Vaev::Style
-
+} // namespace Vaev

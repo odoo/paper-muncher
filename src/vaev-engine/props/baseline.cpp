@@ -68,13 +68,13 @@ export struct DominantBaselineProperty : Property {
         }
 
         Res<Rc<Property>> parse(Cursor<Css::Sst>& c) const override {
-            return Ok(makeRc<DominantBaselineProperty>(self(), try$(parseValue<Css::DominantBaseline>(c))));
+            return Ok(makeRc<DominantBaselineProperty>(self(), try$(parseValue<DominantBaseline>(c))));
         }
     };
 
-    Css::DominantBaseline _value;
+    DominantBaseline _value;
 
-    DominantBaselineProperty(Rc<Property::Registration> registration, Css::DominantBaseline value)
+    DominantBaselineProperty(Rc<Property::Registration> registration, DominantBaseline value)
         : Property(registration), _value(value) {}
 
     void apply([[maybe_unused]] ComputedValues const& parent, ComputedValues& c, [[maybe_unused]] ComputationContext const& cx) const override {
@@ -104,13 +104,13 @@ export struct BaselineSourceProperty : Property {
         }
 
         Res<Rc<Property>> parse(Cursor<Css::Sst>& c) const override {
-            return Ok(makeRc<BaselineSourceProperty>(self(), try$(parseValue<Css::BaselineSource>(c))));
+            return Ok(makeRc<BaselineSourceProperty>(self(), try$(parseValue<BaselineSource>(c))));
         }
     };
 
-    Css::BaselineSource _value;
+    BaselineSource _value;
 
-    BaselineSourceProperty(Rc<Property::Registration> registration, Css::BaselineSource value)
+    BaselineSourceProperty(Rc<Property::Registration> registration, BaselineSource value)
         : Property(registration), _value(value) {}
 
     void apply([[maybe_unused]] ComputedValues const& parent, ComputedValues& c, [[maybe_unused]] ComputationContext const& cx) const override {
@@ -140,13 +140,13 @@ export struct AlignmentBaselineProperty : Property {
         }
 
         Res<Rc<Property>> parse(Cursor<Css::Sst>& c) const override {
-            return Ok(makeRc<AlignmentBaselineProperty>(self(), try$(parseValue<Css::AlignmentBaseline>(c))));
+            return Ok(makeRc<AlignmentBaselineProperty>(self(), try$(parseValue<AlignmentBaseline>(c))));
         }
     };
 
-    Css::AlignmentBaseline _value;
+    AlignmentBaseline _value;
 
-    AlignmentBaselineProperty(Rc<Property::Registration> registration, Css::AlignmentBaseline value)
+    AlignmentBaselineProperty(Rc<Property::Registration> registration, AlignmentBaseline value)
         : Property(registration), _value(value) {}
 
     void apply([[maybe_unused]] ComputedValues const& parent, ComputedValues& c, [[maybe_unused]] ComputationContext const& cx) const override {
@@ -201,8 +201,8 @@ export struct BaselineShiftProperty : Property {
 // https://drafts.csswg.org/css-inline/#transverse-alignment
 export struct VerticalAlignProperty : Property {
     struct Value {
-        Opt<Css::BaselineSource> baselineSource = NONE;
-        Opt<Css::AlignmentBaseline> alignmentBaseline = NONE;
+        Opt<BaselineSource> baselineSource = NONE;
+        Opt<AlignmentBaseline> alignmentBaseline = NONE;
         Opt<Css::BaselineShift> baselineShift = NONE;
     };
 
@@ -236,7 +236,7 @@ export struct VerticalAlignProperty : Property {
                 if (maybeFirstOrLast) {
                     if (not value.baselineSource) {
                         value.baselineSource = Some(maybeFirstOrLast.expect().visit(
-                            [](auto& v) -> Css::BaselineSource {
+                            [](auto& v) -> BaselineSource {
                                 return v;
                             }
                         ));
@@ -246,7 +246,7 @@ export struct VerticalAlignProperty : Property {
                     return Error::invalidData("duplicated value type");
                 }
 
-                auto maybeAlignmentBaseline = parseValue<Css::AlignmentBaseline>(c);
+                auto maybeAlignmentBaseline = parseValue<AlignmentBaseline>(c);
                 if (maybeAlignmentBaseline) {
                     if (not value.alignmentBaseline) {
                         value.alignmentBaseline = Some(maybeAlignmentBaseline.expect());

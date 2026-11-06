@@ -8,6 +8,8 @@ import Karm.Math;
 import Karm.Logger;
 
 import :values;
+import :css.values;
+import :style.values;
 import :layout.layout;
 import :layout.values;
 import :layout.positioned;
@@ -327,7 +329,7 @@ struct FlexItem {
     // https://www.w3.org/TR/css-flexbox-1/#min-size-auto
     Au getMinAutoPrefMainSize(Vec2Au containerSize) const {
         Opt<Au> definiteMaxMainSize;
-        auto maxMainSize = box->style->sizing->maxSize(fa.isRowOriented ? Css::Axis::HORIZONTAL : Css::Axis::VERTICAL);
+        auto maxMainSize = box->style->sizing->maxSize(fa.isRowOriented ? Axis::HORIZONTAL : Axis::VERTICAL);
         if (auto maxMainSizeCalc = maxMainSize.is<Style::PixelPercentage>()) {
             definiteMaxMainSize = Some(Layout::resolve(*maxMainSizeCalc, fa.mainAxis(containerSize)));
         }

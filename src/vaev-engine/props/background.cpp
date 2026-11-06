@@ -8,9 +8,12 @@ import Karm.Core;
 import :props.base;
 import :css.parser;
 import :style.computed;
-import :values.base;
+import :css.values.base;
 import :values.primitives;
-import :values.background;
+import :css.values.primitives;
+import :style.values.primitives;
+import :css.values.background;
+import :style.values.background;
 
 using namespace Karm;
 
@@ -24,7 +27,7 @@ export struct BackgroundColorProperty : Property {
         Registration() : Property::Registration(Properties::BACKGROUND_COLOR) {}
 
         Rc<Property> initial() const override {
-            return makeRc<BackgroundColorProperty>(self(), Css::TRANSPARENT);
+            return makeRc<BackgroundColorProperty>(self(), TRANSPARENT);
         }
 
         Rc<Property> load(ComputedValues const& c) const override {
@@ -205,7 +208,7 @@ export struct BackgroundRepeatProperty : Property {
 // https://www.w3.org/TR/CSS22/colors.html#x10
 export struct BackgroundProperty : Property {
     struct Value {
-        Css::Color color = Css::TRANSPARENT;
+        Css::Color color = TRANSPARENT;
         Vec<Css::BackgroundLayer> layers = {};
 
         void repr(Io::Emit& e) const {
@@ -221,7 +224,7 @@ export struct BackgroundProperty : Property {
             : Property::Registration(Properties::BACKGROUND, SHORTHAND) {}
 
         Rc<Property> initial() const override {
-            return makeRc<BackgroundProperty>(self(), Value{Css::TRANSPARENT});
+            return makeRc<BackgroundProperty>(self(), Value{TRANSPARENT});
         }
 
         Rc<Property> load(ComputedValues const& c) const override {

@@ -54,15 +54,15 @@ test$("vaev-css-unit-value-units") {
     auto flex = try$(_parse<Css::PureFlex>("2fr"));
     assertEq$(flex.toFr(), 2.0);
 
-    auto number = try$(_parse<Css::UnitValue>("2"));
+    auto number = try$(_parse<UnitValue>("2"));
     assertEq$(number.baseType(), NONE);
-    assertEq$(try$(_parse<Css::UnitValue>("2%")).baseType(), Css::NumericBaseType::PERCENT);
+    assertEq$(try$(_parse<UnitValue>("2%")).baseType(), NumericBaseType::PERCENT);
 
     return Ok();
 }
 
 test$("vaev-css-unit-value-parsing") {
-    assertEq$(try$(_parse<Css::PureAbsoluteLength>("2PX")).pixels().value(), 2.0);
+    assertEq$(try$(_parse<Css::PureAbsoluteLength>("2PX")).toPx(), 2.0);
 
     assert$(not _parse<Css::PureAbsoluteLength>("2em"));
     assert$(_parse<Css::PureLength>("2em"));
@@ -75,7 +75,7 @@ test$("vaev-css-unit-value-parsing") {
 
     assertEq$(try$(_parse<Css::PureLength>("2em")), Css::PureLength::fromEm(2));
     assertNe$(try$(_parse<Css::PureAbsoluteLength>("1in")), try$(_parse<Css::PureAbsoluteLength>("96px")));
-    assertEq$(try$(_parse<Css::PureAbsoluteLength>("1in")).pixels().value(), 96.0);
+    assertEq$(try$(_parse<Css::PureAbsoluteLength>("1in")).toPx(), 96.0);
     assertGt$(try$(_parse<Css::PureAbsoluteLength>("1in")), try$(_parse<Css::PureAbsoluteLength>("95px")));
     assertEq$(try$(_parse<Css::PureResolution>("96dpi")).toDppx(), 1.0);
 

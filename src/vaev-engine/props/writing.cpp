@@ -32,13 +32,13 @@ export struct WritingModeProperty : Property {
         }
 
         Res<Rc<Property>> parse(Cursor<Css::Sst>& c) const override {
-            return Ok(makeRc<WritingModeProperty>(self(), try$(parseValue<Css::WritingMode>(c))));
+            return Ok(makeRc<WritingModeProperty>(self(), try$(parseValue<WritingMode>(c))));
         }
     };
 
-    Css::WritingMode _value;
+    WritingMode _value;
 
-    WritingModeProperty(Rc<Property::Registration> registration, Css::WritingMode value)
+    WritingModeProperty(Rc<Property::Registration> registration, WritingMode value)
         : Property(registration), _value(value) {}
 
     void apply([[maybe_unused]] ComputedValues const& parent, ComputedValues& c, [[maybe_unused]] ComputationContext const& cx) const override {
@@ -73,13 +73,13 @@ export struct DirectionProperty : Property {
         }
 
         Res<Rc<Property>> parse(Cursor<Css::Sst>& c) const override {
-            return Ok(makeRc<DirectionProperty>(self(), try$(parseValue<Css::Direction>(c))));
+            return Ok(makeRc<DirectionProperty>(self(), try$(parseValue<Direction>(c))));
         }
     };
 
-    Css::Direction _value;
+    Direction _value;
 
-    DirectionProperty(Rc<Property::Registration> registration, Css::Direction value)
+    DirectionProperty(Rc<Property::Registration> registration, Direction value)
         : Property(registration), _value(value) {}
 
     void apply([[maybe_unused]] ComputedValues const& parent, ComputedValues& c, [[maybe_unused]] ComputationContext const& cx) const override {

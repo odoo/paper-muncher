@@ -8,6 +8,8 @@ import :dom.names;
 import :layout.base;
 import :style;
 import :values;
+import :css.values;
+import :style.values;
 
 using namespace Karm;
 

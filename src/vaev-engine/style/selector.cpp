@@ -9,6 +9,8 @@ import Karm.Logger;
 
 import :css;
 import :values;
+import :css.values;
+import :style.values;
 import :dom.element;
 
 using namespace Karm;
@@ -239,7 +241,7 @@ export struct ClassSelector {
 };
 
 export struct AnB {
-    Css::Integer a, b;
+    Integer a, b;
 
     void repr(Io::Emit& e) const {
         e("{}n{}{}", a, b < 0 ? ""s : "+"s, b);
@@ -249,7 +251,7 @@ export struct AnB {
 
     bool match(usize index) const {
         // is index = An + B for a non-negative integer n >= 0
-        Css::Integer intIndex = (Css::Integer)index - b;
+        Integer intIndex = (Integer)index - b;
 
         if (a == 0)
             return intIndex == 0;
@@ -260,7 +262,7 @@ export struct AnB {
         return intIndex / a >= 0;
     }
 
-    static Res<Css::Integer> _parseAfterN(Cursor<Css::Sst>& cur) {
+    static Res<Integer> _parseAfterN(Cursor<Css::Sst>& cur) {
         eatWhitespace(cur);
         if (cur.ended())
             return Ok(0);
@@ -269,7 +271,7 @@ export struct AnB {
             if (cur->token.data[0] != '+' and cur->token.data[0] != '-')
                 return Error::invalidData("expected '+' or '-' in AnB expression after 'n'");
 
-            return Ok(try$(parseValue<Css::Integer>(cur)));
+            return Ok(try$(parseValue<Integer>(cur)));
         } else if (cur.peek() == Css::Token::DELIM) {
             if (cur->token.data != "+"s and cur->token.data != "-"s)
                 return Error::invalidData("expected '+' or '-' in AnB expression after 'n'");
@@ -282,14 +284,14 @@ export struct AnB {
 
             if (not cur.ended() and (cur->token.data[0] == '+' or cur->token.data[0] == '-'))
                 return Error::invalidData("unexpected '+' or '-' in AnB expression after 'n'");
-            Css::Integer unsigedB = try$(parseValue<Css::Integer>(cur));
+            Integer unsigedB = try$(parseValue<Integer>(cur));
             return Ok(isNegative ? -unsigedB : unsigedB);
         }
 
         return Ok(0);
     }
 
-    static Res<Css::Integer> _parseAfterNDash(Cursor<Css::Sst>& cur) {
+    static Res<Integer> _parseAfterNDash(Cursor<Css::Sst>& cur) {
         eatWhitespace(cur);
         if (cur.ended() or cur.peek() != Css::Token::NUMBER)
             return Error::invalidData("expected number");
@@ -297,7 +299,7 @@ export struct AnB {
         if (not isAsciiDigit(cur->token.data[0]))
             return Error::invalidData("expected unsigned number");
 
-        return Ok(try$(parseValue<Css::Integer>(cur)));
+        return Ok(try$(parseValue<Integer>(cur)));
     }
 
     static Res<AnB> _parseIdent(Cursor<Css::Sst>& cur, bool precededByPlus) {
@@ -345,7 +347,7 @@ export struct AnB {
 
     static Res<AnB> _parseDimension(Cursor<Css::Sst>& cur, bool precededByPlus) {
         Io::SScan scan = cur->token.data.str();
-        Opt<Css::Integer> A = Io::atoi(scan);
+        Opt<Integer> A = Io::atoi(scan);
 
         if (not A)
             return Error::invalidData("expected integer for A in AnB expression");
@@ -377,7 +379,7 @@ export struct AnB {
             if (nUnit == "n-"s)
                 digitCount++;
 
-            Opt<Css::Integer> B = Io::atoi(Str{unit.end() - digitCount, digitCount});
+            Opt<Integer> B = Io::atoi(Str{unit.end() - digitCount, digitCount});
             if (not B)
                 return Error::invalidData("invalid B in AnB expression");
             return Ok(AnB{*A, *B});
@@ -402,7 +404,7 @@ export struct AnB {
         }
 
         if (cur.peek() == Css::Token::NUMBER) {
-            return Ok(AnB{0, try$(parseValue<Css::Integer>(cur))});
+            return Ok(AnB{0, try$(parseValue<Integer>(cur))});
         }
 
         bool precededByPlus = false;
