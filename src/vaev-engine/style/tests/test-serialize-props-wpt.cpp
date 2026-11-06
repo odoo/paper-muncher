@@ -3964,12 +3964,12 @@ test$("vaev-style-wpt-css-css-fonts-parsing-font-size-valid") {
     try$(_expectSerialized(_driver, "font-size", "smaller", "smaller"));
     try$(_expectSerialized(_driver, "font-size", "10px", "10px"));
     try$(_expectSerialized(_driver, "font-size", "20%", "20%"));
+    try$(_expectSerialized(_driver, "font-size", "calc(30% - 40px)", "calc(30% - 40px)"));
     return Ok();
 }
 
 test$("vaev-style-wpt-css-css-fonts-parsing-font-size-valid-xfail", XFAIL) {
     try$(_expectSerialized(_driver, "font-size", "xxx-large", "xxx-large"));
-    try$(_expectSerialized(_driver, "font-size", "calc(30% - 40px)", "calc(30% - 40px)"));
     return Ok();
 }
 

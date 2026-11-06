@@ -28,11 +28,11 @@ concept FontSizeContext = LengthContext<T> and requires(T t) {
 
 export Pixel toComputed(Css::FontSize const& value, FontSizeContext auto const& ctx) {
     return value.visit(
-        [&](Css::PureLength const& v) {
-            return toComputed(v, ctx);
-        },
-        [&](Css::PurePercentage const& v) {
-            return Pixel{ctx.parentFontSize * (v.value() / 100.0)};
+        [&](Css::LengthPercentage const& v) {
+            // NOTE: At this point, ctx's font metrics are the parent's, so `em` resolves against the parent font size, and
+            //       percentages are relative to it too. Negative calc() results are clamped to the allowed [0,∞] range.
+            //       https://www.w3.org/TR/css-fonts-4/#font-size-prop
+            return Pixel{max(toComputed(v, ctx, ctx.parentFontSize).value(), 0.0)};
         },
         [&](Keywords::XxSmall) {
             return Pixel{ctx.userFontSize * 0.5};

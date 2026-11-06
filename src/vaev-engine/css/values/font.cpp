@@ -11,6 +11,7 @@ import :css.lexer;
 import :css.parser;
 import :css.serializer;
 import :css.values.base;
+import :css.values.calc;
 import :css.values.keywords;
 import :css.values.primitives;
 import :css.values.unitValue;
@@ -299,8 +300,7 @@ struct ValueSerializer<FontWeight> {
 // https://www.w3.org/TR/css-fonts-4/#font-size-prop
 
 using FontSize = Union<
-    PureLength,
-    PurePercentage,
+    LengthPercentage,
     Keywords::XxSmall,
     Keywords::XSmall,
     Keywords::Small,
