@@ -88,11 +88,11 @@ test$("feature-orientation") {
 }
 
 test$("feature-resolution") {
-    assert$(ResolutionFeature::min(Css::PureResolution::fromDpi(96)).match(TEST_MEDIA));
+    assert$(ResolutionFeature::min(Css::PureResolution::fromDppx(1)).match(TEST_MEDIA));
 
-    assert$(ResolutionFeature::max(Css::PureResolution::fromDpi(96)).match(TEST_MEDIA));
+    assert$(ResolutionFeature::max(Css::PureResolution::fromDppx(1)).match(TEST_MEDIA));
 
-    assert$(ResolutionFeature::exact(Css::PureResolution::fromDpi(96)).match(TEST_MEDIA));
+    assert$(ResolutionFeature::exact(Css::PureResolution::fromDppx(1)).match(TEST_MEDIA));
 
     return Ok();
 }

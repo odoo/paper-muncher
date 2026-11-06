@@ -160,12 +160,6 @@ struct TypedUnitValue {
     // MARK: <resolution> ------------------------------------------------------
     // https://drafts.csswg.org/css-values/#resolution
 
-    static constexpr TypedUnitValue fromDpi(f64 val)
-        requires(TYPE == NumericBaseType::RESOLUTION)
-    {
-        return TypedUnitValue{UnitValue{val, UnitValue::Unit::DPI}};
-    }
-
     static constexpr TypedUnitValue fromDppx(f64 val)
         requires(TYPE == NumericBaseType::RESOLUTION)
     {
