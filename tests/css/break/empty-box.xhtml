@@ -41,4 +41,73 @@
     <div class="after"></div>
 </rendering>
 </test>
+
+<test name="empty-box-below-padding" flow="paginate" width="200px" height="200px" margins="0">
+<container>
+    <html lang="en" xmlns="http://www.w3.org/1999/xhtml">
+
+    <head>
+        <style>
+            :root {
+                background-color: white;
+            }
+
+            body {
+                margin: 0;
+            }
+
+            .padded {
+                padding-top: 20px;
+                background-color: gold;
+            }
+
+            .tall {
+                background-color: lightseagreen;
+            }
+
+            .after {
+                height: 50px;
+                background-color: salmon;
+            }
+        </style>
+    </head>
+
+    <body>
+        <slot />
+    </body>
+
+    </html>
+</container>
+
+<rendering>
+    <div class="padded">
+        <div class="tall" style="height: 180px;"></div>
+    </div>
+    <div class="after" style="break-before: page;"></div>
+</rendering>
+
+<rendering help="FIXME: the rest of the box should continue on the next page instead of being dropped">
+    <div class="padded">
+        <div class="tall" style="height: 190px;"></div>
+    </div>
+    <div class="after"></div>
+</rendering>
+
+<rendering help="an empty box before it is not content placed on the page">
+    <div></div>
+    <div class="padded">
+        <div class="tall" style="height: 190px;"></div>
+    </div>
+    <div class="after"></div>
+</rendering>
+
+<rendering help="measuring a centered box is not content placed on the page">
+    <center>
+        <div class="padded">
+            <div class="tall" style="height: 190px;"></div>
+        </div>
+    </center>
+    <div class="after"></div>
+</rendering>
+</test>
 </tests>

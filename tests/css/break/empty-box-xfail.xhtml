@@ -1,0 +1,76 @@
+<tests>
+<test name="empty-box-below-padding-in-table-cell" flow="paginate" width="200px" height="200px" margins="0">
+<container>
+    <html lang="en" xmlns="http://www.w3.org/1999/xhtml">
+
+    <head>
+        <style>
+            :root {
+                background-color: white;
+            }
+
+            body {
+                margin: 0;
+            }
+
+            table {
+                border-collapse: collapse;
+            }
+
+            td {
+                padding: 0;
+            }
+
+            .padded {
+                width: 50px;
+                padding-top: 20px;
+                background-color: gold;
+            }
+
+            .tall {
+                background-color: lightseagreen;
+            }
+
+            .after {
+                height: 50px;
+                background-color: salmon;
+            }
+        </style>
+    </head>
+
+    <body>
+        <slot />
+    </body>
+
+    </html>
+</container>
+
+<rendering>
+    <table>
+        <tr>
+            <td>text</td>
+            <td>
+                <div class="padded">
+                    <div class="tall" style="height: 180px;"></div>
+                </div>
+            </td>
+        </tr>
+    </table>
+    <div class="after" style="break-before: page;"></div>
+</rendering>
+
+<rendering help="a cell beside it is not content placed above it, pagination currently panics because it makes no progress" xfail="true">
+    <table>
+        <tr>
+            <td>text</td>
+            <td>
+                <div class="padded">
+                    <div class="tall" style="height: 190px;"></div>
+                </div>
+            </td>
+        </tr>
+    </table>
+    <div class="after"></div>
+</rendering>
+</test>
+</tests>

@@ -48,4 +48,81 @@
     </table>
 </rendering>
 </test>
+
+<test name="table-continuing-on-next-pages" flow="paginate" width="200px" height="200px" margins="0">
+<container>
+    <html lang="en" xmlns="http://www.w3.org/1999/xhtml">
+
+    <head>
+        <style>
+            :root {
+                background-color: white;
+            }
+
+            body {
+                margin: 0;
+            }
+
+            table {
+                width: 100%;
+                border-spacing: 0;
+            }
+
+            td {
+                padding: 0;
+            }
+
+            .row {
+                height: 50px;
+            }
+
+            .odd {
+                background-color: lightseagreen;
+            }
+
+            .even {
+                background-color: salmon;
+            }
+        </style>
+    </head>
+
+    <body>
+        <slot />
+    </body>
+
+    </html>
+</container>
+
+<rendering>
+    <div class="row odd"></div>
+    <div class="row even"></div>
+    <div class="row odd"></div>
+    <div class="row even"></div>
+    <div class="row odd"></div>
+    <div class="row even"></div>
+    <div class="row odd"></div>
+    <div class="row even"></div>
+    <div class="row odd"></div>
+    <div class="row even"></div>
+    <div class="row odd"></div>
+    <div class="row even"></div>
+</rendering>
+
+<rendering help="a page starting with the rest of a table must still break when the table overflows it">
+    <table>
+        <tr><td class="row odd"></td></tr>
+        <tr><td class="row even"></td></tr>
+        <tr><td class="row odd"></td></tr>
+        <tr><td class="row even"></td></tr>
+        <tr><td class="row odd"></td></tr>
+        <tr><td class="row even"></td></tr>
+        <tr><td class="row odd"></td></tr>
+        <tr><td class="row even"></td></tr>
+        <tr><td class="row odd"></td></tr>
+        <tr><td class="row even"></td></tr>
+        <tr><td class="row odd"></td></tr>
+        <tr><td class="row even"></td></tr>
+    </table>
+</rendering>
+</test>
 </tests>
