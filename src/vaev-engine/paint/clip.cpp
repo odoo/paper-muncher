@@ -7,35 +7,35 @@ import :paint.background;
 
 namespace Vaev::Paint {
 
-Pair<RectAu, RadiiAu> resolveClipGeometryBox(Rc<Layout::Fragment>& fragment, GeometryBox box, RectAu viewBox) {
-    RadiiAu metricsRadii = 0_au;
+Pair<Layout::RectAu, Layout::RadiiAu> resolveClipGeometryBox(Rc<Layout::Fragment>& fragment, GeometryBox box, Layout::RectAu viewBox) {
+    Layout::RadiiAu metricsRadii = 0_au;
     if (auto boxFragment = fragment.is<Layout::BoxFragment>())
         metricsRadii = boxFragment->metrics.radii;
 
     return box.visit(
-        [&](Keywords::BorderBox const&) -> Pair<RectAu, RadiiAu> {
+        [&](Keywords::BorderBox const&) -> Pair<Layout::RectAu, Layout::RadiiAu> {
             return {fragment->borderBox(), metricsRadii};
         },
-        [&](Keywords::PaddingBox const&) -> Pair<RectAu, RadiiAu> {
+        [&](Keywords::PaddingBox const&) -> Pair<Layout::RectAu, Layout::RadiiAu> {
             return {fragment->paddingBox(), {0_au}};
         },
-        [&](Keywords::ContentBox const&) -> Pair<RectAu, RadiiAu> {
+        [&](Keywords::ContentBox const&) -> Pair<Layout::RectAu, Layout::RadiiAu> {
             return {fragment->contentBox(), {0_au}};
         },
-        [&](Keywords::MarginBox const&) -> Pair<RectAu, RadiiAu> {
+        [&](Keywords::MarginBox const&) -> Pair<Layout::RectAu, Layout::RadiiAu> {
             return {fragment->marginBox(), {0_au}};
         },
-        [&](Keywords::FillBox const&) -> Pair<RectAu, RadiiAu> {
+        [&](Keywords::FillBox const&) -> Pair<Layout::RectAu, Layout::RadiiAu> {
             if (fragment->hasCssLayoutBox())
                 return {fragment->contentBox(), {0_au}};
             return {fragment->objectBoundingBox(), {0_au}};
         },
-        [&](Keywords::StrokeBox const&) -> Pair<RectAu, RadiiAu> {
+        [&](Keywords::StrokeBox const&) -> Pair<Layout::RectAu, Layout::RadiiAu> {
             if (fragment->hasCssLayoutBox())
                 return {fragment->borderBox(), metricsRadii};
             return {fragment->strokeBoundingBox(), metricsRadii};
         },
-        [&](Keywords::ViewBox const&) -> Pair<RectAu, RadiiAu> {
+        [&](Keywords::ViewBox const&) -> Pair<Layout::RectAu, Layout::RadiiAu> {
             if (fragment->hasCssLayoutBox())
                 return {fragment->borderBox(), metricsRadii};
             return {viewBox, {0_au}};
@@ -43,7 +43,7 @@ Pair<RectAu, RadiiAu> resolveClipGeometryBox(Rc<Layout::Fragment>& fragment, Geo
     );
 }
 
-Math::Radiif resolveRadii(Math::Radii<Style::PixelPercentage> const& baseRadii, RectAu const& referenceBox) {
+Math::Radiif resolveRadii(Math::Radii<Style::PixelPercentage> const& baseRadii, Layout::RectAu const& referenceBox) {
     Math::Radiif radii;
     radii.a = Layout::resolve(baseRadii.a, referenceBox.height).cast<f64>();
     radii.b = Layout::resolve(baseRadii.b, referenceBox.width).cast<f64>();
@@ -57,7 +57,7 @@ Math::Radiif resolveRadii(Math::Radii<Style::PixelPercentage> const& baseRadii, 
 }
 
 // https://drafts.csswg.org/css-shapes-1/#typedef-basic-shape
-Tuple<Math::Path, Gfx::FillRule> resolvedClipShape(Style::BasicShapeFunction const& shape, RectAu referenceBox) {
+Tuple<Math::Path, Gfx::FillRule> resolvedClipShape(Style::BasicShapeFunction const& shape, Layout::RectAu referenceBox) {
     Math::Path path;
     Gfx::FillRule fillRule = {};
 
@@ -107,7 +107,7 @@ Tuple<Math::Path, Gfx::FillRule> resolvedClipShape(Style::BasicShapeFunction con
                 auto wSquared = Math::pow2(referenceBox.width.cast<f64>());
                 radius = Layout::resolve(
                                  circle.radius.expect<Style::PixelPercentage>(),
-                                 Au(Math::sqrt(hSquared + wSquared) / Math::sqrt(2.0))
+                                 Layout::Au(Math::sqrt(hSquared + wSquared) / Math::sqrt(2.0))
                              )
                              .cast<f64>();
             }
@@ -200,7 +200,7 @@ Tuple<Math::Path, Gfx::FillRule> resolvedClipShape(Style::BasicShapeFunction con
 
 void applyClip(Rc<Layout::Fragment>& fragment, Gfx::Canvas& g, Math::Rectf viewBox) {
     auto& clip = fragment->style().clip->expect();
-    auto [referenceBox, radii] = resolveClipGeometryBox(fragment, clip.referenceBox, viewBox.cast<Au>());
+    auto [referenceBox, radii] = resolveClipGeometryBox(fragment, clip.referenceBox, viewBox.cast<Layout::Au>());
 
     if (auto& [c] = clip.shape) {
         auto [path, fillRule] = resolvedClipShape(c, referenceBox);

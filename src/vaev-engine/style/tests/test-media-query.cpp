@@ -7,13 +7,14 @@ import Vaev.Engine;
 
 using namespace Karm;
 using namespace Karm::Math::Literals;
+using namespace Vaev::Literals;
 
 namespace Vaev::Style::Tests {
 
 static Media const TEST_MEDIA = {
     .type = Css::MediaType::SCREEN,
-    .width = 1920_au,
-    .height = 1080_au,
+    .width = 1920_px,
+    .height = 1080_px,
     .aspectRatio = 16.0 / 9.0,
     .orientation = Print::Orientation::LANDSCAPE,
 
@@ -40,15 +41,15 @@ static Media const TEST_MEDIA = {
     .prefersColorScheme = Css::ColorScheme::LIGHT,
     .prefersReducedData = Css::ReducedData::REDUCE,
 
-    .deviceWidth = 1920_au,
-    .deviceHeight = 1080_au,
+    .deviceWidth = 1920_px,
+    .deviceHeight = 1080_px,
     .deviceAspectRatio = 16.0 / 9.0,
 };
 
 test$("logical-and") {
     auto query = MediaQuery::combineAnd(
         TypeFeature{Css::MediaType::SCREEN},
-        WidthFeature::min(1920_au)
+        WidthFeature::min(Css::PureLength::fromPx(1920))
     );
 
     assert$(query.match(TEST_MEDIA));
@@ -59,7 +60,7 @@ test$("logical-and") {
 test$("logical-or") {
     auto query = MediaQuery::combineOr(
         TypeFeature{Css::MediaType::SCREEN},
-        WidthFeature::min(1920_au)
+        WidthFeature::min(Css::PureLength::fromPx(1920))
     );
 
     assert$(query.match(TEST_MEDIA));

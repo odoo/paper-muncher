@@ -111,14 +111,15 @@ export struct WebView {
         auto root = makeRc<Layout::Box>(Layout::buildDocument(_document.upgrade()));
         Layout::Fragmentainer fragmentainer;
 
+        auto viewport = Layout::resolve(_area.viewport);
         auto layout = Layout::layoutRoot(
             *root,
             {
                 .fragmentainer = Some<Layout::Fragmentainer&>(fragmentainer),
                 .generateFragment = true,
-                .knownSize = {Some(_area.viewport.width), NONE},
-                .availableSpace = {_area.viewport.width, 0_au},
-                .containingBlock = _area.viewport,
+                .knownSize = {Some(viewport.width), NONE},
+                .availableSpace = {viewport.width, 0_au},
+                .containingBlock = viewport,
             }
         );
 
@@ -155,11 +156,11 @@ export struct WebView {
         _render = NONE;
     }
 
-    RectAu scrollableOverflow() {
+    Layout::RectAu scrollableOverflow() {
         return ensureRender().stacking->scrollableOverflow();
     }
 
-    RectAu borderBox() {
+    Layout::RectAu borderBox() {
         return ensureRender().fragments->borderBox();
     }
 

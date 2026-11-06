@@ -24,9 +24,9 @@ namespace Vaev::Driver {
 
 export struct PageLayoutInfos {
     usize pageNumber;
-    RectAu pageRect;
-    RectAu pageDecoration;
-    RectAu pageContent;
+    Layout::RectAu pageRect;
+    Layout::RectAu pageDecoration;
+    Layout::RectAu pageContent;
     Rc<Style::PageComputedValues> pageStyle;
     Layout::Breakpoint breakpoint;
 };
@@ -34,7 +34,7 @@ export struct PageLayoutInfos {
 export struct PageDecorator {
     virtual ~PageDecorator() = default;
 
-    virtual RectAu layout([[maybe_unused]] Style::DisplayArea const& area, [[maybe_unused]] Style::ViewerPrefs const& prefs, [[maybe_unused]] PageLayoutInfos const& infos) {
+    virtual Layout::RectAu layout([[maybe_unused]] Style::DisplayArea const& area, [[maybe_unused]] Style::ViewerPrefs const& prefs, [[maybe_unused]] PageLayoutInfos const& infos) {
         return infos.pageDecoration;
     }
 
@@ -42,7 +42,7 @@ export struct PageDecorator {
     }
 };
 
-void _paintCornerMargin(PageLayoutInfos& infos, Gfx::Canvas& g, RectAu const& rect, Style::PageArea area, Layout::RunningPositionMap& runningPosition) {
+void _paintCornerMargin(PageLayoutInfos& infos, Gfx::Canvas& g, Layout::RectAu const& rect, Style::PageArea area, Layout::RunningPositionMap& runningPosition) {
     auto root = Layout::buildElement(infos.pageStyle->area(area), infos.pageNumber, runningPosition);
     Layout::Fragmentainer fragmentainer;
     auto output = Layout::layoutRoot(
@@ -50,7 +50,7 @@ void _paintCornerMargin(PageLayoutInfos& infos, Gfx::Canvas& g, RectAu const& re
         {
             .fragmentainer = Some<Layout::Fragmentainer&>(fragmentainer),
             .generateFragment = true,
-            .knownSize = rect.size().cast<Some<Au>>(),
+            .knownSize = rect.size().cast<Some<Layout::Au>>(),
             .position = rect.topStart(),
             .availableSpace = rect.size(),
             .containingBlock = rect.size(),
@@ -60,7 +60,7 @@ void _paintCornerMargin(PageLayoutInfos& infos, Gfx::Canvas& g, RectAu const& re
     Paint::StackingContext::establishStackingContext(output.fragment.expect())->paintRoot(g);
 }
 
-void _paintMainMargin(PageLayoutInfos& infos, Gfx::Canvas& g, RectAu const& rect, Style::PageArea mainArea, Array<Style::PageArea, 3> subAreas, Layout::RunningPositionMap& runningPosition) {
+void _paintMainMargin(PageLayoutInfos& infos, Gfx::Canvas& g, Layout::RectAu const& rect, Style::PageArea mainArea, Array<Style::PageArea, 3> subAreas, Layout::RunningPositionMap& runningPosition) {
     auto box = Layout::buildElement(infos.pageStyle->area(mainArea), infos.pageNumber, runningPosition);
     for (auto subArea : subAreas) {
         box.add(Layout::buildElement(infos.pageStyle->area(subArea), infos.pageNumber, runningPosition));
@@ -71,7 +71,7 @@ void _paintMainMargin(PageLayoutInfos& infos, Gfx::Canvas& g, RectAu const& rect
         {
             .fragmentainer = Some<Layout::Fragmentainer&>(fragmentainer),
             .generateFragment = true,
-            .knownSize = rect.size().cast<Some<Au>>(),
+            .knownSize = rect.size().cast<Some<Layout::Au>>(),
             .position = rect.topStart(),
             .availableSpace = rect.size(),
             .containingBlock = rect.size(),
@@ -82,10 +82,10 @@ void _paintMainMargin(PageLayoutInfos& infos, Gfx::Canvas& g, RectAu const& rect
 
 void _paintMargins(PageLayoutInfos& infos, Gfx::Canvas& g, Layout::RunningPositionMap& runningPosition) {
     // Compute all corner rects
-    auto topLeftMarginCornerRect = RectAu::fromTwoPoint(infos.pageRect.topStart(), infos.pageContent.topStart());
-    auto topRightMarginCornerRect = RectAu::fromTwoPoint(infos.pageRect.topEnd(), infos.pageContent.topEnd());
-    auto bottomLeftMarginCornerRect = RectAu::fromTwoPoint(infos.pageRect.bottomStart(), infos.pageContent.bottomStart());
-    auto bottomRightMarginCornerRect = RectAu::fromTwoPoint(infos.pageRect.bottomEnd(), infos.pageContent.bottomEnd());
+    auto topLeftMarginCornerRect = Layout::RectAu::fromTwoPoint(infos.pageRect.topStart(), infos.pageContent.topStart());
+    auto topRightMarginCornerRect = Layout::RectAu::fromTwoPoint(infos.pageRect.topEnd(), infos.pageContent.topEnd());
+    auto bottomLeftMarginCornerRect = Layout::RectAu::fromTwoPoint(infos.pageRect.bottomStart(), infos.pageContent.bottomStart());
+    auto bottomRightMarginCornerRect = Layout::RectAu::fromTwoPoint(infos.pageRect.bottomEnd(), infos.pageContent.bottomEnd());
 
     // Paint corners
     _paintCornerMargin(infos, g, topLeftMarginCornerRect, Style::PageArea::TOP_LEFT_CORNER, runningPosition);
@@ -94,10 +94,10 @@ void _paintMargins(PageLayoutInfos& infos, Gfx::Canvas& g, Layout::RunningPositi
     _paintCornerMargin(infos, g, bottomRightMarginCornerRect, Style::PageArea::BOTTOM_RIGHT_CORNER, runningPosition);
 
     // Compute main area rects
-    auto topRect = RectAu::fromTwoPoint(topLeftMarginCornerRect.topEnd(), topRightMarginCornerRect.bottomStart());
-    auto bottomRect = RectAu::fromTwoPoint(bottomLeftMarginCornerRect.topEnd(), bottomRightMarginCornerRect.bottomStart());
-    auto leftRect = RectAu::fromTwoPoint(topLeftMarginCornerRect.bottomEnd(), bottomLeftMarginCornerRect.topStart());
-    auto rightRect = RectAu::fromTwoPoint(topRightMarginCornerRect.bottomEnd(), bottomRightMarginCornerRect.topStart());
+    auto topRect = Layout::RectAu::fromTwoPoint(topLeftMarginCornerRect.topEnd(), topRightMarginCornerRect.bottomStart());
+    auto bottomRect = Layout::RectAu::fromTwoPoint(bottomLeftMarginCornerRect.topEnd(), bottomRightMarginCornerRect.bottomStart());
+    auto leftRect = Layout::RectAu::fromTwoPoint(topLeftMarginCornerRect.bottomEnd(), bottomLeftMarginCornerRect.topStart());
+    auto rightRect = Layout::RectAu::fromTwoPoint(topRightMarginCornerRect.bottomEnd(), bottomRightMarginCornerRect.topStart());
 
     // Paint main areas
     _paintMainMargin(infos, g, topRect, Style::PageArea::TOP, {Style::PageArea::TOP_LEFT, Style::PageArea::TOP_CENTER, Style::PageArea::TOP_RIGHT}, runningPosition);
@@ -118,9 +118,9 @@ struct PaginationContext {
     Layout::RunningPositionMap runningPosition = {};
 };
 
-static InsetsAu _resolvePageMargin(Print::Margins marginSetting, Style::Margins const& margin, RectAu pageRect) {
+static Layout::InsetsAu _resolvePageMargin(Print::Margins marginSetting, Style::Margins const& margin, Layout::RectAu pageRect) {
     return marginSetting.visit(
-        [&](Print::MarginOption option) -> InsetsAu {
+        [&](Print::MarginOption option) -> Layout::InsetsAu {
             switch (option) {
             case Print::MarginOption::NONE:
                 return {};
@@ -142,7 +142,7 @@ static InsetsAu _resolvePageMargin(Print::Margins marginSetting, Style::Margins 
                 unreachable();
             }
         },
-        [](InsetsAu custom) {
+        [](Layout::InsetsAu custom) {
             return custom;
         }
     );
@@ -160,7 +160,7 @@ Vec<PageLayoutInfos> collectBreakPointsAndRunningPositions(PaginationContext& co
         };
 
         auto pageStyle = context.computer.computeValues(*context.initialStyle, page);
-        auto pageRect = RectAu{context.area.viewport};
+        auto pageRect = Layout::RectAu{Layout::resolve(context.area.viewport)};
         auto pageDecoration = pageRect.shrink(
             _resolvePageMargin(context.settings.margins, *pageStyle->style->margin, pageRect)
         );

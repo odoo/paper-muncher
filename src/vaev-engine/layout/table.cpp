@@ -52,9 +52,9 @@ void advanceUntil(MutCursor<Box>& cursor, auto pred) {
         cursor.next();
 }
 
-Css::UsedBorder resolve(Box const& box, Style::BorderEdge const edge) {
+UsedBorder resolve(Box const& box, Style::BorderEdge const edge) {
     auto& border = box.style->borders->get(edge);
-    return Css::UsedBorder{
+    return UsedBorder{
         border.style == Gfx::BorderStyle::NONE
             ? 0_au
             : Layout::resolve(border.width),
@@ -453,8 +453,8 @@ export struct TableFormatingContext : FormatingContext {
     };
 
     // https://www.w3.org/TR/css-tables-3/#border-style-harmonization-algorithm
-    Css::UsedBorder harmonizeConflictingBorders(Vec<Css::UsedBorder> const& borders) {
-        Css::UsedBorder currentlyWinningBorderProperties{
+    UsedBorder harmonizeConflictingBorders(Vec<UsedBorder> const& borders) {
+        UsedBorder currentlyWinningBorderProperties{
             0_au,
             Gfx::BorderStyle::NONE,
             Css::BLACK,
@@ -499,7 +499,7 @@ export struct TableFormatingContext : FormatingContext {
     }
 
     void addAxisAndGroupBorder(
-        Vec<Css::UsedBorder>& borders,
+        Vec<UsedBorder>& borders,
         AxisAndGroupsIdxs const& axisAndGroupsIdxs,
         Style::BorderEdge edge,
         Vec<TableAxis> const& axis,
@@ -517,25 +517,25 @@ export struct TableFormatingContext : FormatingContext {
         }
     }
 
-    void paintCellEnd(usize i, usize j, Css::UsedBorder const& finalBorder) {
+    void paintCellEnd(usize i, usize j, UsedBorder const& finalBorder) {
         bordersStyleGrid.colorAt(i, j).end = finalBorder.color;
         bordersStyleGrid.styleAt(i, j).end = finalBorder.style;
         bordersGrid.widthAt(i, j).end = finalBorder.width;
     }
 
-    void paintCellStart(usize i, usize j, Css::UsedBorder const& finalBorder) {
+    void paintCellStart(usize i, usize j, UsedBorder const& finalBorder) {
         bordersStyleGrid.colorAt(i, j).start = finalBorder.color;
         bordersStyleGrid.styleAt(i, j).start = finalBorder.style;
         bordersGrid.widthAt(i, j).start = finalBorder.width;
     }
 
-    void paintCellTop(usize i, usize j, Css::UsedBorder const& finalBorder) {
+    void paintCellTop(usize i, usize j, UsedBorder const& finalBorder) {
         bordersStyleGrid.colorAt(i, j).top = finalBorder.color;
         bordersStyleGrid.styleAt(i, j).top = finalBorder.style;
         bordersGrid.widthAt(i, j).top = finalBorder.width;
     }
 
-    void paintCellBottom(usize i, usize j, Css::UsedBorder const& finalBorder) {
+    void paintCellBottom(usize i, usize j, UsedBorder const& finalBorder) {
         bordersStyleGrid.colorAt(i, j).bottom = finalBorder.color;
         bordersStyleGrid.styleAt(i, j).bottom = finalBorder.style;
         bordersGrid.widthAt(i, j).bottom = finalBorder.width;
@@ -578,7 +578,7 @@ export struct TableFormatingContext : FormatingContext {
                 end = max(endOfTop, endOfBottom);
             }
 
-            Vec<Css::UsedBorder> borders;
+            Vec<UsedBorder> borders;
 
             for (usize j = start; j <= end; j += colSpanAt(j, i))
                 if (grid.at(j, i).box)
@@ -634,7 +634,7 @@ export struct TableFormatingContext : FormatingContext {
                 end = max(endOfLeft, endOfRight);
             }
 
-            Vec<Css::UsedBorder> borders;
+            Vec<UsedBorder> borders;
 
             for (usize i = start; i <= end; i += rowSpanAt(j, i))
                 if (grid.at(j, i).box)
@@ -665,7 +665,7 @@ export struct TableFormatingContext : FormatingContext {
         if (grid.size.x == 0 or grid.size.y == 0)
             return;
 
-        Css::UsedBorder tableBorder = resolve(box, edge);
+        UsedBorder tableBorder = resolve(box, edge);
         usize const i = edge == Style::BorderEdge::TOP ? 0 : grid.size.y - 1;
 
         usize j = 0;
@@ -676,7 +676,7 @@ export struct TableFormatingContext : FormatingContext {
                 continue;
             }
 
-            Vec<Css::UsedBorder> borders = {
+            Vec<UsedBorder> borders = {
                 resolve(*grid.at(j, i).box, edge),
                 tableBorder
             };
@@ -701,7 +701,7 @@ export struct TableFormatingContext : FormatingContext {
         if (grid.size.x == 0 or grid.size.y == 0)
             return;
 
-        Css::UsedBorder tableBorder = resolve(box, edge);
+        UsedBorder tableBorder = resolve(box, edge);
         usize const j = edge == Style::BorderEdge::START ? 0 : grid.size.x - 1;
 
         usize i = 0;
@@ -712,7 +712,7 @@ export struct TableFormatingContext : FormatingContext {
                 continue;
             }
 
-            Vec<Css::UsedBorder> borders = {
+            Vec<UsedBorder> borders = {
                 resolve(*grid.at(j, i).box, edge),
                 tableBorder
             };
@@ -1491,7 +1491,7 @@ export struct TableFormatingContext : FormatingContext {
         lastAutoLayoutInput = cacheKey;
     }
 
-    Css::UsedBorders buildUsedCollapsedBordersForCell(usize i, usize j, usize rowSpan, usize colSpan) {
+    UsedBorders buildUsedCollapsedBordersForCell(usize i, usize j, usize rowSpan, usize colSpan) {
         auto topStartStyle = bordersStyleGrid.styleAt(i, j);
         auto topStartColor = bordersStyleGrid.colorAt(i, j);
         auto bottomEndStyle = bordersStyleGrid.styleAt(i + rowSpan - 1, j + colSpan - 1);
@@ -1499,11 +1499,11 @@ export struct TableFormatingContext : FormatingContext {
 
         // FIXME: Probably have a dedicated type for storing collapsed border
         //        style in box because width is not used and BoxMetrics is used instead
-        return Css::UsedBorders{
-            Css::UsedBorder{0_au, topStartStyle.top, topStartColor.top},
-            Css::UsedBorder{0_au, bottomEndStyle.end, bottomEndColor.end},
-            Css::UsedBorder{0_au, bottomEndStyle.bottom, bottomEndColor.bottom},
-            Css::UsedBorder{0_au, topStartStyle.start, topStartColor.start},
+        return UsedBorders{
+            UsedBorder{0_au, topStartStyle.top, topStartColor.top},
+            UsedBorder{0_au, bottomEndStyle.end, bottomEndColor.end},
+            UsedBorder{0_au, bottomEndStyle.bottom, bottomEndColor.bottom},
+            UsedBorder{0_au, topStartStyle.start, topStartColor.start},
         };
     }
 

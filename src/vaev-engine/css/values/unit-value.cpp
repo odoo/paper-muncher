@@ -13,7 +13,6 @@ import :css.serializer;
 import :css.values.base;
 import :css.values.keywords;
 import :css.values.primitives;
-import :values.length;
 import :values.unitValue;
 
 using namespace Karm;
@@ -129,10 +128,6 @@ struct TypedUnitValue {
 
     // MARK: <length> ----------------------------------------------------------
     // https://drafts.csswg.org/css-values/#lengths
-
-    constexpr TypedUnitValue(Math::Au value)
-        requires(TYPE == NumericBaseType::LENGTH)
-        : _value(value.cast<f64>(), UnitValue::Unit::PX) {}
 
     static constexpr TypedUnitValue fromPx(f64 val)
         requires(TYPE == NumericBaseType::LENGTH)

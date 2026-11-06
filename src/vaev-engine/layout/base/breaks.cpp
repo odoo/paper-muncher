@@ -3,7 +3,7 @@ export module Vaev.Engine:layout.breaks;
 import Karm.Core;
 import Karm.Math;
 
-import :values.length;
+import :layout.length;
 import :css.values.length;
 import :style.values.length;
 import :css.values.length;

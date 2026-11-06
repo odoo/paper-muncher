@@ -38,7 +38,7 @@ struct Viewport : Ui::View<Viewport> {
         _props = o._props;
     }
 
-    void paint(Gfx::Canvas& g, RectAu) override {
+    void paint(Gfx::Canvas& g, Layout::RectAu) override {
         g.push();
         g.clip(_listener.containerBound().cast<f64>());
         g.origin((_listener.scroll() + _listener.containerBound().xy).cast<f64>());
@@ -67,8 +67,8 @@ struct Viewport : Ui::View<Viewport> {
         if (auto e = event.is<App::MouseEvent>()) {
             if (e->type == App::MouseEvent::PRESS and
                 e->button == App::MouseButton::RIGHT and
-                bound().contains(e->pos.cast<Au>())) {
-                auto mousePosition = e->pos.cast<Au>() - bound().topStart() - _listener.scroll();
+                bound().contains(e->pos.cast<Layout::Au>())) {
+                auto mousePosition = e->pos.cast<Layout::Au>() - bound().topStart() - _listener.scroll();
 
                 auto hit = _webview->hittest(mousePosition.cast<f64>());
                 Dom::MouseEvent domEvent{};
@@ -81,19 +81,19 @@ struct Viewport : Ui::View<Viewport> {
         }
     }
 
-    void layout(RectAu bound) override {
+    void layout(Layout::RectAu bound) override {
         _listener.updateContainerBound(bound);
 
         auto prefs = Style::ViewerPrefs::forRender();
         prefs.colorScheme = _props.prefersColorScheme.unwrapOr(Ui::darkMode ? Css::ColorScheme::DARK : Css::ColorScheme::LIGHT);
-        _webview->changeArea(Style::DisplayArea::forRender(bound.size(), Css::PureResolution::fromDppx(_props.scale)));
+        _webview->changeArea(Style::DisplayArea::forRender(bound.size().cast<f64>(), Css::PureResolution::fromDppx(_props.scale)));
         _webview->changePrefs(prefs);
 
         _listener.updateContentBound(_webview->scrollableOverflow());
         View::layout(bound);
     }
 
-    Vec2Au size(Vec2Au size, Ui::Hint hint) override {
+    Layout::Vec2Au size(Layout::Vec2Au size, Ui::Hint hint) override {
         if (hint == Ui::Hint::MAX)
             return size;
         return {};

@@ -10,7 +10,6 @@ export import :values.flex;
 export import :values.float_;
 export import :values.insets;
 export import :values.keywords;
-export import :values.length;
 export import :values.list;
 export import :values.multicol;
 export import :values.overflow;

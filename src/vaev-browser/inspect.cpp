@@ -517,7 +517,7 @@ Ui::Child inspectStyleTabComputed(Rc<WebView> webview, InspectState const& s, Ui
            Kr::scaffoldContent() | Ui::pinSize(128_au);
 }
 
-Ui::Child inspectStyleBoxInset(Str name, Gfx::Color color, InsetsAu insets, Ui::Child inner) {
+Ui::Child inspectStyleBoxInset(Str name, Gfx::Color color, Layout::InsetsAu insets, Ui::Child inner) {
     return Ui::stack(
                Ui::vflow(
                    0_au,

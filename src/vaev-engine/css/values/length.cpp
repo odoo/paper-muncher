@@ -21,9 +21,6 @@ namespace Vaev::Css {
 // https://drafts.csswg.org/css-values/#absolute-lengths
 
 export struct PureAbsoluteLength : TypedUnitValue<Some(NumericBaseType::LENGTH)> {
-    constexpr PureAbsoluteLength(Au value)
-        : TypedUnitValue(UnitValue{value.cast<f64>(), UnitValue::Unit::PX}) {}
-
     constexpr explicit PureAbsoluteLength(UnitValue value)
         : TypedUnitValue(value) {
         if (not value.isAbsolute())

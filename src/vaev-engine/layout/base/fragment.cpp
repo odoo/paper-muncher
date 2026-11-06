@@ -4,7 +4,7 @@ import Karm.Core;
 import Karm.Font;
 import Karm.Math;
 
-import :values.length;
+import :layout.length;
 import :css.values.length;
 import :style.values.length;
 import :css.values.length;
@@ -15,6 +15,18 @@ using namespace Karm;
 using namespace Karm::Literals;
 
 namespace Vaev::Layout {
+
+export struct UsedBorder {
+    Au width = 0_au;
+    Gfx::BorderStyle style = Gfx::BorderStyle::NONE;
+    Gfx::Color color = Gfx::BLACK;
+
+    void repr(Io::Emit& e) const {
+        e("(used-border {} {})", style, color);
+    }
+};
+
+export using UsedBorders = Math::Insets<UsedBorder>;
 
 static Rc<Gfx::Fontface> _bubbleFontface() {
     static Opt<Rc<Gfx::Fontface>> fontface = NONE;
@@ -572,7 +584,7 @@ export struct BoxMetrics {
 
 export struct BoxFragment : Fragment {
     BoxMetrics metrics;
-    Opt<Css::UsedBorders> usedBorders;
+    Opt<UsedBorders> usedBorders;
 
     BoxFragment(Box& box, BoxMetrics metrics = {}, Vec<Rc<Fragment>> children = {})
         : Fragment(box, std::move(children)), metrics(metrics) {}
@@ -637,7 +649,7 @@ export struct BoxFragment : Fragment {
         return Some(borders);
     }
 
-    static Opt<Gfx::Borders> buildBorders(BoxMetrics const& metrics, Css::UsedBorders const& border) {
+    static Opt<Gfx::Borders> buildBorders(BoxMetrics const& metrics, UsedBorders const& border) {
         if (metrics.borders.zero())
             return NONE;
 

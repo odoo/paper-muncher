@@ -20,7 +20,6 @@ import :css.values.length;
 import :css.values.primitives;
 import :values.basicShape;
 import :values.keywords;
-import :values.length;
 
 using namespace Karm;
 

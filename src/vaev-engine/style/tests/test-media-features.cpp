@@ -6,13 +6,14 @@ import Karm.Math;
 
 using namespace Karm;
 using namespace Karm::Math::Literals;
+using namespace Vaev::Literals;
 
 namespace Vaev::Style::Tests {
 
 static Media const TEST_MEDIA = {
     .type = Css::MediaType::SCREEN,
-    .width = 1920_au,
-    .height = 1080_au,
+    .width = 1920_px,
+    .height = 1080_px,
     .aspectRatio = 16.0 / 9.0,
     .orientation = Print::Orientation::LANDSCAPE,
 
@@ -39,8 +40,8 @@ static Media const TEST_MEDIA = {
     .prefersColorScheme = Css::ColorScheme::LIGHT,
     .prefersReducedData = Css::ReducedData::REDUCE,
 
-    .deviceWidth = 1920_au,
-    .deviceHeight = 1080_au,
+    .deviceWidth = 1920_px,
+    .deviceHeight = 1080_px,
     .deviceAspectRatio = 16.0 / 9.0,
 };
 
@@ -51,21 +52,21 @@ test$("feature-type") {
 }
 
 test$("feature-width") {
-    assert$(WidthFeature::min(1000_au).match(TEST_MEDIA));
+    assert$(WidthFeature::min(Css::PureLength::fromPx(1000)).match(TEST_MEDIA));
 
-    assert$(WidthFeature::max(2000_au).match(TEST_MEDIA));
+    assert$(WidthFeature::max(Css::PureLength::fromPx(2000)).match(TEST_MEDIA));
 
-    assert$(WidthFeature::exact(1920_au).match(TEST_MEDIA));
+    assert$(WidthFeature::exact(Css::PureLength::fromPx(1920)).match(TEST_MEDIA));
 
     return Ok();
 }
 
 test$("feature-height") {
-    assert$(HeightFeature::min(1000_au).match(TEST_MEDIA));
+    assert$(HeightFeature::min(Css::PureLength::fromPx(1000)).match(TEST_MEDIA));
 
-    assert$(HeightFeature::max(2000_au).match(TEST_MEDIA));
+    assert$(HeightFeature::max(Css::PureLength::fromPx(2000)).match(TEST_MEDIA));
 
-    assert$(HeightFeature::exact(1080_au).match(TEST_MEDIA));
+    assert$(HeightFeature::exact(Css::PureLength::fromPx(1080)).match(TEST_MEDIA));
 
     return Ok();
 }
@@ -223,21 +224,21 @@ test$("feature-prefers-reduced-data") {
 }
 
 test$("feature-device-width") {
-    assert$(DeviceWidthFeature::min(1920_au).match(TEST_MEDIA));
+    assert$(DeviceWidthFeature::min(Css::PureLength::fromPx(1920)).match(TEST_MEDIA));
 
-    assert$(DeviceWidthFeature::max(1920_au).match(TEST_MEDIA));
+    assert$(DeviceWidthFeature::max(Css::PureLength::fromPx(1920)).match(TEST_MEDIA));
 
-    assert$(DeviceWidthFeature::exact(1920_au).match(TEST_MEDIA));
+    assert$(DeviceWidthFeature::exact(Css::PureLength::fromPx(1920)).match(TEST_MEDIA));
 
     return Ok();
 }
 
 test$("feature-device-height") {
-    assert$(DeviceHeightFeature::min(1080_au).match(TEST_MEDIA));
+    assert$(DeviceHeightFeature::min(Css::PureLength::fromPx(1080)).match(TEST_MEDIA));
 
-    assert$(DeviceHeightFeature::max(1080_au).match(TEST_MEDIA));
+    assert$(DeviceHeightFeature::max(Css::PureLength::fromPx(1080)).match(TEST_MEDIA));
 
-    assert$(DeviceHeightFeature::exact(1080_au).match(TEST_MEDIA));
+    assert$(DeviceHeightFeature::exact(Css::PureLength::fromPx(1080)).match(TEST_MEDIA));
 
     return Ok();
 }

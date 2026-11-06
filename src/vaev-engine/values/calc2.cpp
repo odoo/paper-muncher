@@ -6,7 +6,6 @@ export module Vaev.Engine:values.calc2;
 
 import Karm.Core;
 
-import :values.length;
 import :values.unitValue;
 
 using namespace Karm;

@@ -22,6 +22,18 @@ export Au resolve(Style::Pixel const& value) {
     return Au::fromFloatNearest(value.value());
 }
 
+export Vec2Au resolve(Math::Vec2<Style::Pixel> const& value) {
+    return {resolve(value.x), resolve(value.y)};
+}
+
+export Style::Pixel toPixel(Au value) {
+    return Style::Pixel{value.cast<f64>()};
+}
+
+export Math::Vec2<Style::Pixel> toPixel(Vec2Au value) {
+    return {toPixel(value.x), toPixel(value.y)};
+}
+
 export Opt<Au> resolve(Style::PixelPercentage const& value, Opt<Au> relative) {
     return value.visit(
         [](Style::Pixel const& px) -> Opt<Au> {

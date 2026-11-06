@@ -32,14 +32,14 @@ export struct ComputationContext :
     Style::FontSizeContextData {
 
     void populateUsingViewport(Viewport const& vp) {
-        viewportSmallWidth = vp.small.width.cast<f64>();
-        viewportSmallHeight = vp.small.height.cast<f64>();
+        viewportSmallWidth = vp.small.width.value();
+        viewportSmallHeight = vp.small.height.value();
 
-        viewportLargeWidth = vp.large.width.cast<f64>();
-        viewportLargeHeight = vp.large.height.cast<f64>();
+        viewportLargeWidth = vp.large.width.value();
+        viewportLargeHeight = vp.large.height.value();
 
-        viewportDynamicWidth = vp.dynamic.width.cast<f64>();
-        viewportDynamicHeight = vp.dynamic.height.cast<f64>();
+        viewportDynamicWidth = vp.dynamic.width.value();
+        viewportDynamicHeight = vp.dynamic.height.value();
     }
 
     void populateUsingRootComputedValues(ComputedValues const& values) {

@@ -69,7 +69,7 @@ export struct StackingContext {
         Opt<Rc<Layout::Fragment>> hitest(Math::Vec2f pos, Math::Rectf viewBox) {
             return content.visit(
                 [&](Rc<Layout::Fragment>& f) -> Opt<Rc<Layout::Fragment>> {
-                    if (f->borderBox().contains(pos.cast<Au>())) {
+                    if (f->borderBox().contains(pos.cast<Layout::Au>())) {
                         return Some(f);
                     }
                     return NONE;
@@ -80,7 +80,7 @@ export struct StackingContext {
             );
         }
 
-        RectAu scrollableOverflow() {
+        Layout::RectAu scrollableOverflow() {
             return content.visit(
                 [](Rc<Layout::Fragment>& f) {
                     return f->borderBox();
@@ -366,7 +366,7 @@ export struct StackingContext {
                 return hit;
             }
 
-        if (fragment->borderBox().contains(pos.cast<Au>())) {
+        if (fragment->borderBox().contains(pos.cast<Layout::Au>())) {
             return Some(fragment);
         }
 
@@ -390,7 +390,7 @@ export struct StackingContext {
     }
 
     // https://drafts.csswg.org/css-overflow-3/#scrollable
-    RectAu scrollableOverflow() {
+    Layout::RectAu scrollableOverflow() {
         auto bound = fragment->borderBox();
         for (auto& c : layers)
             bound = bound.mergeWith(c.scrollableOverflow());

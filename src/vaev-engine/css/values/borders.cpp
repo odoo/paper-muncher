@@ -13,7 +13,6 @@ import :css.values.length;
 import :css.values.lineWidth;
 import :css.values.primitives;
 import :values.keywords;
-import :values.length;
 
 namespace Vaev::Css {
 
@@ -61,18 +60,6 @@ export struct SpecifiedBorder {
         e("(specified-border {} {} {})", width, style, color);
     }
 };
-
-export struct UsedBorder {
-    Au width = 0_au;
-    Gfx::BorderStyle style = Gfx::BorderStyle::NONE;
-    Gfx::Color color = Gfx::BLACK;
-
-    void repr(Io::Emit& e) const {
-        e("(used-border {} {})", style, color);
-    }
-};
-
-export using UsedBorders = Math::Insets<UsedBorder>;
 
 export template <>
 struct ValueParser<SpecifiedBorder> {

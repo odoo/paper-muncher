@@ -46,7 +46,7 @@ Async::Task<Gfx::Snapshot> _fetchImageContentAsync(Http::Client& client, Ref::Ur
         auto width = Layout::resolve(root->computedValues()->sizing->width.unwrapOr<Style::PixelPercentage>(Style::Pixel{300}), 300_au);
         auto height = Layout::resolve(root->computedValues()->sizing->height.unwrapOr<Style::PixelPercentage>(Style::Pixel{300}), 300_au);
 
-        webview->changeArea(Style::DisplayArea::forRender({width, height}, Css::PureResolution::fromDppx(1)));
+        webview->changeArea(Style::DisplayArea::forRender(Layout::Vec2Au{width, height}.cast<f64>(), Css::PureResolution::fromDppx(1)));
         co_return Ok(webview->snapshot());
     } else {
         auto image = Karm::Image::load(data);

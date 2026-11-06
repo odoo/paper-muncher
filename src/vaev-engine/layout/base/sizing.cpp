@@ -7,6 +7,8 @@ import :layout.values;
 
 namespace Vaev::Layout {
 
+export constexpr Au INDEFINITE = Limits<Au>::MAX;
+
 // MARK: Fit content size ------------------------------------------------------
 // https://www.w3.org/TR/css-sizing-3/#fit-content-size
 // NOTE: This is called the “shrink-to-fit” width in CSS2

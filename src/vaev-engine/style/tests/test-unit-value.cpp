@@ -68,7 +68,7 @@ test$("vaev-css-unit-value-parsing") {
     assert$(not _parse<Css::PureAbsoluteLength>("2em"));
     assert$(_parse<Css::PureLength>("2em"));
 
-    assertEq$(try$(_parse<Css::PureLength>("0")), Css::PureLength{0_au});
+    assertEq$(try$(_parse<Css::PureLength>("0")), Css::PureLength::fromPx(0));
 
     assert$(not _parse<Css::PureLength>("10deg"));
     assert$(not _parse<Css::PureAngle>("10px"));

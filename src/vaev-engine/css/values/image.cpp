@@ -11,7 +11,6 @@ import :css.values.keywords;
 import :css.values.length;
 import :css.values.primitives;
 import :css.values.unitValue;
-import :values.length;
 
 // https://www.w3.org/TR/css-images-4/
 

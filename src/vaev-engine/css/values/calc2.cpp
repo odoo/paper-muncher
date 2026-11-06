@@ -16,7 +16,6 @@ import :css.values.primitives;
 import :css.values.unitValue;
 import :values.calc2;
 import :values.keywords;
-import :values.length;
 import :values.unitValue;
 
 using namespace Karm;

@@ -7,7 +7,7 @@ import :layout.values;
 namespace Vaev::Paint {
 
 // https://www.w3.org/TR/css-transforms-1/#transform-box
-RectAu resolveTransformReference(Rc<Layout::Fragment>& fragment, TransformBox box, RectAu viewBox) {
+Layout::RectAu resolveTransformReference(Rc<Layout::Fragment>& fragment, TransformBox box, Layout::RectAu viewBox) {
     // For SVG elements without associated CSS layout box, the used value
     // for content-box is fill-box and for border-box is stroke-box;
     // conversely for elements with one, fill-box is content-box and both
@@ -42,7 +42,7 @@ RectAu resolveTransformReference(Rc<Layout::Fragment>& fragment, TransformBox bo
 }
 
 // https://www.w3.org/TR/css-transforms-1/#transform-origin-property
-Vec2Au resolveTransformOrigin(Style::Position const& origin, RectAu referenceBox) {
+Layout::Vec2Au resolveTransformOrigin(Style::Position const& origin, Layout::RectAu referenceBox) {
     return {
         referenceBox.start() + Layout::resolve(origin.x, referenceBox.width),
         referenceBox.top() + Layout::resolve(origin.y, referenceBox.height),
@@ -50,7 +50,7 @@ Vec2Au resolveTransformOrigin(Style::Position const& origin, RectAu referenceBox
 }
 
 // https://www.w3.org/TR/css-transforms-1/#transform-property
-Math::Trans2f resolveTransform(Slice<Style::TransformFunction> transforms, RectAu referenceBox, Vec2Au origin) {
+Math::Trans2f resolveTransform(Slice<Style::TransformFunction> transforms, Layout::RectAu referenceBox, Layout::Vec2Au origin) {
     auto result = Math::Trans2f::translate(
         origin.cast<f64>()
     );
@@ -107,7 +107,7 @@ Math::Trans2f resolveTransform(Slice<Style::TransformFunction> transforms, RectA
 
 Math::Trans2f resolveTransform(Rc<Layout::Fragment>& fragment, Math::Rectf viewBox) {
     auto const& transform = *fragment->style().transform;
-    auto referenceBox = resolveTransformReference(fragment, transform.box, viewBox.cast<Au>());
+    auto referenceBox = resolveTransformReference(fragment, transform.box, viewBox.cast<Layout::Au>());
     auto origin = resolveTransformOrigin(transform.origin, referenceBox);
     return resolveTransform(transform.transform.expect<Style::TransformList>(), referenceBox, origin);
 }

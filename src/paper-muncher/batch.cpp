@@ -99,8 +99,8 @@ export struct Option {
         auto stock = this->stock;
         if (this->width or this->height)
             stock = Print::PaperStock::custom(
-                this->width ? Vaev::Au{this->width->toPx()} : stock.minorAxis,
-                this->height ? Vaev::Au{this->height->toPx()} : stock.majorAxis
+                this->width ? Vaev::Layout::Au{this->width->toPx()} : stock.minorAxis,
+                this->height ? Vaev::Layout::Au{this->height->toPx()} : stock.majorAxis
             );
 
         Print::Margins margins = Print::MarginOption::DEFAULT;
@@ -110,7 +110,7 @@ export struct Option {
             },
             [&](Math::Insets<Vaev::Css::PureAbsoluteLength> const& insets) {
                 margins = insets.map([&](Vaev::Css::PureAbsoluteLength l) {
-                    return Vaev::Au{l.toPx()};
+                    return Vaev::Layout::Au{l.toPx()};
                 });
             }
         );
@@ -124,8 +124,8 @@ export struct Option {
     }
 
     Vaev::Style::DisplayArea deriveArea() const {
-        auto width = this->width ? Vaev::Au{this->width->toPx()} : 800_au;
-        auto height = this->height ? Vaev::Au{this->height->toPx()} : 600_au;
+        auto width = this->width ? this->width->toPx() : 800.0;
+        auto height = this->height ? this->height->toPx() : 600.0;
         return Vaev::Style::DisplayArea::forRender(
             {width, height},
             this->scale
@@ -138,31 +138,31 @@ struct HeaderFooterDecorator : Vaev::Driver::PageDecorator {
     Opt<Rc<Vaev::WebView>> footerWebView;
     Union<Vaev::Keywords::Auto, Vaev::Css::PureAbsoluteLength> headerSize = Vaev::Keywords::AUTO;
     Union<Vaev::Keywords::Auto, Vaev::Css::PureAbsoluteLength> footerSize = Vaev::Keywords::AUTO;
-    Map<Math::Vec2Au, Pair<Vaev::Au>> _memo;
+    Map<Math::Vec2Au, Pair<Vaev::Layout::Au>> _memo;
 
-    Vaev::RectAu layout(Vaev::Style::DisplayArea const& area, Vaev::Style::ViewerPrefs const& prefs, Vaev::Driver::PageLayoutInfos const& infos) override {
+    Vaev::Layout::RectAu layout(Vaev::Style::DisplayArea const& area, Vaev::Style::ViewerPrefs const& prefs, Vaev::Driver::PageLayoutInfos const& infos) override {
         auto [headerHeight, footerHeight] = _memo.lookupOrPut(infos.pageDecoration.size(), [&] {
-            Vaev::Au headerHeight = 0_au;
-            Vaev::Au footerHeight = 0_au;
+            Vaev::Layout::Au headerHeight = 0_au;
+            Vaev::Layout::Au footerHeight = 0_au;
 
             if (headerSize == Vaev::Keywords::AUTO) {
                 if (auto& [w] = headerWebView) {
-                    w->changeArea(area.withViewport(infos.pageDecoration.size()));
+                    w->changeArea(area.withViewport(Vaev::Layout::toPixel(infos.pageDecoration.size())));
                     w->changePrefs(prefs);
                     headerHeight = w->borderBox().height;
                 }
             } else {
-                headerHeight = Vaev::Au{headerSize.expect<Vaev::Css::PureAbsoluteLength>().toPx()};
+                headerHeight = Vaev::Layout::Au{headerSize.expect<Vaev::Css::PureAbsoluteLength>().toPx()};
             }
 
             if (footerSize == Vaev::Keywords::AUTO) {
                 if (auto& [w] = footerWebView) {
-                    w->changeArea(area.withViewport(infos.pageDecoration.size()));
+                    w->changeArea(area.withViewport(Vaev::Layout::toPixel(infos.pageDecoration.size())));
                     w->changePrefs(prefs);
                     footerHeight = w->borderBox().height;
                 }
             } else {
-                footerHeight = Vaev::Au{footerSize.expect<Vaev::Css::PureAbsoluteLength>().toPx()};
+                footerHeight = Vaev::Layout::Au{footerSize.expect<Vaev::Css::PureAbsoluteLength>().toPx()};
             }
 
             return Pair{headerHeight, footerHeight};
@@ -179,7 +179,7 @@ struct HeaderFooterDecorator : Vaev::Driver::PageDecorator {
         pageCounters.instantiateCounter(nullptr, {Vaev::CustomIdent{"pages"_sym}, false}, static_cast<Vaev::Integer>(pageCount));
 
         if (auto& [w] = headerWebView) {
-            w->changeArea(area.withViewport({decorationWidth, headerHeight}));
+            w->changeArea(area.withViewport(Vaev::Layout::toPixel(Vaev::Layout::Vec2Au{decorationWidth, headerHeight})));
             w->changePrefs(prefs);
             w->changeInitialCounterSet(pageCounters);
             g.push();
@@ -189,7 +189,7 @@ struct HeaderFooterDecorator : Vaev::Driver::PageDecorator {
         }
 
         if (auto& [w] = footerWebView) {
-            w->changeArea(area.withViewport({decorationWidth, footerHeight}));
+            w->changeArea(area.withViewport(Vaev::Layout::toPixel(Vaev::Layout::Vec2Au{decorationWidth, footerHeight})));
             w->changePrefs(prefs);
             w->changeInitialCounterSet(pageCounters);
             g.push();
@@ -245,7 +245,7 @@ Async::Task<> runSingleAsync(
         webview->changeArea(area);
         webview->changePrefs(Vaev::Style::ViewerPrefs::forRender());
 
-        Math::Vec2Au size = area.deviceSize();
+        auto size = area.deviceSize().cast<Math::Au>();
 
         if (options.extend == Extend::FIT) {
             auto overflow = webview->scrollableOverflow();

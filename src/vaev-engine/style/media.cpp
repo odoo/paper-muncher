@@ -12,6 +12,7 @@ import :style.values;
 import :css;
 
 using namespace Karm;
+using namespace Vaev::Literals;
 
 namespace Vaev::Style {
 
@@ -32,7 +33,7 @@ static auto quirksMediaScreen = Debug::Flag::feature(
 export struct DisplayArea {
     Css::MediaType type = Css::MediaType::SCREEN;
 
-    Vec2Au viewport = {800_au, 600_au};
+    Math::Vec2<Pixel> viewport = {800_px, 600_px};
 
     Css::PureResolution resolution = Css::PureResolution::fromDppx(1);
 
@@ -52,14 +53,14 @@ export struct DisplayArea {
     Css::Pointer anyPointer = Css::Pointer::FINE;
     Css::Hover anyHover = Css::Hover::HOVER;
 
-    static Vec2Au _toViewport(Vec2Au deviceSize, Css::PureResolution resolution) {
+    static Math::Vec2<Pixel> _toViewport(Math::Vec2f deviceSize, Css::PureResolution resolution) {
         return {
-            Au{deviceSize.width / resolution.toDppx()},
-            Au{deviceSize.height / resolution.toDppx()},
+            Pixel{deviceSize.width / resolution.toDppx()},
+            Pixel{deviceSize.height / resolution.toDppx()},
         };
     }
 
-    static DisplayArea forView(Vec2Au deviceSize, Css::PureResolution resolution = Css::PureResolution::fromDppx(1)) {
+    static DisplayArea forView(Math::Vec2f deviceSize, Css::PureResolution resolution = Css::PureResolution::fromDppx(1)) {
         return {
             .type = Css::MediaType::SCREEN,
             .viewport = _toViewport(deviceSize, resolution),
@@ -67,7 +68,7 @@ export struct DisplayArea {
         };
     }
 
-    static DisplayArea forRender(Vec2Au deviceSize, Css::PureResolution resolution) {
+    static DisplayArea forRender(Math::Vec2f deviceSize, Css::PureResolution resolution) {
         return {
             .type = Css::MediaType::SCREEN,
             .viewport = _toViewport(deviceSize, resolution),
@@ -86,7 +87,7 @@ export struct DisplayArea {
         auto pageSize = settings.pageSize();
         return {
             .type = Css::MediaType::PRINT,
-            .viewport = {Au{pageSize.width / settings.scale}, Au{pageSize.height / settings.scale}},
+            .viewport = {Pixel{static_cast<f64>(pageSize.width) / settings.scale}, Pixel{static_cast<f64>(pageSize.height) / settings.scale}},
             .resolution = Css::PureResolution::fromDppx(settings.scale),
         };
     }
@@ -95,11 +96,11 @@ export struct DisplayArea {
         return resolution.toDppx();
     }
 
-    Vec2Au deviceSize() const {
-        return {Au{viewport.width * scale()}, Au{viewport.height * scale()}};
+    Math::Vec2f deviceSize() const {
+        return {viewport.width.value() * scale(), viewport.height.value() * scale()};
     }
 
-    DisplayArea withViewport(Vec2Au viewport) const {
+    DisplayArea withViewport(Math::Vec2<Pixel> viewport) const {
         DisplayArea area = *this;
         area.viewport = viewport;
         return area;
@@ -140,11 +141,11 @@ export struct Media {
 
     /// 4.1. Width: the width feature
     /// https://drafts.csswg.org/mediaqueries/#width
-    Au width;
+    Pixel width;
 
     /// 4.2. Height: the height feature
     /// https://drafts.csswg.org/mediaqueries/#height
-    Au height;
+    Pixel height;
 
     /// 4.3. Aspect-Ratio: the aspect-ratio feature
     /// https://drafts.csswg.org/mediaqueries/#aspect-ratio
@@ -250,15 +251,15 @@ export struct Media {
     Css::ReducedData prefersReducedData;
 
     // Appendix A: Deprecated Media Features
-    Au deviceWidth;
-    Au deviceHeight;
+    Pixel deviceWidth;
+    Pixel deviceHeight;
     f64 deviceAspectRatio;
 
     static Media from(DisplayArea const& area, ViewerPrefs const& prefs) {
-        auto ratio = [](Vec2Au size) -> f64 {
-            if (size.height == 0_au)
+        auto ratio = [](f64 width, f64 height) -> f64 {
+            if (height == 0)
                 return 0;
-            return static_cast<f64>(size.width) / static_cast<f64>(size.height);
+            return width / height;
         };
 
         auto viewport = area.viewport;
@@ -275,7 +276,7 @@ export struct Media {
             .type = type,
             .width = viewport.width,
             .height = viewport.height,
-            .aspectRatio = ratio(viewport),
+            .aspectRatio = ratio(viewport.width.value(), viewport.height.value()),
             .orientation = viewport.height >= viewport.width
                                ? Print::Orientation::PORTRAIT
                                : Print::Orientation::LANDSCAPE,
@@ -304,14 +305,24 @@ export struct Media {
             .prefersColorScheme = prefs.colorScheme,
             .prefersReducedData = prefs.reducedData,
 
-            .deviceWidth = deviceSize.width,
-            .deviceHeight = deviceSize.height,
-            .deviceAspectRatio = ratio(deviceSize),
+            .deviceWidth = Pixel{deviceSize.width},
+            .deviceHeight = Pixel{deviceSize.height},
+            .deviceAspectRatio = ratio(deviceSize.width, deviceSize.height),
         };
     }
 
     bool operator==(Media const&) const = default;
 };
+
+// Media features are compared in their specified form.
+static Css::PureLength _featureValue(Pixel value) {
+    return Css::PureLength::fromPx(value.value());
+}
+
+template <typename T>
+static T const& _featureValue(T const& value) {
+    return value;
+}
 
 // MARK: Media Features --------------------------------------------------------
 
@@ -383,7 +394,7 @@ struct RangeFeature {
     }
 
     bool match(Media const& media) const {
-        return match(media.*F);
+        return match(_featureValue(media.*F));
     }
 
     static RangeFeature min(T value) {
