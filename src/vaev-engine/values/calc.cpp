@@ -2,7 +2,7 @@ module;
 
 #include <karm/macros>
 
-export module Vaev.Engine:values.calc2;
+export module Vaev.Engine:values.calc;
 
 import Karm.Core;
 

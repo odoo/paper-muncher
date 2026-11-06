@@ -3,9 +3,9 @@ export module Vaev.Engine:style.values.insets;
 import Karm.Core;
 import Karm.Math;
 
-import :css.values.calc2;
+import :css.values.calc;
 import :css.values.insets;
-import :style.values.calc2;
+import :style.values.numeric;
 import :values.unitValue;
 
 using namespace Karm;

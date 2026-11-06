@@ -6,7 +6,7 @@ export module Vaev.Engine:css.values.sizing;
 
 import Karm.Core;
 
-import :css.values.calc2;
+import :css.values.calc;
 import :css.values.keywords;
 import :values.keywords;
 

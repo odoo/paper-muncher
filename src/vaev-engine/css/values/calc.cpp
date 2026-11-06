@@ -2,7 +2,7 @@ module;
 
 #include <karm/macros>
 
-export module Vaev.Engine:css.values.calc2;
+export module Vaev.Engine:css.values.calc;
 
 import Karm.Core;
 
@@ -14,7 +14,7 @@ import :css.values.keywords;
 import :css.values.length;
 import :css.values.primitives;
 import :css.values.unitValue;
-import :values.calc2;
+import :values.calc;
 import :values.keywords;
 import :values.unitValue;
 

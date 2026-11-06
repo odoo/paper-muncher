@@ -2,10 +2,9 @@ export module Vaev.Engine:style.values.lineHeight;
 
 import Karm.Core;
 
-import :css.values.calc2;
+import :css.values.calc;
 import :css.values.lineHeight;
-import :style.values.calc2;
-import :style.values.length;
+import :style.values.numeric;
 import :values.unitValue;
 
 using namespace Karm;

@@ -3,7 +3,7 @@ export module Vaev.Engine:style.values.baseline;
 import Karm.Core;
 
 import :css.values.baseline;
-import :style.values.calc2;
+import :style.values.numeric;
 import :values.unitValue;
 
 using namespace Karm;

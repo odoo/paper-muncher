@@ -7,7 +7,7 @@ export module Vaev.Engine:css.values.flex;
 import Karm.Core;
 
 import :css.parser;
-import :css.values.calc2;
+import :css.values.calc;
 import :css.values.keywords;
 import :values.keywords;
 

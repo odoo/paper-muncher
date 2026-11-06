@@ -9,8 +9,9 @@ import Karm.Core;
 import :css.values.basicShape;
 import :style.values.background;
 import :style.values.borders;
-import :style.values.calc2;
 import :style.values.insets;
+import :style.values.numeric;
+import :values.insets;
 import :values.unitValue;
 
 using namespace Karm;

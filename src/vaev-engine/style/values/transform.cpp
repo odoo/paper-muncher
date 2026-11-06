@@ -6,9 +6,9 @@ export module Vaev.Engine:style.values.transform;
 
 import Karm.Core;
 
-import :css.values.calc2;
+import :css.values.calc;
 import :css.values.transform;
-import :style.values.calc2;
+import :style.values.numeric;
 import :values.unitValue;
 
 using namespace Karm::Math::Literals;

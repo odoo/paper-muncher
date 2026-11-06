@@ -7,7 +7,7 @@ export module Vaev.Engine:style.values.sizing;
 import Karm.Core;
 
 import :css.values.sizing;
-import :style.values.calc2;
+import :style.values.numeric;
 import :values.unitValue;
 
 using namespace Karm;

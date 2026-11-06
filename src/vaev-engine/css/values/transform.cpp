@@ -8,7 +8,7 @@ export module Vaev.Engine:css.values.transform;
 import :css.lexer;
 import :css.parser;
 import :css.values.base;
-import :css.values.calc2;
+import :css.values.calc;
 import :css.values.keywords;
 import :css.values.primitives;
 

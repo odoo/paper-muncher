@@ -3,7 +3,7 @@ export module Vaev.Engine:style.viewport;
 import Karm.Math;
 
 import :css.values.unitValue;
-import :style.values.length;
+import :style.values.numeric;
 
 using namespace Karm;
 

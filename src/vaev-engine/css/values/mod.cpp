@@ -6,7 +6,7 @@ export import :css.values.base;
 export import :css.values.baseline;
 export import :css.values.basicShape;
 export import :css.values.borders;
-export import :css.values.calc2;
+export import :css.values.calc;
 export import :css.values.color;
 export import :css.values.content;
 export import :css.values.counter;

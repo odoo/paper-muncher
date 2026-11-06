@@ -3,9 +3,8 @@ export module Vaev.Engine:style.values.borders;
 import Karm.Core;
 import Karm.Math;
 
-import :css.values.calc2;
-import :style.values.calc2;
-import :style.values.length;
+import :css.values.calc;
+import :style.values.numeric;
 import :values.unitValue;
 
 using namespace Vaev::Literals;

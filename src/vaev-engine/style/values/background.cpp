@@ -7,11 +7,10 @@ export module Vaev.Engine:style.values.background;
 import Karm.Core;
 
 import :css.values.background;
-import :css.values.calc2;
+import :css.values.calc;
 import :css.values.image;
-import :style.values.calc2;
-import :style.values.percent;
-import :values.calc2;
+import :style.values.numeric;
+import :values.calc;
 import :values.unitValue;
 
 using namespace Karm;

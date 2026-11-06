@@ -8,7 +8,7 @@ import Karm.Core;
 
 import :css.values.font;
 import :css.values.unitValue;
-import :style.values.length;
+import :style.values.numeric;
 import :values.unitValue;
 
 using namespace Vaev::Literals;

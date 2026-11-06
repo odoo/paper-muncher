@@ -6,10 +6,9 @@ export module Vaev.Engine:style.values.lineWidth;
 
 import Karm.Core;
 
-import :css.values.calc2;
+import :css.values.calc;
 import :css.values.lineWidth;
-import :style.values.calc2;
-import :style.values.length;
+import :style.values.numeric;
 import :values.unitValue;
 
 using namespace Vaev::Literals;

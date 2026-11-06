@@ -13,7 +13,7 @@ import :css.parser;
 import :css.values.background;
 import :css.values.base;
 import :css.values.borders;
-import :css.values.calc2;
+import :css.values.calc;
 import :css.values.insets;
 import :css.values.keywords;
 import :css.values.length;

@@ -7,7 +7,7 @@ export module Vaev.Engine:style.values.flex;
 import Karm.Core;
 
 import :css.values.flex;
-import :style.values.calc2;
+import :style.values.numeric;
 import :values.unitValue;
 
 using namespace Karm;
