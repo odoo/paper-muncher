@@ -167,7 +167,7 @@ struct FlexItem {
         });
         // TODO: not always we will need min/max content sizes,
         //       this can be lazy computed for performance gains
-        computeContentSizes(input);
+        computeContentSizes();
     }
 
     InsetsAu resolvedMargin() {
@@ -179,15 +179,13 @@ struct FlexItem {
         };
     }
 
-    void computeContentSizes(Input const& input) {
+    void computeContentSizes() {
         minContentSize = computeIntrinsicContentSize(
-                             input,
                              *box,
                              IntrinsicSize::MIN_CONTENT
                          ) +
                          padding.all() + borders.all();
         maxContentSize = computeIntrinsicContentSize(
-                             input,
                              *box,
                              IntrinsicSize::MAX_CONTENT
                          ) +
@@ -246,7 +244,7 @@ struct FlexItem {
 
         if (not input.knownSize.width)
             input.knownSize.width = computeSpecifiedBorderBoxWidth(
-                input, *box, box->style->sizing->width, input.containingBlock,
+                *box, box->style->sizing->width, input.containingBlock,
                 borders.horizontal() + padding.horizontal()
             );
 

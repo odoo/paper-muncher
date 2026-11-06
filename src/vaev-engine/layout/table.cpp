@@ -975,15 +975,13 @@ export struct TableFormatingContext : FormatingContext {
     }
 
     // MARK: Auto Table Layout -------------------------------------------------
-    Pair<Au> getCellMinMaxAutoWidth(Input const& input, Box& box, TableCell& cell, Au tableComputedWidth, UsedSpacings usedSpacings) {
+    Pair<Au> getCellMinMaxAutoWidth(Box& box, TableCell& cell, Au tableComputedWidth, UsedSpacings usedSpacings) {
         auto cellMinOutput = computeIntrinsicContentSize(
-            input,
             box,
             IntrinsicSize::MIN_CONTENT
         );
 
         auto cellMaxOutput = computeIntrinsicContentSize(
-            input,
             box,
             IntrinsicSize::MAX_CONTENT
         );
@@ -1014,7 +1012,7 @@ export struct TableFormatingContext : FormatingContext {
         return {cellMinWidth, cellMaxWidth};
     };
 
-    void computeAutoWidthOfCellsSpan1(Input const& input, Vec<Au>& minColWidth, Vec<Au>& maxColWidth, Au tableWidth) {
+    void computeAutoWidthOfCellsSpan1(Vec<Au>& minColWidth, Vec<Au>& maxColWidth, Au tableWidth) {
         for (usize i = 0; i < grid.size.y; ++i) {
             for (usize j = 0; j < grid.size.x; ++j) {
                 auto cell = grid.at(j, i);
@@ -1034,7 +1032,7 @@ export struct TableFormatingContext : FormatingContext {
                     .borders = buildBordersWidthsForCell(i, j, cell.rowSpan, colSpan)
                 };
 
-                auto [cellMinWidth, cellMaxWidth] = getCellMinMaxAutoWidth(input, *cell.box, cell, tableWidth, usedSpacings);
+                auto [cellMinWidth, cellMaxWidth] = getCellMinMaxAutoWidth(*cell.box, cell, tableWidth, usedSpacings);
 
                 minColWidth[j] = max(minColWidth[j], cellMinWidth);
                 maxColWidth[j] = max(maxColWidth[j], cellMaxWidth);
@@ -1042,7 +1040,7 @@ export struct TableFormatingContext : FormatingContext {
         }
     }
 
-    void computeAutoWidthOfCellsSpanN(Input const& input, Vec<Au>& minColWidth, Vec<Au>& maxColWidth, Au tableWidth) {
+    void computeAutoWidthOfCellsSpanN(Vec<Au>& minColWidth, Vec<Au>& maxColWidth, Au tableWidth) {
         for (usize i = 0; i < grid.size.y; ++i) {
             for (usize j = 0; j < grid.size.x; ++j) {
                 auto cell = grid.at(j, i);
@@ -1062,7 +1060,7 @@ export struct TableFormatingContext : FormatingContext {
                     .borders = buildBordersWidthsForCell(i, j, cell.rowSpan, colSpan)
                 };
 
-                auto [cellMinWidth, cellMaxWidth] = getCellMinMaxAutoWidth(input, *cell.box, cell, tableWidth, usedSpacings);
+                auto [cellMinWidth, cellMaxWidth] = getCellMinMaxAutoWidth(*cell.box, cell, tableWidth, usedSpacings);
 
                 Au currSumMinColWidth{0};
                 Au currSumMaxColWidth{0};
@@ -1138,16 +1136,16 @@ export struct TableFormatingContext : FormatingContext {
         }
     }
 
-    Pair<Vec<Au>> computeMinMaxAutoWidths(Input const& input, usize size, Au tableWidth) {
+    Pair<Vec<Au>> computeMinMaxAutoWidths(usize size, Au tableWidth) {
         Vec<Au> minColWidth{};
         minColWidth.resize(size);
 
         Vec<Au> maxColWidth{};
         maxColWidth.resize(size);
 
-        computeAutoWidthOfCellsSpan1(input, minColWidth, maxColWidth, tableWidth);
+        computeAutoWidthOfCellsSpan1(minColWidth, maxColWidth, tableWidth);
         computeAutoWidthOfCols(minColWidth, maxColWidth, tableWidth);
-        computeAutoWidthOfCellsSpanN(input, minColWidth, maxColWidth, tableWidth);
+        computeAutoWidthOfCellsSpanN(minColWidth, maxColWidth, tableWidth);
         computeAutoWidthOfColGroups(minColWidth, tableWidth);
 
         return {minColWidth, maxColWidth};
@@ -1155,14 +1153,14 @@ export struct TableFormatingContext : FormatingContext {
 
     Opt<Pair<Vec<Au>>> intrinsicSizes;
 
-    Pair<Vec<Au>> computeIntrinsicMinMaxAutoWidths(Input const& input, usize size) {
+    Pair<Vec<Au>> computeIntrinsicMinMaxAutoWidths(usize size) {
         if (not intrinsicSizes)
-            intrinsicSizes = Some(computeMinMaxAutoWidths(input, size, 0_au));
+            intrinsicSizes = Some(computeMinMaxAutoWidths(size, 0_au));
         return *intrinsicSizes;
     }
 
     // https://www.w3.org/TR/CSS22/tables.html#auto-table-layout
-    void computeAutoColWidths(Input const& input, Opt<Au> knownSizeX, Au capmin, Au containingBlockX) {
+    void computeAutoColWidths(Opt<Au> knownSizeX, Au capmin, Au containingBlockX) {
         // FIXME: This is a rough approximation of the algorithm.
         //        We need to distinguish between percentage-based and fixed lengths:
         //         - Percentage-based sizes are fixed and cannot have extra space distributed to them.
@@ -1174,7 +1172,7 @@ export struct TableFormatingContext : FormatingContext {
         //        We will need a way to retrieve the percentage value, which is also not yet implemented.
 
         if (knownSizeX) {
-            auto [minWithoutPerc, maxWithoutPerc] = computeIntrinsicMinMaxAutoWidths(input, grid.size.x);
+            auto [minWithoutPerc, maxWithoutPerc] = computeIntrinsicMinMaxAutoWidths(grid.size.x);
 
             tableUsedWidth = max(capmin, *knownSizeX);
 
@@ -1185,7 +1183,7 @@ export struct TableFormatingContext : FormatingContext {
                 return;
             }
 
-            auto [minWithPerc, maxWithPerc] = computeMinMaxAutoWidths(input, grid.size.x, *knownSizeX);
+            auto [minWithPerc, maxWithPerc] = computeMinMaxAutoWidths(grid.size.x, *knownSizeX);
 
             auto sumMaxWithoutPerc = iter(maxWithoutPerc) | Sum();
             Vec<Au>& distWOPToUse = sumMaxWithoutPerc < tableUsedWidth ? maxWithoutPerc : minWithoutPerc;
@@ -1232,7 +1230,7 @@ export struct TableFormatingContext : FormatingContext {
                 colWidth = distWPToUse;
             }
         } else {
-            auto [minColWidth, maxColWidth] = computeIntrinsicMinMaxAutoWidths(input, grid.size.x);
+            auto [minColWidth, maxColWidth] = computeIntrinsicMinMaxAutoWidths(grid.size.x);
             auto sumMaxColWidths = iter(maxColWidth) | Sum();
             auto sumMinColWidths = iter(minColWidth) | Sum();
 
@@ -1421,13 +1419,12 @@ export struct TableFormatingContext : FormatingContext {
 
             if (input.intrinsic == IntrinsicSize::AUTO) {
                 computeAutoColWidths(
-                    input,
                     input.knownSize.width,
                     input.capmin.unwrapOr(0_au),
                     input.containingBlock.x
                 );
             } else {
-                auto [minContent, maxContent] = computeIntrinsicMinMaxAutoWidths(input, grid.size.x);
+                auto [minContent, maxContent] = computeIntrinsicMinMaxAutoWidths(grid.size.x);
                 if (input.intrinsic == IntrinsicSize::MIN_CONTENT)
                     colWidth = minContent;
                 else if (input.intrinsic == IntrinsicSize::MAX_CONTENT) {

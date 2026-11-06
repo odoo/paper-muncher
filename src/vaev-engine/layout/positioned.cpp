@@ -198,7 +198,7 @@ export Output layoutAbsolutePositioned(Input const& input, Box& box, RectAu cont
         width = Some(availableSpace.width);
     } else {
         width = computeSpecifiedBorderBoxWidth(
-            input, box, style.sizing->width, containingBlock.size(),
+            box, style.sizing->width, containingBlock.size(),
             usedSpacings.padding.horizontal() + usedSpacings.borders.horizontal()
         );
     }

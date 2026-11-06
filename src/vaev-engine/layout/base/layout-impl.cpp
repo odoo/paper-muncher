@@ -146,15 +146,17 @@ Math::Radii<Au> computeRadii(Box& box, Vec2Au size) {
     return res;
 }
 
-Vec2Au computeIntrinsicContentSize(Input const& input, Box& box, IntrinsicSize intrinsic, Opt<Au> capmin) {
+Vec2Au computeIntrinsicContentSize(Box& box, IntrinsicSize intrinsic, Opt<Au> capmin) {
     if (intrinsic == IntrinsicSize::AUTO) {
         panic("bad argument");
     }
 
+    // NOTE: Intrinsic sizes don't depend on fragmentation, lay out into an infinite fragmentainer that never breaks.
+    Fragmentainer fragmentainer;
     auto output = _dispatchFormatingContext(
         box,
         {
-            .fragmentainer = input.fragmentainer,
+            .fragmentainer = Some<Fragmentainer&>(fragmentainer),
             .intrinsic = intrinsic,
             .knownSize = {NONE, NONE},
             .capmin = capmin,
@@ -166,7 +168,7 @@ Vec2Au computeIntrinsicContentSize(Input const& input, Box& box, IntrinsicSize i
     return output.size;
 }
 
-Opt<Au> computeSpecifiedBorderBoxWidth(Input const& input, Box& box, Style::Size size, Vec2Au containingBlock, Au horizontalBorderBox, Opt<Au> capmin) {
+Opt<Au> computeSpecifiedBorderBoxWidth(Box& box, Style::Size size, Vec2Au containingBlock, Au horizontalBorderBox, Opt<Au> capmin) {
     if (auto calc = size.is<Style::PixelPercentage>()) {
         auto specifiedWidth = Layout::resolve(*calc, containingBlock.x);
         if (box.style->boxSizing == Keywords::CONTENT_BOX) {
@@ -176,15 +178,15 @@ Opt<Au> computeSpecifiedBorderBoxWidth(Input const& input, Box& box, Style::Size
     }
 
     if (size.is<Keywords::MinContent>()) {
-        auto intrinsicSize = computeIntrinsicContentSize(input, box, IntrinsicSize::MIN_CONTENT, capmin);
+        auto intrinsicSize = computeIntrinsicContentSize(box, IntrinsicSize::MIN_CONTENT, capmin);
         return Some(intrinsicSize.x + horizontalBorderBox);
     } else if (size.is<Keywords::MaxContent>()) {
-        auto intrinsicSize = computeIntrinsicContentSize(input, box, IntrinsicSize::MAX_CONTENT, capmin);
+        auto intrinsicSize = computeIntrinsicContentSize(box, IntrinsicSize::MAX_CONTENT, capmin);
         return Some(intrinsicSize.x + horizontalBorderBox);
     } else if (size.is<Keywords::FitContent>()) {
-        auto minIntrinsicSize = computeIntrinsicContentSize(input, box, IntrinsicSize::MIN_CONTENT, capmin);
-        auto maxIntrinsicSize = computeIntrinsicContentSize(input, box, IntrinsicSize::MAX_CONTENT, capmin);
-        auto stretchIntrinsicSize = computeIntrinsicContentSize(input, box, IntrinsicSize::STRETCH_TO_FIT, capmin);
+        auto minIntrinsicSize = computeIntrinsicContentSize(box, IntrinsicSize::MIN_CONTENT, capmin);
+        auto maxIntrinsicSize = computeIntrinsicContentSize(box, IntrinsicSize::MAX_CONTENT, capmin);
+        auto stretchIntrinsicSize = computeIntrinsicContentSize(box, IntrinsicSize::STRETCH_TO_FIT, capmin);
 
         return Some(clamp(stretchIntrinsicSize.x, minIntrinsicSize.x, maxIntrinsicSize.x) + horizontalBorderBox);
     } else if (size.is<Keywords::Auto>()) {
@@ -349,7 +351,7 @@ Output layoutRoot(Box& root, Input input) {
 
     if (not input.knownSize.width)
         input.knownSize.width = computeSpecifiedBorderBoxWidth(
-            input, root, root.style->sizing->width, input.containingBlock,
+            root, root.style->sizing->width, input.containingBlock,
             usedSpacings.borders.horizontal() + usedSpacings.padding.horizontal()
         );
 

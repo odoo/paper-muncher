@@ -145,7 +145,7 @@ Output fragmentEmptyBox(Fragmentainer const& fc, FragmentBuilder& fragBuilder, I
 // The table wrapper box inline size is the table grid box inline size, computed
 // here from its intrinsic sizes since tables with 'width: auto' size to
 // fit-content instead of stretching like other block-level boxes.
-Opt<Au> _tableWrapperFitContentWidth(Input const& input, Box& wrapper, Au availableWidth) {
+Opt<Au> _tableWrapperFitContentWidth(Box& wrapper, Au availableWidth) {
     for (auto& gridBox : wrapper.children()) {
         if (gridBox.style->display != Display::Internal::TABLE_BOX)
             continue;
@@ -155,7 +155,7 @@ Opt<Au> _tableWrapperFitContentWidth(Input const& input, Box& wrapper, Au availa
         if (not gridBox.style->sizing->width.is<Keywords::Auto>())
             return NONE;
 
-        return Some(computeFitContentInlineSize(input, wrapper, availableWidth));
+        return Some(computeFitContentInlineSize(wrapper, availableWidth));
     }
 
     return NONE;
@@ -179,7 +179,7 @@ void _populateChildSpecifiedSizes(Box& child, Input& parentInput, Input& childIn
                 // When the inline size is not known, we cannot enforce it to the child. (?)
                 Au availableWidth = blockInlineSize.expect() - usedSpacings.margin.horizontal();
                 if (child.style->display == Display::TABLE) {
-                    childInput.knownSize.width = Some(_tableWrapperFitContentWidth(parentInput, child, availableWidth)
+                    childInput.knownSize.width = Some(_tableWrapperFitContentWidth(child, availableWidth)
                                                           .unwrapOr(availableWidth));
                 } else {
                     childInput.knownSize.width = Some(availableWidth);
@@ -187,7 +187,7 @@ void _populateChildSpecifiedSizes(Box& child, Input& parentInput, Input& childIn
             }
         } else {
             childInput.knownSize.width = computeSpecifiedBorderBoxWidth(
-                parentInput, child, child.style->sizing->width, containingBlock,
+                child, child.style->sizing->width, containingBlock,
                 usedSpacings.padding.horizontal() + usedSpacings.borders.horizontal(),
                 childInput.capmin
             );
@@ -241,7 +241,7 @@ struct BlockFormatingContext : FormatingContext {
         for (auto& c : box.children()) {
             if (c.style->display != Display::TABLE_BOX) {
                 auto minContentContrib = computeIntrinsicContentSize(
-                    input, c, IntrinsicSize::MIN_CONTENT
+                    c, IntrinsicSize::MIN_CONTENT
                 );
 
                 Vec2Au containingBlock = {inlineSize, input.knownSize.height.unwrapOr(0_au)};
@@ -372,7 +372,7 @@ struct BlockFormatingContext : FormatingContext {
 
             if (c.isPseudoElement(Dom::PseudoElement::MARKER)) {
                 // NOSPEC: The spec doesn't define where the marker should be placed.
-                auto width = computeIntrinsicContentSize(input, c, IntrinsicSize::MAX_CONTENT).x;
+                auto width = computeIntrinsicContentSize(c, IntrinsicSize::MAX_CONTENT).x;
                 childInput.position.x -= width * 2.5;
                 childInput.knownSize.width = Some(width);
             }

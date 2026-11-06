@@ -17,11 +17,11 @@ export InsetsAu computePaddings(Box& box, Vec2Au containingBlock);
 
 export Math::Radii<Au> computeRadii(Box& box, Vec2Au size);
 
-export Opt<Au> computeSpecifiedBorderBoxWidth(Input const& input, Box& box, Style::Size size, Vec2Au containingBlock, Au horizontalBorderBox, Opt<Au> capmin = NONE);
+export Opt<Au> computeSpecifiedBorderBoxWidth(Box& box, Style::Size size, Vec2Au containingBlock, Au horizontalBorderBox, Opt<Au> capmin = NONE);
 
 export Opt<Au> computeSpecifiedBorderBoxHeight(Box& box, Style::Size size, Vec2Au containingBlock, Au verticalBorderBox);
 
-export Vec2Au computeIntrinsicContentSize(Input const& input, Box& box, IntrinsicSize intrinsic, Opt<Au> capmin = NONE);
+export Vec2Au computeIntrinsicContentSize(Box& box, IntrinsicSize intrinsic, Opt<Au> capmin = NONE);
 
 export BoxMetrics computeBoxMetrics(Box& box, Vec2Au position, Vec2Au size, UsedSpacings const& usedSpacings);
 

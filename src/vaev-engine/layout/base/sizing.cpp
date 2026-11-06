@@ -13,9 +13,9 @@ export constexpr Au INDEFINITE = Limits<Au>::MAX;
 // https://www.w3.org/TR/css-sizing-3/#fit-content-size
 // NOTE: This is called the “shrink-to-fit” width in CSS2
 
-export Vec2Au computeFitContentSize(Input const& input, Box& box, AvailableSpace availableSpace) {
-    auto minSize = computeIntrinsicContentSize(input, box, IntrinsicSize::MIN_CONTENT);
-    auto maxSize = computeIntrinsicContentSize(input, box, IntrinsicSize::MAX_CONTENT);
+export Vec2Au computeFitContentSize(Box& box, AvailableSpace availableSpace) {
+    auto minSize = computeIntrinsicContentSize(box, IntrinsicSize::MIN_CONTENT);
+    auto maxSize = computeIntrinsicContentSize(box, IntrinsicSize::MAX_CONTENT);
     Vec2Au size = {INDEFINITE, INDEFINITE};
 
     // If the available space in a given axis is definite,
@@ -42,12 +42,12 @@ export Vec2Au computeFitContentSize(Input const& input, Box& box, AvailableSpace
     return size;
 }
 
-export Au computeFitContentInlineSize(Input const& input, Box& box, AvailableSpaceAxis availableSpace) {
-    return computeFitContentSize(input, box, {availableSpace, INDEFINITE}).x;
+export Au computeFitContentInlineSize(Box& box, AvailableSpaceAxis availableSpace) {
+    return computeFitContentSize(box, {availableSpace, INDEFINITE}).x;
 }
 
-export Au computeFitContentBlockSize(Input const& input, Box& box, AvailableSpaceAxis availableSpace) {
-    return computeFitContentSize(input, box, {INDEFINITE, availableSpace}).y;
+export Au computeFitContentBlockSize(Box& box, AvailableSpaceAxis availableSpace) {
+    return computeFitContentSize(box, {INDEFINITE, availableSpace}).y;
 }
 
 // https://www.w3.org/TR/css-sizing-3/#preferred-size-properties
