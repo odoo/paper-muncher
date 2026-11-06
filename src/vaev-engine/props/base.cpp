@@ -28,7 +28,7 @@ namespace Properties {
 export struct RegisteredPropertySet;
 
 export struct ComputationContext :
-    Style::RelativeLengthContextData,
+    RelativeLengthContextData,
     Style::FontSizeContextData {
 
     void populateUsingViewport(Viewport const& vp) {

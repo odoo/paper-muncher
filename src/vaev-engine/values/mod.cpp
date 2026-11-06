@@ -4,8 +4,6 @@ export import :values.baseline;
 export import :values.basicShape;
 export import :values.breaks;
 export import :values.calc2;
-export import :values.color;
-export import :values.counter;
 export import :values.flex;
 export import :values.float_;
 export import :values.insets;

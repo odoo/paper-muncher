@@ -11,11 +11,16 @@ import :css.values.calc2;
 import :css.values.image;
 import :css.values.keywords;
 import :css.values.primitives;
-import :values.counter;
 import :values.keywords;
 import :values.primitives;
 
 namespace Vaev::Css {
+
+export using CounterSymbolsType = Union<
+    Keywords::Cyclic,
+    Keywords::Numeric,
+    Keywords::Alphabetic,
+    Keywords::Fixed>;
 
 // https://drafts.csswg.org/css-counter-styles-3/#typedef-symbol
 // TODO: Add Image support to CounterSymbol

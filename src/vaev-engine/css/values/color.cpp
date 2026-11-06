@@ -16,7 +16,6 @@ import :css.values.keywords;
 import :css.values.length;
 import :css.values.primitives;
 import :css.values.unitValue;
-import :values.color;
 import :values.keywords;
 import :values.primitives;
 
@@ -658,7 +657,7 @@ struct ValueParser<Color> {
 
             if (eqCi(data, "transparent"s)) {
                 c.next();
-                return Ok(TRANSPARENT);
+                return Ok(Gfx::ALPHA);
             }
 
             auto maybeColor = parseNamedColor(data);

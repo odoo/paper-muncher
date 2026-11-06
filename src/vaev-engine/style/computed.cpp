@@ -31,6 +31,11 @@ struct Transforms {
     }
 };
 
+export struct BorderSpacing {
+    Pixel horizontal = Pixel{0};
+    Pixel vertical = Pixel{0};
+};
+
 export struct Table {
     CaptionSide captionSide = Keywords::TOP;
     BorderSpacing spacing;
@@ -85,7 +90,7 @@ export struct Aligns {
 };
 
 export struct Backgrounds {
-    Color color = TRANSPARENT;
+    Color color = Gfx::ALPHA;
     Vec<BackgroundLayer> layers = {};
 
     bool imageIsNone() const {

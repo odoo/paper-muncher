@@ -8,7 +8,6 @@ import Karm.Core;
 
 import :css.values.calc2;
 import :css.values.transform;
-import :style.values.angle;
 import :style.values.calc2;
 import :values.unitValue;
 

@@ -47,28 +47,28 @@ static Res<String> _specified(Str input) {
 // Computed <length>, serialized.
 static Res<String> _px(Str input) {
     auto calc = try$(_parse<Length>(input));
-    auto cx = Style::RelativeLengthContextData{};
+    auto cx = RelativeLengthContextData{};
     return _serialize(Style::toSpecified(Style::toComputed(calc, cx)));
 }
 
 // Computed <length-percentage>, serialized.
 static Res<String> _lp(Str input) {
     auto calc = try$(_parse<LengthPercentage>(input));
-    auto cx = Style::RelativeLengthContextData{};
+    auto cx = RelativeLengthContextData{};
     return _serialize(Style::toSpecified(Style::toComputed(calc, cx)));
 }
 
 // Used <length-percentage> against a percentage basis, in px.
 static Res<f64> _used(Str input, f64 basis) {
     auto calc = try$(_parse<LengthPercentage>(input));
-    auto cx = Style::RelativeLengthContextData{};
+    auto cx = RelativeLengthContextData{};
     return Ok(Layout::resolve(Style::toComputed(calc, cx), Layout::Au{basis}).cast<f64>());
 }
 
 // Used <length-percentage> against an optional percentage basis, in px.
 static Res<Opt<f64>> _usedOpt(Str input, Opt<f64> basis) {
     auto calc = try$(_parse<LengthPercentage>(input));
-    auto cx = Style::RelativeLengthContextData{};
+    auto cx = RelativeLengthContextData{};
     Opt<Layout::Au> relative = NONE;
     if (basis)
         relative = Some(Layout::Au{*basis});
@@ -495,7 +495,7 @@ test$("calc-unsimplifiable-functions") {
 // (Chrome computes calc(1px / 0) to 3.35544e+07px and calc(NaN * 1px) to 0px).
 // NOTE: `calc(infinity * 1px)` is only the serialization of a *specified* value.
 test$("calc-computed-infinity-and-nan-are-clamped", XFAIL) {
-    auto cx = Style::RelativeLengthContextData{};
+    auto cx = RelativeLengthContextData{};
 
     auto inf = Style::toComputed(try$(_parse<Length>("calc(1px / 0)")), cx).value();
     assert$(inf > 0 and not Math::isInf(inf));

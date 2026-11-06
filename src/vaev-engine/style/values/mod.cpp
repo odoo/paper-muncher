@@ -1,6 +1,5 @@
 export module Vaev.Engine:style.values;
 
-export import :style.values.angle;
 export import :style.values.background;
 export import :style.values.baseline;
 export import :style.values.basicShape;
@@ -14,9 +13,6 @@ export import :style.values.length;
 export import :style.values.lineHeight;
 export import :style.values.lineWidth;
 export import :style.values.percent;
-export import :style.values.primitives;
 export import :style.values.sizing;
 export import :style.values.svg;
-export import :style.values.table;
 export import :style.values.transform;
-export import :style.values.unitValue;

@@ -7,7 +7,6 @@ export module Vaev.Engine:style.values.calc2;
 import Karm.Core;
 
 import :css.values.calc2;
-import :style.values.angle;
 import :style.values.length;
 import :style.values.percent;
 import :values.calc2;
@@ -19,6 +18,8 @@ using namespace Vaev::Literals;
 namespace Vaev::Style {
 
 // FIXME: Make Pixel and Percentage backed by f32.
+export using Rad = Distinct<f64, struct _RadTag>;
+
 export struct LinearPixelPercentage {
     Pixel px;
     Percent percentage;

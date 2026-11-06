@@ -4,8 +4,6 @@ import Karm.Core;
 import Karm.Icu;
 import :values.primitives;
 import :css.values.primitives;
-import :style.values.primitives;
-import :values.counter;
 import :css.values.counter;
 
 using namespace Karm;
