@@ -43,8 +43,8 @@ Async::Task<Gfx::Snapshot> _fetchImageContentAsync(Http::Client& client, Ref::Ur
         // NOSPEC: The spec references a “default object size” but does not define explicit values.
         //         Historically, browsers (including Chrome) default to 300x150, as mentioned in older drafts:
         //         https://www.w3.org/TR/2011/WD-css3-images-20110908/#default-object-size
-        auto width = Au{Style::resolve(root->computedValues()->sizing->width.unwrapOr<Style::PixelPercentage>(Style::Pixel{300}), Style::Pixel{300}).value()};
-        auto height = Au{Style::resolve(root->computedValues()->sizing->height.unwrapOr<Style::PixelPercentage>(Style::Pixel{300}), Style::Pixel{300}).value()};
+        auto width = Layout::resolve(root->computedValues()->sizing->width.unwrapOr<Style::PixelPercentage>(Style::Pixel{300}), 300_au);
+        auto height = Layout::resolve(root->computedValues()->sizing->height.unwrapOr<Style::PixelPercentage>(Style::Pixel{300}), 300_au);
 
         webview->changeArea(Style::DisplayArea::forRender({width, height}, Css::PureResolution::fromDppx(1)));
         co_return Ok(webview->snapshot());

@@ -179,43 +179,4 @@ export Css::LengthPercentage toSpecified(PixelPercentage const& value) {
     );
 }
 
-// https://www.w3.org/TR/css-values-4/#calc-computed-value
-export Opt<Pixel> resolve(PixelPercentage const& value, Opt<Pixel> relative) {
-    return value.visit(
-        [](Pixel const& px) -> Opt<Pixel> {
-            return Some(px);
-        },
-        [&](Percent const& percentage) -> Opt<Pixel> {
-            if (auto const [r] = relative)
-                return Some(Pixel{r.value() * (percentage.value() / 100.)});
-            return NONE;
-        },
-        [&](LinearPixelPercentage const& lin) -> Opt<Pixel> {
-            if (auto const [r] = relative)
-                return Some(Pixel{lin.px.value() + r.value() * (lin.percentage.value() / 100.)});
-            return NONE;
-        },
-        [&](Box<Calc> const& calc) -> Opt<Pixel> {
-            auto simplified = simplify(
-                *calc,
-                NONE,
-                Some(NumericBaseType::LENGTH),
-                relative.map([](Pixel r) {
-                    return r.value();
-                })
-            );
-
-            if (auto n = simplified.is<UnitValue>(); n and n->unit() == UnitValue::Unit::PX)
-                return Some(Pixel{n->value()});
-            return NONE;
-        }
-    );
-}
-
-export Pixel resolve(PixelPercentage const& value, Pixel relative) {
-    if (auto const [px] = resolve(value, Opt<Pixel>{Some(relative)}))
-        return px;
-    panic("calc didn't simplify to a single value of expected unit");
-}
-
 } // namespace Vaev::Style

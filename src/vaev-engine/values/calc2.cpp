@@ -293,7 +293,7 @@ export struct SumNode;
 export struct ProductNode;
 export struct FnNode;
 
-using Calc = Union<
+export using Calc = Union<
     UnitValue,
     NegateNode,
     InvertNode,
