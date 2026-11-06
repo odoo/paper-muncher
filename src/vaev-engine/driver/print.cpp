@@ -190,6 +190,7 @@ Vec<PageLayoutInfos> collectBreakPointsAndRunningPositions(PaginationContext& co
                 .breakpointTraverser = Layout::BreakpointTraverser(
                     pageInfos ? &last(pageInfos).breakpoint : &startOfDocument
                 ),
+                .atFragmentainerStart = true,
             }
         );
 
@@ -199,6 +200,9 @@ Vec<PageLayoutInfos> collectBreakPointsAndRunningPositions(PaginationContext& co
             outDiscovery.completelyLaidOut
                 ? Layout::Breakpoint::classB(1, false)
                 : outDiscovery.breakpoint.expect();
+
+        if (pageInfos and infos.breakpoint == last(pageInfos).breakpoint)
+            panic("pagination made no progress");
 
         pageInfos.pushBack(std::move(infos));
 
@@ -261,6 +265,7 @@ export Yield<Gfx::Snapshot> print(Gc::Heap& heap, Gc::Ref<Dom::Document> dom, Pr
                     i == 0 ? &startOfDocument : &pageInfos[i - 1].breakpoint,
                     &infos.breakpoint,
                 },
+                .atFragmentainerStart = true,
             }
         );
 

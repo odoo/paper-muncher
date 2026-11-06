@@ -368,7 +368,8 @@ struct SvgFormatingContext : FormatingContext {
             not input.fragmentainer->acceptsFit(
                 input.position.y,
                 size.y,
-                input.pendingVerticalSizes
+                input.pendingVerticalSizes,
+                input.atFragmentainerStart
             )) {
             return {
                 .fragment = Some(fragment),
