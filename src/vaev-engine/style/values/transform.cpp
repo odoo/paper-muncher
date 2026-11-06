@@ -18,7 +18,7 @@ namespace Vaev::Style {
 export struct TransformTypes {
     using LengthPercentageType = PixelPercentage;
     using NumberType = f64;
-    using AngleType = Rad;
+    using AngleType = Deg;
 };
 
 export using MatrixTransform = Css::MatrixTransformT<TransformTypes>;

@@ -77,24 +77,24 @@ Math::Trans2f resolveTransform(Slice<Style::TransformFunction> transforms, Layou
                 return Math::Trans2f::scale({t.x, t.y});
             },
             [&](Style::RotateTransform const& t) {
-                return Math::Trans2f::rotate(t.value.value());
+                return Math::Trans2f::rotate(t.value.value() * Math::DEG2RAD);
             },
             [&](Style::SkewTransform const& t) {
                 return Math::Trans2f::skew({
-                    Math::tan(t.x.value()),
-                    Math::tan(t.y.value()),
+                    Math::tan(t.x.value() * Math::DEG2RAD),
+                    Math::tan(t.y.value() * Math::DEG2RAD),
                 });
             },
             [&](Style::SkewXTransform const& t) {
                 return Math::Trans2f::skew({
-                    Math::tan(t.value.value()),
+                    Math::tan(t.value.value() * Math::DEG2RAD),
                     0,
                 });
             },
             [&](Style::SkewYTransform const& t) {
                 return Math::Trans2f::skew({
                     0,
-                    Math::tan(t.value.value()),
+                    Math::tan(t.value.value() * Math::DEG2RAD),
                 });
             }
         );

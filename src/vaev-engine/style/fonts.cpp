@@ -22,7 +22,7 @@ export struct FontFace {
 
     Vec<Css::FontSource> sources;
 
-    Union<None, Css::FontStyle, Range<Rad>> style = Css::FontStyle{Css::FontStyle::NORMAL};
+    Union<None, Css::FontStyle, Range<Deg>> style = Css::FontStyle{Css::FontStyle::NORMAL};
 
     Opt<Range<Gfx::FontWeight>> weight = Some(Range<Gfx::FontWeight>::emptyAt(Gfx::FontWeight::REGULAR));
     Opt<Range<Percent>> width = Some(Range<Percent>::emptyAt(Percent{Css::FontWidth{Css::FontWidth::NORMAL}.val().value()}));
@@ -187,7 +187,7 @@ export struct SrcFontDescriptor {
 // MARK: font-style
 // https://www.w3.org/TR/css-fonts-4/#font-style-desc
 export struct FontStyleFontDescriptor {
-    Union<None, Css::FontStyle, Range<Rad>> value;
+    Union<None, Css::FontStyle, Range<Deg>> value;
 
     static Str name() { return "font-style"; }
 
@@ -215,7 +215,7 @@ export struct FontStyleFontDescriptor {
             return Ok();
         }
 
-        value = Range<Rad>::fromStartEnd(toComputed(style.obliqueAngle), toComputed(val.expect()));
+        value = Range<Deg>::fromStartEnd(toComputed(style.obliqueAngle), toComputed(val.expect()));
         return Ok();
     }
 };

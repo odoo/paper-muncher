@@ -94,13 +94,13 @@ export Css::Length toSpecified(Pixel const& px) {
 // MARK: Angle ----------------------------------------------------------------
 // https://drafts.csswg.org/css-values/#angles
 
-export using Rad = Distinct<f64, struct _RadTag>;
+export using Deg = Distinct<f64, struct _DegTag>;
 
-export Rad toComputed(Css::PureAngle const& value) {
-    return Rad{value.unitValue().to(UnitValue::Unit::RAD)};
+export Deg toComputed(Css::PureAngle const& value) {
+    return Deg{value.unitValue().to(UnitValue::Unit::DEG)};
 }
 
-export Rad toComputed(Css::Angle const& value) {
+export Deg toComputed(Css::Angle const& value) {
     auto simplified = simplify(
         value.calcTree(),
         NONE,
@@ -108,15 +108,15 @@ export Rad toComputed(Css::Angle const& value) {
         NONE
     );
 
-    if (auto n = simplified.is<UnitValue>(); n and n->baseType() == NumericBaseType::ANGLE) {
-        return Rad{n->to(UnitValue::Unit::RAD)};
+    if (auto n = simplified.is<UnitValue>(); n and n->unit() == UnitValue::Unit::DEG) {
+        return Deg{n->value()};
     } else {
         panic("calc didn't simplify to a single value of expected unit");
     }
 }
 
-export Css::Angle toSpecified(Rad const& angle) {
-    return Css::Angle{UNCHECKED, UnitValue{angle.value(), UnitValue::Unit::RAD}};
+export Css::Angle toSpecified(Deg const& angle) {
+    return Css::Angle{UNCHECKED, UnitValue{angle.value(), UnitValue::Unit::DEG}};
 }
 
 // MARK: Resolution -----------------------------------------------------------
@@ -222,6 +222,14 @@ export constexpr Style::Pixel operator""_px(long double val) {
     return Style::Pixel{static_cast<f64>(val)};
 }
 
+export constexpr Style::Deg operator""_deg(unsigned long long val) {
+    return Style::Deg{static_cast<f64>(val)};
+}
+
+export constexpr Style::Deg operator""_deg(long double val) {
+    return Style::Deg{static_cast<f64>(val)};
+}
+
 export constexpr Style::Dppx operator""_dppx(unsigned long long val) {
     return Style::Dppx{static_cast<f64>(val)};
 }
@@ -247,9 +255,9 @@ struct Karm::Io::Formatter<Vaev::Style::Percent> {
 };
 
 export template <>
-struct Karm::Io::Formatter<Vaev::Style::Rad> {
-    Res<> format(Io::TextWriter& writer, Vaev::Style::Rad value) {
-        return Io::format(writer, "{}rad", value.value());
+struct Karm::Io::Formatter<Vaev::Style::Deg> {
+    Res<> format(Io::TextWriter& writer, Vaev::Style::Deg value) {
+        return Io::format(writer, "{}deg", value.value());
     }
 };
 
