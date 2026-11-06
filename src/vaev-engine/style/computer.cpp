@@ -66,7 +66,7 @@ export struct Computer {
         for (auto el : _iterElementInScope(element)) {
             auto maybeCounterIncrement =
                 iter(el.computedValues()->counters->increment) |
-                FindFirst([&](Css::CounterIncrement const& increment) {
+                FindFirst([&](CounterIncrement const& increment) {
                     return increment.name == counter;
                 });
 
@@ -84,7 +84,7 @@ export struct Computer {
             // 3. If el sets this counter with counter-set, then add that integer value to num and break this loop.
             auto maybeCounterSet =
                 iter(el.computedValues()->counters->set) |
-                FindFirst([&](Css::CounterSet const& set) {
+                FindFirst([&](Vaev::CounterSet const& set) {
                     return set.name == counter;
                 });
 
@@ -125,7 +125,7 @@ export struct Computer {
             for (auto& counterIncrement : countersStyle.increment) {
                 counters.increment(elementHandle, counterIncrement);
             }
-        } else if (style.display == Css::Display::Item::YES) {
+        } else if (style.display == Display::Item::YES) {
             // https://www.w3.org/TR/css-lists-3/#list-item-counter
             counters.increment(elementHandle, {.name = CustomIdent{"list-item"_sym}, .value = Some(1)});
         }
@@ -452,7 +452,7 @@ export struct Computer {
         auto computedValues = computeValues(parentComputedValues, el);
         el._computedValues = Some(computedValues);
 
-        if (computedValues->display == Css::Display::Item::YES)
+        if (computedValues->display == Display::Item::YES)
             generatePseudoElement(*computedValues, el, Dom::PseudoElement::MARKER);
 
         generatePseudoElement(*computedValues, el, Dom::PseudoElement::AFTER);

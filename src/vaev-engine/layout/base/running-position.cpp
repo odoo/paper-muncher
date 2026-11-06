@@ -51,15 +51,15 @@ struct RunningPositionMap {
     }
 
     // https://www.w3.org/TR/css-gcpm-3/#using-named-strings
-    Res<RunningPositionInfo> match(Css::ElementFunc elt, usize pageNumber) {
+    Res<RunningPositionInfo> match(ElementFunc elt, usize pageNumber) {
         auto id = elt.customIdent;
         auto const& list = try$(content.lookup(id).okOr(Error::notFound("element not found")));
 
         switch (elt.target) {
-        case Css::ElementFunc::Target::UNDEFINED:
+        case ElementFunc::Target::UNDEFINED:
             return Ok(list[0]);
 
-        case Css::ElementFunc::Target::START:
+        case ElementFunc::Target::START:
             for (usize i = 0; i < list.len(); i++) {
                 auto elt = list[i];
                 if (elt.pageNumber == pageNumber and i > 0) {
@@ -68,13 +68,13 @@ struct RunningPositionMap {
             }
             return Ok(list[0]);
 
-        case Css::ElementFunc::Target::FIRST:
-        case Css::ElementFunc::Target::FIRST_EXCEPT: {
+        case ElementFunc::Target::FIRST:
+        case ElementFunc::Target::FIRST_EXCEPT: {
             auto elements = _searchPage(list, pageNumber);
             return Ok(elements[0]);
         }
 
-        case Css::ElementFunc::Target::LAST: {
+        case ElementFunc::Target::LAST: {
             auto elements = _searchPage(list, pageNumber);
             return Ok(elements[elements.len() - 1]);
         }

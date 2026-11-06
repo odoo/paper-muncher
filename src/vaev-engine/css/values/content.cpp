@@ -12,40 +12,12 @@ import :css.values.base;
 import :css.values.counter;
 import :css.values.keywords;
 import :css.values.primitives;
+import :values.content;
+import :values.counter;
 import :values.keywords;
 import :values.primitives;
 
 namespace Vaev::Css {
-
-// https://www.w3.org/TR/css-content-3/
-// https://www.w3.org/TR/css-gcpm-3/#funcdef-element
-export struct ElementFunc {
-    enum struct Target {
-        UNDEFINED,
-        FIRST,
-        START,
-        LAST,
-        FIRST_EXCEPT
-    };
-
-    CustomIdent customIdent = {""_sym};
-    Target target = Target::UNDEFINED;
-
-    explicit ElementFunc(CustomIdent customIdent, Target target = Target::UNDEFINED)
-        : customIdent(customIdent), target(target) {}
-
-    void repr(Io::Emit& e) const {
-        e("element '{}'", customIdent);
-    }
-};
-
-export using ContentValue = Union<
-    Keywords::Normal,
-    Keywords::None,
-    String,
-    ElementFunc,
-    CounterFunc,
-    CountersFunc>;
 
 export template <>
 struct ValueParser<ContentValue> {

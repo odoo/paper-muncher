@@ -1,11 +1,16 @@
 export module Vaev.Engine:values;
 
+export import :values.align;
 export import :values.baseline;
 export import :values.basicShape;
 export import :values.breaks;
 export import :values.calc;
+export import :values.content;
+export import :values.counter;
+export import :values.display;
 export import :values.flex;
 export import :values.float_;
+export import :values.font;
 export import :values.insets;
 export import :values.keywords;
 export import :values.list;
@@ -13,6 +18,7 @@ export import :values.multicol;
 export import :values.overflow;
 export import :values.primitives;
 export import :values.sizing;
+export import :values.svg;
 export import :values.table;
 export import :values.text;
 export import :values.transform;

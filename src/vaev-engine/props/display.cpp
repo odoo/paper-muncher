@@ -19,7 +19,7 @@ export struct DisplayProperty : Property {
         Registration() : Property::Registration(Properties::DISPLAY) {}
 
         Rc<Property> initial() const override {
-            return makeRc<DisplayProperty>(self(), Css::Display{Css::Display::FLOW, Css::Display::INLINE});
+            return makeRc<DisplayProperty>(self(), Display{Display::FLOW, Display::INLINE});
         }
 
         Rc<Property> load(ComputedValues const& s) const override {
@@ -27,13 +27,13 @@ export struct DisplayProperty : Property {
         }
 
         Res<Rc<Property>> parse(Cursor<Css::Sst>& c) const override {
-            return Ok(makeRc<DisplayProperty>(self(), try$(parseValue<Css::Display>(c))));
+            return Ok(makeRc<DisplayProperty>(self(), try$(parseValue<Display>(c))));
         }
     };
 
-    Css::Display _value;
+    Display _value;
 
-    DisplayProperty(Rc<Property::Registration> registration, Css::Display value)
+    DisplayProperty(Rc<Property::Registration> registration, Display value)
         : Property(registration), _value(value) {}
 
     void apply([[maybe_unused]] ComputedValues const& parent, ComputedValues& c, [[maybe_unused]] ComputationContext const& cx) const override {
@@ -41,7 +41,7 @@ export struct DisplayProperty : Property {
     }
 
     Res<> serialize(Io::TextWriter& w) const override {
-        return serializeValue(w, _value);
+        return Css::serializeValue(w, _value);
     }
 
     void repr(Io::Emit& e) const override {
@@ -64,13 +64,13 @@ export struct ContentProperty : Property {
         }
 
         Res<Rc<Property>> parse(Cursor<Css::Sst>& c) const override {
-            return Ok(makeRc<ContentProperty>(self(), try$(parseValue<Css::ContentValue>(c))));
+            return Ok(makeRc<ContentProperty>(self(), try$(parseValue<ContentValue>(c))));
         }
     };
 
-    Css::ContentValue _value;
+    ContentValue _value;
 
-    ContentProperty(Rc<Property::Registration> registration, Css::ContentValue value)
+    ContentProperty(Rc<Property::Registration> registration, ContentValue value)
         : Property(registration), _value(value) {}
 
     void apply([[maybe_unused]] ComputedValues const& parent, ComputedValues& c, [[maybe_unused]] ComputationContext const& cx) const override {

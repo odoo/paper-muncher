@@ -509,33 +509,33 @@ struct FlexItem {
     }
 
     // https://www.w3.org/TR/css-flexbox-1/#align-items-property
-    void alignItem(Au lineCrossSize, Css::Align::Keywords parentAlignItems) {
+    void alignItem(Au lineCrossSize, Align::Keywords parentAlignItems) {
         auto align = box->style->aligns.alignSelf.keyword;
 
         // https://www.w3.org/TR/css-flexbox-1/#valdef-align-items-auto
-        if (align == Css::Align::AUTO)
+        if (align == Align::AUTO)
             align = parentAlignItems;
 
         switch (align) {
-        case Css::Align::FLEX_END:
+        case Align::FLEX_END:
             alignCrossFlexEnd(lineCrossSize);
             return;
 
-        case Css::Align::CENTER:
+        case Align::CENTER:
             alignCrossCenter(lineCrossSize);
             return;
 
-        case Css::Align::FIRST_BASELINE:
+        case Align::FIRST_BASELINE:
             // https://www.w3.org/TR/css-flexbox-1/#valdef-align-items-baseline
             // TODO: complex case, ignoring for now
             return;
 
-        case Css::Align::STRETCH:
+        case Align::STRETCH:
             alignCrossStretch();
             return;
 
         default:
-        case Css::Align::FLEX_START:
+        case Align::FLEX_START:
             alignCrossFlexStart();
             return;
         }
@@ -611,31 +611,31 @@ struct FlexLine {
     }
 
     // https://www.w3.org/TR/css-flexbox-1/#justify-content-property
-    void justifyContent(Css::Align::Keywords justifyContent, Au mainSize, Au occupiedSize) {
+    void justifyContent(Align::Keywords justifyContent, Au mainSize, Au occupiedSize) {
         switch (justifyContent) {
-        case Css::Align::SPACE_AROUND:
+        case Align::SPACE_AROUND:
             if (occupiedSize > mainSize or items.len() == 1)
                 alignMainCenter(mainSize, occupiedSize);
             else
                 alignMainSpaceAround(mainSize, occupiedSize);
             break;
 
-        case Css::Align::CENTER:
+        case Align::CENTER:
             alignMainCenter(mainSize, occupiedSize);
             break;
 
-        case Css::Align::FLEX_END:
+        case Align::FLEX_END:
             alignMainFlexEnd(mainSize, occupiedSize);
             break;
 
-        case Css::Align::SPACE_BETWEEN:
+        case Align::SPACE_BETWEEN:
             if (occupiedSize > mainSize or items.len() == 1)
                 alignMainFlexStart();
             else
                 alignMainSpaceBetween(mainSize, occupiedSize);
             break;
 
-        case Css::Align::FLEX_START:
+        case Align::FLEX_START:
         default:
             alignMainFlexStart();
             break;
@@ -1122,7 +1122,7 @@ struct FlexFormatingContext : FormatingContext {
 
             for (auto& flexItem : flexLine.items) {
                 if (
-                    flexItem.box->style->aligns.alignSelf == Css::Align::FIRST_BASELINE and
+                    flexItem.box->style->aligns.alignSelf == Align::FIRST_BASELINE and
                     not flexItem.hasAnyCrossMarginAuto() /* and
                     inline-axis is parallel to main-axis*/
                 ) {
@@ -1165,7 +1165,7 @@ struct FlexFormatingContext : FormatingContext {
         if (
             not(input.intrinsic == IntrinsicSize::MIN_CONTENT) and
             (fa.crossAxis(box.style->sizing).is<Keywords::Auto>() or fa.crossAxis(input.knownSize)) and
-            box.style->aligns.alignContent == Css::Align::STRETCH
+            box.style->aligns.alignContent == Align::STRETCH
         ) {
             Au sumOfCrossSizes{0};
             for (auto& flexLine : _lines)
@@ -1192,12 +1192,12 @@ struct FlexFormatingContext : FormatingContext {
     void _determineUsedCrossSize(Box& box, Input input) {
         for (auto& flexLine : _lines) {
             for (auto& flexItem : flexLine.items) {
-                Css::Align itemAlign = flexItem.box->style->aligns.alignSelf;
-                if (itemAlign == Css::Align::AUTO)
+                Align itemAlign = flexItem.box->style->aligns.alignSelf;
+                if (itemAlign == Align::AUTO)
                     itemAlign = box.style->aligns.alignItems;
 
                 if (
-                    itemAlign == Css::Align::STRETCH and
+                    itemAlign == Align::STRETCH and
                     fa.crossAxis(flexItem.box->style->sizing).is<Keywords::Auto>() and
                     not flexItem.hasAnyCrossMarginAuto()
                 ) {
@@ -1278,10 +1278,10 @@ struct FlexFormatingContext : FormatingContext {
                 // NOTE: justifying doesnt change sizes/margins, thus will only run when committing and setting positions
                 auto justifyContent = box.style->aligns.justifyContent.keyword;
                 if (_flex.isReverse()) {
-                    if (justifyContent == Css::Align::FLEX_START)
-                        justifyContent = Css::Align::FLEX_END;
-                    else if (justifyContent == Css::Align::FLEX_END)
-                        justifyContent = Css::Align::FLEX_START;
+                    if (justifyContent == Align::FLEX_START)
+                        justifyContent = Align::FLEX_END;
+                    else if (justifyContent == Align::FLEX_END)
+                        justifyContent = Align::FLEX_START;
                 }
                 flexLine.justifyContent(
                     justifyContent,
@@ -1394,7 +1394,7 @@ struct FlexFormatingContext : FormatingContext {
         };
 
         switch (box.style->aligns.alignContent.keyword) {
-        case Css::Align::FLEX_END: {
+        case Align::FLEX_END: {
             Au currPositionCross{availableCrossSpace};
             for (auto& flexLine : _lines) {
                 fa.crossAxis(flexLine.position) = currPositionCross;
@@ -1403,12 +1403,12 @@ struct FlexFormatingContext : FormatingContext {
             break;
         }
 
-        case Css::Align::CENTER: {
+        case Align::CENTER: {
             alignContentCenter();
             break;
         }
 
-        case Css::Align::SPACE_AROUND: {
+        case Align::SPACE_AROUND: {
             if (availableCrossSpace < 0_au) {
                 alignContentCenter();
             } else {
@@ -1423,7 +1423,7 @@ struct FlexFormatingContext : FormatingContext {
             break;
         }
 
-        case Css::Align::SPACE_BETWEEN: {
+        case Align::SPACE_BETWEEN: {
             if (availableCrossSpace < 0_au or _lines.len() == 1)
                 alignContentFlexStart();
             else {
@@ -1438,7 +1438,7 @@ struct FlexFormatingContext : FormatingContext {
             break;
         }
 
-        case Css::Align::FLEX_START:
+        case Align::FLEX_START:
         default:
             alignContentFlexStart();
         }

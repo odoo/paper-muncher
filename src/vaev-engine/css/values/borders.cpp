@@ -7,7 +7,6 @@ import :css.lexer;
 import :css.parser;
 import :css.values.base;
 import :css.values.color;
-import :css.values.insets;
 import :css.values.keywords;
 import :css.values.lineWidth;
 import :css.values.primitives;

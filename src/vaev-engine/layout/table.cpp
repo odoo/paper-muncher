@@ -194,8 +194,8 @@ export struct TableFormatingContext : FormatingContext {
 
         growDownwardGrowingCells();
 
-        advanceUntil(tableRowCursor, [](Css::Display d) {
-            return d == Css::Display::TABLE_CELL;
+        advanceUntil(tableRowCursor, [](Display d) {
+            return d == Display::TABLE_CELL;
         });
 
         while (not tableRowCursor.ended()) {
@@ -249,8 +249,8 @@ export struct TableFormatingContext : FormatingContext {
             current.x += colSpan;
 
             tableRowCursor.next();
-            advanceUntil(tableRowCursor, [](Css::Display d) {
-                return d == Css::Display::TABLE_CELL;
+            advanceUntil(tableRowCursor, [](Display d) {
+                return d == Display::TABLE_CELL;
             });
         }
         current.y++;
@@ -272,8 +272,8 @@ export struct TableFormatingContext : FormatingContext {
 
         usize ystartRowGroup = grid.size.y;
 
-        advanceUntil(rowGroupCursor, [](Css::Display d) {
-            return d == Css::Display::TABLE_ROW;
+        advanceUntil(rowGroupCursor, [](Display d) {
+            return d == Display::TABLE_ROW;
         });
 
         while (not rowGroupCursor.ended()) {
@@ -282,8 +282,8 @@ export struct TableFormatingContext : FormatingContext {
             rows.pushBack({.start = ystartRow, .end = grid.size.y - 1, .el = *rowGroupCursor});
 
             rowGroupCursor.next();
-            advanceUntil(rowGroupCursor, [](Css::Display d) {
-                return d == Css::Display::TABLE_ROW;
+            advanceUntil(rowGroupCursor, [](Display d) {
+                return d == Display::TABLE_ROW;
             });
         }
 
@@ -298,8 +298,8 @@ export struct TableFormatingContext : FormatingContext {
         auto tableBoxChildren = box.children();
         MutCursor<Box> tableBoxCursor{tableBoxChildren};
 
-        advanceUntil(tableBoxCursor, [](Css::Display d) {
-            return d == Css::Display::TABLE_HEADER_GROUP;
+        advanceUntil(tableBoxCursor, [](Display d) {
+            return d == Display::TABLE_HEADER_GROUP;
         });
 
         if (tableBoxCursor.ended())
@@ -318,7 +318,7 @@ export struct TableFormatingContext : FormatingContext {
         if (tableBoxCursor.ended())
             return;
 
-        advanceUntil(tableBoxCursor, [](Css::Display d) {
+        advanceUntil(tableBoxCursor, [](Display d) {
             return d.isHeadBodyFootRowOrColGroup();
         });
 
@@ -326,12 +326,12 @@ export struct TableFormatingContext : FormatingContext {
             return;
 
         // MARK: Columns groups
-        while (not tableBoxCursor.ended() and tableBoxCursor->style->display == Css::Display::TABLE_COLUMN_GROUP) {
+        while (not tableBoxCursor.ended() and tableBoxCursor->style->display == Display::TABLE_COLUMN_GROUP) {
             auto columnGroupChildren = tableBoxCursor->children();
             MutCursor<Box> columnGroupCursor = {columnGroupChildren};
 
-            advanceUntil(columnGroupCursor, [](Css::Display d) {
-                return d == Css::Display::TABLE_COLUMN;
+            advanceUntil(columnGroupCursor, [](Display d) {
+                return d == Display::TABLE_COLUMN;
             });
 
             if (not columnGroupCursor.ended()) {
@@ -345,8 +345,8 @@ export struct TableFormatingContext : FormatingContext {
                     cols.pushBack({.start = grid.size.x - span, .end = grid.size.x - 1, .el = *columnGroupCursor});
 
                     columnGroupCursor.next();
-                    advanceUntil(columnGroupCursor, [](Css::Display d) {
-                        return d == Css::Display::TABLE_COLUMN;
+                    advanceUntil(columnGroupCursor, [](Display d) {
+                        return d == Display::TABLE_COLUMN;
                     });
                 }
 
@@ -359,7 +359,7 @@ export struct TableFormatingContext : FormatingContext {
             }
 
             tableBoxCursor.next();
-            advanceUntil(tableBoxCursor, [](Css::Display d) {
+            advanceUntil(tableBoxCursor, [](Display d) {
                 return d.isHeadBodyFootRowOrColGroup();
             });
         }
@@ -374,14 +374,14 @@ export struct TableFormatingContext : FormatingContext {
         }
 
         while (true) {
-            advanceUntil(tableBoxCursor, [](Css::Display d) {
+            advanceUntil(tableBoxCursor, [](Display d) {
                 return d.isHeadBodyFootOrRow();
             });
 
             if (tableBoxCursor.ended())
                 break;
 
-            if (tableBoxCursor->style->display == Css::Display::TABLE_ROW) {
+            if (tableBoxCursor->style->display == Display::TABLE_ROW) {
                 processRows(*tableBoxCursor);
                 tableBoxCursor.next();
                 continue;
@@ -389,15 +389,15 @@ export struct TableFormatingContext : FormatingContext {
 
             endRowGroup();
 
-            if (tableBoxCursor->style->display == Css::Display::TABLE_FOOTER_GROUP) {
+            if (tableBoxCursor->style->display == Display::TABLE_FOOTER_GROUP) {
                 pendingTfoots.pushBack(tableBoxCursor - tableBoxChildren.begin());
                 tableBoxCursor.next();
                 continue;
             }
 
             // The current element is either a thead or a tbody.
-            if (tableBoxCursor->style->display != Css::Display::TABLE_HEADER_GROUP and
-                tableBoxCursor->style->display != Css::Display::TABLE_ROW_GROUP) {
+            if (tableBoxCursor->style->display != Display::TABLE_HEADER_GROUP and
+                tableBoxCursor->style->display != Display::TABLE_ROW_GROUP) {
                 // FIXME: Prod code should not fail, but ok for current dev scenario
                 panic("current element should be thead or tbody");
             }

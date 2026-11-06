@@ -65,14 +65,14 @@ struct ListStyleTypeProperty : Property {
         }
 
         Res<Rc<Property>> parse(Cursor<Css::Sst>& c) const override {
-            auto value = try$(parseValue<Css::ListType>(c));
+            auto value = try$(parseValue<ListType>(c));
             return Ok(makeRc<ListStyleTypeProperty>(self(), value));
         }
     };
 
-    Css::ListType _value;
+    ListType _value;
 
-    ListStyleTypeProperty(Rc<Property::Registration> registration, Css::ListType value)
+    ListStyleTypeProperty(Rc<Property::Registration> registration, ListType value)
         : Property(registration), _value(value) {}
 
     void apply(ComputedValues const&, ComputedValues& c, [[maybe_unused]] ComputationContext const& cx) const override {
@@ -130,7 +130,7 @@ struct ListStylePositionProperty : Property {
 struct ListStyleProperty : Property {
     struct Value {
         Css::ListImage image = Keywords::NONE;
-        Css::ListType type = CustomIdent{"disc"_sym};
+        ListType type = CustomIdent{"disc"_sym};
         ListPosition position = Keywords::OUTSIDE;
 
         void repr(Io::Emit& e) const {
@@ -174,7 +174,7 @@ struct ListStyleProperty : Property {
                     continue;
                 }
 
-                if (auto type = parseValue<Css::ListType>(c)) {
+                if (auto type = parseValue<ListType>(c)) {
                     value.type = type.take();
                     continue;
                 }

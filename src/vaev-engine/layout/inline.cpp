@@ -22,7 +22,7 @@ struct InlineFormatingContext : FormatingContext {
         if (childBox.style->inline_->baselineSource == Keywords::LAST)
             return output.lastBaselineSet;
 
-        if (childBox.style->display == Css::Display::INLINE and childBox.style->display == Css::Display::FLOW_ROOT)
+        if (childBox.style->display == Display::INLINE and childBox.style->display == Display::FLOW_ROOT)
             return output.lastBaselineSet;
         return output.firstBaselineSet;
     }

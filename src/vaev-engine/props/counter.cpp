@@ -17,7 +17,7 @@ export struct CounterResetProperty : Property {
         Registration() : Property::Registration(Properties::COUNTER_RESET) {}
 
         Rc<Property> initial() const override {
-            return makeRc<CounterResetProperty>(self(), Vec<Css::CounterReset>{});
+            return makeRc<CounterResetProperty>(self(), Vec<CounterReset>{});
         }
 
         Rc<Property> load(ComputedValues const& c) const override {
@@ -26,15 +26,15 @@ export struct CounterResetProperty : Property {
 
         Res<Rc<Property>> parse(Cursor<Css::Sst>& c) const override {
             if (parseValue<Keywords::None>(c))
-                return Ok(makeRc<CounterResetProperty>(self(), Vec<Css::CounterReset>{}));
-            auto value = try$(parseValue<Vec<Css::CounterReset>>(c));
+                return Ok(makeRc<CounterResetProperty>(self(), Vec<CounterReset>{}));
+            auto value = try$(parseValue<Vec<CounterReset>>(c));
             return Ok(makeRc<CounterResetProperty>(self(), value));
         }
     };
 
-    Vec<Css::CounterReset> _value;
+    Vec<CounterReset> _value;
 
-    CounterResetProperty(Rc<Property::Registration> registration, Vec<Css::CounterReset> value)
+    CounterResetProperty(Rc<Property::Registration> registration, Vec<CounterReset> value)
         : Property(registration), _value(value) {}
 
     void apply(ComputedValues const&, ComputedValues& c, [[maybe_unused]] ComputationContext const& cx) const override {
@@ -52,7 +52,7 @@ export struct CounterIncrementProperty : Property {
         Registration() : Property::Registration(Properties::COUNTER_INCREMENT) {}
 
         Rc<Property> initial() const override {
-            return makeRc<CounterIncrementProperty>(self(), Vec<Css::CounterIncrement>{});
+            return makeRc<CounterIncrementProperty>(self(), Vec<CounterIncrement>{});
         }
 
         Rc<Property> load(ComputedValues const& c) const override {
@@ -61,15 +61,15 @@ export struct CounterIncrementProperty : Property {
 
         Res<Rc<Property>> parse(Cursor<Css::Sst>& c) const override {
             if (parseValue<Keywords::None>(c))
-                return Ok(makeRc<CounterIncrementProperty>(self(), Vec<Css::CounterIncrement>{}));
-            auto value = try$(parseValue<Vec<Css::CounterIncrement>>(c));
+                return Ok(makeRc<CounterIncrementProperty>(self(), Vec<CounterIncrement>{}));
+            auto value = try$(parseValue<Vec<CounterIncrement>>(c));
             return Ok(makeRc<CounterIncrementProperty>(self(), value));
         }
     };
 
-    Vec<Css::CounterIncrement> _value;
+    Vec<CounterIncrement> _value;
 
-    CounterIncrementProperty(Rc<Property::Registration> registration, Vec<Css::CounterIncrement> value)
+    CounterIncrementProperty(Rc<Property::Registration> registration, Vec<CounterIncrement> value)
         : Property(registration), _value(value) {}
 
     void apply(ComputedValues const&, ComputedValues& c, [[maybe_unused]] ComputationContext const& cx) const override {
@@ -87,7 +87,7 @@ export struct CounterSetProperty : Property {
         Registration() : Property::Registration(Properties::COUNTER_SET) {}
 
         Rc<Property> initial() const override {
-            return makeRc<CounterSetProperty>(self(), Vec<Css::CounterSet>{});
+            return makeRc<CounterSetProperty>(self(), Vec<Vaev::CounterSet>{});
         }
 
         Rc<Property> load(ComputedValues const& c) const override {
@@ -96,15 +96,15 @@ export struct CounterSetProperty : Property {
 
         Res<Rc<Property>> parse(Cursor<Css::Sst>& c) const override {
             if (parseValue<Keywords::None>(c))
-                return Ok(makeRc<CounterSetProperty>(self(), Vec<Css::CounterSet>{}));
-            auto value = try$(parseValue<Vec<Css::CounterSet>>(c));
+                return Ok(makeRc<CounterSetProperty>(self(), Vec<Vaev::CounterSet>{}));
+            auto value = try$(parseValue<Vec<Vaev::CounterSet>>(c));
             return Ok(makeRc<CounterSetProperty>(self(), value));
         }
     };
 
-    Vec<Css::CounterSet> _value;
+    Vec<Vaev::CounterSet> _value;
 
-    CounterSetProperty(Rc<Property::Registration> registration, Vec<Css::CounterSet> value)
+    CounterSetProperty(Rc<Property::Registration> registration, Vec<Vaev::CounterSet> value)
         : Property(registration), _value(value) {}
 
     void apply(ComputedValues const&, ComputedValues& c, [[maybe_unused]] ComputationContext const& cx) const override {

@@ -15,6 +15,7 @@ import :css.values.calc;
 import :css.values.keywords;
 import :css.values.primitives;
 import :css.values.unitValue;
+import :values.font;
 import :values.keywords;
 import :values.primitives;
 
@@ -370,21 +371,6 @@ export struct FontVariation {
     bool operator==(FontTag const& other) const {
         return tag == other;
     }
-};
-
-struct FontFamily {
-    Symbol name;
-
-    FontFamily(Symbol name)
-        : name(name) {
-    }
-
-    void repr(Io::Emit& e) const {
-        e("(FontFamily name:{})", name);
-    }
-
-    bool operator==(FontFamily const&) const = default;
-    auto operator<=>(FontFamily const&) const = default;
 };
 
 export struct FontSource {

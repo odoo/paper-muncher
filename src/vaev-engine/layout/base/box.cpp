@@ -17,7 +17,7 @@ export using Content = Union<
     Rc<Gfx::Prose>,
     Gfx::Snapshot,
     Css::SvgShapeElement,
-    Css::SvgViewBox>;
+    SvgViewBox>;
 
 struct Box : Meta::NoCopy {
     Rc<Style::ComputedValues const> style;
@@ -151,7 +151,7 @@ struct Box : Meta::NoCopy {
 
     // https://drafts.csswg.org/css-tables-3/#table-wrapper-box
     bool isTableWrapperBox() const {
-        return style->display == Css::Display::Inside::TABLE;
+        return style->display == Display::Inside::TABLE;
     }
 
     bool isPseudoElement(Symbol type) const {

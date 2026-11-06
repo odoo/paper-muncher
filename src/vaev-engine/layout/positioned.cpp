@@ -26,19 +26,19 @@ static RectAu _computeInsetModifiedContainingBlock(Box& box, RectAu containingBl
     // depending on the box’s self-alignment property in the relevant axis:
     if (startIsAuto and endIsAuto) {
         // -> for self-start alignment or its equivalent
-        if (oneOf(style.aligns.justifySelf, Css::Align::SELF_START, Css::Align::AUTO, Css::Align::NORMAL, Css::Align::STRETCH)) {
+        if (oneOf(style.aligns.justifySelf, Align::SELF_START, Align::AUTO, Align::NORMAL, Align::STRETCH)) {
             // Set its start-edge inset property to the static position, and its end-edge inset property to zero.
             resolvedInsets.start = staticPositionRect.start() - containingBlock.start();
         }
 
         // -> for self-end alignment or its equivalent
-        else if (style.aligns.justifySelf == Css::Align::SELF_END) {
+        else if (style.aligns.justifySelf == Align::SELF_END) {
             // Set its end-edge inset property to the static position, and its start-edge inset property to zero.
             resolvedInsets.end = containingBlock.end() - staticPositionRect.end();
         }
 
         // -> for center alignment
-        else if (style.aligns.justifySelf == Css::Align::CENTER) {
+        else if (style.aligns.justifySelf == Align::CENTER) {
             // Let start distance be the distance from the center of its static-position rectangle to the start edge of its containing block,
             // and end distance be the distance from the center of its static-position rectangle to the end edge of its containing block.
             Au staticPositionCenter = staticPositionRect.start() + Au{f64{staticPositionRect.width} / 2.0};
@@ -80,20 +80,20 @@ static RectAu _computeInsetModifiedContainingBlock(Box& box, RectAu containingBl
     // depending on the box’s self-alignment property in the relevant axis:
     if (topIsAuto and bottomIsAuto) {
         // -> for self-start alignment or its equivalent
-        if (oneOf(style.aligns.alignSelf, Css::Align::SELF_START, Css::Align::AUTO, Css::Align::NORMAL, Css::Align::STRETCH)) {
+        if (oneOf(style.aligns.alignSelf, Align::SELF_START, Align::AUTO, Align::NORMAL, Align::STRETCH)) {
             // Set its start-edge inset property to the static position, and its end-edge inset property to zero.
             resolvedInsets.top = staticPositionRect.top() - containingBlock.top();
         }
 
         // -> for self-end alignment or its equivalent
-        else if (style.aligns.alignSelf == Css::Align::SELF_END) {
+        else if (style.aligns.alignSelf == Align::SELF_END) {
             // Set its end-edge inset property to the static position, and its start-edge inset property to zero.
             resolvedInsets.bottom = containingBlock.bottom() - staticPositionRect.bottom();
 
         }
 
         // -> for center alignment
-        else if (style.aligns.alignSelf == Css::Align::CENTER) {
+        else if (style.aligns.alignSelf == Align::CENTER) {
             // Let start distance be the distance from the center of its static-position rectangle to the start edge of its containing block,
             // and end distance be the distance from the center of its static-position rectangle to the end edge of its containing block.
             Au staticPositionCenter = staticPositionRect.top() + Au{f64{staticPositionRect.height} / 2.0};

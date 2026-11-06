@@ -6,8 +6,8 @@ export module Vaev.Engine:style.values.font;
 
 import Karm.Core;
 
+import :css.values.calc;
 import :css.values.font;
-import :css.values.unitValue;
 import :style.values.numeric;
 import :values.unitValue;
 

@@ -340,7 +340,7 @@ export struct SvgViewBoxProperty : Property {
             : Property::Registration(Properties::VIEWBOX, PRESENTATION_ATTRIBUTE) {}
 
         Rc<Property> initial() const override {
-            return makeRc<SvgViewBoxProperty>(self(), Opt<Css::SvgViewBox>{NONE});
+            return makeRc<SvgViewBoxProperty>(self(), Opt<SvgViewBox>{NONE});
         }
 
         Rc<Property> load(ComputedValues const& c) const override {
@@ -348,7 +348,7 @@ export struct SvgViewBoxProperty : Property {
         }
 
         Res<Rc<Property>> parse(Cursor<Css::Sst>& c) const override {
-            Css::SvgViewBox viewBox;
+            SvgViewBox viewBox;
 
             viewBox.minX = try$(parseValue<f64>(c));
 
@@ -365,9 +365,9 @@ export struct SvgViewBoxProperty : Property {
         }
     };
 
-    Opt<Css::SvgViewBox> _value;
+    Opt<SvgViewBox> _value;
 
-    SvgViewBoxProperty(Rc<Property::Registration> registration, Opt<Css::SvgViewBox> value)
+    SvgViewBoxProperty(Rc<Property::Registration> registration, Opt<SvgViewBox> value)
         : Property(registration), _value(std::move(value)) {}
 
     void apply([[maybe_unused]] ComputedValues const& parent, ComputedValues& c, [[maybe_unused]] ComputationContext const& cx) const override {
@@ -376,7 +376,7 @@ export struct SvgViewBoxProperty : Property {
 
     Res<> serialize(Io::TextWriter& w) const override {
         if (auto const& [viewBox] = _value)
-            return serializeValue(w, viewBox);
+            return Css::serializeValue(w, viewBox);
 
         // NOSPEC: An unspecified viewBox has no serialized form.
         return Ok();

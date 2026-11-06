@@ -14,7 +14,7 @@ using namespace Karm;
 namespace Vaev::Style {
 
 struct Fonts {
-    Vec<Css::FontFamily> families = {"sans-serif"_sym};
+    Vec<FontFamily> families = {"sans-serif"_sym};
     Gfx::FontWeight weight = Gfx::FontWeight::REGULAR;
     Css::FontWidth width = Css::FontWidth::NORMAL;
     Css::FontStyle style = Css::FontStyle::NORMAL;
@@ -50,7 +50,7 @@ export struct SvgGeometry {
     PixelPercentage r = Pixel{0};
 
     Union<String, None> d = NONE;
-    Opt<Css::SvgViewBox> viewBox = NONE;
+    Opt<SvgViewBox> viewBox = NONE;
 };
 
 export struct SvgPainting {
@@ -71,22 +71,22 @@ export struct Inherited {};
 
 export struct Aligns {
     // https://drafts.csswg.org/css-align-3/#propdef-align-content
-    Css::Align alignContent;
+    Align alignContent;
 
     // https://drafts.csswg.org/css-align-3/#propdef-justify-content
-    Css::Align justifyContent;
+    Align justifyContent;
 
     // https://drafts.csswg.org/css-align-3/#propdef-justify-self
-    Css::Align justifySelf;
+    Align justifySelf;
 
     // https://drafts.csswg.org/css-align-3/#propdef-align-self
-    Css::Align alignSelf;
+    Align alignSelf;
 
     // https://drafts.csswg.org/css-align-3/#propdef-justify-items
-    Css::Align justifyItems;
+    Align justifyItems;
 
     // https://drafts.csswg.org/css-align-3/#propdef-align-items
-    Css::Align alignItems;
+    Align alignItems;
 };
 
 export struct Backgrounds {
@@ -155,9 +155,9 @@ export struct Columns {
 };
 
 export struct Counters {
-    Vec<Css::CounterReset> reset;
-    Vec<Css::CounterIncrement> increment;
-    Vec<Css::CounterSet> set;
+    Vec<CounterReset> reset;
+    Vec<CounterIncrement> increment;
+    Vec<Vaev::CounterSet> set;
 };
 
 export struct Flex {
@@ -196,7 +196,7 @@ export struct Inline {
 
 export struct List {
     Css::ListImage image = Keywords::NONE;
-    Css::ListType type = CustomIdent{"disc"_sym};
+    ListType type = CustomIdent{"disc"_sym};
     ListPosition position = Keywords::OUTSIDE;
     MarkerSide markerSide = Keywords::MATCH_SELF;
 };
@@ -298,10 +298,10 @@ export struct ComputedValues {
     ZIndex zIndex = Keywords::AUTO;
     Style::Overflows overflows;
     Gfx::Color color;
-    Css::ContentValue content = Keywords::NORMAL;
+    ContentValue content = Keywords::NORMAL;
     Integer order;
     Aligns aligns;
-    Css::Display display;
+    Display display;
     f32 opacity;
 
     // Small Field

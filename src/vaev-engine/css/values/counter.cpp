@@ -8,23 +8,13 @@ import :css.lexer;
 import :css.parser;
 import :css.values.base;
 import :css.values.calc;
-import :css.values.image;
 import :css.values.keywords;
 import :css.values.primitives;
+import :values.counter;
 import :values.keywords;
 import :values.primitives;
 
 namespace Vaev::Css {
-
-export using CounterSymbolsType = Union<
-    Keywords::Cyclic,
-    Keywords::Numeric,
-    Keywords::Alphabetic,
-    Keywords::Fixed>;
-
-// https://drafts.csswg.org/css-counter-styles-3/#typedef-symbol
-// TODO: Add Image support to CounterSymbol
-export using CounterSymbol = Union<String, /* Image ,*/ CustomIdent>;
 
 // https://drafts.csswg.org/css-counter-styles-3/#descdef-counter-style-additive-symbols
 export struct AdditiveCounterSymbol {
@@ -33,16 +23,6 @@ export struct AdditiveCounterSymbol {
 
     void repr(Io::Emit& e) const {
         e("(additive-symbol {} {})", value, symbol);
-    }
-};
-
-// https://drafts.csswg.org/css-counter-styles-3/#symbols-function
-export struct CounterSymbolsFunc {
-    Opt<CounterSymbolsType> type;
-    Vec<CounterSymbol> symbols;
-
-    void repr(Io::Emit& e) const {
-        e("(counter-symbols {} {})", type, symbols);
     }
 };
 
@@ -115,20 +95,6 @@ export using CounterSpeakAs = Union<
     Keywords::SpellOut,
     CustomIdent>;
 
-// https://www.w3.org/TR/css-counter-styles-3/#typedef-counter-style
-export using CounterStyle = Union<CustomIdent, CounterSymbolsFunc>;
-
-// https://drafts.csswg.org/css-lists/#auto-numbering
-// https://drafts.csswg.org/css-lists/#counter-functions
-export struct CounterFunc {
-    CustomIdent name;
-    Opt<CounterStyle> style = NONE;
-
-    void repr(Io::Emit& e) const {
-        e("(counter {})", name);
-    }
-};
-
 export template <>
 struct ValueParser<CounterFunc> {
     static Res<CounterFunc> parse(Cursor<Sst>& c) {
@@ -145,17 +111,6 @@ struct ValueParser<CounterFunc> {
 
         c.next();
         return Ok(CounterFunc{name, maybeSymbols});
-    }
-};
-
-// https://www.w3.org/TR/css-lists-3/#funcdef-counters
-export struct CountersFunc {
-    CustomIdent name;
-    String join;
-    Opt<CounterStyle> style = NONE;
-
-    void repr(Io::Emit& e) const {
-        e("(counters {} {} {})", name, join, style);
     }
 };
 
@@ -180,32 +135,9 @@ struct ValueParser<CountersFunc> {
     }
 };
 
-// https://www.w3.org/TR/css-lists-3/#counter-reset
-export struct CounterReset {
-    CustomIdent name;
-    bool reversed;
-    Opt<Integer> value = Some(0);
-
-    void repr(Io::Emit& e) const {
-        e("(counter-reset {}{} {})", reversed ? "reversed " : "", name, value);
-    }
-};
-
-// https://www.w3.org/TR/css-lists-3/#increment-set
-export struct CounterIncrement {
-    CustomIdent name;
-    Opt<Integer> value;
-
-    void repr(Io::Emit& e) const {
-        e("(counter-increment {} {})", name, value);
-    }
-};
-
-export using CounterSet = CounterIncrement;
-
 export template <>
-struct ValueParser<Css::CounterReset> {
-    static Res<Css::CounterReset> parse(Cursor<Sst>& c) {
+struct ValueParser<CounterReset> {
+    static Res<CounterReset> parse(Cursor<Sst>& c) {
         if (c.ended())
             return Error::invalidData("unexpected end of input");
 
@@ -222,18 +154,18 @@ struct ValueParser<Css::CounterReset> {
         }
 
         auto value = try$(parseValue<Integer>(c));
-        return Ok(Css::CounterReset{name, reversed, Some(value)});
+        return Ok(CounterReset{name, reversed, Some(value)});
     }
 };
 
 export template <>
-struct ValueParser<Css::CounterIncrement> {
-    static Res<Css::CounterIncrement> parse(Cursor<Sst>& c) {
+struct ValueParser<CounterIncrement> {
+    static Res<CounterIncrement> parse(Cursor<Sst>& c) {
         if (c.ended())
             return Error::invalidData("unexpected end of input");
         CustomIdent name = try$(parseValue<CustomIdent>(c));
         auto value = try$(parseValue<Integer>(c));
-        return Ok(Css::CounterIncrement{name, Some(value)});
+        return Ok(CounterIncrement{name, Some(value)});
     }
 };
 

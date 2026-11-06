@@ -268,12 +268,12 @@ Ui::Child elementEndTag(Dom::Element const& el) {
     );
 }
 
-Str displayToBadge(Css::Display d) {
-    if (d == Css::Display::GRID)
+Str displayToBadge(Display d) {
+    if (d == Display::GRID)
         return "grid";
-    else if (d == Css::Display::FLEX)
+    else if (d == Display::FLEX)
         return "flex";
-    else if (d == Css::Display::TABLE)
+    else if (d == Display::TABLE)
         return "grid";
     else
         return "";

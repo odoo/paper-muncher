@@ -4,7 +4,6 @@ module;
 
 export module Vaev.Engine:css.values.svg;
 
-
 import :css.lexer;
 import :css.parser;
 import :css.serializer;
@@ -12,6 +11,7 @@ import :css.values.base;
 import :css.values.color;
 import :css.values.keywords;
 import :css.values.primitives;
+import :values.svg;
 
 using namespace Karm::Literals;
 
@@ -44,18 +44,6 @@ export enum struct SvgMeetOrSlice {
 // TODO: still not complete type
 // https://svgwg.org/svg2-draft/painting.html#SpecifyingPaint
 export using SvgPaint = Opt<Color>;
-
-// https://svgwg.org/svg2-draft/coords.html#ViewBoxAttribute
-export struct SvgViewBox {
-    f64 minX;
-    f64 minY;
-    f64 width;
-    f64 height;
-
-    void repr(Io::Emit& e) const {
-        e("(ViewBox minX={} minY={} width={} height={})", minX, minY, width, height);
-    }
-};
 
 // https://svgwg.org/svg2-draft/shapes.html#TermShapeElement
 enum struct SvgShapeElement {

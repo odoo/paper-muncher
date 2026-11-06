@@ -25,7 +25,7 @@ Au normalizedDiagonal(Vec2Au relativeTo) {
 
 struct SvgFormatingContext : FormatingContext {
     // https://svgwg.org/svg2-draft/coords.html#SizingSVGInCSS
-    Opt<f64> intrinsicAspectRatio(Opt<Css::SvgViewBox> const& vb, Style::Size const& width, Style::Size const& height) {
+    Opt<f64> intrinsicAspectRatio(Opt<SvgViewBox> const& vb, Style::Size const& width, Style::Size const& height) {
         // 1. If the width and height sizing properties on the ‘svg’ element are both absolute values:
         auto absolute = [](Style::Size const& size) -> Opt<Style::Pixel> {
             if (auto pp = size.is<Style::PixelPercentage>())
@@ -45,7 +45,7 @@ struct SvgFormatingContext : FormatingContext {
         return NONE;
     }
 
-    Vec2Au _resolvePercentageRelative(Opt<Css::SvgViewBox> const& viewbox, Math::Trans2f transform, RectAu boundingBox) {
+    Vec2Au _resolvePercentageRelative(Opt<SvgViewBox> const& viewbox, Math::Trans2f transform, RectAu boundingBox) {
         // https://svgwg.org/svg2-draft/coords.html#Units
         // SPEC: For <percentage> values that are defined to be relative to the size of SVG viewport:
         // the value to use must be the percentage, in user units, of the * parameter of the ‘viewBox’ applied to that
@@ -154,7 +154,7 @@ struct SvgFormatingContext : FormatingContext {
     }
 
     // https://svgwg.org/svg2-draft/coords.html#ComputingAViewportsTransform
-    Math::Trans2f _computeEquivalentTransformOfSVGViewport(Css::SvgViewBox const& vb, Vec2Au const& position, Vec2Au const& size) {
+    Math::Trans2f _computeEquivalentTransformOfSVGViewport(SvgViewBox const& vb, Vec2Au const& position, Vec2Au const& size) {
         // 1. Let vb-x, vb-y, vb-width, vb-height be the min-x, min-y, width and height values of the viewBox attribute
         // respectively.
         // 2. Let e-x, e-y, e-width, e-height be the position and size of the element respectively.
