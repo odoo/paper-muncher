@@ -45,7 +45,7 @@ export struct ComputationContext :
     void populateUsingRootComputedValues(ComputedValues const& values) {
         Gfx::Font font = Gfx::Font{
             values.fontFace,
-            values.font->size.cast<f64>(),
+            values.font->size.value(),
         };
         rootFontSize = font.fontSize();
         rootXHeight = font.xHeight();
@@ -55,13 +55,13 @@ export struct ComputationContext :
     }
 
     void populateUsingParentComputedValues(ComputedValues const& values) {
-        parentFontSize = values.font->size.cast<f64>();
+        parentFontSize = values.font->size.value();
     }
 
     void populateUsingOwnComputedValues(ComputedValues const& values) {
         Gfx::Font font = Gfx::Font{
             values.fontFace,
-            values.font->size.cast<f64>(),
+            values.font->size.value(),
         };
         fontSize = font.fontSize();
         xHeight = font.xHeight();

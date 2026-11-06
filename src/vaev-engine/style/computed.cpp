@@ -18,7 +18,7 @@ struct Fonts {
     Gfx::FontWeight weight = Gfx::FontWeight::REGULAR;
     Css::FontWidth width = Css::FontWidth::NORMAL;
     Css::FontStyle style = Css::FontStyle::NORMAL;
-    Au size;
+    Pixel size;
 };
 
 struct Transforms {
@@ -144,8 +144,8 @@ export struct Breaks {
 };
 
 export struct Columns {
-    Union<Keywords::Auto, Au> width = Keywords::AUTO;
-    Union<Keywords::Auto, Au> height = Keywords::AUTO;
+    Union<Keywords::Auto, Pixel> width = Keywords::AUTO;
+    Union<Keywords::Auto, Pixel> height = Keywords::AUTO;
     ColumnCount count = Keywords::AUTO;
 };
 

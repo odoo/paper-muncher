@@ -79,7 +79,7 @@ static Gfx::SpanStyle _spanStyleFromStyle(Style::ComputedValues const& style) {
             if (number < 0)
                 return NONE;
 
-            return Some(style.font->size * number);
+            return Some(Au::fromFloatNearest(style.font->size.value() * number));
         },
         [&](Style::Pixel const& length) -> Opt<Au> {
             auto result = Au::fromFloatNearest(length.value());
@@ -94,7 +94,7 @@ static Gfx::SpanStyle _spanStyleFromStyle(Style::ComputedValues const& style) {
     return {
         .font = {
             style.fontFace,
-            style.font->size.cast<f64>(),
+            style.font->size.value(),
         },
         .color = Some(style.color),
         // FIXME: Should be done during prose layout

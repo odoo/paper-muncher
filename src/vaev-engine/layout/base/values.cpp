@@ -23,17 +23,22 @@ export Au resolve(Style::Pixel const& value) {
 }
 
 export Au resolve(Style::PixelPercentage const& value, Au relative) {
-    return Style::resolve(value, relative);
+    return resolve(Style::resolve(value, Style::Pixel{relative.cast<f64>()}));
 }
 
 export Au resolve(Union<Keywords::Auto, Style::PixelPercentage> const& value, Au relative) {
     if (value.is<Keywords::Auto>())
         return 0_au;
-    return Style::resolve(value.expect<Style::PixelPercentage>(), relative);
+    return resolve(value.expect<Style::PixelPercentage>(), relative);
 }
 
 export Opt<Au> resolve(Style::PixelPercentage const& value, Opt<Au> relative) {
-    return Style::resolve(value, relative);
+    auto px = Style::resolve(value, relative.map([](Au au) {
+        return Style::Pixel{au.cast<f64>()};
+    }));
+    return px.map([](Style::Pixel p) {
+        return resolve(p);
+    });
 }
 
 } // namespace Vaev::Layout

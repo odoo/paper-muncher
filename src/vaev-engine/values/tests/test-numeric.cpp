@@ -62,18 +62,18 @@ static Res<String> _lp(Str input) {
 static Res<f64> _used(Str input, f64 basis) {
     auto calc = try$(_parse<LengthPercentage>(input));
     auto cx = Style::RelativeLengthContextData{};
-    return Ok(Style::resolve(Style::toComputed(calc, cx), Au{basis}).cast<f64>());
+    return Ok(Au{Style::resolve(Style::toComputed(calc, cx), Style::Pixel{basis}).value()}.cast<f64>());
 }
 
 // Used <length-percentage> against an optional percentage basis, in px.
 static Res<Opt<f64>> _usedOpt(Str input, Opt<f64> basis) {
     auto calc = try$(_parse<LengthPercentage>(input));
     auto cx = Style::RelativeLengthContextData{};
-    Opt<Au> relative = NONE;
+    Opt<Style::Pixel> relative = NONE;
     if (basis)
-        relative = Some(Au{*basis});
-    return Ok(Style::resolve(Style::toComputed(calc, cx), relative).map([](Au au) {
-        return au.cast<f64>();
+        relative = Some(Style::Pixel{*basis});
+    return Ok(Style::resolve(Style::toComputed(calc, cx), relative).map([](Style::Pixel px) {
+        return Au{px.value()}.cast<f64>();
     }));
 }
 

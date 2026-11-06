@@ -20,12 +20,12 @@ export using Pixel = Distinct<f64, struct _PixelTag>;
 // 6. MARK: Distance Units: the <length> type
 // https://drafts.csswg.org/css-values/#lengths
 
-export Au toComputed(Css::PureLength const& value, LengthContext auto const& ctx) {
-    return Au::fromFloatNearest(value.unitValue().canonical(ctx).value());
+export Pixel toComputed(Css::PureLength const& value, LengthContext auto const& ctx) {
+    return Pixel{value.unitValue().canonical(ctx).value()};
 }
 
-export Au toComputed(Css::PureAbsoluteLength value) {
-    return Au::fromFloatNearest(value.toPx());
+export Pixel toComputed(Css::PureAbsoluteLength value) {
+    return Pixel{value.toPx()};
 }
 
 } // namespace Vaev::Style

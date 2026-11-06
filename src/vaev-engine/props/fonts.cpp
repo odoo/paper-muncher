@@ -241,7 +241,7 @@ export struct FontSizeProperty : Property {
         }
 
         Rc<Property> load(ComputedValues const& c) const override {
-            return makeRc<FontSizeProperty>(self(), Css::PureLength{c.font->size});
+            return makeRc<FontSizeProperty>(self(), Css::PureLength::fromPx(c.font->size.value()));
         }
 
         Res<Rc<Property>> parse(Cursor<Css::Sst>& c) const override {
@@ -305,7 +305,7 @@ export struct FontProperty : Property {
                     Some(font.weight),
                     font.width,
                     font.style,
-                    Css::PureLength{font.size},
+                    Css::PureLength::fromPx(font.size.value()),
                 }
             );
         }

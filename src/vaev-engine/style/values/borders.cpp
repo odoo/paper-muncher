@@ -6,7 +6,6 @@ import Karm.Math;
 import :css.values.calc2;
 import :style.values.calc2;
 import :style.values.length;
-import :values.length;
 import :values.unitValue;
 
 using namespace Vaev::Literals;

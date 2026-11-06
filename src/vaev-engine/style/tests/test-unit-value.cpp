@@ -7,6 +7,7 @@ import Karm.Diag;
 using namespace Karm;
 using namespace Karm::Literals;
 using namespace Karm::Math::Literals;
+using namespace Vaev::Literals;
 
 namespace Vaev::Style::Tests {
 
@@ -34,7 +35,7 @@ static Res<String> _serialize(T const& value) {
 
 test$("vaev-css-unit-value-units") {
     auto length = try$(_parse<Css::PureAbsoluteLength>("1in"));
-    assertEq$(toComputed(length), 96_au);
+    assertEq$(toComputed(length), 96_px);
 
     auto angle = try$(_parse<Css::PureAngle>("1turn"));
     assertEq$(angle.toDegree(), 360.0);

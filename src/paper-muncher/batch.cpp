@@ -99,8 +99,8 @@ export struct Option {
         auto stock = this->stock;
         if (this->width or this->height)
             stock = Print::PaperStock::custom(
-                this->width ? Vaev::Style::toComputed(*this->width) : stock.minorAxis,
-                this->height ? Vaev::Style::toComputed(*this->height) : stock.majorAxis
+                this->width ? Vaev::Au{this->width->toPx()} : stock.minorAxis,
+                this->height ? Vaev::Au{this->height->toPx()} : stock.majorAxis
             );
 
         Print::Margins margins = Print::MarginOption::DEFAULT;
@@ -110,7 +110,7 @@ export struct Option {
             },
             [&](Math::Insets<Vaev::Css::PureAbsoluteLength> const& insets) {
                 margins = insets.map([&](Vaev::Css::PureAbsoluteLength l) {
-                    return Vaev::Style::toComputed(l);
+                    return Vaev::Au{l.toPx()};
                 });
             }
         );
@@ -124,8 +124,8 @@ export struct Option {
     }
 
     Vaev::Style::DisplayArea deriveArea() const {
-        auto width = this->width ? Vaev::Style::toComputed(*this->width) : 800_au;
-        auto height = this->height ? Vaev::Style::toComputed(*this->height) : 600_au;
+        auto width = this->width ? Vaev::Au{this->width->toPx()} : 800_au;
+        auto height = this->height ? Vaev::Au{this->height->toPx()} : 600_au;
         return Vaev::Style::DisplayArea::forRender(
             {width, height},
             this->scale
@@ -152,7 +152,7 @@ struct HeaderFooterDecorator : Vaev::Driver::PageDecorator {
                     headerHeight = w->borderBox().height;
                 }
             } else {
-                headerHeight = Vaev::Style::toComputed(headerSize.expect<Vaev::Css::PureAbsoluteLength>());
+                headerHeight = Vaev::Au{headerSize.expect<Vaev::Css::PureAbsoluteLength>().toPx()};
             }
 
             if (footerSize == Vaev::Keywords::AUTO) {
@@ -162,7 +162,7 @@ struct HeaderFooterDecorator : Vaev::Driver::PageDecorator {
                     footerHeight = w->borderBox().height;
                 }
             } else {
-                footerHeight = Vaev::Style::toComputed(footerSize.expect<Vaev::Css::PureAbsoluteLength>());
+                footerHeight = Vaev::Au{footerSize.expect<Vaev::Css::PureAbsoluteLength>().toPx()};
             }
 
             return Pair{headerHeight, footerHeight};
