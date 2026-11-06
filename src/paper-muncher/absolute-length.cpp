@@ -12,9 +12,6 @@ using namespace Karm;
 
 namespace PaperMuncher {
 
-// A <length> restricted to absolute units (cm, mm, Q, in, pt, pc, px), for
-// command-line options where there is no font or viewport to resolve relative
-// units against.
 // https://drafts.csswg.org/css-values/#absolute-lengths
 export struct AbsoluteLength : Vaev::Css::PureLength {
     constexpr explicit AbsoluteLength(Vaev::UnitValue value)
