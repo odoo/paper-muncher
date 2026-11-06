@@ -16,7 +16,6 @@ import :css.values.borders;
 import :css.values.calc;
 import :css.values.insets;
 import :css.values.keywords;
-import :css.values.length;
 import :css.values.primitives;
 import :values.basicShape;
 import :values.keywords;

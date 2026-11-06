@@ -12,7 +12,7 @@ using namespace Vaev::Literals;
 namespace Vaev::Style::Tests {
 
 static_assert(Meta::Equatable<Css::PureTime, Css::PureTime> and Meta::Comparable<Css::PureTime, Css::PureTime>);
-static_assert(Meta::Equatable<Css::PureAbsoluteLength, Css::PureLength> and Meta::Comparable<Css::PureAbsoluteLength, Css::PureLength>);
+static_assert(Meta::Equatable<Css::PureLength, Css::PureLength> and Meta::Comparable<Css::PureLength, Css::PureLength>);
 static_assert(not Meta::Equatable<Css::PureTime, Css::PureAngle> and not Meta::Comparable<Css::PureTime, Css::PureAngle>);
 static_assert(not Meta::Equatable<Css::PureLength, Css::PurePercentage> and not Meta::Comparable<Css::PureLength, Css::PurePercentage>);
 static_assert(not Meta::Equatable<Css::PureFlex, Css::PurePercentage> and not Meta::Comparable<Css::PureFlex, Css::PurePercentage>);
@@ -34,8 +34,8 @@ static Res<String> _serialize(T const& value) {
 }
 
 test$("vaev-css-unit-value-units") {
-    auto length = try$(_parse<Css::PureAbsoluteLength>("1in"));
-    assertEq$(toComputed(length), 96_px);
+    auto length = try$(_parse<Css::PureLength>("1in"));
+    assertEq$(length.unitValue().to(UnitValue::Unit::PX), 96.0);
 
     auto angle = try$(_parse<Css::PureAngle>("1turn"));
     assertEq$(angle.toDegree(), 360.0);
@@ -63,9 +63,8 @@ test$("vaev-css-unit-value-units") {
 }
 
 test$("vaev-css-unit-value-parsing") {
-    assertEq$(try$(_parse<Css::PureAbsoluteLength>("2PX")).toPx(), 2.0);
+    assertEq$(try$(_parse<Css::PureLength>("2PX")).unitValue().to(UnitValue::Unit::PX), 2.0);
 
-    assert$(not _parse<Css::PureAbsoluteLength>("2em"));
     assert$(_parse<Css::PureLength>("2em"));
 
     assertEq$(try$(_parse<Css::PureLength>("0")), Css::PureLength::fromPx(0));
@@ -75,9 +74,9 @@ test$("vaev-css-unit-value-parsing") {
     assert$(not _parse<Css::PureFlex>("10%"));
 
     assertEq$(try$(_parse<Css::PureLength>("2em")), Css::PureLength::fromEm(2));
-    assertNe$(try$(_parse<Css::PureAbsoluteLength>("1in")), try$(_parse<Css::PureAbsoluteLength>("96px")));
-    assertEq$(try$(_parse<Css::PureAbsoluteLength>("1in")).toPx(), 96.0);
-    assertGt$(try$(_parse<Css::PureAbsoluteLength>("1in")), try$(_parse<Css::PureAbsoluteLength>("95px")));
+    assertNe$(try$(_parse<Css::PureLength>("1in")), try$(_parse<Css::PureLength>("96px")));
+    assertEq$(try$(_parse<Css::PureLength>("1in")).unitValue().to(UnitValue::Unit::PX), 96.0);
+    assertGt$(try$(_parse<Css::PureLength>("1in")), try$(_parse<Css::PureLength>("95px")));
     assertEq$(try$(_parse<Css::PureResolution>("96dpi")).toDppx(), 1.0);
 
     return Ok();

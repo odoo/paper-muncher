@@ -18,6 +18,8 @@ import Karm.Ref;
 
 import Vaev.Engine;
 
+import :absoluteLength;
+
 using namespace Karm;
 using namespace Karm::Literals;
 using namespace Karm::Math::Literals;
@@ -82,18 +84,18 @@ export Rc<Http::Client> defaultHttpClient(bool sandboxed) {
 export struct Option {
     Vaev::Css::PureResolution scale = Vaev::Css::PureResolution::fromDppx(1);
     Vaev::Css::PureResolution density = Vaev::Css::PureResolution::fromDppx(1);
-    Opt<Vaev::Css::PureAbsoluteLength> width = NONE;
-    Opt<Vaev::Css::PureAbsoluteLength> height = NONE;
+    Opt<AbsoluteLength> width = NONE;
+    Opt<AbsoluteLength> height = NONE;
     Opt<Vaev::Css::Color> background = NONE;
     Print::PaperStock stock = Print::A4;
     Print::Orientation orientation = Print::Orientation::PORTRAIT;
-    Union<Print::MarginOption, Math::Insets<Vaev::Css::PureAbsoluteLength>> margins = Print::MarginOption::DEFAULT;
+    Union<Print::MarginOption, Math::Insets<AbsoluteLength>> margins = Print::MarginOption::DEFAULT;
     Ref::Uti outputFormat = Ref::Uti::PUBLIC_DATA;
     Batch batch = Batch::CONCAT;
     Flow flow = Flow::AUTO;
     Extend extend = Extend::CROP;
-    Union<Vaev::Keywords::Auto, Vaev::Css::PureAbsoluteLength> headerSize = Vaev::Keywords::AUTO;
-    Union<Vaev::Keywords::Auto, Vaev::Css::PureAbsoluteLength> footerSize = Vaev::Keywords::AUTO;
+    Union<Vaev::Keywords::Auto, AbsoluteLength> headerSize = Vaev::Keywords::AUTO;
+    Union<Vaev::Keywords::Auto, AbsoluteLength> footerSize = Vaev::Keywords::AUTO;
 
     auto derivePrintSettings() const -> Print::Settings {
         auto stock = this->stock;
@@ -108,8 +110,8 @@ export struct Option {
             [&](Print::MarginOption n) {
                 margins = n;
             },
-            [&](Math::Insets<Vaev::Css::PureAbsoluteLength> const& insets) {
-                margins = insets.map([&](Vaev::Css::PureAbsoluteLength l) {
+            [&](Math::Insets<AbsoluteLength> const& insets) {
+                margins = insets.map([&](AbsoluteLength l) {
                     return Vaev::Layout::Au{l.toPx()};
                 });
             }
@@ -136,8 +138,8 @@ export struct Option {
 struct HeaderFooterDecorator : Vaev::Driver::PageDecorator {
     Opt<Rc<Vaev::WebView>> headerWebView;
     Opt<Rc<Vaev::WebView>> footerWebView;
-    Union<Vaev::Keywords::Auto, Vaev::Css::PureAbsoluteLength> headerSize = Vaev::Keywords::AUTO;
-    Union<Vaev::Keywords::Auto, Vaev::Css::PureAbsoluteLength> footerSize = Vaev::Keywords::AUTO;
+    Union<Vaev::Keywords::Auto, AbsoluteLength> headerSize = Vaev::Keywords::AUTO;
+    Union<Vaev::Keywords::Auto, AbsoluteLength> footerSize = Vaev::Keywords::AUTO;
     Map<Math::Vec2Au, Pair<Vaev::Layout::Au>> _memo;
 
     Vaev::Layout::RectAu layout(Vaev::Style::DisplayArea const& area, Vaev::Style::ViewerPrefs const& prefs, Vaev::Driver::PageLayoutInfos const& infos) override {
@@ -152,7 +154,7 @@ struct HeaderFooterDecorator : Vaev::Driver::PageDecorator {
                     headerHeight = w->borderBox().height;
                 }
             } else {
-                headerHeight = Vaev::Layout::Au{headerSize.expect<Vaev::Css::PureAbsoluteLength>().toPx()};
+                headerHeight = Vaev::Layout::Au{headerSize.expect<AbsoluteLength>().toPx()};
             }
 
             if (footerSize == Vaev::Keywords::AUTO) {
@@ -162,7 +164,7 @@ struct HeaderFooterDecorator : Vaev::Driver::PageDecorator {
                     footerHeight = w->borderBox().height;
                 }
             } else {
-                footerHeight = Vaev::Layout::Au{footerSize.expect<Vaev::Css::PureAbsoluteLength>().toPx()};
+                footerHeight = Vaev::Layout::Au{footerSize.expect<AbsoluteLength>().toPx()};
             }
 
             return Pair{headerHeight, footerHeight};

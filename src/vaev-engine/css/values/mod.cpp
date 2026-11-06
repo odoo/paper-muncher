@@ -16,7 +16,6 @@ export import :css.values.font;
 export import :css.values.image;
 export import :css.values.insets;
 export import :css.values.keywords;
-export import :css.values.length;
 export import :css.values.lineHeight;
 export import :css.values.lineWidth;
 export import :css.values.list;

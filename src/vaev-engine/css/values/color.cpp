@@ -13,7 +13,6 @@ import :css.parser;
 import :css.serializer;
 import :css.values.base;
 import :css.values.keywords;
-import :css.values.length;
 import :css.values.primitives;
 import :css.values.unitValue;
 import :values.keywords;

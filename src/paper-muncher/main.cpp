@@ -109,7 +109,7 @@ Async::Task<> entryPointAsync(Sys::Env& env, Async::CancellationToken ct) {
 
     auto paperArg = Cli::option<Union<Print::PaperStock, PaperList>>(NONE, "paper"s, "Paper size of the output pages (default: A4)"s, Print::A4);
     auto orientationArg = Cli::option<Print::Orientation>(NONE, "orientation"s, "Page orientation (default: portrait)"s, Print::Orientation::PORTRAIT);
-    auto marginArg = Cli::option<Union<Print::MarginOption, Math::Insets<Vaev::Css::PureAbsoluteLength>>>(NONE, "margins"s, "Page margins, in CSS units or as a named preset (default: default)"s, Print::MarginOption::DEFAULT);
+    auto marginArg = Cli::option<Union<Print::MarginOption, Math::Insets<PaperMuncher::AbsoluteLength>>>(NONE, "margins"s, "Page margins, in CSS units or as a named preset (default: default)"s, Print::MarginOption::DEFAULT);
     auto backgroundArg = Cli::option<Opt<Vaev::Css::Color>>(NONE, "background"s, "Background color of the output document (default: white for HTML, transparent for SVG)"s, NONE);
     Cli::Section paperSection{
         .title = "Paper Options"s,
@@ -117,8 +117,8 @@ Async::Task<> entryPointAsync(Sys::Env& env, Async::CancellationToken ct) {
         .epilog = "Use '--paper list' to display all supported standard paper sizes."s
     };
 
-    auto widthArg = Cli::option<Opt<Vaev::Css::PureAbsoluteLength>>(NONE, "width"s, "Viewport width, in CSS units (e.g. 800px)"s, NONE);
-    auto heightArg = Cli::option<Opt<Vaev::Css::PureAbsoluteLength>>(NONE, "height"s, "Viewport height, in CSS units (e.g. 600px)"s, NONE);
+    auto widthArg = Cli::option<Opt<PaperMuncher::AbsoluteLength>>(NONE, "width"s, "Viewport width, in CSS units (e.g. 800px)"s, NONE);
+    auto heightArg = Cli::option<Opt<PaperMuncher::AbsoluteLength>>(NONE, "height"s, "Viewport height, in CSS units (e.g. 600px)"s, NONE);
     auto scaleArg = Cli::option<Vaev::Css::PureResolution>(NONE, "scale"s, "Scale factor applied to the input document (e.g. 1x)"s, Vaev::Css::PureResolution::fromDppx(1));
 
     Cli::Section viewportSection{
@@ -128,9 +128,9 @@ Async::Task<> entryPointAsync(Sys::Env& env, Async::CancellationToken ct) {
     };
 
     auto headerArg = Cli::option<Opt<Ref::Url>>(NONE, "header"s, "Document to render as the page header"s, NONE);
-    auto headerSizeArg = Cli::option<Union<Vaev::Keywords::Auto, Vaev::Css::PureAbsoluteLength>>(NONE, "header-size"s, "Height of the page header (default: auto)"s, Vaev::Keywords::AUTO);
+    auto headerSizeArg = Cli::option<Union<Vaev::Keywords::Auto, PaperMuncher::AbsoluteLength>>(NONE, "header-size"s, "Height of the page header (default: auto)"s, Vaev::Keywords::AUTO);
     auto footerArg = Cli::option<Opt<Ref::Url>>(NONE, "footer"s, "Document to render as the page footer"s, NONE);
-    auto footerSizeArg = Cli::option<Union<Vaev::Keywords::Auto, Vaev::Css::PureAbsoluteLength>>(NONE, "footer-size"s, "Height of the page footer (default: auto)"s, Vaev::Keywords::AUTO);
+    auto footerSizeArg = Cli::option<Union<Vaev::Keywords::Auto, PaperMuncher::AbsoluteLength>>(NONE, "footer-size"s, "Height of the page footer (default: auto)"s, Vaev::Keywords::AUTO);
 
     Cli::Section decorationSection{
         .title = "Document decoration"s,

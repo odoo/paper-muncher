@@ -8,7 +8,6 @@ import :css.parser;
 import :css.values.base;
 import :css.values.color;
 import :css.values.keywords;
-import :css.values.length;
 import :css.values.primitives;
 import :css.values.unitValue;
 

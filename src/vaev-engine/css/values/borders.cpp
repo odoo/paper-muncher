@@ -9,7 +9,6 @@ import :css.values.base;
 import :css.values.color;
 import :css.values.insets;
 import :css.values.keywords;
-import :css.values.length;
 import :css.values.lineWidth;
 import :css.values.primitives;
 import :values.keywords;
