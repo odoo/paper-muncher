@@ -155,7 +155,6 @@ Vec2Au computeIntrinsicContentSize(Input const& input, Box& box, IntrinsicSize i
         box,
         {
             .fragmentainer = input.fragmentainer,
-            .viewport = input.viewport,
             .intrinsic = intrinsic,
             .knownSize = {NONE, NONE},
             .capmin = capmin,

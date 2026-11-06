@@ -1329,7 +1329,6 @@ export struct TableFormatingContext : FormatingContext {
                     *cell.box,
                     {
                         .fragmentainer = input.fragmentainer,
-                        .viewport = input.viewport,
                         .usedSpacings = usedSpacings,
                         .knownSize = {Some(cellWidth), NONE},
                         .containingBlock = {tableUsedWidth, 0_au},
@@ -1558,7 +1557,6 @@ export struct TableFormatingContext : FormatingContext {
 
         Input childInput{
             .fragmentainer = input.fragmentainer,
-            .viewport = input.viewport,
             .generateFragment = input.generateFragment,
             .usedSpacings = usedSpacings,
             .knownSize = {

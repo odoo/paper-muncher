@@ -11,12 +11,9 @@ import :layout.values;
 namespace Vaev::Layout {
 
 // https://www.w3.org/TR/css-position-3/#resolving-insets
-static RectAu _computeInsetModifiedContainingBlock(Input const& input, Box& box, RectAu containingBlock, RectAu staticPositionRect) {
+static RectAu _computeInsetModifiedContainingBlock(Box& box, RectAu containingBlock, RectAu staticPositionRect) {
     auto const& style = *box.style;
 
-    auto relativeTo = style.position == Keywords::FIXED
-                          ? input.viewport->small
-                          : containingBlock;
 
     InsetsAu resolvedInsets = {};
 
@@ -69,10 +66,10 @@ static RectAu _computeInsetModifiedContainingBlock(Input const& input, Box& box,
         }
     } else {
         if (not startIsAuto) {
-            resolvedInsets.start = Layout::resolve(*style.insets->start.is<InsetLength>(), relativeTo.width);
+            resolvedInsets.start = Layout::resolve(*style.insets->start.is<InsetLength>(), containingBlock.width);
         }
         if (not endIsAuto) {
-            resolvedInsets.end = Layout::resolve(*style.insets->end.is<InsetLength>(), relativeTo.width);
+            resolvedInsets.end = Layout::resolve(*style.insets->end.is<InsetLength>(), containingBlock.width);
         }
     }
 
@@ -124,10 +121,10 @@ static RectAu _computeInsetModifiedContainingBlock(Input const& input, Box& box,
         }
     } else {
         if (not topIsAuto) {
-            resolvedInsets.top = Layout::resolve(*style.insets->top.is<InsetLength>(), relativeTo.height);
+            resolvedInsets.top = Layout::resolve(*style.insets->top.is<InsetLength>(), containingBlock.height);
         }
         if (not bottomIsAuto) {
-            resolvedInsets.bottom = Layout::resolve(*style.insets->bottom.is<InsetLength>(), relativeTo.height);
+            resolvedInsets.bottom = Layout::resolve(*style.insets->bottom.is<InsetLength>(), containingBlock.height);
         }
     }
 
@@ -180,7 +177,7 @@ export Output layoutAbsolutePositioned(Input const& input, Box& box, RectAu cont
     // according to the absolute positioning layout model:
 
     // 1. First, its inset-modified containing block is calculated, defining its available space.
-    auto availableSpace = _computeInsetModifiedContainingBlock(input, box, containingBlock, staticPositionRect);
+    auto availableSpace = _computeInsetModifiedContainingBlock(box, containingBlock, staticPositionRect);
 
     // 2. Next, its width and height are resolved against this definite available space,
     //    as its preferred size capped by its maximum size (if any), floored by its minimum size.
@@ -236,7 +233,6 @@ export Output layoutAbsolutePositioned(Input const& input, Box& box, RectAu cont
 
     Input childInput = {
         .fragmentainer = input.fragmentainer,
-        .viewport = input.viewport,
         .generateFragment = true,
         .usedSpacings = usedSpacings,
         .knownSize = {width, height},

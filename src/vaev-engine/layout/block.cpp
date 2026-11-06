@@ -335,7 +335,6 @@ struct BlockFormatingContext : FormatingContext {
 
             Input childInput = {
                 .fragmentainer = input.fragmentainer,
-                .viewport = input.viewport,
                 .generateFragment = input.generateFragment,
                 .usedSpacings = usedSpacings,
                 .intrinsic = input.intrinsic,

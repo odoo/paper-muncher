@@ -163,7 +163,6 @@ struct FlexItem {
         // FIXME: check if really needed
         speculateValues(Input{
             .fragmentainer = input.fragmentainer,
-            .viewport = input.viewport,
             .containingBlock = containingBlock,
         });
         // TODO: not always we will need min/max content sizes,
@@ -749,7 +748,6 @@ struct FlexFormatingContext : FormatingContext {
             i.speculateValues(
                 {
                     .fragmentainer = input.fragmentainer,
-                    .viewport = input.viewport,
                     .knownSize = fa.extractMainAxisAndFillOptOther(i.flexBaseSize),
                     .availableSpace = availableSpace,
                 }
@@ -1071,7 +1069,6 @@ struct FlexFormatingContext : FormatingContext {
             i.speculateValues(
                 {
                     .fragmentainer = input.fragmentainer,
-                    .viewport = input.viewport,
                     .knownSize = fa.extractMainAxisAndFillOptOther(i.usedSize),
                     .availableSpace = fa.extractMainAxisAndFillOther(i.usedSize, availableCrossSpace),
                     .containingBlock = fa.extractMainAxisAndFillOther(i.usedSize, availableCrossSpace),
@@ -1470,7 +1467,6 @@ struct FlexFormatingContext : FormatingContext {
 
                 Input childInput{
                     .fragmentainer = input.fragmentainer,
-                    .viewport = input.viewport,
                     .generateFragment = true,
                     .usedSpacings = usedSpacings,
                     .knownSize = {

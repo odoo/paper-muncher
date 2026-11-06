@@ -108,7 +108,6 @@ export struct WebView {
 
         computeStyle();
 
-        Style::Viewport viewport = {.small = _area.viewport};
         auto root = makeRc<Layout::Box>(Layout::buildDocument(_document.upgrade()));
         Layout::Fragmentainer fragmentainer;
 
@@ -116,11 +115,10 @@ export struct WebView {
             *root,
             {
                 .fragmentainer = Some<Layout::Fragmentainer&>(fragmentainer),
-                .viewport = Some<Style::Viewport const&>(viewport),
                 .generateFragment = true,
-                .knownSize = {Some(viewport.small.width), NONE},
-                .availableSpace = {viewport.small.width, 0_au},
-                .containingBlock = {viewport.small.width, viewport.small.height},
+                .knownSize = {Some(_area.viewport.width), NONE},
+                .availableSpace = {_area.viewport.width, 0_au},
+                .containingBlock = _area.viewport,
             }
         );
 

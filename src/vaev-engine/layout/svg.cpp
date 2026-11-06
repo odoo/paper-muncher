@@ -125,7 +125,6 @@ struct SvgFormatingContext : FormatingContext {
 
             Input childInput{
                 .fragmentainer = input.fragmentainer,
-                .viewport = input.viewport,
                 .generateFragment = true,
                 .usedSpacings = {},
                 .knownSize = {

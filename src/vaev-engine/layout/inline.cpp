@@ -78,7 +78,6 @@ struct InlineFormatingContext : FormatingContext {
 
             Input childInput{
                 .fragmentainer = input.fragmentainer,
-                .viewport = input.viewport,
                 .generateFragment = false,
                 .usedSpacings = usedSpacings,
                 .availableSpace = {inlineSize, input.availableSpace.y},
@@ -155,7 +154,6 @@ struct InlineFormatingContext : FormatingContext {
 
                 Input childInput{
                     .fragmentainer = input.fragmentainer,
-                    .viewport = input.viewport,
                     .generateFragment = input.generateFragment,
                     .usedSpacings = usedSpacings,
                     .knownSize = {

@@ -44,13 +44,11 @@ export struct PageDecorator {
 
 void _paintCornerMargin(PageLayoutInfos& infos, Gfx::Canvas& g, RectAu const& rect, Style::PageArea area, Layout::RunningPositionMap& runningPosition) {
     auto root = Layout::buildElement(infos.pageStyle->area(area), infos.pageNumber, runningPosition);
-    Style::Viewport viewport{.small = rect.size()};
     Layout::Fragmentainer fragmentainer;
     auto output = Layout::layoutRoot(
         root,
         {
             .fragmentainer = Some<Layout::Fragmentainer&>(fragmentainer),
-            .viewport = Some<Style::Viewport const&>(viewport),
             .generateFragment = true,
             .knownSize = rect.size().cast<Some<Au>>(),
             .position = rect.topStart(),
@@ -67,13 +65,11 @@ void _paintMainMargin(PageLayoutInfos& infos, Gfx::Canvas& g, RectAu const& rect
     for (auto subArea : subAreas) {
         box.add(Layout::buildElement(infos.pageStyle->area(subArea), infos.pageNumber, runningPosition));
     }
-    Style::Viewport viewport{.small = rect.size()};
     Layout::Fragmentainer fragmentainer;
     auto output = Layout::layoutRoot(
         box,
         {
             .fragmentainer = Some<Layout::Fragmentainer&>(fragmentainer),
-            .viewport = Some<Style::Viewport const&>(viewport),
             .generateFragment = true,
             .knownSize = rect.size().cast<Some<Au>>(),
             .position = rect.topStart(),
@@ -180,9 +176,6 @@ Vec<PageLayoutInfos> collectBreakPointsAndRunningPositions(PaginationContext& co
         if (auto& [decorator] = context.decorator)
             infos.pageContent = decorator.layout(context.area, context.prefs, infos);
 
-        Style::Viewport viewport = {
-            .small = infos.pageContent.size(),
-        };
         context.fragmentainer = {infos.pageContent.size(), infos.pageContent.y};
         context.fragmentainer.enterDiscovery();
 
@@ -190,7 +183,6 @@ Vec<PageLayoutInfos> collectBreakPointsAndRunningPositions(PaginationContext& co
             context.contentRoot,
             {
                 .fragmentainer = Some<Layout::Fragmentainer&>(context.fragmentainer),
-                .viewport = Some<Style::Viewport const&>(viewport),
                 .knownSize = {Some(infos.pageContent.width), NONE},
                 .position = infos.pageContent.topStart(),
                 .availableSpace = infos.pageContent.size(),
@@ -255,14 +247,10 @@ export Yield<Gfx::Snapshot> print(Gc::Heap& heap, Gc::Ref<Dom::Document> dom, Pr
     auto pageInfos = collectBreakPointsAndRunningPositions(paginationContext);
 
     for (auto [infos, i] : iter(pageInfos) | Index()) {
-        Style::Viewport viewport = {
-            .small = infos.pageContent.size(),
-        };
         auto output = Layout::layoutRoot(
             contentRoot,
             {
                 .fragmentainer = Some<Layout::Fragmentainer&>(fragmentainer),
-                .viewport = Some<Style::Viewport const&>(viewport),
                 .generateFragment = true,
                 .knownSize = {Some(infos.pageContent.width), NONE},
                 .position = infos.pageContent.topStart(),
