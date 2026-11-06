@@ -1569,6 +1569,7 @@ export struct TableFormatingContext : FormatingContext {
             .containingBlock = tableBoxSize,
             .breakpointTraverser = breakpointsForCell,
             .pendingVerticalSizes = input.pendingVerticalSizes,
+            .atFragmentainerStart = input.atFragmentainerStart,
         };
 
         if (cell.box->style->position == Keywords::RELATIVE) {
@@ -1793,6 +1794,9 @@ export struct TableFormatingContext : FormatingContext {
             } else if (i == (shouldRepeatHeaderAndFooter ? dataRowsInterval.y : grid.size.y - 1)) {
                 completelyLaidOut = not rowOutput.someBottomsUncompleteLaidOut;
             }
+
+            if (rowOutput.sizeY > 0_au)
+                input.atFragmentainerStart = false;
 
             currPositionY += rowOutput.sizeY + spacing.y;
         }
