@@ -270,6 +270,9 @@ Output layoutContentBox(Tree& tree, Box& box, Input input) {
         tree, box, input, startAt, stopAt
     );
 
+    if (tree.fc.isDiscoveryMode() and out.completelyLaidOut and out.size.y > 0_au)
+        tree.fc.markContentPlaced();
+
     Vec<Rc<PlaceholderFragment>> outOfFlowStash;
 
     if (input.generateFragment) {

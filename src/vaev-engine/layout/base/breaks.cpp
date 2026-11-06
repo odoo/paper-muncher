@@ -19,6 +19,7 @@ export struct Fragmentainer {
     Au _blockStart = 0_au; //< Block position of the fragmentainer's start, in the same space as the layout positions
     bool _isDiscoveryMode = false; //< Are we looking for suitable breakpoints?
     usize _monolithicCount = 0;    //< How deep we are in a monolithic box
+    bool _contentPlaced = false;   //< Was some non-empty content placed yet?
 
     Fragmentainer(Vec2Au currSize = Vec2Au::MAX, Au blockStart = 0_au)
         : _size(currSize), _blockStart(blockStart) {}
@@ -53,7 +54,18 @@ export struct Fragmentainer {
         return not hasInfiniteDimensions() and not isMonolithicBox();
     }
 
+    void markContentPlaced() {
+        _contentPlaced = true;
+    }
+
+    // https://www.w3.org/TR/css-break-3/#unforced-breaks
     bool acceptsFit(Au verticalPosition, Au verticalSize, Au pendingVerticalSizes) const {
+        // However, the UA must not break at the top of the page, i.e. it must place at least some content on each
+        // fragmentainer, so that each fragmentainer has a non-zero amount of content, in order to guarantee progress
+        // through the content.
+        if (not _contentPlaced)
+            return true;
+
         // TODO: consider apply this check only when in discovery mode
         return verticalPosition - _blockStart + verticalSize + pendingVerticalSizes <= _size.y;
     }
@@ -183,6 +195,24 @@ export struct Breakpoint {
 
         if (appeal <= other.appeal)
             *this = std::move(other);
+    }
+
+    bool operator==(Breakpoint const& other) const {
+        if (endIdx != other.endIdx or
+            appeal != other.appeal or
+            advance != other.advance or
+            completelyLaidOut != other.completelyLaidOut or
+            children.len() != other.children.len())
+            return false;
+
+        for (usize i = 0; i < children.len(); ++i) {
+            if (bool(children[i]) != bool(other.children[i]))
+                return false;
+            if (children[i] and not(children[i].expect() == other.children[i].expect()))
+                return false;
+        }
+
+        return true;
     }
 
     void repr(Io::Emit& e) const {

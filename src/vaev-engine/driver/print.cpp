@@ -204,6 +204,9 @@ Vec<PageLayoutInfos> collectBreakPointsAndRunningPositions(PaginationContext& co
                 ? Layout::Breakpoint::classB(1, false)
                 : outDiscovery.breakpoint.expect();
 
+        if (pageInfos and infos.breakpoint == last(pageInfos).breakpoint)
+            panic("pagination made no progress");
+
         pageInfos.pushBack(std::move(infos));
 
         if (outDiscovery.completelyLaidOut)
