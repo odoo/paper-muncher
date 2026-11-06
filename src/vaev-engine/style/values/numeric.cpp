@@ -215,11 +215,11 @@ export Pixel toComputed(Css::LengthPercentage const& value, LengthContext auto c
 namespace Vaev::Literals {
 
 export constexpr Style::Pixel operator""_px(unsigned long long val) {
-    return Style::Pixel{static_cast<f32>(val)};
+    return Style::Pixel{static_cast<f64>(val)};
 }
 
 export constexpr Style::Pixel operator""_px(long double val) {
-    return Style::Pixel{static_cast<f32>(val)};
+    return Style::Pixel{static_cast<f64>(val)};
 }
 
 export constexpr Style::Dppx operator""_dppx(unsigned long long val) {
