@@ -44,7 +44,7 @@ export struct SvgXProperty : Property {
         : Property(registration), _value(value) {}
 
     void apply([[maybe_unused]] ComputedValues const& parent, ComputedValues& c, [[maybe_unused]] ComputationContext const& cx) const override {
-        c.svg.cow().x = resolve(_value, cx);
+        c.svg.cow().x = toComputed(_value, cx);
     }
 
     Res<> serialize(Io::TextWriter& w) const override {
@@ -85,7 +85,7 @@ export struct SvgYProperty : Property {
         : Property(registration), _value(value) {}
 
     void apply([[maybe_unused]] ComputedValues const& parent, ComputedValues& c, [[maybe_unused]] ComputationContext const& cx) const override {
-        c.svg.cow().y = resolve(_value, cx);
+        c.svg.cow().y = toComputed(_value, cx);
     }
 
     Res<> serialize(Io::TextWriter& w) const override {
@@ -126,7 +126,7 @@ export struct SvgCXProperty : Property {
         : Property(registration), _value(value) {}
 
     void apply([[maybe_unused]] ComputedValues const& parent, ComputedValues& c, [[maybe_unused]] ComputationContext const& cx) const override {
-        c.svg.cow().cx = resolve(_value, cx);
+        c.svg.cow().cx = toComputed(_value, cx);
     }
 
     Res<> serialize(Io::TextWriter& w) const override {
@@ -167,7 +167,7 @@ export struct SvgCYProperty : Property {
         : Property(registration), _value(value) {}
 
     void apply([[maybe_unused]] ComputedValues const& parent, ComputedValues& c, [[maybe_unused]] ComputationContext const& cx) const override {
-        c.svg.cow().cy = resolve(_value, cx);
+        c.svg.cow().cy = toComputed(_value, cx);
     }
 
     Res<> serialize(Io::TextWriter& w) const override {
@@ -208,7 +208,7 @@ export struct SvgRProperty : Property {
         : Property(registration), _value(value) {}
 
     void apply([[maybe_unused]] ComputedValues const& parent, ComputedValues& c, [[maybe_unused]] ComputationContext const& cx) const override {
-        c.svg.cow().r = resolve(_value, cx);
+        c.svg.cow().r = toComputed(_value, cx);
     }
 
     Res<> serialize(Io::TextWriter& w) const override {
@@ -536,7 +536,7 @@ export struct StrokeWidthProperty : Property {
         : Property(registration), _value(value) {}
 
     void apply([[maybe_unused]] ComputedValues const& parent, ComputedValues& c, [[maybe_unused]] ComputationContext const& cx) const override {
-        c.svgPaint.cow().strokeWidth = resolve(_value, cx);
+        c.svgPaint.cow().strokeWidth = toComputed(_value, cx);
     }
 
     Res<> serialize(Io::TextWriter& w) const override {

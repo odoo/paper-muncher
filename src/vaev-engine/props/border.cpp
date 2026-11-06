@@ -419,7 +419,7 @@ export struct BorderTopWidthProperty : Property {
         : Property(registration), _value(value) {}
 
     void apply([[maybe_unused]] ComputedValues const& parent, ComputedValues& c, [[maybe_unused]] ComputationContext const& cx) const override {
-        c.borders.cow().top.width = resolve(_value, cx);
+        c.borders.cow().top.width = toComputed(_value, cx);
     }
 
     Res<> serialize(Io::TextWriter& w) const override {
@@ -455,7 +455,7 @@ export struct BorderRightWidthProperty : Property {
         : Property(registration), _value(value) {}
 
     void apply([[maybe_unused]] ComputedValues const& parent, ComputedValues& c, [[maybe_unused]] ComputationContext const& cx) const override {
-        c.borders.cow().end.width = resolve(_value, cx);
+        c.borders.cow().end.width = toComputed(_value, cx);
     }
 
     Res<> serialize(Io::TextWriter& w) const override {
@@ -491,7 +491,7 @@ export struct BorderBottomWidthProperty : Property {
         : Property(registration), _value(value) {}
 
     void apply([[maybe_unused]] ComputedValues const& parent, ComputedValues& c, [[maybe_unused]] ComputationContext const& cx) const override {
-        c.borders.cow().bottom.width = resolve(_value, cx);
+        c.borders.cow().bottom.width = toComputed(_value, cx);
     }
 
     Res<> serialize(Io::TextWriter& w) const override {
@@ -527,7 +527,7 @@ export struct BorderLeftWidthProperty : Property {
         : Property(registration), _value(value) {}
 
     void apply([[maybe_unused]] ComputedValues const& parent, ComputedValues& c, [[maybe_unused]] ComputationContext const& cx) const override {
-        c.borders.cow().start.width = resolve(_value, cx);
+        c.borders.cow().start.width = toComputed(_value, cx);
     }
 
     Res<> serialize(Io::TextWriter& w) const override {
@@ -567,8 +567,8 @@ export struct BorderTopRightRadiusProperty : Property {
         : Property(registration), _value(value) {}
 
     void apply([[maybe_unused]] ComputedValues const& parent, ComputedValues& c, [[maybe_unused]] ComputationContext const& cx) const override {
-        c.borders.cow().radii.c = resolve(_value[0], cx);
-        c.borders.cow().radii.d = resolve(_value[1], cx);
+        c.borders.cow().radii.c = toComputed(_value[0], cx);
+        c.borders.cow().radii.d = toComputed(_value[1], cx);
     }
 
     Res<> serialize(Io::TextWriter& w) const override {
@@ -611,8 +611,8 @@ export struct BorderTopLeftRadiusProperty : Property {
         : Property(registration), _value(value) {}
 
     void apply([[maybe_unused]] ComputedValues const& parent, ComputedValues& c, [[maybe_unused]] ComputationContext const& cx) const override {
-        c.borders.cow().radii.a = resolve(_value[1], cx);
-        c.borders.cow().radii.b = resolve(_value[0], cx);
+        c.borders.cow().radii.a = toComputed(_value[1], cx);
+        c.borders.cow().radii.b = toComputed(_value[0], cx);
     }
 
     Res<> serialize(Io::TextWriter& w) const override {
@@ -652,8 +652,8 @@ export struct BorderBottomRightRadiusProperty : Property {
         : Property(registration), _value(value) {}
 
     void apply([[maybe_unused]] ComputedValues const& parent, ComputedValues& c, [[maybe_unused]] ComputationContext const& cx) const override {
-        c.borders.cow().radii.e = resolve(_value[1], cx);
-        c.borders.cow().radii.f = resolve(_value[0], cx);
+        c.borders.cow().radii.e = toComputed(_value[1], cx);
+        c.borders.cow().radii.f = toComputed(_value[0], cx);
     }
 
     Res<> serialize(Io::TextWriter& w) const override {
@@ -696,8 +696,8 @@ export struct BorderBottomLeftRadiusProperty : Property {
         : Property(registration), _value(value) {}
 
     void apply([[maybe_unused]] ComputedValues const& parent, ComputedValues& c, [[maybe_unused]] ComputationContext const& cx) const override {
-        c.borders.cow().radii.g = resolve(_value[0], cx);
-        c.borders.cow().radii.h = resolve(_value[1], cx);
+        c.borders.cow().radii.g = toComputed(_value[0], cx);
+        c.borders.cow().radii.h = toComputed(_value[1], cx);
     }
 
     Res<> serialize(Io::TextWriter& w) const override {
@@ -734,7 +734,7 @@ export struct BorderRadiusProperty : Property {
         : Property(registration), _value(value) {}
 
     void apply([[maybe_unused]] ComputedValues const& parent, ComputedValues& c, [[maybe_unused]] ComputationContext const& cx) const override {
-        c.borders.cow().radii = resolve(_value, cx);
+        c.borders.cow().radii = toComputed(_value, cx);
     }
 
     Longhands expand(RegisteredPropertySet& registry, ComputedValues const&, ComputedValues&) const override {
@@ -1080,7 +1080,7 @@ export struct BorderSpacingProperty : Property {
         : Property(registration), _value(value) {}
 
     void apply([[maybe_unused]] ComputedValues const& parent, ComputedValues& c, [[maybe_unused]] ComputationContext const& cx) const override {
-        c.table.cow().spacing = {resolve(_value.horizontal, cx), resolve(_value.vertical, cx)};
+        c.table.cow().spacing = {toComputed(_value.horizontal, cx), toComputed(_value.vertical, cx)};
     }
 
     // https://drafts.csswg.org/cssom/#serialize-a-css-value

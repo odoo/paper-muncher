@@ -23,7 +23,7 @@ export using Rad = Distinct<f64, struct _RadTag>;
 
 namespace Vaev::Style {
 
-Css::Rad resolve(Css::PureAngle const& value, [[maybe_unused]] auto const& ctx = NONE) {
+Css::Rad toComputed(Css::PureAngle const& value, [[maybe_unused]] auto const& ctx = NONE) {
     return Css::Rad{value.toRadian()};
 }
 

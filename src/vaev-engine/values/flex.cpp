@@ -57,8 +57,8 @@ export using FlexBasis = Union<
     Keywords::FitContent,
     PixelPercentage>;
 
-export Style::FlexBasis resolve(Css::FlexBasis const& value, Css::LengthContext auto const& ctx) {
-    return value.visit([&](auto const& v) -> Style::FlexBasis { return resolve(v, ctx); });
+export Style::FlexBasis toComputed(Css::FlexBasis const& value, Css::LengthContext auto const& ctx) {
+    return value.visit([&](auto const& v) -> Style::FlexBasis { return toComputed(v, ctx); });
 }
 
 export Css::FlexBasis toSpecified(Style::FlexBasis const& value) {

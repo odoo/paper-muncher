@@ -32,7 +32,7 @@ namespace Keywords {
 } // namespace Keywords
 
 export template <StrLit K>
-Keyword<K> resolve(Keyword<K> const& value, auto const&) {
+Keyword<K> toComputed(Keyword<K> const& value, auto const&) {
     return value;
 }
 export template <StrLit K>

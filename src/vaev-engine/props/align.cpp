@@ -261,7 +261,7 @@ export struct RowGapProperty : Property {
         : Property(registration), _value(value) {}
 
     void apply([[maybe_unused]] ComputedValues const& parent, ComputedValues& c, [[maybe_unused]] ComputationContext const& cx) const override {
-        c.gaps.cow().row = resolve(_value, cx);
+        c.gaps.cow().row = toComputed(_value, cx);
     }
 
     Res<> serialize(Io::TextWriter& w) const override {
@@ -302,7 +302,7 @@ export struct ColumnGapProperty : Property {
         : Property(registration), _value(value) {}
 
     void apply([[maybe_unused]] ComputedValues const& parent, ComputedValues& c, [[maybe_unused]] ComputationContext const& cx) const override {
-        c.gaps.cow().col = resolve(_value, cx);
+        c.gaps.cow().col = toComputed(_value, cx);
     }
 
     Res<> serialize(Io::TextWriter& w) const override {

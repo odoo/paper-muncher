@@ -271,16 +271,16 @@ struct ValueParser<Math::Radii<T>> {
 
 namespace Vaev::Style {
 
-export Math::Radii<PixelPercentage> resolve(Math::Radii<Css::LengthPercentage> const& value, Css::LengthContext auto const& ctx) {
+export Math::Radii<PixelPercentage> toComputed(Math::Radii<Css::LengthPercentage> const& value, Css::LengthContext auto const& ctx) {
     return {
-        resolve(value.a, ctx),
-        resolve(value.b, ctx),
-        resolve(value.c, ctx),
-        resolve(value.d, ctx),
-        resolve(value.e, ctx),
-        resolve(value.f, ctx),
-        resolve(value.g, ctx),
-        resolve(value.h, ctx),
+        toComputed(value.a, ctx),
+        toComputed(value.b, ctx),
+        toComputed(value.c, ctx),
+        toComputed(value.d, ctx),
+        toComputed(value.e, ctx),
+        toComputed(value.f, ctx),
+        toComputed(value.g, ctx),
+        toComputed(value.h, ctx),
     };
 }
 

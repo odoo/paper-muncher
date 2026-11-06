@@ -67,8 +67,8 @@ export using Paddings = Math::Insets<PixelPercentage>;
 
 export using BoxInsets = Math::Insets<Union<Keywords::Auto, PixelPercentage>>;
 
-export Union<Keywords::Auto, PixelPercentage> resolve(Union<Keywords::Auto, Css::LengthPercentage> const& value, Css::LengthContext auto const& ctx) {
-    return value.visit([&](auto const& v) -> Union<Keywords::Auto, PixelPercentage> { return resolve(v, ctx); });
+export Union<Keywords::Auto, PixelPercentage> toComputed(Union<Keywords::Auto, Css::LengthPercentage> const& value, Css::LengthContext auto const& ctx) {
+    return value.visit([&](auto const& v) -> Union<Keywords::Auto, PixelPercentage> { return toComputed(v, ctx); });
 }
 
 export Union<Keywords::Auto, Css::LengthPercentage> toSpecified(Union<Keywords::Auto, PixelPercentage> const& value) {
@@ -76,8 +76,8 @@ export Union<Keywords::Auto, Css::LengthPercentage> toSpecified(Union<Keywords::
 }
 
 export template <typename T>
-auto resolve(Math::Insets<T> const& value, Css::LengthContext auto const& ctx) -> Math::Insets<decltype(resolve(value.top, ctx))> {
-    return {resolve(value.top, ctx), resolve(value.end, ctx), resolve(value.bottom, ctx), resolve(value.start, ctx)};
+auto toComputed(Math::Insets<T> const& value, Css::LengthContext auto const& ctx) -> Math::Insets<decltype(toComputed(value.top, ctx))> {
+    return {toComputed(value.top, ctx), toComputed(value.end, ctx), toComputed(value.bottom, ctx), toComputed(value.start, ctx)};
 }
 
 export template <typename T>
@@ -132,8 +132,8 @@ export using Gap = Union<
     Keywords::Normal,
     PixelPercentage>;
 
-export Style::Gap resolve(Css::Gap const& value, Css::LengthContext auto const& ctx) {
-    return value.visit([&](auto const& v) -> Style::Gap { return resolve(v, ctx); });
+export Style::Gap toComputed(Css::Gap const& value, Css::LengthContext auto const& ctx) {
+    return value.visit([&](auto const& v) -> Style::Gap { return toComputed(v, ctx); });
 }
 
 export Css::Gap toSpecified(Style::Gap const& value) {

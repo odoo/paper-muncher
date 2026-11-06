@@ -30,7 +30,7 @@ export using LineWidth = Union<
 
 namespace Vaev::Style {
 
-export Pixel resolve(Css::LineWidth const& value, Css::LengthContext auto const& ctx) {
+export Pixel toComputed(Css::LineWidth const& value, Css::LengthContext auto const& ctx) {
     return value.visit(
         [](Keywords::Thin const&) {
             return 1_px;
@@ -42,7 +42,7 @@ export Pixel resolve(Css::LineWidth const& value, Css::LengthContext auto const&
             return 5_px;
         },
         [&](Css::Length const& length) {
-            return resolve(length, ctx);
+            return toComputed(length, ctx);
         }
     );
 }

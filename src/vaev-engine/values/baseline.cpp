@@ -67,8 +67,8 @@ export struct Inline {
     Style::LineHeight lineHeight = Keywords::NORMAL;
 };
 
-export Style::BaselineShift resolve(Css::BaselineShift const& value, Css::LengthContext auto const& ctx) {
-    return value.visit([&](auto const& v) -> Style::BaselineShift { return resolve(v, ctx); });
+export Style::BaselineShift toComputed(Css::BaselineShift const& value, Css::LengthContext auto const& ctx) {
+    return value.visit([&](auto const& v) -> Style::BaselineShift { return toComputed(v, ctx); });
 }
 
 export Css::BaselineShift toSpecified(Style::BaselineShift const& value) {

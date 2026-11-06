@@ -334,10 +334,10 @@ concept FontSizeContext = LengthContext<T> and requires(T t) {
 
 namespace Vaev::Style {
 
-Au resolve(Css::FontSize const& value, Css::FontSizeContext auto const& ctx) {
+Au toComputed(Css::FontSize const& value, Css::FontSizeContext auto const& ctx) {
     return value.visit(
         [&](Css::PureLength const& v) {
-            return resolve(v, ctx);
+            return toComputed(v, ctx);
         },
         [&](Css::PurePercentage const& v) {
             return Au::fromFloatNearest(ctx.parentFontSize * (v.value() / 100.0));

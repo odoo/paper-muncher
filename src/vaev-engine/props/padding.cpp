@@ -40,7 +40,7 @@ export struct PaddingTopProperty : Property {
         : Property(registration), _value(value) {}
 
     void apply([[maybe_unused]] ComputedValues const& parent, ComputedValues& c, [[maybe_unused]] ComputationContext const& cx) const override {
-        c.padding.cow().top = resolve(_value, cx);
+        c.padding.cow().top = toComputed(_value, cx);
     }
 
     Res<> serialize(Io::TextWriter& w) const override {
@@ -75,7 +75,7 @@ export struct PaddingRightProperty : Property {
         : Property(registration), _value(value) {}
 
     void apply([[maybe_unused]] ComputedValues const& parent, ComputedValues& c, [[maybe_unused]] ComputationContext const& cx) const override {
-        c.padding.cow().end = resolve(_value, cx);
+        c.padding.cow().end = toComputed(_value, cx);
     }
 
     Res<> serialize(Io::TextWriter& w) const override {
@@ -110,7 +110,7 @@ export struct PaddingBottomProperty : Property {
         : Property(registration), _value(value) {}
 
     void apply([[maybe_unused]] ComputedValues const& parent, ComputedValues& c, [[maybe_unused]] ComputationContext const& cx) const override {
-        c.padding.cow().bottom = resolve(_value, cx);
+        c.padding.cow().bottom = toComputed(_value, cx);
     }
 
     Res<> serialize(Io::TextWriter& w) const override {
@@ -145,7 +145,7 @@ export struct PaddingLeftProperty : Property {
         : Property(registration), _value(value) {}
 
     void apply([[maybe_unused]] ComputedValues const& parent, ComputedValues& c, [[maybe_unused]] ComputationContext const& cx) const override {
-        c.padding.cow().start = resolve(_value, cx);
+        c.padding.cow().start = toComputed(_value, cx);
     }
 
     Res<> serialize(Io::TextWriter& w) const override {

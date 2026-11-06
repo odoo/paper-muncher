@@ -35,7 +35,7 @@ export using Pixel = Distinct<f64, struct _PixelTag>;
 // 6. MARK: Distance Units: the <length> type
 // https://drafts.csswg.org/css-values/#lengths
 
-export Au resolve(Css::PureLength const& value, Css::LengthContext auto const& ctx) {
+export Au toComputed(Css::PureLength const& value, Css::LengthContext auto const& ctx) {
     return Au::fromFloatNearest(value.unitValue().canonical(ctx).value());
 }
 
@@ -68,7 +68,7 @@ export struct PureAbsoluteLength : TypedUnitValue<Some(NumericBaseType::LENGTH)>
 
 namespace Vaev::Style {
 
-export Au resolve(Css::PureAbsoluteLength value) {
+export Au toComputed(Css::PureAbsoluteLength value) {
     return Au::fromFloatNearest(value.pixels().value());
 }
 

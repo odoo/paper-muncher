@@ -68,8 +68,8 @@ namespace Vaev::Style {
 
 export using ShapeRadius = Css::ShapeRadiusT<PixelPercentage>;
 
-export Style::ShapeRadius resolve(Css::ShapeRadius const& value, Css::LengthContext auto const& ctx) {
-    return value.visit([&](auto const& v) -> Style::ShapeRadius { return resolve(v, ctx); });
+export Style::ShapeRadius toComputed(Css::ShapeRadius const& value, Css::LengthContext auto const& ctx) {
+    return value.visit([&](auto const& v) -> Style::ShapeRadius { return toComputed(v, ctx); });
 }
 
 export Css::ShapeRadius toSpecified(Style::ShapeRadius const& value) {
@@ -101,8 +101,8 @@ namespace Vaev::Style {
 
 export using Circle = Css::CircleT<PixelPercentage, Style::Position>;
 
-export Style::Circle resolve(Css::Circle const& value, Css::LengthContext auto const& ctx) {
-    return {resolve(value.radius, ctx), resolve(value.position, ctx)};
+export Style::Circle toComputed(Css::Circle const& value, Css::LengthContext auto const& ctx) {
+    return {toComputed(value.radius, ctx), toComputed(value.position, ctx)};
 }
 
 export Css::Circle toSpecified(Style::Circle const& value) {
@@ -168,8 +168,8 @@ namespace Vaev::Style {
 
 export using Ellipse = Css::EllipseT<PixelPercentage, Style::Position>;
 
-export Style::Ellipse resolve(Css::Ellipse const& value, Css::LengthContext auto const& ctx) {
-    return {resolve(value.rx, ctx), resolve(value.ry, ctx), resolve(value.position, ctx)};
+export Style::Ellipse toComputed(Css::Ellipse const& value, Css::LengthContext auto const& ctx) {
+    return {toComputed(value.rx, ctx), toComputed(value.ry, ctx), toComputed(value.position, ctx)};
 }
 
 export Css::Ellipse toSpecified(Style::Ellipse const& value) {
@@ -238,8 +238,8 @@ namespace Vaev::Style {
 
 export using Inset = Css::InsetT<PixelPercentage>;
 
-export Style::Inset resolve(Css::Inset const& value, Css::LengthContext auto const& ctx) {
-    return {resolve(value.insets, ctx), resolve(value.borderRadius, ctx)};
+export Style::Inset toComputed(Css::Inset const& value, Css::LengthContext auto const& ctx) {
+    return {toComputed(value.insets, ctx), toComputed(value.borderRadius, ctx)};
 }
 
 export Css::Inset toSpecified(Style::Inset const& value) {
@@ -354,10 +354,10 @@ namespace Vaev::Style {
 
 export using Polygon = Css::PolygonT<PixelPercentage>;
 
-export Style::Polygon resolve(Css::Polygon const& value, Css::LengthContext auto const& ctx) {
+export Style::Polygon toComputed(Css::Polygon const& value, Css::LengthContext auto const& ctx) {
     Style::Polygon result{value.fillRule, {}};
     for (auto const& [x, y] : value.points)
-        result.points.emplaceBack(resolve(x, ctx), resolve(y, ctx));
+        result.points.emplaceBack(toComputed(x, ctx), toComputed(y, ctx));
     return result;
 }
 
@@ -432,8 +432,8 @@ namespace Vaev::Style {
 
 export using Rect = Css::RectT<PixelPercentage>;
 
-export Style::Rect resolve(Css::Rect const& value, Css::LengthContext auto const& ctx) {
-    return {resolve(value.insets, ctx), resolve(value.borderRadius, ctx)};
+export Style::Rect toComputed(Css::Rect const& value, Css::LengthContext auto const& ctx) {
+    return {toComputed(value.insets, ctx), toComputed(value.borderRadius, ctx)};
 }
 
 export Css::Rect toSpecified(Style::Rect const& value) {
@@ -518,13 +518,13 @@ namespace Vaev::Style {
 
 export using Xywh = Css::XywhT<PixelPercentage>;
 
-export Style::Xywh resolve(Css::Xywh const& value, Css::LengthContext auto const& ctx) {
+export Style::Xywh toComputed(Css::Xywh const& value, Css::LengthContext auto const& ctx) {
     return {
-        resolve(value.x, ctx),
-        resolve(value.y, ctx),
-        resolve(value.width, ctx),
-        resolve(value.height, ctx),
-        resolve(value.borderRadius, ctx),
+        toComputed(value.x, ctx),
+        toComputed(value.y, ctx),
+        toComputed(value.width, ctx),
+        toComputed(value.height, ctx),
+        toComputed(value.borderRadius, ctx),
     };
 }
 
@@ -622,7 +622,7 @@ namespace Vaev::Style {
 
 export using BasicShape = Css::BasicShapeT<PixelPercentage, Style::Position>;
 
-export Style::BasicShape resolve(Css::BasicShape const& value, Css::LengthContext auto const& ctx) {
+export Style::BasicShape toComputed(Css::BasicShape const& value, Css::LengthContext auto const& ctx) {
     return {
         value.shape.map([&](Css::BasicShapeFunction const& shape) {
             return shape.visit(
@@ -630,7 +630,7 @@ export Style::BasicShape resolve(Css::BasicShape const& value, Css::LengthContex
                     return path;
                 },
                 [&](auto const& s) -> Style::BasicShapeFunction {
-                    return resolve(s, ctx);
+                    return toComputed(s, ctx);
                 }
             );
         }),

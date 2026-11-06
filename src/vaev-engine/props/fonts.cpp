@@ -255,7 +255,7 @@ export struct FontSizeProperty : Property {
         : Property(registration), _value(value) {}
 
     void apply([[maybe_unused]] ComputedValues const& parent, ComputedValues& c, [[maybe_unused]] ComputationContext const& cx) const override {
-        c.font.cow().size = resolve(_value, cx);
+        c.font.cow().size = toComputed(_value, cx);
     }
 
     Res<> serialize(Io::TextWriter& w) const override {

@@ -83,7 +83,7 @@ export struct WidthProperty : Property {
         : Property(registration), _value(value) {}
 
     void apply([[maybe_unused]] ComputedValues const& parent, ComputedValues& c, [[maybe_unused]] ComputationContext const& cx) const override {
-        c.sizing.cow().width = resolve(_value, cx);
+        c.sizing.cow().width = toComputed(_value, cx);
     }
 
     Res<> serialize(Io::TextWriter& w) const override {
@@ -127,7 +127,7 @@ export struct HeightProperty : Property {
         : Property(registration), _value(value) {}
 
     void apply([[maybe_unused]] ComputedValues const& parent, ComputedValues& c, [[maybe_unused]] ComputationContext const& cx) const override {
-        c.sizing.cow().height = resolve(_value, cx);
+        c.sizing.cow().height = toComputed(_value, cx);
     }
 
     Res<> serialize(Io::TextWriter& w) const override {
@@ -163,7 +163,7 @@ export struct MinWidthProperty : Property {
         : Property(registration), _value(value) {}
 
     void apply([[maybe_unused]] ComputedValues const& parent, ComputedValues& c, [[maybe_unused]] ComputationContext const& cx) const override {
-        c.sizing.cow().minWidth = resolve(_value, cx);
+        c.sizing.cow().minWidth = toComputed(_value, cx);
     }
 
     Res<> serialize(Io::TextWriter& w) const override {
@@ -199,7 +199,7 @@ export struct MinHeightProperty : Property {
         : Property(registration), _value(value) {}
 
     void apply([[maybe_unused]] ComputedValues const& parent, ComputedValues& c, [[maybe_unused]] ComputationContext const& cx) const override {
-        c.sizing.cow().minHeight = resolve(_value, cx);
+        c.sizing.cow().minHeight = toComputed(_value, cx);
     }
 
     Res<> serialize(Io::TextWriter& w) const override {
@@ -236,7 +236,7 @@ export struct MaxWidthProperty : Property {
         : Property(registration), _value(value) {}
 
     void apply([[maybe_unused]] ComputedValues const& parent, ComputedValues& c, [[maybe_unused]] ComputationContext const& cx) const override {
-        c.sizing.cow().maxWidth = resolve(_value, cx);
+        c.sizing.cow().maxWidth = toComputed(_value, cx);
     }
 
     Res<> serialize(Io::TextWriter& w) const override {
@@ -272,7 +272,7 @@ export struct MaxHeightProperty : Property {
         : Property(registration), _value(value) {}
 
     void apply([[maybe_unused]] ComputedValues const& parent, ComputedValues& c, [[maybe_unused]] ComputationContext const& cx) const override {
-        c.sizing.cow().maxHeight = resolve(_value, cx);
+        c.sizing.cow().maxHeight = toComputed(_value, cx);
     }
 
     Res<> serialize(Io::TextWriter& w) const override {

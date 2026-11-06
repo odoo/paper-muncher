@@ -508,35 +508,35 @@ export using Transform = Union<Keywords::None, Style::TransformList>;
 
 // https://drafts.csswg.org/css-transforms/#transform-property
 // Computed value: as specified, but with lengths made absolute.
-export Style::TransformFunction resolve(Css::TransformFunction const& value, Css::LengthContext auto const& ctx) {
+export Style::TransformFunction toComputed(Css::TransformFunction const& value, Css::LengthContext auto const& ctx) {
     return value.visit(
         [](Css::MatrixTransform const& t) -> Style::TransformFunction {
             return Style::MatrixTransform{{
-                resolve(t.values[0]),
-                resolve(t.values[1]),
-                resolve(t.values[2]),
-                resolve(t.values[3]),
-                resolve(t.values[4]),
-                resolve(t.values[5]),
+                toComputed(t.values[0]),
+                toComputed(t.values[1]),
+                toComputed(t.values[2]),
+                toComputed(t.values[3]),
+                toComputed(t.values[4]),
+                toComputed(t.values[5]),
             }};
         },
         [&](Css::TranslateTransform const& t) -> Style::TransformFunction {
-            return Style::TranslateTransform{resolve(t.x, ctx), resolve(t.y, ctx)};
+            return Style::TranslateTransform{toComputed(t.x, ctx), toComputed(t.y, ctx)};
         },
         [](Css::ScaleTransform const& t) -> Style::TransformFunction {
-            return Style::ScaleTransform{resolve(t.x), resolve(t.y)};
+            return Style::ScaleTransform{toComputed(t.x), toComputed(t.y)};
         },
         [](Css::RotateTransform const& t) -> Style::TransformFunction {
-            return Style::RotateTransform{resolve(t.value)};
+            return Style::RotateTransform{toComputed(t.value)};
         },
         [](Css::SkewTransform const& t) -> Style::TransformFunction {
-            return Style::SkewTransform{resolve(t.x), resolve(t.y)};
+            return Style::SkewTransform{toComputed(t.x), toComputed(t.y)};
         },
         [](Css::SkewXTransform const& t) -> Style::TransformFunction {
-            return Style::SkewXTransform{resolve(t.value)};
+            return Style::SkewXTransform{toComputed(t.value)};
         },
         [](Css::SkewYTransform const& t) -> Style::TransformFunction {
-            return Style::SkewYTransform{resolve(t.value)};
+            return Style::SkewYTransform{toComputed(t.value)};
         }
     );
 }

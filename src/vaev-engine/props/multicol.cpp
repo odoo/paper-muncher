@@ -55,7 +55,7 @@ export struct ColumnWidthProperty : Property {
                 return Keywords::AUTO;
             },
             [&](Css::Length const& width) -> Union<Keywords::Auto, Au> {
-                return Au::fromFloatNearest(resolve(width, cx).value());
+                return Au::fromFloatNearest(toComputed(width, cx).value());
             }
         );
     }
@@ -111,7 +111,7 @@ export struct ColumnHeightProperty : Property {
                 return Keywords::AUTO;
             },
             [&](Css::Length const& height) -> Union<Keywords::Auto, Au> {
-                return Au::fromFloatNearest(resolve(height, cx).value());
+                return Au::fromFloatNearest(toComputed(height, cx).value());
             }
         );
     }

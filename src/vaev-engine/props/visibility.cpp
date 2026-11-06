@@ -69,7 +69,7 @@ export struct OpacityProperty : Property {
             //       only math functions keep their percentages.
             if (not c.ended() and c.peek() == Css::Token::PERCENTAGE) {
                 auto percentage = try$(parseValue<Css::Percentage>(c));
-                return Ok(makeRc<OpacityProperty>(self(), Css::Number::fromCanonical(resolve(percentage).value() / 100.)));
+                return Ok(makeRc<OpacityProperty>(self(), Css::Number::fromCanonical(toComputed(percentage).value() / 100.)));
             }
 
             return Ok(makeRc<OpacityProperty>(self(), try$(parseValue<Value>(c))));
@@ -84,11 +84,11 @@ export struct OpacityProperty : Property {
     void apply([[maybe_unused]] ComputedValues const& parent, ComputedValues& c, [[maybe_unused]] ComputationContext const& cx) const override {
         auto specifiedNumber = _value.visit(
             [](Css::Number const& n) {
-                return resolve(n);
+                return toComputed(n);
             },
             [](Css::Percentage const& percent) {
                 // Percentages:	map to the range [0,1]
-                return resolve(percent, 1);
+                return toComputed(percent, 1);
             }
         );
 
@@ -134,7 +134,7 @@ export struct ClipPathProperty : Property {
 
     void apply([[maybe_unused]] ComputedValues const& parent, ComputedValues& c, [[maybe_unused]] ComputationContext const& cx) const override {
         if (auto clipShape = _value.is<Css::BasicShape>())
-            c.clip.cow() = Some(resolve(*clipShape, cx));
+            c.clip.cow() = Some(toComputed(*clipShape, cx));
         else
             c.clip.cow() = NONE;
     }

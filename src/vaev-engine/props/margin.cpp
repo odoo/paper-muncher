@@ -39,7 +39,7 @@ export struct MarginTopProperty : Property {
         : Property(registration), _value(value) {}
 
     void apply([[maybe_unused]] ComputedValues const& parent, ComputedValues& c, [[maybe_unused]] ComputationContext const& cx) const override {
-        c.margin.cow().top = resolve(_value, cx);
+        c.margin.cow().top = toComputed(_value, cx);
     }
 
     Res<> serialize(Io::TextWriter& w) const override {
@@ -77,7 +77,7 @@ export struct MarginRightProperty : Property {
         : Property(registration), _value(value) {}
 
     void apply([[maybe_unused]] ComputedValues const& parent, ComputedValues& c, [[maybe_unused]] ComputationContext const& cx) const override {
-        c.margin.cow().end = resolve(_value, cx);
+        c.margin.cow().end = toComputed(_value, cx);
     }
 
     Res<> serialize(Io::TextWriter& w) const override {
@@ -115,7 +115,7 @@ export struct MarginBottomProperty : Property {
         : Property(registration), _value(value) {}
 
     void apply([[maybe_unused]] ComputedValues const& parent, ComputedValues& c, [[maybe_unused]] ComputationContext const& cx) const override {
-        c.margin.cow().bottom = resolve(_value, cx);
+        c.margin.cow().bottom = toComputed(_value, cx);
     }
 
     Res<> serialize(Io::TextWriter& w) const override {
@@ -153,7 +153,7 @@ export struct MarginLeftProperty : Property {
         : Property(registration), _value(value) {}
 
     void apply([[maybe_unused]] ComputedValues const& parent, ComputedValues& c, [[maybe_unused]] ComputationContext const& cx) const override {
-        c.margin.cow().start = resolve(_value, cx);
+        c.margin.cow().start = toComputed(_value, cx);
     }
 
     Res<> serialize(Io::TextWriter& w) const override {

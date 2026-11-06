@@ -42,7 +42,7 @@ export struct LineHeightProperty : Property {
         : Property(registration), _value(value) {}
 
     void apply([[maybe_unused]] ComputedValues const& parent, ComputedValues& c, [[maybe_unused]] ComputationContext const& cx) const override {
-        c.inline_.cow().lineHeight = resolve(_value, cx);
+        c.inline_.cow().lineHeight = toComputed(_value, cx);
     }
 
     Res<> serialize(Io::TextWriter& w) const override {
@@ -186,7 +186,7 @@ export struct BaselineShiftProperty : Property {
         : Property(registration), _value(value) {}
 
     void apply([[maybe_unused]] ComputedValues const& parent, ComputedValues& c, [[maybe_unused]] ComputationContext const& cx) const override {
-        c.inline_.cow().baselineShift = resolve(_value, cx);
+        c.inline_.cow().baselineShift = toComputed(_value, cx);
     }
 
     Res<> serialize(Io::TextWriter& w) const override {

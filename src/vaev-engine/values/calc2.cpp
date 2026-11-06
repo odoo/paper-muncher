@@ -1885,7 +1885,7 @@ export struct LinearPixelPercentage {
     }
 };
 
-export f64 resolve(Css::Number const& value) {
+export f64 toComputed(Css::Number const& value) {
     auto simplified = simplify(value.calcTree(), NONE, NONE);
 
     if (auto n = simplified.is<Css::UnitValue>(); n and n->unit() == Css::UnitValue::Unit::NONE) {
@@ -1895,7 +1895,7 @@ export f64 resolve(Css::Number const& value) {
     }
 }
 
-export Css::Rad resolve(Css::Angle const& value) {
+export Css::Rad toComputed(Css::Angle const& value) {
     auto simplified = simplify(
         value.calcTree(),
         NONE,
@@ -1914,7 +1914,7 @@ export Css::Angle toSpecified(Css::Rad const& angle) {
     return Css::Angle{UNCHECKED, Css::UnitValue{angle.value(), Css::UnitValue::Unit::RAD}};
 }
 
-export Percent resolve(Css::Percentage const& value) {
+export Percent toComputed(Css::Percentage const& value) {
     auto simplified = simplify(
         value.calcTree(),
         NONE,
@@ -1929,7 +1929,7 @@ export Percent resolve(Css::Percentage const& value) {
     }
 }
 
-export f64 resolve(Css::Percentage const& value, f64 percentBasis) {
+export f64 toComputed(Css::Percentage const& value, f64 percentBasis) {
     auto simplified = simplify(
         value.calcTree(),
         NONE,
@@ -1944,7 +1944,7 @@ export f64 resolve(Css::Percentage const& value, f64 percentBasis) {
     }
 }
 
-export Pixel resolve(Css::Length const& value, Css::LengthContext auto const& ctx) {
+export Pixel toComputed(Css::Length const& value, Css::LengthContext auto const& ctx) {
     auto simplified = simplify(
         value.calcTree(),
         ctx,
@@ -1963,7 +1963,7 @@ export Css::Length toSpecified(Pixel const& px) {
     return Css::Length{UNCHECKED, Css::UnitValue{px.value(), Css::UnitValue::Unit::PX}};
 }
 
-export Pixel resolve(Css::LengthPercentage const& value, Css::LengthContext auto const& ctx, f64 percentBasis) {
+export Pixel toComputed(Css::LengthPercentage const& value, Css::LengthContext auto const& ctx, f64 percentBasis) {
     auto simplified = simplify(
         value.calcTree(),
         ctx,
@@ -1981,7 +1981,7 @@ export Pixel resolve(Css::LengthPercentage const& value, Css::LengthContext auto
 export using PixelPercentage = Union<Pixel, Percent, LinearPixelPercentage, Box<Css::Calc>>;
 
 // https://drafts.csswg.org/css-values-4/#calc-computed-value
-export PixelPercentage resolve(Css::LengthPercentage const& value, Css::LengthContext auto const& ctx) {
+export PixelPercentage toComputed(Css::LengthPercentage const& value, Css::LengthContext auto const& ctx) {
     auto simplified = simplify(
         value.calcTree(),
         ctx,

@@ -34,7 +34,7 @@ static Res<String> _serialize(T const& value) {
 
 test$("vaev-css-unit-value-units") {
     auto length = try$(_parse<Css::PureAbsoluteLength>("1in"));
-    assertEq$(resolve(length), 96_au);
+    assertEq$(toComputed(length), 96_au);
 
     auto angle = try$(_parse<Css::PureAngle>("1turn"));
     assertEq$(angle.toDegree(), 360.0);

@@ -39,7 +39,7 @@ export struct FlexBasisProperty : Property {
         : Property(registration), _value(value) {}
 
     void apply([[maybe_unused]] ComputedValues const& parent, ComputedValues& c, [[maybe_unused]] ComputationContext const& cx) const override {
-        c.flex.cow().basis = resolve(_value, cx);
+        c.flex.cow().basis = toComputed(_value, cx);
     }
 
     Res<> serialize(Io::TextWriter& w) const override {

@@ -24,16 +24,16 @@ namespace Vaev::Style {
 
 export using LineHeight = Union<Keywords::Normal, f64, Pixel>;
 
-export Style::LineHeight resolve(Css::LineHeight const& value, Css::LengthContext auto const& ctx) {
+export Style::LineHeight toComputed(Css::LineHeight const& value, Css::LengthContext auto const& ctx) {
     return value.visit(
         [](Keywords::Normal const& normal) -> Style::LineHeight {
             return normal;
         },
         [](Css::Number const& number) -> Style::LineHeight {
-            return resolve(number);
+            return toComputed(number);
         },
         [&](Css::LengthPercentage const& length) -> Style::LineHeight {
-            return resolve(length, ctx, ctx.fontSize);
+            return toComputed(length, ctx, ctx.fontSize);
         }
     );
 }

@@ -48,21 +48,21 @@ static Res<String> _specified(Str input) {
 static Res<String> _px(Str input) {
     auto calc = try$(_parse<Length>(input));
     auto cx = RelativeLengthContextData{};
-    return _serialize(Style::toSpecified(Style::resolve(calc, cx)));
+    return _serialize(Style::toSpecified(Style::toComputed(calc, cx)));
 }
 
 // Computed <length-percentage>, serialized.
 static Res<String> _lp(Str input) {
     auto calc = try$(_parse<LengthPercentage>(input));
     auto cx = RelativeLengthContextData{};
-    return _serialize(Style::toSpecified(Style::resolve(calc, cx)));
+    return _serialize(Style::toSpecified(Style::toComputed(calc, cx)));
 }
 
 // Used <length-percentage> against a percentage basis, in px.
 static Res<f64> _used(Str input, f64 basis) {
     auto calc = try$(_parse<LengthPercentage>(input));
     auto cx = RelativeLengthContextData{};
-    return Ok(Style::resolve(Style::resolve(calc, cx), Au{basis}).cast<f64>());
+    return Ok(Style::resolve(Style::toComputed(calc, cx), Au{basis}).cast<f64>());
 }
 
 // Used <length-percentage> against an optional percentage basis, in px.
@@ -72,19 +72,19 @@ static Res<Opt<f64>> _usedOpt(Str input, Opt<f64> basis) {
     Opt<Au> relative = NONE;
     if (basis)
         relative = Some(Au{*basis});
-    return Ok(Style::resolve(Style::resolve(calc, cx), relative).map([](Au au) {
+    return Ok(Style::resolve(Style::toComputed(calc, cx), relative).map([](Au au) {
         return au.cast<f64>();
     }));
 }
 
 // Computed <number>.
 static Res<f64> _num(Str input) {
-    return Ok(static_cast<f64>(Style::resolve(try$(_parse<Number>(input)))));
+    return Ok(static_cast<f64>(Style::toComputed(try$(_parse<Number>(input)))));
 }
 
 // Computed <percentage>.
 static Res<f64> _pct(Str input) {
-    return Ok(Style::resolve(try$(_parse<Percentage>(input))).value());
+    return Ok(Style::toComputed(try$(_parse<Percentage>(input))).value());
 }
 
 static bool _near(f64 a, f64 b) {
@@ -497,10 +497,10 @@ test$("calc-unsimplifiable-functions") {
 test$("calc-computed-infinity-and-nan-are-clamped", XFAIL) {
     auto cx = RelativeLengthContextData{};
 
-    auto inf = Style::resolve(try$(_parse<Length>("calc(1px / 0)")), cx).value();
+    auto inf = Style::toComputed(try$(_parse<Length>("calc(1px / 0)")), cx).value();
     assert$(inf > 0 and not Math::isInf(inf));
 
-    auto negInf = Style::resolve(try$(_parse<Length>("calc(-infinity * 1px)")), cx).value();
+    auto negInf = Style::toComputed(try$(_parse<Length>("calc(-infinity * 1px)")), cx).value();
     assert$(negInf < 0 and not Math::isInf(negInf));
 
     assertEq$(try$(_px("calc(NaN * 1px)")), "0px"s);

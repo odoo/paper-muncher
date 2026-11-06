@@ -92,14 +92,14 @@ export struct Position {
     }
 };
 
-export Style::Position resolve(Css::BackgroundPosition const& value, Css::LengthContext auto const& ctx) {
+export Style::Position toComputed(Css::BackgroundPosition const& value, Css::LengthContext auto const& ctx) {
     auto offset = [&](bool isCenter, bool isFromEnd, Css::LengthPercentage const& length) -> PixelPercentage {
         if (isCenter)
             return Percent{50};
 
         if (isFromEnd) {
             // calc(100% - <length-percentage>)
-            return resolve(
+            return toComputed(
                 Css::LengthPercentage{
                     UNCHECKED,
                     Css::SumNode{
@@ -113,7 +113,7 @@ export Style::Position resolve(Css::BackgroundPosition const& value, Css::Length
             );
         }
 
-        return resolve(length, ctx);
+        return toComputed(length, ctx);
     };
 
     return {

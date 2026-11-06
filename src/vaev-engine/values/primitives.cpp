@@ -55,7 +55,7 @@ namespace Vaev::Style {
 // MARK: Number ----------------------------------------------------------------
 // https://drafts.csswg.org/css-values/#numbers
 
-export f64 resolve(f64 const& value, [[maybe_unused]] auto const& ctx = NONE) {
+export f64 toComputed(f64 const& value, [[maybe_unused]] auto const& ctx = NONE) {
     return value;
 }
 

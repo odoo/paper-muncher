@@ -39,7 +39,7 @@ export struct OutlineWidthProperty : Property {
         : Property(registration), _value(value) {}
 
     void apply([[maybe_unused]] ComputedValues const& parent, ComputedValues& c, [[maybe_unused]] ComputationContext const& cx) const override {
-        c.outline.cow().width = resolve(_value, cx);
+        c.outline.cow().width = toComputed(_value, cx);
     }
 
     Res<> serialize(Io::TextWriter& w) const override {
@@ -168,7 +168,7 @@ export struct OutlineOffsetProperty : Property {
         : Property(registration), _value(value) {}
 
     void apply([[maybe_unused]] ComputedValues const& parent, ComputedValues& c, [[maybe_unused]] ComputationContext const& cx) const override {
-        c.outline.cow().offset = resolve(_value, cx);
+        c.outline.cow().offset = toComputed(_value, cx);
     }
 
     Res<> serialize(Io::TextWriter& w) const override {

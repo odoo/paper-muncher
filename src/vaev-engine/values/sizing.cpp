@@ -35,12 +35,12 @@ export using Size = Union<Keywords::Auto, PixelPercentage, Keywords::Stretch, Ke
 
 export using MaxSize = Union<Keywords::None, PixelPercentage, Keywords::Stretch, Keywords::MinContent, Keywords::MaxContent, Keywords::FitContent>;
 
-export Style::Size resolve(Css::Size const& value, Css::LengthContext auto const& ctx) {
-    return value.visit([&](auto const& v) -> Style::Size { return resolve(v, ctx); });
+export Style::Size toComputed(Css::Size const& value, Css::LengthContext auto const& ctx) {
+    return value.visit([&](auto const& v) -> Style::Size { return toComputed(v, ctx); });
 }
 
-export Style::MaxSize resolve(Css::MaxSize const& value, Css::LengthContext auto const& ctx) {
-    return value.visit([&](auto const& v) -> Style::MaxSize { return resolve(v, ctx); });
+export Style::MaxSize toComputed(Css::MaxSize const& value, Css::LengthContext auto const& ctx) {
+    return value.visit([&](auto const& v) -> Style::MaxSize { return toComputed(v, ctx); });
 }
 
 export Css::Size toSpecified(Style::Size const& value) {

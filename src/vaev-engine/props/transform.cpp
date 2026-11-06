@@ -158,7 +158,7 @@ export struct TransformOriginProperty : Property {
                     return Style::Percent{100};
                 },
                 [&](Css::LengthPercentage const& length) -> Style::PixelPercentage {
-                    return resolve(length, ctx);
+                    return toComputed(length, ctx);
                 }
             ),
             value.yOffset.visit(
@@ -172,7 +172,7 @@ export struct TransformOriginProperty : Property {
                     return Style::Percent{100};
                 },
                 [&](Css::LengthPercentage const& length) -> Style::PixelPercentage {
-                    return resolve(length, ctx);
+                    return toComputed(length, ctx);
                 }
             ),
         };
@@ -246,7 +246,7 @@ export struct TransformProperty : Property {
             [&](Css::TransformList const& list) -> Style::Transform {
                 Style::TransformList result;
                 for (auto const& function : list)
-                    result.pushBack(resolve(function, ctx));
+                    result.pushBack(toComputed(function, ctx));
                 return result;
             }
         );
