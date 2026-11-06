@@ -82,14 +82,6 @@ export struct FontWidth {
     auto operator<=>(FontWidth const& other) const {
         return _val <=> other._val;
     }
-
-    PurePercentage operator-(FontWidth const& other) const {
-        return _val - other._val;
-    }
-
-    FontWidth operator+(PurePercentage value) const {
-        return FontWidth{_val + value};
-    }
 };
 
 export template <>

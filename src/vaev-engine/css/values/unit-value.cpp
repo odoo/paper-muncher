@@ -135,27 +135,6 @@ struct TypedUnitValue {
         return TypedUnitValue{UnitValue{val, UnitValue::Unit::PX}};
     }
 
-    static constexpr TypedUnitValue fromEm(f64 val)
-        requires(TYPE == NumericBaseType::LENGTH)
-    {
-        return TypedUnitValue{UnitValue{val, UnitValue::Unit::EM}};
-    }
-
-    // https://drafts.csswg.org/css-values/#absolute-lengths
-    constexpr bool absolute() const
-        requires(TYPE == NumericBaseType::LENGTH)
-    {
-        return _value.isAbsolute();
-    }
-
-    constexpr Opt<f64> absolutePixels() const
-        requires(TYPE == NumericBaseType::LENGTH)
-    {
-        if (not absolute())
-            return NONE;
-        return Some(_value.to(UnitValue::Unit::PX));
-    }
-
     // MARK: <angle> -----------------------------------------------------------
     // https://drafts.csswg.org/css-values/#angles
 
@@ -165,46 +144,10 @@ struct TypedUnitValue {
         return TypedUnitValue{UnitValue{val, UnitValue::Unit::DEG}};
     }
 
-    static constexpr TypedUnitValue fromRadian(f64 val)
-        requires(TYPE == NumericBaseType::ANGLE)
-    {
-        return TypedUnitValue{UnitValue{val, UnitValue::Unit::RAD}};
-    }
-
-    static constexpr TypedUnitValue fromGrad(f64 val)
-        requires(TYPE == NumericBaseType::ANGLE)
-    {
-        return TypedUnitValue{UnitValue{val, UnitValue::Unit::GRAD}};
-    }
-
-    static constexpr TypedUnitValue fromTurn(f64 val)
-        requires(TYPE == NumericBaseType::ANGLE)
-    {
-        return TypedUnitValue{UnitValue{val, UnitValue::Unit::TURN}};
-    }
-
     constexpr f64 toDegree() const
         requires(TYPE == NumericBaseType::ANGLE)
     {
         return _value.to(UnitValue::Unit::DEG);
-    }
-
-    constexpr f64 toRadian() const
-        requires(TYPE == NumericBaseType::ANGLE)
-    {
-        return _value.to(UnitValue::Unit::RAD);
-    }
-
-    constexpr TypedUnitValue operator+(TypedUnitValue other) const
-        requires(TYPE == NumericBaseType::ANGLE)
-    {
-        return fromRadian(toRadian() + other.toRadian());
-    }
-
-    constexpr TypedUnitValue operator-(TypedUnitValue other) const
-        requires(TYPE == NumericBaseType::ANGLE)
-    {
-        return fromRadian(toRadian() - other.toRadian());
     }
 
     // MARK: <percentage> ------------------------------------------------------
@@ -213,66 +156,6 @@ struct TypedUnitValue {
     constexpr explicit TypedUnitValue(f64 value)
         requires(TYPE == NumericBaseType::PERCENT)
         : _value(value, UnitValue::Unit::PERCENT) {}
-
-    constexpr TypedUnitValue operator+(TypedUnitValue other) const
-        requires(TYPE == NumericBaseType::PERCENT)
-    {
-        return TypedUnitValue{value() + other.value()};
-    }
-
-    constexpr TypedUnitValue operator-(TypedUnitValue other) const
-        requires(TYPE == NumericBaseType::PERCENT)
-    {
-        return TypedUnitValue{value() - other.value()};
-    }
-
-    // MARK: <time> ------------------------------------------------------------
-    // https://drafts.csswg.org/css-values/#time
-
-    static constexpr TypedUnitValue fromSecond(f64 val)
-        requires(TYPE == NumericBaseType::TIME)
-    {
-        return TypedUnitValue{UnitValue{val, UnitValue::Unit::S}};
-    }
-
-    static constexpr TypedUnitValue fromMillisecond(f64 val)
-        requires(TYPE == NumericBaseType::TIME)
-    {
-        return TypedUnitValue{UnitValue{val, UnitValue::Unit::MS}};
-    }
-
-    constexpr f64 toSecond() const
-        requires(TYPE == NumericBaseType::TIME)
-    {
-        return _value.to(UnitValue::Unit::S);
-    }
-
-    constexpr f64 toMillisecond() const
-        requires(TYPE == NumericBaseType::TIME)
-    {
-        return _value.to(UnitValue::Unit::MS);
-    }
-
-    // MARK: <frequency> -------------------------------------------------------
-    // https://drafts.csswg.org/css-values/#frequency
-
-    static constexpr TypedUnitValue fromHz(f64 hz)
-        requires(TYPE == NumericBaseType::FREQUENCY)
-    {
-        return TypedUnitValue{UnitValue{hz, UnitValue::Unit::HZ}};
-    }
-
-    static constexpr TypedUnitValue fromKHz(f64 khz)
-        requires(TYPE == NumericBaseType::FREQUENCY)
-    {
-        return TypedUnitValue{UnitValue{khz, UnitValue::Unit::KHZ}};
-    }
-
-    constexpr f64 toHz() const
-        requires(TYPE == NumericBaseType::FREQUENCY)
-    {
-        return _value.to(UnitValue::Unit::HZ);
-    }
 
     // MARK: <resolution> ------------------------------------------------------
     // https://drafts.csswg.org/css-values/#resolution
@@ -283,55 +166,16 @@ struct TypedUnitValue {
         return TypedUnitValue{UnitValue{val, UnitValue::Unit::DPI}};
     }
 
-    static constexpr TypedUnitValue fromDpcm(f64 val)
-        requires(TYPE == NumericBaseType::RESOLUTION)
-    {
-        return TypedUnitValue{UnitValue{val, UnitValue::Unit::DPCM}};
-    }
-
     static constexpr TypedUnitValue fromDppx(f64 val)
         requires(TYPE == NumericBaseType::RESOLUTION)
     {
         return TypedUnitValue{UnitValue{val, UnitValue::Unit::DPPX}};
     }
 
-    static constexpr TypedUnitValue infinite()
-        requires(TYPE == NumericBaseType::RESOLUTION)
-    {
-        return fromDppx(Math::INF);
-    }
-
-    constexpr f64 toDpi() const
-        requires(TYPE == NumericBaseType::RESOLUTION)
-    {
-        return _value.to(UnitValue::Unit::DPI);
-    }
-
-    constexpr f64 toDpcm() const
-        requires(TYPE == NumericBaseType::RESOLUTION)
-    {
-        return _value.to(UnitValue::Unit::DPCM);
-    }
-
     constexpr f64 toDppx() const
         requires(TYPE == NumericBaseType::RESOLUTION)
     {
         return _value.to(UnitValue::Unit::DPPX);
-    }
-
-    // MARK: <flex> ------------------------------------------------------------
-    // https://drafts.csswg.org/css-grid/#typedef-flex
-
-    static constexpr TypedUnitValue fromFr(f64 val)
-        requires(TYPE == NumericBaseType::FLEX)
-    {
-        return TypedUnitValue{UnitValue{val, UnitValue::Unit::FR}};
-    }
-
-    constexpr f64 toFr() const
-        requires(TYPE == NumericBaseType::FLEX)
-    {
-        return _value.to(UnitValue::Unit::FR);
     }
 };
 

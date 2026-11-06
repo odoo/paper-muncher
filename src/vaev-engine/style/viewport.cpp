@@ -2,7 +2,6 @@ export module Vaev.Engine:style.viewport;
 
 import Karm.Math;
 
-import :css.values.unitValue;
 import :style.values.numeric;
 
 using namespace Karm;
@@ -10,7 +9,6 @@ using namespace Karm;
 namespace Vaev::Style {
 
 export struct Viewport {
-    Css::PureResolution dpi = Css::PureResolution::fromDpi(96);
     // https://drafts.csswg.org/css-values/#small-viewport-size
     Math::Vec2<Pixel> small;
     // https://drafts.csswg.org/css-values/#large-viewport-size

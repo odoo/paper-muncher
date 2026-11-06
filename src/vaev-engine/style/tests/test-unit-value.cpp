@@ -44,16 +44,16 @@ test$("vaev-css-unit-value-units") {
     assertEq$(resolution.toDppx(), 2.0);
 
     auto time = try$(_parse<Css::PureTime>("1500ms"));
-    assertEq$(time.toSecond(), 1.5);
+    assertEq$(time.unitValue().to(UnitValue::Unit::S), 1.5);
 
     auto frequency = try$(_parse<Css::PureFrequency>("2kHz"));
-    assertEq$(frequency.toHz(), 2000.0);
+    assertEq$(frequency.unitValue().to(UnitValue::Unit::HZ), 2000.0);
 
     auto percent = try$(_parse<Css::PurePercentage>("50%"));
     assertEq$(percent.value(), 50.0);
 
     auto flex = try$(_parse<Css::PureFlex>("2fr"));
-    assertEq$(flex.toFr(), 2.0);
+    assertEq$(flex.unitValue().to(UnitValue::Unit::FR), 2.0);
 
     auto number = try$(_parse<UnitValue>("2"));
     assertEq$(number.baseType(), NONE);
@@ -73,7 +73,7 @@ test$("vaev-css-unit-value-parsing") {
     assert$(not _parse<Css::PureAngle>("10px"));
     assert$(not _parse<Css::PureFlex>("10%"));
 
-    assertEq$(try$(_parse<Css::PureLength>("2em")), Css::PureLength::fromEm(2));
+    assertEq$(try$(_parse<Css::PureLength>("2em")), (Css::PureLength{UnitValue{2, UnitValue::Unit::EM}}));
     assertNe$(try$(_parse<Css::PureLength>("1in")), try$(_parse<Css::PureLength>("96px")));
     assertEq$(try$(_parse<Css::PureLength>("1in")).unitValue().to(UnitValue::Unit::PX), 96.0);
     assertGt$(try$(_parse<Css::PureLength>("1in")), try$(_parse<Css::PureLength>("95px")));

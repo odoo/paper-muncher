@@ -22,10 +22,10 @@ export struct FontFace {
 
     Vec<Css::FontSource> sources;
 
-    Union<None, Css::FontStyle, Range<Css::PureAngle>> style = Css::FontStyle{Css::FontStyle::NORMAL};
+    Union<None, Css::FontStyle, Range<Rad>> style = Css::FontStyle{Css::FontStyle::NORMAL};
 
     Opt<Range<Gfx::FontWeight>> weight = Some(Range<Gfx::FontWeight>::emptyAt(Gfx::FontWeight::REGULAR));
-    Opt<Range<Css::FontWidth>> width = Some(Range<Css::FontWidth>::emptyAt(Css::FontWidth::NORMAL));
+    Opt<Range<Percent>> width = Some(Range<Percent>::emptyAt(Percent{Css::FontWidth{Css::FontWidth::NORMAL}.val().value()}));
 
     Vec<Range<Rune>> unicodeRange;
 
@@ -50,7 +50,7 @@ export struct FontFace {
 
         Gfx::FontStretch resolvedStretch = Gfx::FontStretch::NORMAL;
         if (width)
-            resolvedStretch = Gfx::FontStretch::fromPercent(width.expect().start.val().value());
+            resolvedStretch = Gfx::FontStretch::fromPercent(width.expect().start.value());
 
         Gfx::FontStyle resolvedStyle = Gfx::FontStyle::NORMAL;
         if (style.is<Css::FontStyle>())
@@ -187,7 +187,7 @@ export struct SrcFontDescriptor {
 // MARK: font-style
 // https://www.w3.org/TR/css-fonts-4/#font-style-desc
 export struct FontStyleFontDescriptor {
-    Union<None, Css::FontStyle, Range<Css::PureAngle>> value;
+    Union<None, Css::FontStyle, Range<Rad>> value;
 
     static Str name() { return "font-style"; }
 
@@ -215,7 +215,7 @@ export struct FontStyleFontDescriptor {
             return Ok();
         }
 
-        value = Range<Css::PureAngle>::fromStartEnd(style.obliqueAngle, val.expect());
+        value = Range<Rad>::fromStartEnd(toComputed(style.obliqueAngle), toComputed(val.expect()));
         return Ok();
     }
 };
@@ -256,11 +256,11 @@ export struct FontWeightFontDescriptor {
 // MARK: font-width
 // https://www.w3.org/TR/css-fonts-4/#font-width-prop
 export struct FontWidthFontDescriptor {
-    Opt<Range<Css::FontWidth>> value = initial();
+    Opt<Range<Percent>> value = initial();
 
     static Str name() { return "font-width"; }
 
-    static Opt<Range<Css::FontWidth>> initial() { return NONE; }
+    static Opt<Range<Percent>> initial() { return NONE; }
 
     void apply(FontFace& f) const {
         f.width = value;
@@ -276,11 +276,11 @@ export struct FontWidthFontDescriptor {
 
         auto val = parseValue<Css::FontWidth>(c);
         if (not val) {
-            value = Some(Range<Css::FontWidth>::emptyAt(width));
+            value = Some(Range<Percent>::emptyAt(Percent{width.val().value()}));
             return Ok();
         }
 
-        value = Some(Range<Css::FontWidth>::fromStartEnd(width, val.expect()));
+        value = Some(Range<Percent>::fromStartEnd(Percent{width.val().value()}, Percent{val.expect().val().value()}));
 
         return Ok();
     }
