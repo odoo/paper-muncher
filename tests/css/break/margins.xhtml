@@ -1,0 +1,102 @@
+<tests>
+<test name="margin-truncated-after-unforced-break" flow="paginate" width="200px" height="200px" margins="0">
+<container>
+    <html lang="en" xmlns="http://www.w3.org/1999/xhtml">
+
+    <head>
+        <style>
+            :root {
+                background-color: white;
+            }
+
+            body {
+                margin: 0;
+            }
+
+            .filler {
+                height: 150px;
+                background-color: salmon;
+            }
+
+            .box {
+                height: 100px;
+                background-color: lightseagreen;
+            }
+        </style>
+    </head>
+
+    <body>
+        <slot />
+    </body>
+
+    </html>
+</container>
+
+<rendering>
+    <div class="filler"></div>
+    <div class="box" style="break-before: page;"></div>
+</rendering>
+
+<rendering>
+    <div class="filler"></div>
+    <div class="box" style="margin-top: 20px;"></div>
+</rendering>
+
+<rendering>
+    <div class="filler"></div>
+    <div class="box" style="margin-top: 300px;"></div>
+</rendering>
+
+<rendering>
+    <div class="filler"></div>
+    <div>
+        <div class="box" style="margin-top: 300px;"></div>
+    </div>
+</rendering>
+</test>
+
+<test name="margin-preserved-after-forced-break" flow="paginate" width="200px" height="200px" margins="0">
+<container>
+    <html lang="en" xmlns="http://www.w3.org/1999/xhtml">
+
+    <head>
+        <style>
+            :root {
+                background-color: white;
+            }
+
+            body {
+                margin: 0;
+            }
+
+            .filler {
+                height: 50px;
+                background-color: salmon;
+            }
+
+            .box {
+                height: 100px;
+                background-color: lightseagreen;
+            }
+        </style>
+    </head>
+
+    <body>
+        <slot />
+    </body>
+
+    </html>
+</container>
+
+<rendering>
+    <div class="filler"></div>
+    <div style="height: 20px; break-before: page;"></div>
+    <div class="box"></div>
+</rendering>
+
+<rendering>
+    <div class="filler"></div>
+    <div class="box" style="margin-top: 20px; break-before: page;"></div>
+</rendering>
+</test>
+</tests>

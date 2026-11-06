@@ -61,6 +61,8 @@ export struct Input {
 
     // Floats of the parent block formatting context, empty when this box establishes a new one.
     Floats floats = {};
+    // Whether the block-start margin of the first child adjoins an unforced break, through this box's own margin.
+    bool truncatesFirstChildMargin = false;
 
     // TODO: instead of stringing this around, maybe change this (and check method of fragmentainer) to a
     // "availableSpaceInFragmentainer" parameter
