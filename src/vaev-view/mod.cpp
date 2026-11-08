@@ -18,7 +18,7 @@ export using DispatchEvent = Ui::Send<Dom::Event&>;
 
 export struct ViewportProps {
     f64 scale = 1.0;
-    Opt<Css::ColorScheme> prefersColorScheme = NONE;
+    Opt<Style::ColorScheme> prefersColorScheme = NONE;
 
     bool wireframe = false;
     Opt<Dom::OriginatingElement> selected = NONE;
@@ -85,7 +85,7 @@ struct Viewport : Ui::View<Viewport> {
         _listener.updateContainerBound(bound);
 
         auto prefs = Style::ViewerPrefs::forRender();
-        prefs.colorScheme = _props.prefersColorScheme.unwrapOr(Ui::darkMode ? Css::ColorScheme::DARK : Css::ColorScheme::LIGHT);
+        prefs.colorScheme = _props.prefersColorScheme.unwrapOr(Ui::darkMode ? Style::ColorScheme::DARK : Style::ColorScheme::LIGHT);
         _webview->changeArea(Style::DisplayArea::forRender(bound.size().cast<f64>(), Style::Dppx{_props.scale}));
         _webview->changePrefs(prefs);
 

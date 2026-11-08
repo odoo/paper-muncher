@@ -13,6 +13,99 @@ import :css.values;
 import :style.values;
 import :css;
 
+namespace Vaev::Css {
+
+// MARK: Font descriptor values ----------------------------------------------
+
+export enum struct FontDisplay {
+    AUTO,
+    BLOCK,
+    SWAP,
+    FALLBACK,
+    OPTIONAL,
+
+    _LEN,
+};
+
+// MARK: FontFeature -----------------------------------------------------------
+
+export using FontTag = Array<char, 4>;
+
+export FontTag makeTag(Str tag) {
+    if (tag.len() != 4)
+        return {' ', ' ', ' ', ' '};
+    return {tag[0], tag[1], tag[2], tag[3]};
+}
+
+export struct FontFeature {
+    enum struct _Value {
+        OFF,
+        ON,
+    };
+
+    FontTag tag;
+    isize val;
+
+    FontFeature(Str tag, isize val)
+        : tag(makeTag(tag)), val(val) {
+    }
+
+    FontFeature(Str tag, _Value val)
+        : tag(makeTag(tag)), val(static_cast<isize>(val)) {
+    }
+
+    void repr(Io::Emit& e) const {
+        e("(font-feature {} {})", tag, val);
+    }
+
+    bool operator==(FontFeature const& other) const {
+        return tag == other.tag and val == other.val;
+    }
+
+    bool operator==(FontTag const& other) const {
+        return tag == other;
+    }
+
+    bool operator==(_Value const& other) const {
+        return val == static_cast<isize>(other);
+    }
+};
+
+export struct FontVariation {
+    FontTag tag;
+    f64 val;
+
+    FontVariation(Str tag, f64 val)
+        : tag(makeTag(tag)), val(val) {
+    }
+
+    void repr(Io::Emit& e) const {
+        e("(font-variation {} {})", tag, val);
+    }
+
+    bool operator==(FontTag const& other) const {
+        return tag == other;
+    }
+};
+
+export struct FontSource {
+    Union<Ref::Url, FontFamily> identifier;
+    Opt<String> format;
+
+    FontSource(Ref::Url url) : identifier(url) {}
+
+    FontSource(FontFamily family) : identifier(family) {}
+
+    void repr(Io::Emit& e) const {
+        e("(font-source {}", identifier);
+        if (format)
+            e(" format({})", *format);
+        e(")");
+    }
+};
+
+} // namespace Vaev::Css
+
 namespace Vaev::Style {
 
 // MARK: FontFace --------------------------------------------------------------

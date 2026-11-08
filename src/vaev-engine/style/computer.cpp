@@ -84,7 +84,7 @@ export struct Computer {
             // 3. If el sets this counter with counter-set, then add that integer value to num and break this loop.
             auto maybeCounterSet =
                 iter(el.computedValues()->counters->set) |
-                FindFirst([&](Vaev::CounterSet const& set) {
+                FindFirst([&](Style::CounterIncrement const& set) {
                     return set.name == counter;
                 });
 
@@ -189,7 +189,7 @@ export struct Computer {
     Rc<Gfx::Fontface> _lookupFontface(ComputedValues const& style) {
         Font::Query fq{
             .weight = style.font->weight,
-            .stretch = Gfx::FontStretch{static_cast<u16>(Math::roundi(style.font->width.val().value() * 10.0))},
+            .stretch = Gfx::FontStretch{static_cast<u16>(Math::roundi(style.font->width.value() * 10.0))},
             .style = style.font->style.val,
         };
 

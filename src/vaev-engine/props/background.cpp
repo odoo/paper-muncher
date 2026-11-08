@@ -11,8 +11,8 @@ import :style.computed;
 import :css.values.base;
 import :values.primitives;
 import :css.values.primitives;
-import :css.values.background;
-import :style.values.background;
+import :css.values.backgrounds;
+import :style.values.backgrounds;
 
 using namespace Karm;
 

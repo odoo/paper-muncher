@@ -1,4 +1,4 @@
-export module Vaev.Engine:css.values.image;
+export module Vaev.Engine:css.values.images;
 
 import Karm.Ref;
 import Karm.Gfx;

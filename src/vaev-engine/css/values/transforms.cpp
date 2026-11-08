@@ -2,7 +2,7 @@ module;
 
 #include <karm/macros>
 
-export module Vaev.Engine:css.values.transform;
+export module Vaev.Engine:css.values.transforms;
 
 import :css.lexer;
 import :css.parser;

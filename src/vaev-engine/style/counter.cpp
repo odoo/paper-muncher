@@ -4,7 +4,8 @@ import Karm.Core;
 import Karm.Icu;
 import :values.primitives;
 import :css.values.primitives;
-import :css.values.counter;
+import :css.values.counterStyles;
+import :style.computed;
 
 using namespace Karm;
 
@@ -88,7 +89,7 @@ export struct CounterSet {
     }
 
     // https://drafts.csswg.org/css-lists/#propdef-counter-set
-    void set(Dom::ElementHandle el, Vaev::CounterSet const& set) {
+    void set(Dom::ElementHandle el, Style::CounterIncrement const& set) {
         auto [counter, _] = innerMost(set.name);
         if (not counter) {
             // If there is not currently a counter of the given name on the element,

@@ -2,17 +2,14 @@ module;
 
 #include <karm/macros>
 
-export module Vaev.Engine:style.values.basicShape;
+export module Vaev.Engine:style.values.shapes;
 
 import Karm.Core;
 
-import :css.values.basicShape;
-import :style.values.background;
-import :style.values.borders;
+import :css.values.shapes;
+import :style.values.backgrounds;
 import :style.values.generic;
-import :style.values.insets;
 import :style.values.numeric;
-import :values.insets;
 import :values.unitValue;
 
 using namespace Karm;

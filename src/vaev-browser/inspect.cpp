@@ -68,7 +68,7 @@ export struct InspectChangeMargin {
 };
 
 export struct InspectChangeColorScheme {
-    Opt<Css::ColorScheme> value;
+    Opt<Style::ColorScheme> value;
 };
 
 export struct InspectChangeScale {
@@ -115,7 +115,7 @@ export struct InspectState {
     Gc::Ptr<Dom::Node> selectedNode = nullptr;
     usize selectedFragmentIndex = 0;
 
-    Opt<Css::ColorScheme> colorScheme;
+    Opt<Style::ColorScheme> colorScheme;
     Print::Settings settings;
     bool paginated = false;
 
@@ -715,8 +715,8 @@ Ui::Child inspectTabMedia(InspectState const& s, Ui::Action<InspectAction> send)
                 "Color Scheme"s,
                 {
                     Kr::tabbarItem(s.colorScheme == NONE, rbind(send, InspectChangeColorScheme{NONE}), Kr::tabarItemLabel(NONE, "Auto"s)),
-                    Kr::tabbarItem(s.colorScheme == Css::ColorScheme::LIGHT, rbind(send, InspectChangeColorScheme{Some(Css::ColorScheme::LIGHT)}), Kr::tabarItemLabel(NONE, "Light"s)),
-                    Kr::tabbarItem(s.colorScheme == Css::ColorScheme::DARK, rbind(send, InspectChangeColorScheme{Some(Css::ColorScheme::DARK)}), Kr::tabarItemLabel(NONE, "Dark"s)),
+                    Kr::tabbarItem(s.colorScheme == Style::ColorScheme::LIGHT, rbind(send, InspectChangeColorScheme{Some(Style::ColorScheme::LIGHT)}), Kr::tabarItemLabel(NONE, "Light"s)),
+                    Kr::tabbarItem(s.colorScheme == Style::ColorScheme::DARK, rbind(send, InspectChangeColorScheme{Some(Style::ColorScheme::DARK)}), Kr::tabarItemLabel(NONE, "Dark"s)),
                 }
             ),
             Kr::numberRow(

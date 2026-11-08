@@ -1,9 +1,9 @@
 export module Vaev.Engine:style.values.generic;
 
 import Karm.Core;
+import Karm.Math;
 
-import :style.values.numeric;
-import :values.keywords;
+import :values.unitValue;
 
 using namespace Karm;
 
@@ -37,6 +37,20 @@ auto toSpecified(Union<Ts...> const& value) {
     return value.visit([](auto const& v) -> Specified {
         return toSpecified(v);
     });
+}
+
+} // namespace Vaev::Style
+
+namespace Vaev::Style {
+
+export template <typename T>
+auto toComputed(Math::Insets<T> const& value, LengthContext auto const& ctx) -> Math::Insets<decltype(toComputed(value.top, ctx))> {
+    return {toComputed(value.top, ctx), toComputed(value.end, ctx), toComputed(value.bottom, ctx), toComputed(value.start, ctx)};
+}
+
+export template <typename T>
+auto toSpecified(Math::Insets<T> const& value) -> Math::Insets<decltype(toSpecified(value.top))> {
+    return {toSpecified(value.top), toSpecified(value.end), toSpecified(value.bottom), toSpecified(value.start)};
 }
 
 } // namespace Vaev::Style

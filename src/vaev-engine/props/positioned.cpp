@@ -11,6 +11,41 @@ import :style.computed;
 
 using namespace Karm;
 
+namespace Vaev::Css {
+
+export template <>
+struct ValueParser<Style::PositionScheme> {
+    // https://drafts.csswg.org/css-position-3/#propdef-position
+    static Res<Style::PositionScheme> parse(Cursor<Sst>& c) {
+        if (c.ended())
+            return Error::invalidData("unexpected end of input");
+
+        if (c.skip(Token::ident("static")))
+            return Ok(Keywords::STATIC);
+        else if (c.skip(Token::ident("relative")))
+            return Ok(Keywords::RELATIVE);
+        else if (c.skip(Token::ident("absolute")))
+            return Ok(Keywords::ABSOLUTE);
+        else if (c.skip(Token::ident("fixed")))
+            return Ok(Keywords::FIXED);
+        else if (c.skip(Token::ident("sticky")))
+            return Ok(Keywords::STICKY);
+        else if (c->type == Sst::FUNC and c->prefix == Token::function("running(")) {
+            Cursor<Sst> cur = c->content;
+            auto res = parseValue<CustomIdent>(cur);
+            if (not res) {
+                return Error::invalidData("ill formed custom-ident in running position");
+            }
+            c.next();
+            return Ok(Style::RunningPosition{res.take()});
+
+        } else
+            return Error::invalidData("expected position");
+    }
+};
+
+} // namespace Vaev::Css
+
 namespace Vaev::Style {
 
 // MARK: Positioning -----------------------------------------------------------
@@ -21,7 +56,7 @@ export struct PositionProperty : Property {
         Registration() : Property::Registration(Properties::POSITION) {}
 
         Rc<Property> initial() const override {
-            return makeRc<PositionProperty>(self(), Vaev::Position{Keywords::STATIC});
+            return makeRc<PositionProperty>(self(), Style::PositionScheme{Keywords::STATIC});
         }
 
         Rc<Property> load(ComputedValues const& c) const override {
@@ -29,13 +64,13 @@ export struct PositionProperty : Property {
         }
 
         Res<Rc<Property>> parse(Cursor<Css::Sst>& c) const override {
-            return Ok(makeRc<PositionProperty>(self(), try$(parseValue<Vaev::Position>(c))));
+            return Ok(makeRc<PositionProperty>(self(), try$(parseValue<Style::PositionScheme>(c))));
         }
     };
 
-    Vaev::Position _value;
+    Style::PositionScheme _value;
 
-    PositionProperty(Rc<Property::Registration> registration, Vaev::Position value)
+    PositionProperty(Rc<Property::Registration> registration, Style::PositionScheme value)
         : Property(registration), _value(value) {}
 
     void apply([[maybe_unused]] ComputedValues const& parent, ComputedValues& c, [[maybe_unused]] ComputationContext const& cx) const override {

@@ -2,12 +2,12 @@ module;
 
 #include <karm/macros>
 
-export module Vaev.Engine:style.values.transform;
+export module Vaev.Engine:style.values.transforms;
 
 import Karm.Core;
 
 import :css.values.calc;
-import :css.values.transform;
+import :css.values.transforms;
 import :style.values.numeric;
 import :values.unitValue;
 

@@ -1,4 +1,4 @@
-export module Vaev.Engine:values.basicShape;
+export module Vaev.Engine:values.shapes;
 
 import Karm.Core;
 

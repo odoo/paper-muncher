@@ -6,8 +6,6 @@ export module Vaev.Engine:values.content;
 
 import Karm.Core;
 
-import :values.counter;
-import :values.keywords;
 import :values.primitives;
 
 using namespace Karm;
@@ -35,13 +33,5 @@ export struct ElementFunc {
         e("element '{}'", customIdent);
     }
 };
-
-export using ContentValue = Union<
-    Keywords::Normal,
-    Keywords::None,
-    String,
-    ElementFunc,
-    CounterFunc,
-    CountersFunc>;
 
 } // namespace Vaev

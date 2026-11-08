@@ -11,6 +11,40 @@ import :style.computed;
 
 using namespace Karm;
 
+namespace Vaev::Css {
+
+export template <>
+struct ValueParser<Style::ContentValue> {
+    // https://www.w3.org/TR/css-content-3/
+    // https://www.w3.org/TR/css-gcpm-3/#funcdef-element
+    static Res<Style::ContentValue> parse(Cursor<Sst>& c) {
+        if (c.ended())
+            return Error::invalidData("unexpected end of input");
+
+        if (c.skip(Token::ident("normal")))
+            return Ok(Keywords::NORMAL);
+        else if (c.skip(Token::ident("open-quote")))
+            return Ok(String{"“"});
+        else if (c.skip(Token::ident("close-quote")))
+            return Ok(String{"”"});
+        else if (c->prefix == Token::function("element(")) {
+            Cursor<Sst> cur = c->content;
+            auto element = try$(parseValue<ElementFunc>(cur));
+            c.next();
+            return Ok(element);
+        } else if (c->prefix == Token::function("counter(")) {
+            return parseValue<CounterFunc>(c);
+        } else if (c->prefix == Token::function("counters(")) {
+            return parseValue<CountersFunc>(c);
+        } else if (c->type == Sst::TOKEN and c->token.type == Token::STRING) {
+            return Ok(try$(parseValue<String>(c)));
+        } else
+            return Error::invalidData("expected content");
+    }
+};
+
+} // namespace Vaev::Css
+
 namespace Vaev::Style {
 
 // https://www.w3.org/TR/CSS22/visuren.html#propdef-display

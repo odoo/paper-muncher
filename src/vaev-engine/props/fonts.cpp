@@ -12,7 +12,152 @@ import :style.computed;
 
 using namespace Karm;
 
+namespace Vaev::Css {
+
+export using FontSize = Union<
+    LengthPercentage,
+    Keywords::XxSmall,
+    Keywords::XSmall,
+    Keywords::Small,
+    Keywords::Medium,
+    Keywords::Large,
+    Keywords::XLarge,
+    Keywords::XxLarge,
+    Keywords::Smaller,
+    Keywords::Larger>;
+
+// https://drafts.csswg.org/css-fonts-4/#font-weight-prop
+export enum struct RelativeFontWeight : u8 {
+    LIGHTER,
+    BOLDER,
+
+    _LEN
+};
+
+using _FontWeight = Union<
+    Gfx::FontWeight,
+    RelativeFontWeight>;
+
+export struct FontWeight : _FontWeight {
+    using _FontWeight::_FontWeight;
+
+    bool isRelative() const {
+        return is<RelativeFontWeight>().has();
+    }
+
+    FontWeight()
+        : FontWeight(Gfx::FontWeight::REGULAR) {
+    }
+
+    void repr(Io::Emit& e) const {
+        e("{}", static_cast<Union<Gfx::FontWeight, RelativeFontWeight>>(*this));
+    }
+
+    Gfx::FontWeight resolve() const {
+        if (is<RelativeFontWeight>())
+            return Gfx::FontWeight::REGULAR;
+
+        return expect<Gfx::FontWeight>();
+    }
+
+    Gfx::FontWeight resolve(Gfx::FontWeight const& parent) const {
+        if (is<RelativeFontWeight>()) {
+            if (expect<RelativeFontWeight>() == RelativeFontWeight::LIGHTER)
+                return parent.lighter();
+            return parent.bolder();
+        }
+
+        return expect<Gfx::FontWeight>();
+    }
+};
+
+export template <>
+struct ValueParser<FontWeight> {
+    static Res<FontWeight> parse(Cursor<Sst>& c) {
+        if (c.ended())
+            return Error::invalidData("unexpected end of input");
+
+        if (c.skip(Token::ident("bolder"))) {
+            return Ok(RelativeFontWeight::BOLDER);
+        } else if (c.skip(Token::ident("lighter"))) {
+            return Ok(RelativeFontWeight::LIGHTER);
+        } else {
+            return Ok(try$(parseValue<Gfx::FontWeight>(c)));
+        }
+    }
+};
+
+export template <>
+struct ValueSerializer<FontWeight> {
+    static Res<> serialize(Io::TextWriter& w, FontWeight const& value) {
+        return value.visit([&](auto const& v) {
+            return serializeValue(w, v);
+        });
+    }
+};
+
+} // namespace Vaev::Css
+
 namespace Vaev::Style {
+
+// https://drafts.csswg.org/css-fonts-4/#font-width-prop
+// Computed value: a percentage
+export Percent toComputed(Css::FontWidth const& value) {
+    return Percent{value.val().value()};
+}
+
+static Css::FontWidth _toSpecifiedFontWidth(Percent width) {
+    return Css::FontWidth{Css::PurePercentage{width.value()}};
+}
+
+// https://drafts.csswg.org/css-fonts-4/#font-style-prop
+export FontStyle toComputed(Css::FontStyle const& value) {
+    return {value.val, toComputed(value.obliqueAngle)};
+}
+
+export Css::FontStyle toSpecified(FontStyle const& value) {
+    if (value.val == Gfx::FontStyle::OBLIQUE)
+        return Css::FontStyle{Css::PureAngle::fromDegree(value.obliqueAngle.value())};
+    return Css::FontStyle{value.val};
+}
+
+export Pixel toComputed(Css::FontSize const& value, FontSizeContext auto const& ctx) {
+    return value.visit(
+        [&](Css::LengthPercentage const& v) {
+            // NOTE: At this point, ctx's font metrics are the parent's, so `em` resolves against the parent font size, and
+            //       percentages are relative to it too. Negative calc() results are clamped to the allowed [0,∞] range.
+            //       https://www.w3.org/TR/css-fonts-4/#font-size-prop
+            return Pixel{max(toComputed(v, ctx, ctx.parentFontSize).value(), 0.0)};
+        },
+        [&](Keywords::XxSmall) {
+            return Pixel{ctx.userFontSize * 0.5};
+        },
+        [&](Keywords::XSmall) {
+            return Pixel{ctx.userFontSize * 0.75};
+        },
+        [&](Keywords::Small) {
+            return Pixel{ctx.userFontSize * 0.875};
+        },
+        [&](Keywords::Medium) {
+            return Pixel{ctx.userFontSize};
+        },
+        [&](Keywords::Large) {
+            return Pixel{ctx.userFontSize * 1.125};
+        },
+        [&](Keywords::XLarge) {
+            return Pixel{ctx.userFontSize * 1.25};
+        },
+        [&](Keywords::XxLarge) {
+            return Pixel{ctx.userFontSize * 1.5};
+        },
+        [&](Keywords::Larger) {
+            return Pixel{ctx.parentFontSize * 1.25};
+        },
+        [&](Keywords::Smaller) {
+            return Pixel{ctx.parentFontSize * 0.875};
+        }
+    );
+}
 
 // MARK: Fonts -----------------------------------------------------------------
 
@@ -151,7 +296,7 @@ export struct FontWidthProperty : Property {
         }
 
         Rc<Property> load(ComputedValues const& c) const override {
-            return makeRc<FontWidthProperty>(self(), c.font->width);
+            return makeRc<FontWidthProperty>(self(), _toSpecifiedFontWidth(c.font->width));
         }
 
         Res<Rc<Property>> parse(Cursor<Css::Sst>& c) const override {
@@ -165,7 +310,7 @@ export struct FontWidthProperty : Property {
         : Property(registration), _value(value) {}
 
     void apply([[maybe_unused]] ComputedValues const& parent, ComputedValues& c, [[maybe_unused]] ComputationContext const& cx) const override {
-        c.font.cow().width = _value;
+        c.font.cow().width = toComputed(_value);
     }
 
     Res<> serialize(Io::TextWriter& w) const override {
@@ -196,7 +341,7 @@ export struct FontStyleProperty : Property {
         }
 
         Rc<Property> load(ComputedValues const& c) const override {
-            return makeRc<FontStyleProperty>(self(), c.font->style);
+            return makeRc<FontStyleProperty>(self(), toSpecified(c.font->style));
         }
 
         Res<Rc<Property>> parse(Cursor<Css::Sst>& c) const override {
@@ -210,7 +355,7 @@ export struct FontStyleProperty : Property {
         : Property(registration), _value(value) {}
 
     void apply([[maybe_unused]] ComputedValues const& parent, ComputedValues& c, [[maybe_unused]] ComputationContext const& cx) const override {
-        c.font.cow().style = _value;
+        c.font.cow().style = toComputed(_value);
     }
 
     Res<> serialize(Io::TextWriter& w) const override {
@@ -303,8 +448,8 @@ export struct FontProperty : Property {
                 Value{
                     font.families,
                     Some(font.weight),
-                    font.width,
-                    font.style,
+                    _toSpecifiedFontWidth(font.width),
+                    toSpecified(font.style),
                     Css::LengthPercentage::fromCanonical(font.size.value()),
                 }
             );

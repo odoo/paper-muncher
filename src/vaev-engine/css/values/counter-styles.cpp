@@ -2,7 +2,7 @@ module;
 
 #include <karm/macros>
 
-export module Vaev.Engine:css.values.counter;
+export module Vaev.Engine:css.values.counterStyles;
 
 import :css.lexer;
 import :css.parser;
@@ -10,7 +10,7 @@ import :css.values.base;
 import :css.values.calc;
 import :css.values.keywords;
 import :css.values.primitives;
-import :values.counter;
+import :values.counterStyles;
 import :values.keywords;
 import :values.primitives;
 
@@ -132,40 +132,6 @@ struct ValueParser<CountersFunc> {
 
         c.next();
         return Ok(CountersFunc{name, join, maybeSymbols});
-    }
-};
-
-export template <>
-struct ValueParser<CounterReset> {
-    static Res<CounterReset> parse(Cursor<Sst>& c) {
-        if (c.ended())
-            return Error::invalidData("unexpected end of input");
-
-        bool reversed = false;
-        CustomIdent name;
-
-        if (c.peek() == Token::function("reversed(")) {
-            Cursor<Sst> content = c->content;
-            name = try$(parseValue<CustomIdent>(content));
-            reversed = true;
-            c.next();
-        } else {
-            name = try$(parseValue<CustomIdent>(c));
-        }
-
-        auto value = try$(parseValue<Integer>(c));
-        return Ok(CounterReset{name, reversed, Some(value)});
-    }
-};
-
-export template <>
-struct ValueParser<CounterIncrement> {
-    static Res<CounterIncrement> parse(Cursor<Sst>& c) {
-        if (c.ended())
-            return Error::invalidData("unexpected end of input");
-        CustomIdent name = try$(parseValue<CustomIdent>(c));
-        auto value = try$(parseValue<Integer>(c));
-        return Ok(CounterIncrement{name, Some(value)});
     }
 };
 

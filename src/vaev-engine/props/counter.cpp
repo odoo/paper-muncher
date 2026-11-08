@@ -9,6 +9,44 @@ import :style.counter;
 
 using namespace Karm;
 
+namespace Vaev::Css {
+
+export template <>
+struct ValueParser<Style::CounterReset> {
+    static Res<Style::CounterReset> parse(Cursor<Sst>& c) {
+        if (c.ended())
+            return Error::invalidData("unexpected end of input");
+
+        bool reversed = false;
+        CustomIdent name;
+
+        if (c.peek() == Token::function("reversed(")) {
+            Cursor<Sst> content = c->content;
+            name = try$(parseValue<CustomIdent>(content));
+            reversed = true;
+            c.next();
+        } else {
+            name = try$(parseValue<CustomIdent>(c));
+        }
+
+        auto value = try$(parseValue<Integer>(c));
+        return Ok(Style::CounterReset{name, reversed, Some(value)});
+    }
+};
+
+export template <>
+struct ValueParser<Style::CounterIncrement> {
+    static Res<Style::CounterIncrement> parse(Cursor<Sst>& c) {
+        if (c.ended())
+            return Error::invalidData("unexpected end of input");
+        CustomIdent name = try$(parseValue<CustomIdent>(c));
+        auto value = try$(parseValue<Integer>(c));
+        return Ok(Style::CounterIncrement{name, Some(value)});
+    }
+};
+
+} // namespace Vaev::Css
+
 namespace Vaev::Style {
 
 // https://drafts.csswg.org/css-lists/#counter-reset
@@ -87,7 +125,7 @@ export struct CounterSetProperty : Property {
         Registration() : Property::Registration(Properties::COUNTER_SET) {}
 
         Rc<Property> initial() const override {
-            return makeRc<CounterSetProperty>(self(), Vec<Vaev::CounterSet>{});
+            return makeRc<CounterSetProperty>(self(), Vec<Style::CounterIncrement>{});
         }
 
         Rc<Property> load(ComputedValues const& c) const override {
@@ -96,15 +134,15 @@ export struct CounterSetProperty : Property {
 
         Res<Rc<Property>> parse(Cursor<Css::Sst>& c) const override {
             if (parseValue<Keywords::None>(c))
-                return Ok(makeRc<CounterSetProperty>(self(), Vec<Vaev::CounterSet>{}));
-            auto value = try$(parseValue<Vec<Vaev::CounterSet>>(c));
+                return Ok(makeRc<CounterSetProperty>(self(), Vec<Style::CounterIncrement>{}));
+            auto value = try$(parseValue<Vec<Style::CounterIncrement>>(c));
             return Ok(makeRc<CounterSetProperty>(self(), value));
         }
     };
 
-    Vec<Vaev::CounterSet> _value;
+    Vec<Style::CounterIncrement> _value;
 
-    CounterSetProperty(Rc<Property::Registration> registration, Vec<Vaev::CounterSet> value)
+    CounterSetProperty(Rc<Property::Registration> registration, Vec<Style::CounterIncrement> value)
         : Property(registration), _value(value) {}
 
     void apply(ComputedValues const&, ComputedValues& c, [[maybe_unused]] ComputationContext const& cx) const override {

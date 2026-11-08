@@ -34,15 +34,15 @@ bool isSegmentBreak(Rune rune) {
 }
 
 // http://drafts.csswg.org/css-text/#white-space-property
-static bool _allowsWrap(WhiteSpace whiteSpace) {
+static bool _allowsWrap(Style::WhiteSpace whiteSpace) {
     return oneOf(whiteSpace, Keywords::NORMAL, Keywords::PRE_WRAP, Keywords::BREAK_SPACES, Keywords::PRE_LINE);
 }
 
-static bool _collapsesWhitespace(WhiteSpace whiteSpace) {
+static bool _collapsesWhitespace(Style::WhiteSpace whiteSpace) {
     return oneOf(whiteSpace, Keywords::NORMAL, Keywords::NOWRAP, Keywords::PRE_LINE);
 }
 
-static bool _discardsWhitespaceOnlyTextAtContentStart(WhiteSpace whiteSpace) {
+static bool _discardsWhitespaceOnlyTextAtContentStart(Style::WhiteSpace whiteSpace) {
     return oneOf(whiteSpace, Keywords::NORMAL, Keywords::NOWRAP);
 }
 
@@ -106,7 +106,7 @@ static Gfx::SpanStyle _spanStyleFromStyle(Style::ComputedValues const& style) {
     };
 }
 
-void _transformAndAppendRuneToProse(Rc<Gfx::Prose> prose, Rune rune, TextTransform transform) {
+void _transformAndAppendRuneToProse(Rc<Gfx::Prose> prose, Rune rune, Style::TextTransform transform) {
     transform.visit(
         [&](Keywords::Uppercase) {
             prose->append(toAsciiUpper(rune));

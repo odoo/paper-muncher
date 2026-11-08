@@ -11,7 +11,71 @@ import :style.computed;
 
 using namespace Karm;
 
+namespace Vaev::Css {
+
+export struct SpecifiedBorder {
+    LineWidth width = Keywords::MEDIUM;
+    Gfx::BorderStyle style = Gfx::BorderStyle::NONE;
+    Color color = Keywords::CURRENT_COLOR;
+
+    void repr(Io::Emit& e) const {
+        e("(specified-border {} {} {})", width, style, color);
+    }
+};
+
+export template <>
+struct ValueParser<SpecifiedBorder> {
+    static Res<SpecifiedBorder> parse(Cursor<Sst>& c) {
+        // https://drafts.csswg.org/css-backgrounds/#border-shorthands
+        // <line-width> || <line-style> || <color>, each at most once.
+        SpecifiedBorder border;
+        bool widthSet = false;
+        bool styleSet = false;
+        bool colorSet = false;
+        while (not c.ended()) {
+            eatWhitespace(c);
+
+            auto width = parseValue<LineWidth>(c);
+            if (width) {
+                if (widthSet)
+                    return Error::invalidData("duplicated border width");
+                border.width = width.expect();
+                widthSet = true;
+                continue;
+            }
+
+            auto color = parseValue<Color>(c);
+            if (color) {
+                if (colorSet)
+                    return Error::invalidData("duplicated border color");
+                border.color = color.expect();
+                colorSet = true;
+                continue;
+            }
+
+            auto style = parseValue<Gfx::BorderStyle>(c);
+            if (style) {
+                if (styleSet)
+                    return Error::invalidData("duplicated border style");
+                border.style = style.expect();
+                styleSet = true;
+                continue;
+            }
+
+            break;
+        }
+
+        return Ok(border);
+    }
+};
+
+} // namespace Vaev::Css
+
 namespace Vaev::Style {
+
+export Css::SpecifiedBorder toSpecified(Border const& value) {
+    return {toSpecified(value.width), value.style, toSpecified(value.color)};
+}
 
 // MARK: Borders ---------------------------------------------------------------
 
@@ -762,7 +826,7 @@ export struct BorderTopProperty : Property {
         }
 
         Rc<Property> load(ComputedValues const& c) const override {
-            return makeRc<BorderTopProperty>(self(), c.borders->top);
+            return makeRc<BorderTopProperty>(self(), toSpecified(c.borders->top));
         }
 
         Res<Rc<Property>> parse(Cursor<Css::Sst>& c) const override {
@@ -799,7 +863,7 @@ export struct BorderRightProperty : Property {
         }
 
         Rc<Property> load(ComputedValues const& c) const override {
-            return makeRc<BorderRightProperty>(self(), c.borders->end);
+            return makeRc<BorderRightProperty>(self(), toSpecified(c.borders->end));
         }
 
         Res<Rc<Property>> parse(Cursor<Css::Sst>& c) const override {
@@ -836,7 +900,7 @@ export struct BorderBottomProperty : Property {
         }
 
         Rc<Property> load(ComputedValues const& c) const override {
-            return makeRc<BorderBottomProperty>(self(), c.borders->bottom);
+            return makeRc<BorderBottomProperty>(self(), toSpecified(c.borders->bottom));
         }
 
         Res<Rc<Property>> parse(Cursor<Css::Sst>& c) const override {
@@ -873,7 +937,7 @@ export struct BorderLeftProperty : Property {
         }
 
         Rc<Property> load(ComputedValues const& c) const override {
-            return makeRc<BorderLeftProperty>(self(), c.borders->start);
+            return makeRc<BorderLeftProperty>(self(), toSpecified(c.borders->start));
         }
 
         Res<Rc<Property>> parse(Cursor<Css::Sst>& c) const override {
@@ -910,7 +974,7 @@ export struct BorderProperty : Property {
         }
 
         Rc<Property> load(ComputedValues const& c) const override {
-            return makeRc<BorderProperty>(self(), c.borders->top);
+            return makeRc<BorderProperty>(self(), toSpecified(c.borders->top));
         }
 
         Res<Rc<Property>> parse(Cursor<Css::Sst>& c) const override {

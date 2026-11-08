@@ -2,7 +2,7 @@ module;
 
 #include <karm/macros>
 
-export module Vaev.Engine:values.counter;
+export module Vaev.Engine:values.counterStyles;
 
 import Karm.Core;
 
@@ -57,28 +57,5 @@ export struct CountersFunc {
         e("(counters {} {} {})", name, join, style);
     }
 };
-
-// https://www.w3.org/TR/css-lists-3/#counter-reset
-export struct CounterReset {
-    CustomIdent name;
-    bool reversed;
-    Opt<Integer> value = Some(0);
-
-    void repr(Io::Emit& e) const {
-        e("(counter-reset {}{} {})", reversed ? "reversed " : "", name, value);
-    }
-};
-
-// https://www.w3.org/TR/css-lists-3/#increment-set
-export struct CounterIncrement {
-    CustomIdent name;
-    Opt<Integer> value;
-
-    void repr(Io::Emit& e) const {
-        e("(counter-increment {} {})", name, value);
-    }
-};
-
-export using CounterSet = CounterIncrement;
 
 } // namespace Vaev

@@ -11,7 +11,51 @@ import :style.computed;
 
 using namespace Karm;
 
+namespace Vaev::Css {
+
+// https://drafts.csswg.org/css-inline/#propdef-baseline-shift
+export using BaselineShift = Union<
+    LengthPercentage,
+    Keywords::Sub,
+    Keywords::Super,
+    Keywords::Top,
+    Keywords::Center,
+    Keywords::Bottom>;
+
+// https://www.w3.org/TR/css-inline-3/#line-height-property
+export using LineHeight = Union<Keywords::Normal, Number, LengthPercentage>;
+
+} // namespace Vaev::Css
+
 namespace Vaev::Style {
+
+export LineHeight toComputed(Css::LineHeight const& value, LengthContext auto const& ctx) {
+    return value.visit(
+        [](Keywords::Normal const& normal) -> LineHeight {
+            return normal;
+        },
+        [](Css::Number const& number) -> LineHeight {
+            return toComputed(number);
+        },
+        [&](Css::LengthPercentage const& length) -> LineHeight {
+            return toComputed(length, ctx, ctx.fontSize);
+        }
+    );
+}
+
+export Css::LineHeight toSpecified(LineHeight const& value) {
+    return value.visit(
+        [](Keywords::Normal const& normal) -> Css::LineHeight {
+            return normal;
+        },
+        [](f64 const& number) -> Css::LineHeight {
+            return Css::Number::fromCanonical(number);
+        },
+        [](Pixel const& px) -> Css::LineHeight {
+            return toSpecified(PixelPercentage{px});
+        }
+    );
+}
 
 // https://drafts.csswg.org/css-inline/#line-height-property
 export struct LineHeightProperty : Property {

@@ -11,6 +11,16 @@ import :style.computed;
 
 using namespace Karm;
 
+namespace Vaev::Css {
+
+// https://www.w3.org/TR/css-sizing-3/#propdef-width
+// https://www.w3.org/TR/css-sizing-3/#propdef-height
+export using Size = Union<Keywords::Auto, LengthPercentage, Keywords::Stretch, Keywords::MinContent, Keywords::MaxContent, Keywords::FitContent>;
+
+export using MaxSize = Union<Keywords::None, LengthPercentage, Keywords::Stretch, Keywords::MinContent, Keywords::MaxContent, Keywords::FitContent>;
+
+} // namespace Vaev::Css
+
 namespace Vaev::Style {
 
 // MARK: Sizing ----------------------------------------------------------------

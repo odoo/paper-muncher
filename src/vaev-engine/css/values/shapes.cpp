@@ -2,7 +2,7 @@ module;
 
 #include <karm/macros>
 
-export module Vaev.Engine:css.values.basicShape;
+export module Vaev.Engine:css.values.shapes;
 
 import Karm.Core;
 import Karm.Gfx;
@@ -10,15 +10,13 @@ import Karm.Math;
 
 import :css.lexer;
 import :css.parser;
-import :css.values.background;
+import :css.values.backgrounds;
 import :css.values.base;
-import :css.values.borders;
 import :css.values.calc;
-import :css.values.insets;
 import :css.values.keywords;
 import :css.values.primitives;
-import :values.basicShape;
 import :values.keywords;
+import :values.shapes;
 
 using namespace Karm;
 

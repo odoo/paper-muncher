@@ -1,8 +1,6 @@
-export module Vaev.Engine:values.writing;
+export module Vaev.Engine:values.writingModes;
 
 import Karm.Core;
-
-import :values.keywords;
 
 using namespace Karm;
 
@@ -44,11 +42,5 @@ export struct Axis {
         return value == HORIZONTAL ? 0 : 1;
     }
 };
-
-// https://drafts.csswg.org/css-writing-modes-4/#propdef-writing-mode
-export using WritingMode = Union<Keywords::HorizontalTb, Keywords::VerticalRl, Keywords::VerticalLr, Keywords::SidewaysRl, Keywords::SidewaysLr>;
-
-// https://drafts.csswg.org/css-writing-modes-4/#propdef-direction
-export using Direction = Union<Keywords::Ltr, Keywords::Rtl>;
 
 } // namespace Vaev

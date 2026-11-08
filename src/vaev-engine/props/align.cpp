@@ -11,6 +11,15 @@ import :style.computed;
 
 using namespace Karm;
 
+namespace Vaev::Css {
+
+// https://drafts.csswg.org/css-align-3/#column-row-gap
+export using Gap = Union<
+    Keywords::Normal,
+    LengthPercentage>;
+
+} // namespace Vaev::Css
+
 namespace Vaev::Style {
 
 // MARK: Align -----------------------------------------------------------------

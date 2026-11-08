@@ -6,6 +6,7 @@ export module Vaev.Engine:css.values.primitives;
 
 import Karm.Core;
 import Karm.Ref;
+import Karm.Math;
 
 import :css.lexer;
 import :css.parser;
@@ -233,6 +234,42 @@ struct ValueSerializer<S> {
         }
 
         return Ok();
+    }
+};
+
+} // namespace Vaev::Css
+
+namespace Vaev::Css {
+
+// MARK: Position --------------------------------------------------------------
+
+export template <typename T>
+struct ValueParser<Math::Insets<T>> {
+    static Res<Math::Insets<T>> parse(Cursor<Sst>& c) {
+        if (c.ended())
+            return Error::invalidData("unexpected end of input");
+
+        eatWhitespace(c);
+        auto top = parseValue<T>(c);
+        if (not top)
+            return top.none();
+
+        eatWhitespace(c);
+        auto right = parseValue<T>(c);
+        if (not right)
+            return Ok(Math::Insets<T>{top.take()});
+
+        eatWhitespace(c);
+        auto bottom = parseValue<T>(c);
+        if (not bottom)
+            return Ok(Math::Insets<T>{top.take(), right.take()});
+
+        eatWhitespace(c);
+        auto left = parseValue<T>(c);
+        if (not left)
+            return Ok(Math::Insets<T>{top.take(), right.take(), bottom.take()});
+
+        return Ok(Math::Insets<T>{top.take(), right.take(), bottom.take(), left.take()});
     }
 };
 

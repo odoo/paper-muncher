@@ -2,7 +2,7 @@ module;
 
 #include <karm/macros>
 
-export module Vaev.Engine:css.values.font;
+export module Vaev.Engine:css.values.fonts;
 
 import Karm.Ref;
 import Karm.Gfx;
@@ -11,25 +11,13 @@ import :css.lexer;
 import :css.parser;
 import :css.serializer;
 import :css.values.base;
-import :css.values.calc;
 import :css.values.keywords;
 import :css.values.primitives;
 import :css.values.unitValue;
-import :values.font;
-import :values.keywords;
+import :values.fonts;
 import :values.primitives;
 
 namespace Vaev::Css {
-
-export enum struct FontDisplay {
-    AUTO,
-    BLOCK,
-    SWAP,
-    FALLBACK,
-    OPTIONAL,
-
-    _LEN,
-};
 
 // MARK: FontWidth -------------------------------------------------------------
 // https://www.w3.org/TR/css-fonts-4/#propdef-font-width
@@ -198,50 +186,6 @@ struct ValueSerializer<FontStyle> {
     }
 };
 
-export enum struct RelativeFontWeight : u8 {
-    LIGHTER,
-    BOLDER,
-
-    _LEN
-};
-
-using _FontWeight = Union<
-    Gfx::FontWeight,
-    RelativeFontWeight>;
-
-export struct FontWeight : _FontWeight {
-    using _FontWeight::_FontWeight;
-
-    bool isRelative() const {
-        return is<RelativeFontWeight>().has();
-    }
-
-    FontWeight()
-        : FontWeight(Gfx::FontWeight::REGULAR) {
-    }
-
-    void repr(Io::Emit& e) const {
-        e("{}", static_cast<Union<Gfx::FontWeight, RelativeFontWeight>>(*this));
-    }
-
-    Gfx::FontWeight resolve() const {
-        if (is<RelativeFontWeight>())
-            return Gfx::FontWeight::REGULAR;
-
-        return expect<Gfx::FontWeight>();
-    }
-
-    Gfx::FontWeight resolve(Gfx::FontWeight const& parent) const {
-        if (is<RelativeFontWeight>()) {
-            if (expect<RelativeFontWeight>() == RelativeFontWeight::LIGHTER)
-                return parent.lighter();
-            return parent.bolder();
-        }
-
-        return expect<Gfx::FontWeight>();
-    }
-};
-
 // MARK: FontWeight
 // https://www.w3.org/TR/css-fonts-4/#font-weight-absolute-values
 
@@ -269,123 +213,6 @@ struct ValueSerializer<Gfx::FontWeight> {
     // https://drafts.csswg.org/css-fonts-4/#font-weight-prop
     static Res<> serialize(Io::TextWriter& w, Gfx::FontWeight const& value) {
         return serializeValue(w, static_cast<Integer>(value.value()));
-    }
-};
-
-export template <>
-struct ValueParser<FontWeight> {
-    static Res<FontWeight> parse(Cursor<Sst>& c) {
-        if (c.ended())
-            return Error::invalidData("unexpected end of input");
-
-        if (c.skip(Token::ident("bolder"))) {
-            return Ok(RelativeFontWeight::BOLDER);
-        } else if (c.skip(Token::ident("lighter"))) {
-            return Ok(RelativeFontWeight::LIGHTER);
-        } else {
-            return Ok(try$(parseValue<Gfx::FontWeight>(c)));
-        }
-    }
-};
-
-export template <>
-struct ValueSerializer<FontWeight> {
-    static Res<> serialize(Io::TextWriter& w, FontWeight const& value) {
-        return value.visit([&](auto const& v) {
-            return serializeValue(w, v);
-        });
-    }
-};
-
-// MARK: FontSize --------------------------------------------------------------
-// https://www.w3.org/TR/css-fonts-4/#font-size-prop
-
-using FontSize = Union<
-    LengthPercentage,
-    Keywords::XxSmall,
-    Keywords::XSmall,
-    Keywords::Small,
-    Keywords::Medium,
-    Keywords::Large,
-    Keywords::XLarge,
-    Keywords::XxLarge,
-    Keywords::Smaller,
-    Keywords::Larger>;
-
-// MARK: FontFeature -----------------------------------------------------------
-
-export using FontTag = Array<char, 4>;
-
-export FontTag makeTag(Str tag) {
-    if (tag.len() != 4)
-        return {' ', ' ', ' ', ' '};
-    return {tag[0], tag[1], tag[2], tag[3]};
-}
-
-export struct FontFeature {
-    enum struct _Value {
-        OFF,
-        ON,
-    };
-
-    FontTag tag;
-    isize val;
-
-    FontFeature(Str tag, isize val)
-        : tag(makeTag(tag)), val(val) {
-    }
-
-    FontFeature(Str tag, _Value val)
-        : tag(makeTag(tag)), val(static_cast<isize>(val)) {
-    }
-
-    void repr(Io::Emit& e) const {
-        e("(font-feature {} {})", tag, val);
-    }
-
-    bool operator==(FontFeature const& other) const {
-        return tag == other.tag and val == other.val;
-    }
-
-    bool operator==(FontTag const& other) const {
-        return tag == other;
-    }
-
-    bool operator==(_Value const& other) const {
-        return val == static_cast<isize>(other);
-    }
-};
-
-export struct FontVariation {
-    FontTag tag;
-    f64 val;
-
-    FontVariation(Str tag, f64 val)
-        : tag(makeTag(tag)), val(val) {
-    }
-
-    void repr(Io::Emit& e) const {
-        e("(font-variation {} {})", tag, val);
-    }
-
-    bool operator==(FontTag const& other) const {
-        return tag == other;
-    }
-};
-
-export struct FontSource {
-    Union<Ref::Url, FontFamily> identifier;
-    Opt<String> format;
-
-    FontSource(Ref::Url url) : identifier(url) {}
-
-    FontSource(FontFamily family) : identifier(family) {}
-
-    void repr(Io::Emit& e) const {
-        e("(font-source {}", identifier);
-        if (format)
-            e(" format({})", *format);
-        e(")");
     }
 };
 

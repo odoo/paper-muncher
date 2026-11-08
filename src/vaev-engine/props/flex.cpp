@@ -11,6 +11,18 @@ import :style.computed;
 
 using namespace Karm;
 
+namespace Vaev::Css {
+
+export using FlexBasis = Union<
+    Keywords::Auto,
+    Keywords::Content,
+    Keywords::MinContent,
+    Keywords::MaxContent,
+    Keywords::FitContent,
+    LengthPercentage>;
+
+} // namespace Vaev::Css
+
 namespace Vaev::Style {
 
 // MARK: Flex ------------------------------------------------------------------

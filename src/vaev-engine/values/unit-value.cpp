@@ -6,7 +6,7 @@ export module Vaev.Engine:values.unitValue;
 
 import Karm.Core;
 
-import :values.writing;
+import :values.writingModes;
 
 using namespace Karm;
 

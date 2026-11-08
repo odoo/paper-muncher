@@ -2,7 +2,7 @@ module;
 
 #include <karm/macros>
 
-export module Vaev.Engine:values.font;
+export module Vaev.Engine:values.fonts;
 
 import Karm.Core;
 

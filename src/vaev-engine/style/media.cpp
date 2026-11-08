@@ -16,6 +16,388 @@ using namespace Vaev::Literals;
 
 namespace Vaev::Style {
 
+// MARK: Media feature values ------------------------------------------------
+
+// MARK: Media Types -----------------------------------------------------------
+// https://drafts.csswg.org/mediaqueries/#media-types
+export enum struct MediaType {
+    ALL,
+    PRINT,
+    SCREEN,
+    OTHER, // tty, tv, projection, handheld, braille, aural, embossed
+
+    _LEN,
+};
+
+// MARK: Scan ------------------------------------------------------------------
+// https://drafts.csswg.org/mediaqueries/#scan
+export enum struct Scan {
+    INTERLACE,
+    PROGRESSIVE,
+
+    _LEN,
+};
+
+// MARK: Update ----------------------------------------------------------------
+// https://drafts.csswg.org/mediaqueries/#update
+export enum struct Update {
+    NONE,
+    SLOW,
+    FAST,
+
+    _LEN,
+};
+
+// MARK: OverflowBlock ---------------------------------------------------------
+// https://drafts.csswg.org/mediaqueries/#mf-overflow-block
+export enum struct OverflowBlock {
+    NONE,
+    SCROLL,
+    PAGED,
+
+    _LEN,
+};
+
+// MARK: OverflowInline --------------------------------------------------------
+// https://drafts.csswg.org/mediaqueries/#mf-overflow-inline
+export enum struct OverflowInline {
+    NONE,
+    SCROLL,
+
+    _LEN,
+};
+
+// MARK: Color Gamut -----------------------------------------------------------
+// https://drafts.csswg.org/mediaqueries/#color-gamut
+export enum struct ColorGamut {
+    SRGB,
+    DISPLAY_P3,
+    REC2020,
+
+    _LEN,
+};
+
+// MARK: Pointer ---------------------------------------------------------------
+// https://drafts.csswg.org/mediaqueries/#pointer
+export enum struct Pointer {
+    NONE,
+    COARSE,
+    FINE,
+
+    _LEN,
+};
+
+// MARK: Hover -----------------------------------------------------------------
+// https://drafts.csswg.org/mediaqueries/#hover
+export enum struct Hover {
+    NONE,
+    HOVER,
+
+    _LEN,
+};
+
+// MARK: Reduce Motion ---------------------------------------------------------
+// https://drafts.csswg.org/mediaqueries/#reduced-motion
+export enum struct ReducedMotion {
+    NO_PREFERENCE,
+    REDUCE,
+
+    _LEN,
+};
+
+// MARK: ReducedTransparency ---------------------------------------------------
+// https://drafts.csswg.org/mediaqueries/#reduced-transparency
+export enum struct ReducedTransparency {
+    NO_PREFERENCE,
+    REDUCE,
+
+    _LEN,
+};
+
+// MARK: Contrast --------------------------------------------------------------
+// https://drafts.csswg.org/mediaqueries/#contrast
+export enum struct Contrast {
+    NO_PREFERENCE,
+    MORE,
+    LESS,
+
+    _LEN,
+};
+
+// MARK: Colors ----------------------------------------------------------------
+// https://drafts.csswg.org/mediaqueries/#forced-colors
+export enum struct Colors {
+    NONE,
+    ACTIVE,
+
+    _LEN,
+};
+
+// MARK: Color Scheme ----------------------------------------------------------
+// https://drafts.csswg.org/mediaqueries/#color-scheme
+export enum struct ColorScheme {
+    LIGHT,
+    DARK,
+
+    _LEN,
+};
+
+// MARK: ReducedData
+// https://drafts.csswg.org/mediaqueries/#reduced-data
+export enum struct ReducedData {
+    NO_PREFERENCE,
+    REDUCE,
+
+    _LEN,
+};
+
+} // namespace Vaev::Style
+
+namespace Vaev::Css {
+
+export template <>
+struct ValueParser<Style::MediaType> {
+    static Res<Style::MediaType> parse(Cursor<Sst>& c) {
+        if (c.ended())
+            return Error::invalidData("unexpected end of input");
+
+        if (c.skip(Token::ident("all")))
+            return Ok(Style::MediaType::ALL);
+
+        if (c.skip(Token::ident("print")))
+            return Ok(Style::MediaType::PRINT);
+
+        if (c.skip(Token::ident("screen")))
+            return Ok(Style::MediaType::SCREEN);
+
+        // NOTE: The spec says that we should reconize the following media types
+        //       but they should not match anything
+        static constexpr Array OTHER = {
+            "tty",
+            "tv",
+            "projection",
+            "handheld",
+            "braille",
+            "embossed",
+            "speech",
+            "aural",
+        };
+
+        for (auto const& item : OTHER) {
+            if (c.skip(Token::ident(item)))
+                return Ok(Style::MediaType::OTHER);
+        }
+        return Error::invalidData("expected media type");
+    }
+};
+
+export template <>
+struct ValueParser<Style::Scan> {
+    static Res<Style::Scan> parse(Cursor<Sst>& c) {
+        if (c.ended())
+            return Error::invalidData("unexpected end of input");
+
+        if (c.skip(Token::ident("interlace")))
+            return Ok(Style::Scan::INTERLACE);
+        else if (c.skip(Token::ident("progressive")))
+            return Ok(Style::Scan::PROGRESSIVE);
+        else
+            return Error::invalidData("expected scan value");
+    }
+};
+
+export template <>
+struct ValueParser<Style::Update> {
+    static Res<Style::Update> parse(Cursor<Sst>& c) {
+        if (c.ended())
+            return Error::invalidData("unexpected end of input");
+
+        if (c.skip(Token::ident("none")))
+            return Ok(Style::Update::NONE);
+        else if (c.skip(Token::ident("slow")))
+            return Ok(Style::Update::SLOW);
+        else if (c.skip(Token::ident("fast")))
+            return Ok(Style::Update::FAST);
+        else
+            return Error::invalidData("expected update value");
+    }
+};
+
+export template <>
+struct ValueParser<Style::OverflowBlock> {
+    static Res<Style::OverflowBlock> parse(Cursor<Sst>& c) {
+        if (c.ended())
+            return Error::invalidData("unexpected end of input");
+
+        if (c.skip(Token::ident("none")))
+            return Ok(Style::OverflowBlock::NONE);
+        else if (c.skip(Token::ident("scroll")))
+            return Ok(Style::OverflowBlock::SCROLL);
+        else if (c.skip(Token::ident("paged")))
+            return Ok(Style::OverflowBlock::PAGED);
+        else
+            return Error::invalidData("expected overflow block value");
+    }
+};
+
+export template <>
+struct ValueParser<Style::OverflowInline> {
+    static Res<Style::OverflowInline> parse(Cursor<Sst>& c) {
+        if (c.ended())
+            return Error::invalidData("unexpected end of input");
+
+        if (c.skip(Token::ident("none")))
+            return Ok(Style::OverflowInline::NONE);
+        else if (c.skip(Token::ident("scroll")))
+            return Ok(Style::OverflowInline::SCROLL);
+        else
+            return Error::invalidData("expected overflow inline value");
+    }
+};
+
+export template <>
+struct ValueParser<Style::ColorGamut> {
+    static Res<Style::ColorGamut> parse(Cursor<Sst>& c) {
+        if (c.ended())
+            return Error::invalidData("unexpected end of input");
+
+        if (c.skip(Token::ident("srgb")))
+            return Ok(Style::ColorGamut::SRGB);
+        else if (c.skip(Token::ident("p3")))
+            return Ok(Style::ColorGamut::DISPLAY_P3);
+        else if (c.skip(Token::ident("rec2020")))
+            return Ok(Style::ColorGamut::REC2020);
+        else
+            return Error::invalidData("expected color gamut");
+    }
+};
+
+export template <>
+struct ValueParser<Style::Pointer> {
+    static Res<Style::Pointer> parse(Cursor<Sst>& c) {
+        if (c.ended())
+            return Error::invalidData("unexpected end of input");
+
+        if (c.skip(Token::ident("none")))
+            return Ok(Style::Pointer::NONE);
+        else if (c.skip(Token::ident("coarse")))
+            return Ok(Style::Pointer::COARSE);
+        else if (c.skip(Token::ident("fine")))
+            return Ok(Style::Pointer::FINE);
+        else
+            return Error::invalidData("expected pointer value");
+    }
+};
+
+export template <>
+struct ValueParser<Style::Hover> {
+    static Res<Style::Hover> parse(Cursor<Sst>& c) {
+        if (c.ended())
+            return Error::invalidData("unexpected end of input");
+
+        if (c.skip(Token::ident("none")))
+            return Ok(Style::Hover::NONE);
+        else if (c.skip(Token::ident("hover")))
+            return Ok(Style::Hover::HOVER);
+        else
+            return Error::invalidData("expected hover value");
+    }
+};
+
+export template <>
+struct ValueParser<Style::ReducedMotion> {
+    static Res<Style::ReducedMotion> parse(Cursor<Sst>& c) {
+        if (c.ended())
+            return Error::invalidData("unexpected end of input");
+
+        if (c.skip(Token::ident("no-preference")))
+            return Ok(Style::ReducedMotion::NO_PREFERENCE);
+        else if (c.skip(Token::ident("reduce")))
+            return Ok(Style::ReducedMotion::REDUCE);
+        else
+            return Error::invalidData("expected reduced motion value");
+    }
+};
+
+export template <>
+struct ValueParser<Style::ReducedTransparency> {
+    static Res<Style::ReducedTransparency> parse(Cursor<Sst>& c) {
+        if (c.ended())
+            return Error::invalidData("unexpected end of input");
+
+        if (c.skip(Token::ident("no-preference")))
+            return Ok(Style::ReducedTransparency::NO_PREFERENCE);
+        else if (c.skip(Token::ident("reduce")))
+            return Ok(Style::ReducedTransparency::REDUCE);
+        else
+            return Error::invalidData("expected reduced transparency value");
+    }
+};
+
+export template <>
+struct ValueParser<Style::Contrast> {
+    static Res<Style::Contrast> parse(Cursor<Sst>& c) {
+        if (c.ended())
+            return Error::invalidData("unexpected end of input");
+
+        if (c.skip(Token::ident("less")))
+            return Ok(Style::Contrast::LESS);
+        else if (c.skip(Token::ident("more")))
+            return Ok(Style::Contrast::MORE);
+        else
+            return Error::invalidData("expected contrast value");
+    }
+};
+
+export template <>
+struct ValueParser<Style::Colors> {
+    static Res<Style::Colors> parse(Cursor<Sst>& c) {
+        if (c.ended())
+            return Error::invalidData("unexpected end of input");
+
+        if (c.skip(Token::ident("none")))
+            return Ok(Style::Colors::NONE);
+        else if (c.skip(Token::ident("active")))
+            return Ok(Style::Colors::ACTIVE);
+        else
+            return Error::invalidData("expected colors value");
+    }
+};
+
+export template <>
+struct ValueParser<Style::ColorScheme> {
+    static Res<Style::ColorScheme> parse(Cursor<Sst>& c) {
+        if (c.ended())
+            return Error::invalidData("unexpected end of input");
+
+        if (c.skip(Token::ident("light")))
+            return Ok(Style::ColorScheme::LIGHT);
+        else if (c.skip(Token::ident("dark")))
+            return Ok(Style::ColorScheme::DARK);
+        else
+            return Error::invalidData("expected color scheme value");
+    }
+};
+
+export template <>
+struct ValueParser<Style::ReducedData> {
+    static Res<Style::ReducedData> parse(Cursor<Sst>& c) {
+        if (c.ended())
+            return Error::invalidData("unexpected end of input");
+
+        if (c.skip(Token::ident("no-preference")))
+            return Ok(Style::ReducedData::NO_PREFERENCE);
+        else if (c.skip(Token::ident("reduce")))
+            return Ok(Style::ReducedData::REDUCE);
+        else
+            return Error::invalidData("expected reduced data value");
+    }
+};
+
+} // namespace Vaev::Css
+
+namespace Vaev::Style {
+
 // MARK: wkhtmltopdf Quirks ----------------------------------------------------
 
 static auto quirksMediaZeroViewport = Debug::Flag::feature(
@@ -31,27 +413,27 @@ static auto quirksMediaScreen = Debug::Flag::feature(
 // MARK: Display Area ----------------------------------------------------------
 
 export struct DisplayArea {
-    Css::MediaType type = Css::MediaType::SCREEN;
+    MediaType type = MediaType::SCREEN;
 
     Math::Vec2<Pixel> viewport = {800_px, 600_px};
 
     Dppx resolution = 1_dppx;
 
-    Css::Scan scan = Css::Scan::PROGRESSIVE;
+    Scan scan = Scan::PROGRESSIVE;
     bool grid = false;
-    Css::Update update = Css::Update::FAST;
-    Css::OverflowBlock overflowBlock = Css::OverflowBlock::SCROLL;
-    Css::OverflowInline overflowInline = Css::OverflowInline::SCROLL;
+    Update update = Update::FAST;
+    OverflowBlock overflowBlock = OverflowBlock::SCROLL;
+    OverflowInline overflowInline = OverflowInline::SCROLL;
 
     Integer color = 8;
     Integer colorIndex = 0;
     Integer monochrome = 0;
-    Css::ColorGamut colorGamut = Css::ColorGamut::SRGB;
+    ColorGamut colorGamut = ColorGamut::SRGB;
 
-    Css::Pointer pointer = Css::Pointer::FINE;
-    Css::Hover hover = Css::Hover::HOVER;
-    Css::Pointer anyPointer = Css::Pointer::FINE;
-    Css::Hover anyHover = Css::Hover::HOVER;
+    Pointer pointer = Pointer::FINE;
+    Hover hover = Hover::HOVER;
+    Pointer anyPointer = Pointer::FINE;
+    Hover anyHover = Hover::HOVER;
 
     static Math::Vec2<Pixel> _toViewport(Math::Vec2f deviceSize, Dppx resolution) {
         return {
@@ -62,7 +444,7 @@ export struct DisplayArea {
 
     static DisplayArea forView(Math::Vec2f deviceSize, Dppx resolution = 1_dppx) {
         return {
-            .type = Css::MediaType::SCREEN,
+            .type = MediaType::SCREEN,
             .viewport = _toViewport(deviceSize, resolution),
             .resolution = resolution,
         };
@@ -70,23 +452,23 @@ export struct DisplayArea {
 
     static DisplayArea forRender(Math::Vec2f deviceSize, Dppx resolution) {
         return {
-            .type = Css::MediaType::SCREEN,
+            .type = MediaType::SCREEN,
             .viewport = _toViewport(deviceSize, resolution),
             .resolution = resolution,
-            .update = Css::Update::NONE,
-            .overflowBlock = Css::OverflowBlock::NONE,
-            .overflowInline = Css::OverflowInline::NONE,
-            .pointer = Css::Pointer::NONE,
-            .hover = Css::Hover::NONE,
-            .anyPointer = Css::Pointer::NONE,
-            .anyHover = Css::Hover::NONE,
+            .update = Update::NONE,
+            .overflowBlock = OverflowBlock::NONE,
+            .overflowInline = OverflowInline::NONE,
+            .pointer = Pointer::NONE,
+            .hover = Hover::NONE,
+            .anyPointer = Pointer::NONE,
+            .anyHover = Hover::NONE,
         };
     }
 
     static DisplayArea forPrint(Print::Settings const& settings) {
         auto pageSize = settings.pageSize();
         return {
-            .type = Css::MediaType::PRINT,
+            .type = MediaType::PRINT,
             .viewport = {Pixel{static_cast<f64>(pageSize.width) / settings.scale}, Pixel{static_cast<f64>(pageSize.height) / settings.scale}},
             .resolution = Dppx{settings.scale},
         };
@@ -112,18 +494,18 @@ export struct DisplayArea {
 // MARK: Viewer Preferences ----------------------------------------------------
 
 export struct ViewerPrefs {
-    Css::ReducedMotion reducedMotion = Css::ReducedMotion::NO_PREFERENCE;
-    Css::ReducedTransparency reducedTransparency = Css::ReducedTransparency::NO_PREFERENCE;
-    Css::Contrast contrast = Css::Contrast::NO_PREFERENCE;
-    Css::Colors forcedColors = Css::Colors::NONE;
-    Css::ColorScheme colorScheme = Css::ColorScheme::LIGHT;
-    Css::ReducedData reducedData = Css::ReducedData::NO_PREFERENCE;
+    ReducedMotion reducedMotion = ReducedMotion::NO_PREFERENCE;
+    ReducedTransparency reducedTransparency = ReducedTransparency::NO_PREFERENCE;
+    Contrast contrast = Contrast::NO_PREFERENCE;
+    Colors forcedColors = Colors::NONE;
+    ColorScheme colorScheme = ColorScheme::LIGHT;
+    ReducedData reducedData = ReducedData::NO_PREFERENCE;
 
     static ViewerPrefs forRender() {
         return {
-            .reducedMotion = Css::ReducedMotion::REDUCE,
-            .reducedTransparency = Css::ReducedTransparency::REDUCE,
-            .contrast = Css::Contrast::MORE,
+            .reducedMotion = ReducedMotion::REDUCE,
+            .reducedTransparency = ReducedTransparency::REDUCE,
+            .contrast = Contrast::MORE,
         };
     }
 
@@ -135,7 +517,7 @@ export struct ViewerPrefs {
 export struct Media {
     /// 2.3. Media Types
     /// https://drafts.csswg.org/mediaqueries/#media-types
-    Css::MediaType type;
+    MediaType type;
 
     // 4. MARK: Viewport/Page Dimensions Media Features
 
@@ -163,7 +545,7 @@ export struct Media {
 
     /// 5.2. Scan: the scan feature
     /// https://drafts.csswg.org/mediaqueries/#scan
-    Css::Scan scan = Css::Scan::PROGRESSIVE;
+    Scan scan = Scan::PROGRESSIVE;
 
     /// 5.3. Grid: the grid feature
     /// https://drafts.csswg.org/mediaqueries/#grid
@@ -171,15 +553,15 @@ export struct Media {
 
     /// 5.4. Update: the update feature
     /// https://drafts.csswg.org/mediaqueries/#update
-    Css::Update update;
+    Update update;
 
     /// 5.5. Overflow Block: the overflow-block feature
     /// https://drafts.csswg.org/mediaqueries/#mf-overflow-block
-    Css::OverflowBlock overflowBlock;
+    OverflowBlock overflowBlock;
 
     /// 5.6. Overflow Inline: the overflow-inline feature
     /// https://drafts.csswg.org/mediaqueries/#mf-overflow-inline
-    Css::OverflowInline overflowInline;
+    OverflowInline overflowInline;
 
     //  6. MARK: Color Media Features
 
@@ -197,25 +579,25 @@ export struct Media {
 
     /// 6.4. Color Gamut: the color-gamut feature
     /// https://drafts.csswg.org/mediaqueries/#color-gamut
-    Css::ColorGamut colorGamut;
+    ColorGamut colorGamut;
 
     // 7. MARK: Interaction Media Features
 
     /// 7.1. Pointer: the pointer feature
     /// https://drafts.csswg.org/mediaqueries/#pointer
-    Css::Pointer pointer;
+    Pointer pointer;
 
     /// 7.2. Hover: the hover feature
     /// https://drafts.csswg.org/mediaqueries/#hover
-    Css::Hover hover;
+    Hover hover;
 
     /// 7.3. Any Pointer: the any-pointer feature
     /// https://drafts.csswg.org/mediaqueries/#any-input
-    Css::Pointer anyPointer;
+    Pointer anyPointer;
 
     /// 7.4. Any Hover: the any-hover feature
     /// https://drafts.csswg.org/mediaqueries/#any-input
-    Css::Hover anyHover;
+    Hover anyHover;
 
     // 11. MARK: User Preference Media Features
 
@@ -223,32 +605,32 @@ export struct Media {
     //       the prefers-reduced-motion feature
     //
     // https://drafts.csswg.org/mediaqueries-5/#prefers-reduced-motion
-    Css::ReducedMotion prefersReducedMotion;
+    ReducedMotion prefersReducedMotion;
 
     // 11.2. Detecting the desire for reduced transparency on the page:
     //       the prefers-reduced-transparency feature
     // https://drafts.csswg.org/mediaqueries-5/#prefers-reduced-transparency
-    Css::ReducedTransparency prefersReducedTransparency;
+    ReducedTransparency prefersReducedTransparency;
 
     // 11.3. Detecting the desire for increased or decreased color contrast
     //       from elements on the page: the prefers-contrast feature
     //
     // https://drafts.csswg.org/mediaqueries-5/#prefers-contrast
-    Css::Contrast prefersContrast;
+    Contrast prefersContrast;
 
     // 11.4. Detecting Forced Colors Mode: the forced-colors feature
     // https://drafts.csswg.org/mediaqueries-5/#forced-colors
-    Css::Colors forcedColors;
+    Colors forcedColors;
 
     // 11.5. Detecting the desire for light or dark color schemes:
     //       the prefers-color-scheme feature
     // https://drafts.csswg.org/mediaqueries-5/#prefers-color-scheme
-    Css::ColorScheme prefersColorScheme;
+    ColorScheme prefersColorScheme;
 
     // 11.6. Detecting the desire for reduced data usage when loading a page:
     //       the prefers-reduced-data feature
     // https://drafts.csswg.org/mediaqueries-5/#prefers-reduced-data
-    Css::ReducedData prefersReducedData;
+    ReducedData prefersReducedData;
 
     // Appendix A: Deprecated Media Features
     Pixel deviceWidth;
@@ -269,8 +651,8 @@ export struct Media {
         if (quirksMediaZeroViewport)
             viewport = {};
 
-        if (quirksMediaScreen and type == Css::MediaType::PRINT)
-            type = Css::MediaType::SCREEN;
+        if (quirksMediaScreen and type == MediaType::PRINT)
+            type = MediaType::SCREEN;
 
         return {
             .type = type,
@@ -472,8 +854,8 @@ struct DiscreteFeature {
     bool match(T actual) const {
         if (type == Type::NONE)
             return actual != T{};
-        if constexpr (Meta::Same<T, Css::MediaType>)
-            if (value == Css::MediaType::ALL)
+        if constexpr (Meta::Same<T, MediaType>)
+            if (value == MediaType::ALL)
                 return true;
         return actual == value;
     }
@@ -489,7 +871,7 @@ struct DiscreteFeature {
 
 /// 2.3. Media Types
 /// https://drafts.csswg.org/mediaqueries/#media-types
-export using TypeFeature = DiscreteFeature<"type", Css::MediaType, &Media::type>;
+export using TypeFeature = DiscreteFeature<"type", MediaType, &Media::type>;
 
 // 4. MARK: Viewport/Page Dimensions Media Features ----------------------------
 
@@ -517,7 +899,7 @@ export using ResolutionFeature = RangeFeature<"resolution", Css::PureResolution,
 
 /// 5.2. Scan: the scan feature
 /// https://drafts.csswg.org/mediaqueries/#scan
-export using ScanFeature = DiscreteFeature<"scan", Css::Scan, &Media::scan>;
+export using ScanFeature = DiscreteFeature<"scan", Scan, &Media::scan>;
 
 /// 5.3. Grid: the grid feature
 /// https://drafts.csswg.org/mediaqueries/#grid
@@ -525,15 +907,15 @@ export using GridFeature = DiscreteFeature<"grid", bool, &Media::grid>;
 
 /// 5.4. Update: the update feature
 /// https://drafts.csswg.org/mediaqueries/#update
-export using UpdateFeature = DiscreteFeature<"update", Css::Update, &Media::update>;
+export using UpdateFeature = DiscreteFeature<"update", Update, &Media::update>;
 
 /// 5.5. Overflow Block: the overflow-block feature
 /// https://drafts.csswg.org/mediaqueries/#mf-overflow-block
-export using OverflowBlockFeature = DiscreteFeature<"overflow-block", Css::OverflowBlock, &Media::overflowBlock>;
+export using OverflowBlockFeature = DiscreteFeature<"overflow-block", OverflowBlock, &Media::overflowBlock>;
 
 /// 5.6. Overflow Inline: the overflow-inline feature
 /// https://drafts.csswg.org/mediaqueries/#mf-overflow-inline
-export using OverflowInlineFeature = DiscreteFeature<"overflow-inline", Css::OverflowInline, &Media::overflowInline>;
+export using OverflowInlineFeature = DiscreteFeature<"overflow-inline", OverflowInline, &Media::overflowInline>;
 
 //  6. MARK: Color Media Features ----------------------------------------------
 
@@ -551,25 +933,25 @@ export using MonochromeFeature = RangeFeature<"monochrome", Integer, &Media::mon
 
 /// 6.4. Color Gamut: the color-gamut feature
 /// https://drafts.csswg.org/mediaqueries/#color-gamut
-export using ColorGamutFeature = DiscreteFeature<"color-gamut", Css::ColorGamut, &Media::colorGamut>;
+export using ColorGamutFeature = DiscreteFeature<"color-gamut", ColorGamut, &Media::colorGamut>;
 
 // 7. MARK: Interaction Media Features
 
 /// 7.1. Pointer: the pointer feature
 /// https://drafts.csswg.org/mediaqueries/#pointer
-export using PointerFeature = DiscreteFeature<"pointer", Css::Pointer, &Media::pointer>;
+export using PointerFeature = DiscreteFeature<"pointer", Pointer, &Media::pointer>;
 
 /// 7.2. Hover: the hover feature
 /// https://drafts.csswg.org/mediaqueries/#hover
-export using HoverFeature = DiscreteFeature<"hover", Css::Hover, &Media::hover>;
+export using HoverFeature = DiscreteFeature<"hover", Hover, &Media::hover>;
 
 /// 7.3. Any Pointer: the any-pointer feature
 /// https://drafts.csswg.org/mediaqueries/#any-pointer
-export using AnyPointerFeature = DiscreteFeature<"pointer", Css::Pointer, &Media::anyPointer>;
+export using AnyPointerFeature = DiscreteFeature<"pointer", Pointer, &Media::anyPointer>;
 
 /// 7.4. Any Hover: the any-hover feature
 /// https://drafts.csswg.org/mediaqueries/#any-hover
-export using AnyHoverFeature = DiscreteFeature<"hover", Css::Hover, &Media::anyHover>;
+export using AnyHoverFeature = DiscreteFeature<"hover", Hover, &Media::anyHover>;
 
 // 11. MARK: User Preference Media Features ------------------------------------
 
@@ -577,32 +959,32 @@ export using AnyHoverFeature = DiscreteFeature<"hover", Css::Hover, &Media::anyH
 //       the prefers-reduced-motion feature
 //
 // https://drafts.csswg.org/mediaqueries-5/#prefers-reduced-motion
-export using PrefersReducedMotionFeature = DiscreteFeature<"prefers-reduced-motion", Css::ReducedMotion, &Media::prefersReducedMotion>;
+export using PrefersReducedMotionFeature = DiscreteFeature<"prefers-reduced-motion", ReducedMotion, &Media::prefersReducedMotion>;
 
 // 11.2. Detecting the desire for reduced transparency on the page:
 //       the prefers-reduced-transparency feature
 // https://drafts.csswg.org/mediaqueries-5/#prefers-reduced-transparency
-export using PrefersReducedTransparencyFeature = DiscreteFeature<"prefers-reduced-transparency", Css::ReducedTransparency, &Media::prefersReducedTransparency>;
+export using PrefersReducedTransparencyFeature = DiscreteFeature<"prefers-reduced-transparency", ReducedTransparency, &Media::prefersReducedTransparency>;
 
 // 11.3. Detecting the desire for increased or decreased color contrast
 //       from elements on the page: the prefers-contrast feature
 //
 // https://drafts.csswg.org/mediaqueries-5/#prefers-contrast
-export using PrefersContrastFeature = DiscreteFeature<"prefers-contrast", Css::Contrast, &Media::prefersContrast>;
+export using PrefersContrastFeature = DiscreteFeature<"prefers-contrast", Contrast, &Media::prefersContrast>;
 
 // 11.4. Detecting Forced Colors Mode: the forced-colors feature
 // https://drafts.csswg.org/mediaqueries-5/#forced-colors
-export using ForcedColorsFeature = DiscreteFeature<"forced-colors", Css::Colors, &Media::forcedColors>;
+export using ForcedColorsFeature = DiscreteFeature<"forced-colors", Colors, &Media::forcedColors>;
 
 // 11.5. Detecting the desire for light or dark color schemes:
 //       the prefers-color-scheme feature
 // https://drafts.csswg.org/mediaqueries-5/#prefers-color-scheme
-export using PrefersColorSchemeFeature = DiscreteFeature<"prefers-color-scheme", Css::ColorScheme, &Media::prefersColorScheme>;
+export using PrefersColorSchemeFeature = DiscreteFeature<"prefers-color-scheme", ColorScheme, &Media::prefersColorScheme>;
 
 // 11.6. Detecting the desire for reduced data usage when loading a page:
 //       the prefers-reduced-data feature
 // https://drafts.csswg.org/mediaqueries-5/#prefers-reduced-data
-export using PrefersReducedDataFeature = DiscreteFeature<"prefers-reduced-data", Css::ReducedData, &Media::prefersReducedData>;
+export using PrefersReducedDataFeature = DiscreteFeature<"prefers-reduced-data", ReducedData, &Media::prefersReducedData>;
 
 // Appendix A: Deprecated Media Features
 export using DeviceWidthFeature = RangeFeature<"device-width", Css::PureLength, &Media::deviceWidth>;
@@ -656,7 +1038,7 @@ export struct Feature : _Feature {
         });
     }
 
-    static Feature type(Css::MediaType value) {
+    static Feature type(MediaType value) {
         return TypeFeature{value};
     }
 
@@ -811,12 +1193,12 @@ Pair<RangePrefix, Str> _explodeFeatureName(Io::SScan s) {
 Feature _parseMediaFeature(Cursor<Css::Sst>& c) {
     if (c.ended()) {
         logWarn("unexpected end of input");
-        return TypeFeature{Css::MediaType::OTHER};
+        return TypeFeature{MediaType::OTHER};
     }
 
     if (*c != Css::Token::IDENT) {
         logWarn("expected ident");
-        return TypeFeature{Css::MediaType::OTHER};
+        return TypeFeature{MediaType::OTHER};
     }
 
     auto unexplodedName = c.next().token.data;
@@ -848,7 +1230,7 @@ Feature _parseMediaFeature(Cursor<Css::Sst>& c) {
 
     if (not prop) {
         logWarn("cannot parse feature: {}", unexplodedName);
-        return TypeFeature{Css::MediaType::OTHER};
+        return TypeFeature{MediaType::OTHER};
     }
 
     return prop.take();
@@ -859,7 +1241,7 @@ MediaQuery _parseMediaQueryInfix(Cursor<Css::Sst>& c);
 MediaQuery _parseMediaQueryLeaf(Cursor<Css::Sst>& c) {
     if (c.ended()) {
         logWarn("unexpected end of input");
-        return TypeFeature{Css::MediaType::OTHER};
+        return TypeFeature{MediaType::OTHER};
     }
 
     if (c.skip(Css::Token::ident("not"))) {
@@ -869,7 +1251,7 @@ MediaQuery _parseMediaQueryLeaf(Cursor<Css::Sst>& c) {
     } else if (c.peek() == Css::Sst::BLOCK) {
         Cursor<Css::Sst> content = c.next().content;
         return _parseMediaQueryInfix(content);
-    } else if (auto type = parseValue<Css::MediaType>(c)) {
+    } else if (auto type = parseValue<MediaType>(c)) {
         return TypeFeature{type.take()};
     } else
         return _parseMediaFeature(c);

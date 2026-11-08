@@ -17,7 +17,7 @@ export using Content = Union<
     Rc<Gfx::Prose>,
     Gfx::Snapshot,
     Css::SvgShapeElement,
-    SvgViewBox>;
+    Style::SvgViewBox>;
 
 struct Box : Meta::NoCopy {
     Rc<Style::ComputedValues const> style;
@@ -99,7 +99,7 @@ struct Box : Meta::NoCopy {
     }
 
     bool isRunningPositionedBox() const {
-        return style->position.is<RunningPosition>().has();
+        return style->position.is<Style::RunningPosition>().has();
     }
 
     bool isRootElementPrincipalBox() const {
@@ -125,7 +125,7 @@ struct Box : Meta::NoCopy {
 
         return style->position == Keywords::ABSOLUTE or
                style->position == Keywords::FIXED or
-               style->position.is<RunningPosition>();
+               style->position.is<Style::RunningPosition>();
     }
 
     // https://drafts.csswg.org/css2/#floats
