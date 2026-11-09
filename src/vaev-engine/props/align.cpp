@@ -8,8 +8,10 @@ import Karm.Core;
 import :props.base;
 import :css.parser;
 import :style.computed;
+import :style.values.keywords;
 
 using namespace Karm;
+using namespace Karm::Literals;
 
 namespace Vaev::Style {
 
@@ -18,11 +20,13 @@ namespace Vaev::Style {
 
 // https://drafts.csswg.org/css-align-3/#propdef-align-content
 export struct AlignContentProperty : Property {
+    using Value = Css::Align;
+
     struct Registration : Property::Registration {
         Registration() : Property::Registration(Properties::ALIGN_CONTENT) {}
 
-        Rc<Property> initial() const override {
-            return makeRc<AlignContentProperty>(self(), Align::Keywords::STRETCH);
+        InitialValue initial() const override {
+            return "normal"s;
         }
 
         Rc<Property> load(ComputedValues const& c) const override {
@@ -30,13 +34,13 @@ export struct AlignContentProperty : Property {
         }
 
         Res<Rc<Property>> parse(Cursor<Css::Sst>& c) const override {
-            return Ok(makeRc<AlignContentProperty>(self(), try$(parseValue<Align>(c))));
+            return Ok(makeRc<AlignContentProperty>(self(), try$(parseValue<Css::Align>(c))));
         }
     };
 
-    Align _value;
+    Value _value;
 
-    AlignContentProperty(Rc<Property::Registration> registration, Align value)
+    AlignContentProperty(Rc<Property::Registration> registration, Value value)
         : Property(registration), _value(value) {}
 
     void apply([[maybe_unused]] ComputedValues const& parent, ComputedValues& c, [[maybe_unused]] ComputationContext const& cx) const override {
@@ -44,7 +48,7 @@ export struct AlignContentProperty : Property {
     }
 
     Res<> serialize(Io::TextWriter& w) const override {
-        return serializeValue(w, _value);
+        return Css::serializeValue(w, _value);
     }
 
     void repr(Io::Emit& e) const override {
@@ -54,11 +58,13 @@ export struct AlignContentProperty : Property {
 
 // https://drafts.csswg.org/css-align-3/#propdef-justify-content
 export struct JustifyContentProperty : Property {
+    using Value = Css::Align;
+
     struct Registration : Property::Registration {
         Registration() : Property::Registration(Properties::JUSTIFY_CONTENT) {}
 
-        Rc<Property> initial() const override {
-            return makeRc<JustifyContentProperty>(self(), Align::Keywords::FLEX_START);
+        InitialValue initial() const override {
+            return "normal"s;
         }
 
         Rc<Property> load(ComputedValues const& c) const override {
@@ -66,13 +72,13 @@ export struct JustifyContentProperty : Property {
         }
 
         Res<Rc<Property>> parse(Cursor<Css::Sst>& c) const override {
-            return Ok(makeRc<JustifyContentProperty>(self(), try$(parseValue<Align>(c))));
+            return Ok(makeRc<JustifyContentProperty>(self(), try$(parseValue<Css::Align>(c))));
         }
     };
 
-    Align _value;
+    Value _value;
 
-    JustifyContentProperty(Rc<Property::Registration> registration, Align value)
+    JustifyContentProperty(Rc<Property::Registration> registration, Value value)
         : Property(registration), _value(value) {}
 
     void apply([[maybe_unused]] ComputedValues const& parent, ComputedValues& c, [[maybe_unused]] ComputationContext const& cx) const override {
@@ -80,7 +86,7 @@ export struct JustifyContentProperty : Property {
     }
 
     Res<> serialize(Io::TextWriter& w) const override {
-        return serializeValue(w, _value);
+        return Css::serializeValue(w, _value);
     }
 
     void repr(Io::Emit& e) const override {
@@ -90,11 +96,13 @@ export struct JustifyContentProperty : Property {
 
 // https://drafts.csswg.org/css-align-3/#propdef-justify-self
 export struct JustifySelfProperty : Property {
+    using Value = Css::Align;
+
     struct Registration : Property::Registration {
         Registration() : Property::Registration(Properties::JUSTIFY_SELF) {}
 
-        Rc<Property> initial() const override {
-            return makeRc<JustifySelfProperty>(self(), Align::Keywords::AUTO);
+        InitialValue initial() const override {
+            return "auto"s;
         }
 
         Rc<Property> load(ComputedValues const& c) const override {
@@ -102,13 +110,13 @@ export struct JustifySelfProperty : Property {
         }
 
         Res<Rc<Property>> parse(Cursor<Css::Sst>& c) const override {
-            return Ok(makeRc<JustifySelfProperty>(self(), try$(parseValue<Align>(c))));
+            return Ok(makeRc<JustifySelfProperty>(self(), try$(parseValue<Css::Align>(c))));
         }
     };
 
-    Align _value;
+    Value _value;
 
-    JustifySelfProperty(Rc<Property::Registration> registration, Align value)
+    JustifySelfProperty(Rc<Property::Registration> registration, Value value)
         : Property(registration), _value(value) {}
 
     void apply([[maybe_unused]] ComputedValues const& parent, ComputedValues& c, [[maybe_unused]] ComputationContext const& cx) const override {
@@ -116,7 +124,7 @@ export struct JustifySelfProperty : Property {
     }
 
     Res<> serialize(Io::TextWriter& w) const override {
-        return serializeValue(w, _value);
+        return Css::serializeValue(w, _value);
     }
 
     void repr(Io::Emit& e) const override {
@@ -126,11 +134,13 @@ export struct JustifySelfProperty : Property {
 
 // https://drafts.csswg.org/css-align-3/#propdef-align-self
 export struct AlignSelfProperty : Property {
+    using Value = Css::Align;
+
     struct Registration : Property::Registration {
         Registration() : Property::Registration(Properties::ALIGN_SELF) {}
 
-        Rc<Property> initial() const override {
-            return makeRc<AlignSelfProperty>(self(), Align::Keywords::AUTO);
+        InitialValue initial() const override {
+            return "auto"s;
         }
 
         Rc<Property> load(ComputedValues const& c) const override {
@@ -138,13 +148,13 @@ export struct AlignSelfProperty : Property {
         }
 
         Res<Rc<Property>> parse(Cursor<Css::Sst>& c) const override {
-            return Ok(makeRc<AlignSelfProperty>(self(), try$(parseValue<Align>(c))));
+            return Ok(makeRc<AlignSelfProperty>(self(), try$(parseValue<Css::Align>(c))));
         }
     };
 
-    Align _value;
+    Value _value;
 
-    AlignSelfProperty(Rc<Property::Registration> registration, Align value)
+    AlignSelfProperty(Rc<Property::Registration> registration, Value value)
         : Property(registration), _value(value) {}
 
     void apply([[maybe_unused]] ComputedValues const& parent, ComputedValues& c, [[maybe_unused]] ComputationContext const& cx) const override {
@@ -152,7 +162,7 @@ export struct AlignSelfProperty : Property {
     }
 
     Res<> serialize(Io::TextWriter& w) const override {
-        return serializeValue(w, _value);
+        return Css::serializeValue(w, _value);
     }
 
     void repr(Io::Emit& e) const override {
@@ -162,11 +172,13 @@ export struct AlignSelfProperty : Property {
 
 // https://drafts.csswg.org/css-align-3/#propdef-justify-items
 export struct JustifyItemsProperty : Property {
+    using Value = Css::Align;
+
     struct Registration : Property::Registration {
         Registration() : Property::Registration(Properties::JUSTIFY_ITEMS) {}
 
-        Rc<Property> initial() const override {
-            return makeRc<JustifyItemsProperty>(self(), Align::LEGACY);
+        InitialValue initial() const override {
+            return "legacy"s;
         }
 
         Rc<Property> load(ComputedValues const& c) const override {
@@ -174,13 +186,13 @@ export struct JustifyItemsProperty : Property {
         }
 
         Res<Rc<Property>> parse(Cursor<Css::Sst>& c) const override {
-            return Ok(makeRc<JustifyItemsProperty>(self(), try$(parseValue<Align>(c))));
+            return Ok(makeRc<JustifyItemsProperty>(self(), try$(parseValue<Css::Align>(c))));
         }
     };
 
-    Align _value;
+    Value _value;
 
-    JustifyItemsProperty(Rc<Property::Registration> registration, Align value)
+    JustifyItemsProperty(Rc<Property::Registration> registration, Value value)
         : Property(registration), _value(value) {}
 
     void apply([[maybe_unused]] ComputedValues const& parent, ComputedValues& c, [[maybe_unused]] ComputationContext const& cx) const override {
@@ -188,7 +200,7 @@ export struct JustifyItemsProperty : Property {
     }
 
     Res<> serialize(Io::TextWriter& w) const override {
-        return serializeValue(w, _value);
+        return Css::serializeValue(w, _value);
     }
 
     void repr(Io::Emit& e) const override {
@@ -198,11 +210,13 @@ export struct JustifyItemsProperty : Property {
 
 // https://drafts.csswg.org/css-align-3/#propdef-align-items
 export struct AlignItemsProperty : Property {
+    using Value = Css::Align;
+
     struct Registration : Property::Registration {
         Registration() : Property::Registration(Properties::ALIGN_ITEMS) {}
 
-        Rc<Property> initial() const override {
-            return makeRc<AlignItemsProperty>(self(), Align::Keywords::STRETCH);
+        InitialValue initial() const override {
+            return "normal"s;
         }
 
         Rc<Property> load(ComputedValues const& c) const override {
@@ -210,13 +224,13 @@ export struct AlignItemsProperty : Property {
         }
 
         Res<Rc<Property>> parse(Cursor<Css::Sst>& c) const override {
-            return Ok(makeRc<AlignItemsProperty>(self(), try$(parseValue<Align>(c))));
+            return Ok(makeRc<AlignItemsProperty>(self(), try$(parseValue<Css::Align>(c))));
         }
     };
 
-    Align _value;
+    Value _value;
 
-    AlignItemsProperty(Rc<Property::Registration> registration, Align value)
+    AlignItemsProperty(Rc<Property::Registration> registration, Value value)
         : Property(registration), _value(value) {}
 
     void apply([[maybe_unused]] ComputedValues const& parent, ComputedValues& c, [[maybe_unused]] ComputationContext const& cx) const override {
@@ -224,7 +238,7 @@ export struct AlignItemsProperty : Property {
     }
 
     Res<> serialize(Io::TextWriter& w) const override {
-        return serializeValue(w, _value);
+        return Css::serializeValue(w, _value);
     }
 
     void repr(Io::Emit& e) const override {
@@ -234,34 +248,38 @@ export struct AlignItemsProperty : Property {
 
 // https://drafts.csswg.org/css-align-3/#column-row-gap
 export struct RowGapProperty : Property {
+    using Value = Union<
+        Keywords::Normal,
+        Css::LengthPercentage>;
+
     struct Registration : Property::Registration {
         Registration() : Property::Registration(Properties::ROW_GAP) {}
+
+        InitialValue initial() const override {
+            return "normal"s;
+        }
 
         // https://drafts.csswg.org/css-align-3/#gap-legacy
         SmallVec<Symbol, 1> legacyNameAlias() const override {
             return {"grid-row-gap"_sym};
         }
 
-        Rc<Property> initial() const override {
-            return makeRc<RowGapProperty>(self(), Keywords::NORMAL);
-        }
-
         Rc<Property> load(ComputedValues const& c) const override {
-            return makeRc<RowGapProperty>(self(), c.gaps->row);
+            return makeRc<RowGapProperty>(self(), toSpecified(c.gaps->row));
         }
 
         Res<Rc<Property>> parse(Cursor<Css::Sst>& c) const override {
-            return Ok(makeRc<RowGapProperty>(self(), try$(parseValue<Gap>(c))));
+            return Ok(makeRc<RowGapProperty>(self(), try$(parseValue<Value>(c))));
         }
     };
 
-    Gap _value;
+    Value _value;
 
-    RowGapProperty(Rc<Property::Registration> registration, Gap value)
+    RowGapProperty(Rc<Property::Registration> registration, Value value)
         : Property(registration), _value(value) {}
 
     void apply([[maybe_unused]] ComputedValues const& parent, ComputedValues& c, [[maybe_unused]] ComputationContext const& cx) const override {
-        c.gaps.cow().row = _value;
+        c.gaps.cow().row = toComputed(_value, cx);
     }
 
     Res<> serialize(Io::TextWriter& w) const override {
@@ -275,34 +293,36 @@ export struct RowGapProperty : Property {
 
 // https://drafts.csswg.org/css-align-3/#column-row-gap
 export struct ColumnGapProperty : Property {
+    using Value = RowGapProperty::Value;
+
     struct Registration : Property::Registration {
         Registration() : Property::Registration(Properties::COLUMN_GAP) {}
+
+        InitialValue initial() const override {
+            return "normal"s;
+        }
 
         // https://drafts.csswg.org/css-align-3/#gap-legacy
         SmallVec<Symbol, 1> legacyNameAlias() const override {
             return {"grid-column-gap"_sym};
         }
 
-        Rc<Property> initial() const override {
-            return makeRc<ColumnGapProperty>(self(), Keywords::NORMAL);
-        }
-
         Rc<Property> load(ComputedValues const& c) const override {
-            return makeRc<ColumnGapProperty>(self(), c.gaps->col);
+            return makeRc<ColumnGapProperty>(self(), toSpecified(c.gaps->col));
         }
 
         Res<Rc<Property>> parse(Cursor<Css::Sst>& c) const override {
-            return Ok(makeRc<ColumnGapProperty>(self(), try$(parseValue<Gap>(c))));
+            return Ok(makeRc<ColumnGapProperty>(self(), try$(parseValue<Value>(c))));
         }
     };
 
-    Gap _value;
+    Value _value;
 
-    ColumnGapProperty(Rc<Property::Registration> registration, Gap value)
+    ColumnGapProperty(Rc<Property::Registration> registration, Value value)
         : Property(registration), _value(value) {}
 
     void apply([[maybe_unused]] ComputedValues const& parent, ComputedValues& c, [[maybe_unused]] ComputationContext const& cx) const override {
-        c.gaps.cow().col = _value;
+        c.gaps.cow().col = toComputed(_value, cx);
     }
 
     Res<> serialize(Io::TextWriter& w) const override {
@@ -315,48 +335,52 @@ export struct ColumnGapProperty : Property {
 };
 
 export struct GapProperty : Property {
+    // <'row-gap'> <'column-gap'>?
+    struct Value {
+        RowGapProperty::Value row = Keywords::NORMAL;
+        RowGapProperty::Value col = Keywords::NORMAL;
+
+        void repr(Io::Emit& e) const {
+            e("(gaps {} {})", row, col);
+        }
+    };
+
     struct Registration : Property::Registration {
         Registration() : Property::Registration(Properties::GAP) {}
+
+        InitialValue initial() const override {
+            return "normal"s;
+        }
 
         // https://drafts.csswg.org/css-align-3/#gap-legacy
         SmallVec<Symbol, 1> legacyNameAlias() const override {
             return {"grid-gap"_sym};
         }
 
-        Rc<Property> initial() const override {
-            return makeRc<GapProperty>(
-                self(),
-                Gaps{
-                    Keywords::NORMAL,
-                    Keywords::NORMAL,
-                }
-            );
-        }
-
         Rc<Property> load(ComputedValues const& c) const override {
-            return makeRc<GapProperty>(self(), *c.gaps);
+            return makeRc<GapProperty>(self(), Value{toSpecified(c.gaps->row), toSpecified(c.gaps->col)});
         }
 
         Res<Rc<Property>> parse(Cursor<Css::Sst>& c) const override {
-            auto rowGap = try$(parseValue<Gap>(c));
+            auto rowGap = try$(parseValue<RowGapProperty::Value>(c));
             eatWhitespace(c);
-            auto colGap = parseValue<Gap>(c);
+            auto colGap = parseValue<RowGapProperty::Value>(c);
 
             if (not colGap)
-                return Ok(makeRc<GapProperty>(self(), Gaps{rowGap, rowGap}));
-            return Ok(makeRc<GapProperty>(self(), Gaps{rowGap, colGap.take()}));
+                return Ok(makeRc<GapProperty>(self(), Value{rowGap, rowGap}));
+            return Ok(makeRc<GapProperty>(self(), Value{rowGap, colGap.take()}));
         }
     };
 
-    Gaps _value;
+    Value _value;
 
-    GapProperty(Rc<Property::Registration> registration, Gaps value)
+    GapProperty(Rc<Property::Registration> registration, Value value)
         : Property(registration), _value(value) {}
 
     Longhands expand(RegisteredPropertySet& registry, ComputedValues const&, ComputedValues&) const override {
         return {
-            makeRc<RowGapProperty>(registry.resolveRegistration(Properties::MARGIN_TOP, {}).expect(), _value.row),
-            makeRc<ColumnGapProperty>(registry.resolveRegistration(Properties::MARGIN_TOP, {}).expect(), _value.col),
+            makeRc<RowGapProperty>(registry.resolveRegistration(Properties::ROW_GAP, {}).expect(), _value.row),
+            makeRc<ColumnGapProperty>(registry.resolveRegistration(Properties::COLUMN_GAP, {}).expect(), _value.col),
         };
     }
 

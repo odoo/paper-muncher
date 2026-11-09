@@ -1,5 +1,7 @@
 export module Vaev.Engine:style;
 
+export import :style.values;
+
 export import :style.computer;
 export import :style.counter;
 export import :style.decls;

@@ -5,6 +5,7 @@
     "description": "The vaev web content engine",
     "subdirs": [
         "css",
+        "css/values",
         "dom",
         "driver",
         "html",
@@ -15,7 +16,7 @@
         "paint",
         "props",
         "style",
-        "values",
+        "style/values",
         "xml"
     ],
     "requires": [

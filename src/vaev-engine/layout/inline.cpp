@@ -4,7 +4,7 @@ import Karm.Gfx;
 import Karm.Math;
 import Karm.Core;
 
-import :values;
+import :style.values;
 import :layout.base;
 import :layout.layout;
 import :layout.positioned;
@@ -15,12 +15,12 @@ struct InlineFormatingContext : FormatingContext {
 
     // https://www.w3.org/TR/css-inline-3/#baseline-source
     BaselinePositionsSet getUsedBaselineFromBox(Box const& childBox, Output const& output) {
-        if (childBox.style->inline_->baselineSource == Keywords::FIRST)
+        if (childBox.style->inline_->baselineSource == Style::Keywords::FIRST)
             return output.firstBaselineSet;
-        if (childBox.style->inline_->baselineSource == Keywords::LAST)
+        if (childBox.style->inline_->baselineSource == Style::Keywords::LAST)
             return output.lastBaselineSet;
 
-        if (childBox.style->display == Display::INLINE and childBox.style->display == Display::FLOW_ROOT)
+        if (childBox.style->display == Style::Display::INLINE and childBox.style->display == Style::Display::FLOW_ROOT)
             return output.lastBaselineSet;
         return output.firstBaselineSet;
     }
@@ -65,34 +65,34 @@ struct InlineFormatingContext : FormatingContext {
         return placed.place(side, {marginWidth, 0_au}, proseHeight, container).xy;
     }
 
-    static UsedSpacings _usedSpacings(Tree& tree, Box& box, Vec2Au containingBlock) {
+    static UsedSpacings _usedSpacings(Box& box, Vec2Au containingBlock) {
         return {
-            .padding = computePaddings(tree, box, containingBlock),
-            .borders = computeBorders(tree, box),
-            .margin = computeMargins(tree, box, containingBlock),
+            .padding = computePaddings(box, containingBlock),
+            .borders = computeBorders(box),
+            .margin = computeMargins(box, containingBlock),
         };
     }
 
     // https://www.w3.org/TR/CSS22/visudet.html#float-width
     // If 'width' is computed as 'auto', the used value is the "shrink-to-fit" width.
-    static Au _floatBorderBoxWidth(Tree& tree, Box& box, UsedSpacings const& usedSpacings, Vec2Au containingBlock, IntrinsicSize intrinsic) {
+    static Au _floatBorderBoxWidth(Box& box, UsedSpacings const& usedSpacings, Vec2Au containingBlock, IntrinsicSize intrinsic) {
         Au borderBoxSpacings = usedSpacings.padding.horizontal() + usedSpacings.borders.horizontal();
-        if (auto width = computeSpecifiedBorderBoxWidth(tree, box, box.style->sizing->width, containingBlock, borderBoxSpacings))
+        if (auto width = computeSpecifiedBorderBoxWidth(box, box.style->sizing->width, containingBlock, borderBoxSpacings))
             return width.expect();
 
         if (isMinMaxIntrinsicSize(intrinsic))
-            return computeIntrinsicContentSize(tree, box, intrinsic).x + borderBoxSpacings;
+            return computeIntrinsicContentSize(box, intrinsic).x + borderBoxSpacings;
 
         Au availableWidth = containingBlock.x - usedSpacings.margin.horizontal() - borderBoxSpacings;
-        return computeFitContentInlineSize(tree, box, availableWidth) + borderBoxSpacings;
+        return computeFitContentInlineSize(box, availableWidth) + borderBoxSpacings;
     }
 
-    Output run([[maybe_unused]] Tree& tree, Box& box, Input input, [[maybe_unused]] usize startAt, [[maybe_unused]] Opt<usize> stopAt) override {
-        auto fragBuilder = FragmentBuilder{tree, box};
+    Output run(Box& box, Input input, [[maybe_unused]] usize startAt, [[maybe_unused]] Opt<usize> stopAt) override {
+        auto fragBuilder = FragmentBuilder{box};
 
-        tree.fc.enterMonolithicBox();
+        input.fragmentainer->enterMonolithicBox();
         Defer _ = [&] {
-            tree.fc.leaveMonolithicBox();
+            input.fragmentainer->leaveMonolithicBox();
         };
 
         auto inlineSize = input.knownSize.width.unwrapOrElse([&] {
@@ -123,8 +123,8 @@ struct InlineFormatingContext : FormatingContext {
                         input.knownSize.width.unwrapOr(0_au),
                         input.knownSize.height.unwrapOr(0_au),
                     };
-                    auto usedSpacings = _usedSpacings(tree, atomicBox, childContainingBlock);
-                    boxStrutCell->size.x = _floatBorderBoxWidth(tree, atomicBox, usedSpacings, childContainingBlock, input.intrinsic) + usedSpacings.margin.horizontal();
+                    auto usedSpacings = _usedSpacings(atomicBox, childContainingBlock);
+                    boxStrutCell->size.x = _floatBorderBoxWidth(atomicBox, usedSpacings, childContainingBlock, input.intrinsic) + usedSpacings.margin.horizontal();
                 }
                 continue;
             }
@@ -138,11 +138,12 @@ struct InlineFormatingContext : FormatingContext {
             };
 
             UsedSpacings usedSpacings{
-                .padding = computePaddings(tree, atomicBox, childContainingBlock),
-                .borders = computeBorders(tree, atomicBox),
+                .padding = computePaddings(atomicBox, childContainingBlock),
+                .borders = computeBorders(atomicBox),
             };
 
             Input childInput{
+                .fragmentainer = input.fragmentainer,
                 .generateFragment = false,
                 .usedSpacings = usedSpacings,
                 .availableSpace = {inlineSize, input.availableSpace.y},
@@ -150,18 +151,18 @@ struct InlineFormatingContext : FormatingContext {
             };
 
             childInput.knownSize.width = computeSpecifiedBorderBoxWidth(
-                tree, atomicBox, atomicBox.style->sizing->width, childInput.containingBlock,
+                atomicBox, atomicBox.style->sizing->width, childInput.containingBlock,
                 usedSpacings.padding.horizontal() + usedSpacings.borders.horizontal()
             );
 
             childInput.knownSize.height = computeSpecifiedBorderBoxHeight(
-                tree, atomicBox, atomicBox.style->sizing->height, childInput.containingBlock,
+                atomicBox, atomicBox.style->sizing->height, childInput.containingBlock,
                 usedSpacings.padding.vertical() + usedSpacings.borders.vertical()
             );
 
             // NOTE: We set the same availableSpace to child inline boxes since line wrapping is possible i.e. in the
             // worst case, they will take up the whole availableSpace, and a line break will be done right before them
-            auto atomicBoxOutput = layoutBorderBox(tree, atomicBox, childInput);
+            auto atomicBoxOutput = layoutBorderBox(atomicBox, childInput);
 
             boxStrutCell->size = atomicBoxOutput.size;
             // FIXME: hard-coding alphabetic alignment, missing alignment-baseline and dominant-baseline
@@ -190,21 +191,22 @@ struct InlineFormatingContext : FormatingContext {
                     continue;
 
                 auto childContainingBlock = Vec2Au{inlineSize, input.knownSize.height.unwrapOr(0_au)};
-                auto usedSpacings = _usedSpacings(tree, atomicBox, childContainingBlock);
+                auto usedSpacings = _usedSpacings(atomicBox, childContainingBlock);
 
-                Au width = _floatBorderBoxWidth(tree, atomicBox, usedSpacings, childContainingBlock, input.intrinsic);
+                Au width = _floatBorderBoxWidth(atomicBox, usedSpacings, childContainingBlock, input.intrinsic);
                 Au marginWidth = width + usedSpacings.margin.horizontal();
 
                 auto side = resolveFloatSide(atomicBox.style->float_, box.style->direction);
                 auto positionInProse = _floatPositionInProse(*prose, placedFloats, strutCell->runeRange.start, side, marginWidth, inlineSize, size.y);
 
                 Input childInput{
+                    .fragmentainer = input.fragmentainer,
                     .generateFragment = input.generateFragment,
                     .usedSpacings = usedSpacings,
                     .knownSize = {
                         Some(width),
                         computeSpecifiedBorderBoxHeight(
-                            tree, atomicBox, atomicBox.style->sizing->height, childContainingBlock,
+                            atomicBox, atomicBox.style->sizing->height, childContainingBlock,
                             usedSpacings.padding.vertical() + usedSpacings.borders.vertical()
                         ),
                     },
@@ -214,7 +216,7 @@ struct InlineFormatingContext : FormatingContext {
                     .pageNumber = input.pageNumber,
                 };
 
-                auto output = layoutBorderBox(tree, atomicBox, childInput);
+                auto output = layoutBorderBox(atomicBox, childInput);
                 outOfFlowChildren.pushBack(output.outOfFlowStash);
                 fragBuilder.addChildIfAny(output.fragment);
 
@@ -235,7 +237,7 @@ struct InlineFormatingContext : FormatingContext {
                 if (placesFloats and atomicBox.isFloating())
                     continue;
 
-                if (oneOf(atomicBox.style->position, Keywords::ABSOLUTE, Keywords::FIXED)) {
+                if (oneOf(atomicBox.style->position, Style::Keywords::ABSOLUTE, Style::Keywords::FIXED)) {
                     if (input.generateFragment) {
                         // https://www.w3.org/TR/css-position-3/#staticpos-rect
 
@@ -265,11 +267,12 @@ struct InlineFormatingContext : FormatingContext {
                 };
 
                 UsedSpacings usedSpacings{
-                    .padding = computePaddings(tree, atomicBox, childContainingBlock),
-                    .borders = computeBorders(tree, atomicBox),
+                    .padding = computePaddings(atomicBox, childContainingBlock),
+                    .borders = computeBorders(atomicBox),
                 };
 
                 Input childInput{
+                    .fragmentainer = input.fragmentainer,
                     .generateFragment = input.generateFragment,
                     .usedSpacings = usedSpacings,
                     .knownSize = {
@@ -284,29 +287,29 @@ struct InlineFormatingContext : FormatingContext {
 
                 if (atomicBox.isRemovedFromFlow()) {
                     childInput.knownSize.width = computeSpecifiedBorderBoxWidth(
-                        tree, atomicBox, atomicBox.style->sizing->width, childInput.containingBlock,
+                        atomicBox, atomicBox.style->sizing->width, childInput.containingBlock,
                         usedSpacings.padding.horizontal() + usedSpacings.borders.horizontal()
                     );
 
                     childInput.knownSize.height = computeSpecifiedBorderBoxHeight(
-                        tree, atomicBox, atomicBox.style->sizing->height, childInput.containingBlock,
+                        atomicBox, atomicBox.style->sizing->height, childInput.containingBlock,
                         usedSpacings.padding.vertical() + usedSpacings.borders.vertical()
                     );
                 }
 
-                if (atomicBox.style->position == Keywords::RELATIVE) {
-                    childInput.position += relativePositionOffset(tree, atomicBox, input.containingBlock);
+                if (atomicBox.style->position == Style::Keywords::RELATIVE) {
+                    childInput.position += relativePositionOffset(atomicBox, input.containingBlock);
                 }
 
-                auto output = layoutBorderBox(tree, atomicBox, childInput);
+                auto output = layoutBorderBox(atomicBox, childInput);
 
                 outOfFlowChildren.pushBack(output.outOfFlowStash);
                 fragBuilder.addChildIfAny(output.fragment);
             }
         }
 
-        if (tree.fc.allowBreak() and
-            not tree.fc.acceptsFit(
+        if (input.fragmentainer->allowBreak() and
+            not input.fragmentainer->acceptsFit(
                 input.position.y,
                 size.y,
                 input.pendingVerticalSizes

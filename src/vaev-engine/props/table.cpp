@@ -8,18 +8,22 @@ import Karm.Core;
 import :props.base;
 import :css.parser;
 import :style.computed;
+import :style.values.keywords;
 
 using namespace Karm;
+using namespace Karm::Literals;
 
 namespace Vaev::Style {
 
 // https://www.w3.org/TR/CSS21/tables.html#propdef-table-layout
 export struct TableLayoutProperty : Property {
+    using Value = Css::TableLayout;
+
     struct Registration : Property::Registration {
         Registration() : Property::Registration(Properties::TABLE_LAYOUT) {}
 
-        Rc<Property> initial() const override {
-            return makeRc<TableLayoutProperty>(self(), TableLayout::AUTO);
+        InitialValue initial() const override {
+            return "auto"s;
         }
 
         Rc<Property> load(ComputedValues const& s) const override {
@@ -27,13 +31,13 @@ export struct TableLayoutProperty : Property {
         }
 
         Res<Rc<Property>> parse(Cursor<Css::Sst>& c) const override {
-            return Ok(makeRc<TableLayoutProperty>(self(), try$(parseValue<TableLayout>(c))));
+            return Ok(makeRc<TableLayoutProperty>(self(), try$(parseValue<Css::TableLayout>(c))));
         }
     };
 
-    TableLayout _value;
+    Value _value;
 
-    TableLayoutProperty(Rc<Property::Registration> registration, TableLayout value)
+    TableLayoutProperty(Rc<Property::Registration> registration, Value value)
         : Property(registration), _value(value) {}
 
     void apply([[maybe_unused]] ComputedValues const& parent, ComputedValues& c, [[maybe_unused]] ComputationContext const& cx) const override {
@@ -41,7 +45,7 @@ export struct TableLayoutProperty : Property {
     }
 
     Res<> serialize(Io::TextWriter& w) const override {
-        return serializeValue(w, _value);
+        return Css::serializeValue(w, _value);
     }
 
     void repr(Io::Emit& e) const override {
@@ -51,12 +55,14 @@ export struct TableLayoutProperty : Property {
 
 // https://www.w3.org/TR/CSS21/tables.html#caption-position
 export struct CaptionSideProperty : Property {
+    using Value = Css::CaptionSide;
+
     struct Registration : Property::Registration {
         Registration()
             : Property::Registration(Properties::CAPTION_SIDE, {INHERITED, BULK_INHERITED}) {}
 
-        Rc<Property> initial() const override {
-            return makeRc<CaptionSideProperty>(self(), CaptionSide::TOP);
+        InitialValue initial() const override {
+            return "top"s;
         }
 
         Rc<Property> load(ComputedValues const& s) const override {
@@ -64,13 +70,13 @@ export struct CaptionSideProperty : Property {
         }
 
         Res<Rc<Property>> parse(Cursor<Css::Sst>& c) const override {
-            return Ok(makeRc<CaptionSideProperty>(self(), try$(parseValue<CaptionSide>(c))));
+            return Ok(makeRc<CaptionSideProperty>(self(), try$(parseValue<Css::CaptionSide>(c))));
         }
     };
 
-    CaptionSide _value;
+    Value _value;
 
-    CaptionSideProperty(Rc<Property::Registration> registration, CaptionSide value)
+    CaptionSideProperty(Rc<Property::Registration> registration, Value value)
         : Property(registration), _value(value) {}
 
     void apply([[maybe_unused]] ComputedValues const& parent, ComputedValues& c, [[maybe_unused]] ComputationContext const& cx) const override {
@@ -78,7 +84,7 @@ export struct CaptionSideProperty : Property {
     }
 
     Res<> serialize(Io::TextWriter& w) const override {
-        return serializeValue(w, _value);
+        return Css::serializeValue(w, _value);
     }
 
     void repr(Io::Emit& e) const override {

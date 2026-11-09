@@ -4,118 +4,76 @@ import Karm.Gfx;
 import Karm.Math;
 import Karm.Logger;
 
-import :values;
+import :style.values;
 import :layout.formating;
 
 namespace Vaev::Layout {
 
-export struct Resolver :
-    RelativeLengthContextData,
-    FontSizeContextData {
-
-    static Resolver from(Tree const& tree, Box const& box) {
-        Gfx::Font font = Gfx::Font{box.style->fontFace, box.style->font->size.cast<f64>()};
-        Gfx::Font rootFont = Gfx::Font{tree.root.style->fontFace, 16};
-
-        Resolver ctx;
-
-        ctx.fontSize = font.fontSize();
-        ctx.xHeight = font.xHeight();
-        ctx.capHeight = font.capHeight();
-        ctx.zeroAdvance = font.zeroAdvance();
-        ctx.lineHeight = font.lineHeight();
-
-        ctx.rootFontSize = rootFont.fontSize();
-        ctx.rootXHeight = rootFont.xHeight();
-        ctx.rootCapHeight = rootFont.capHeight();
-        ctx.rootZeroAdvance = rootFont.zeroAdvance();
-        ctx.rootLineHeight = rootFont.lineHeight();
-
-        ctx.viewportSmallWidth = tree.viewport.small.width.cast<f64>();
-        ctx.viewportSmallHeight = tree.viewport.small.height.cast<f64>();
-
-        ctx.viewportLargeWidth = tree.viewport.large.width.cast<f64>();
-        ctx.viewportLargeHeight = tree.viewport.large.height.cast<f64>();
-
-        ctx.viewportDynamicWidth = tree.viewport.dynamic.width.cast<f64>();
-        ctx.viewportDynamicHeight = tree.viewport.dynamic.height.cast<f64>();
-
-        return ctx;
-    }
-
-    Au resolve(Length const& value) {
-        return Vaev::resolve(value, *this);
-    }
-
-    Au resolve(LineWidth const& value) {
-        return Vaev::resolve(value, *this);
-    }
-
-    Au resolve(PercentOr<Length> const& value, Au relative) {
-        return Vaev::resolve(value, *this, relative);
-    }
-
-    Au resolve(Union<Keywords::Auto, Calc<PercentOr<Length>>> const& value, Au relative) {
-        if (value.is<Keywords::Auto>())
-            return 0_au;
-        return Vaev::resolve(value.expect<Calc<PercentOr<Length>>>(), *this, relative);
-    }
-
-    Rad resolve(Angle const& value) {
-        return Rad{value.toRadian()};
-    }
-
-    Number resolve(Number const& value) {
-        return value;
-    }
-
-    Au resolve(FontSize const& value) {
-        return Vaev::resolve(value, *this);
-    }
-
-    template <typename T, typename... Args>
-    Resolved<T> resolve(Calc<T> const& calc, Args... args) {
-        return Vaev::resolve(calc, *this, args...);
-    }
-};
-
 // MARK: Resolve during layout -------------------------------------------------
 
-// HACK: Temporary workaround while we don't properly evaluate computed values
-export bool isPurePercentage(Calc<PercentOr<Length>> calcValue) {
-    if (not calcValue._inner.is<Calc<PercentOr<Length>>::Value>())
-        return false;
-
-    auto const& value = calcValue._inner.expect<Calc<PercentOr<Length>>::Value>();
-    if (not value.is<PercentOr<Length>>())
-        return false;
-
-    return value.expect<PercentOr<Length>>().is<Percent>().has();
+export bool isPurePercentage(Style::PxPercent const& calc) {
+    // FIXME: If the calc is a non-linear tree, it should check inside if it contains percentages.
+    return calc.is<Style::Percent>() or calc.is<Style::LinearPxPercent>();
 }
 
-export Au resolve(Tree const& tree, Box const& box, Length const& value) {
-    return Resolver::from(tree, box).resolve(value);
+export Au resolve(Style::Px const& value) {
+    return Au::fromFloatNearest(value.value());
 }
 
-export Au resolve(Tree const& tree, Box const& box, PercentOr<Length> const& value, Au relative) {
-    return Resolver::from(tree, box).resolve(value, relative);
+export Vec2Au resolve(Math::Vec2<Style::Px> const& value) {
+    return {resolve(value.x), resolve(value.y)};
 }
 
-export Au resolve(Tree const& tree, Box const& box, Union<Keywords::Auto, Calc<PercentOr<Length>>> const& value, Au relative) {
-    return Resolver::from(tree, box).resolve(value, relative);
+export Style::Px toPixel(Au value) {
+    return Style::Px{value.cast<f64>()};
 }
 
-export Au resolve(Tree const& tree, Box const& box, LineWidth const& value) {
-    return Resolver::from(tree, box).resolve(value);
+export Math::Vec2<Style::Px> toPixel(Vec2Au value) {
+    return {toPixel(value.x), toPixel(value.y)};
 }
 
-export Au resolve(Tree const& tree, Box const& box, FontSize const& value) {
-    return Resolver::from(tree, box).resolve(value);
+export Opt<Au> resolve(Style::PxPercent const& value, Opt<Au> relative) {
+    return value.visit(
+        [](Style::Px const& px) -> Opt<Au> {
+            return Some(Au{px.value()});
+        },
+        [&](Style::Percent const& percentage) -> Opt<Au> {
+            if (auto const [r] = relative)
+                return Some(Au{r.cast<f64>() * (percentage.value() / 100.)});
+            return NONE;
+        },
+        [&](Style::LinearPxPercent const& lin) -> Opt<Au> {
+            if (auto const [r] = relative)
+                return Some(Au{lin.px.value() + r.cast<f64>() * (lin.percentage.value() / 100.)});
+            return NONE;
+        },
+        [&](Karm::Box<Style::Calc> const& calc) -> Opt<Au> {
+            auto simplified = Style::simplify(
+                *calc,
+                NONE,
+                Some(Style::NumericBaseType::LENGTH),
+                relative.map([](Au r) {
+                    return r.cast<f64>();
+                })
+            );
+
+            if (auto n = simplified.is<Style::UnitValue>(); n and n->unit() == Style::UnitValue::Unit::PX)
+                return Some(Au{n->value()});
+            return NONE;
+        }
+    );
 }
 
-export template <typename T, typename... Args>
-auto resolve(Tree const& tree, Box const& box, Calc<T> const& value, Args... args) -> Resolved<T> {
-    return Resolver::from(tree, box).resolve(value, args...);
+export Au resolve(Style::PxPercent const& value, Au relative) {
+    if (auto const [au] = resolve(value, Opt<Au>{Some(relative)}))
+        return au;
+    panic("calc didn't simplify to a single value of expected unit");
+}
+
+export Au resolve(Union<Style::Keywords::Auto, Style::PxPercent> const& value, Au relative) {
+    if (value.is<Style::Keywords::Auto>())
+        return 0_au;
+    return resolve(value.expect<Style::PxPercent>(), relative);
 }
 
 } // namespace Vaev::Layout

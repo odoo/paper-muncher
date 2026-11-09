@@ -8,7 +8,7 @@ import Karm.Gfx;
 import Karm.Math;
 import Karm.Core;
 
-import :values;
+import :style.values;
 import :layout.base;
 import :layout.layout;
 import :layout.positioned;
@@ -56,9 +56,9 @@ Res<None, Output> processBreakpointsAfterChild(Fragmentainer const& fc, Fragment
     // BREAK CLASS A
     if (not isLastChild) {
         bool breakIsAvoided =
-            oneOf(parentBox.style->break_->inside, BreakInside::AVOID, BreakInside::AVOID_PAGE) or
-            oneOf(childBox.style->break_->after, BreakBetween::AVOID, BreakBetween::AVOID_PAGE) or
-            (not isLastChild and oneOf(parentBox.children()[childIndex + 1].style->break_->before, BreakBetween::AVOID, BreakBetween::AVOID_PAGE));
+            oneOf(parentBox.style->break_->inside, Style::Keywords::AVOID, Style::Keywords::AVOID_PAGE) or
+            oneOf(childBox.style->break_->after, Style::Keywords::AVOID, Style::Keywords::AVOID_PAGE) or
+            (not isLastChild and oneOf(parentBox.children()[childIndex + 1].style->break_->before, Style::Keywords::AVOID, Style::Keywords::AVOID_PAGE));
 
         currentBreakpoint.overrideIfBetter(
             Breakpoint::classB(
@@ -69,7 +69,7 @@ Res<None, Output> processBreakpointsAfterChild(Fragmentainer const& fc, Fragment
     }
 
     // FORCED BREAK
-    if (childBox.style->break_->after == BreakBetween::PAGE) {
+    if (childBox.style->break_->after == Style::Keywords::PAGE) {
         return Output{
             .fragment = fragBuilder.buildBoxFromInput(input, currentBoxSize),
             .size = currentBoxSize,
@@ -153,41 +153,41 @@ Output fragmentEmptyBox(Fragmentainer const& fc, FragmentBuilder& fragBuilder, I
 // The table wrapper box inline size is the table grid box inline size, computed
 // here from its intrinsic sizes since tables with 'width: auto' size to
 // fit-content instead of stretching like other block-level boxes.
-Opt<Au> _tableWrapperFitContentWidth(Tree& tree, Box& wrapper, Au availableWidth) {
+Opt<Au> _tableWrapperFitContentWidth(Box& wrapper, Au availableWidth) {
     for (auto& gridBox : wrapper.children()) {
-        if (gridBox.style->display != Display::Internal::TABLE_BOX)
+        if (gridBox.style->display != Style::Display::Internal::TABLE_BOX)
             continue;
 
         // TODO: Specified widths live on the table grid box and may be percentages,
         //       which we cannot resolve during intrinsic sizing; bail out for now.
-        if (not gridBox.style->sizing->width.is<Keywords::Auto>())
+        if (not gridBox.style->sizing->width.is<Style::Keywords::Auto>())
             return NONE;
 
-        return Some(computeFitContentInlineSize(tree, wrapper, availableWidth));
+        return Some(computeFitContentInlineSize(wrapper, availableWidth));
     }
 
     return NONE;
 }
 
-void _populateChildSpecifiedSizes(Tree& tree, Box& child, Input& parentInput, Input& childInput, UsedSpacings const& usedSpacings, Opt<Au> blockInlineSize) {
+void _populateChildSpecifiedSizes(Box& child, Input& parentInput, Input& childInput, UsedSpacings const& usedSpacings, Opt<Au> blockInlineSize) {
     // https://drafts.csswg.org/css-tables-3/#fixup-algorithm
     // Percentages which would depend on the width and height on the table-wrapper box’s size are relative to the table-wrapper
     // box’s containing block instead, not the table-wrapper box itself.
-    auto containingBlock = child.style->display == Display::TABLE_BOX ? parentInput.containingBlock : childInput.containingBlock;
+    auto containingBlock = child.style->display == Style::Display::TABLE_BOX ? parentInput.containingBlock : childInput.containingBlock;
 
-    if (childInput.intrinsic == IntrinsicSize::AUTO or child.style->display != Display::INLINE) {
-        if (child.style->sizing->width.is<Keywords::Auto>()) {
+    if (childInput.intrinsic == IntrinsicSize::AUTO or child.style->display != Style::Display::INLINE) {
+        if (child.style->sizing->width.is<Style::Keywords::Auto>()) {
             // https://www.w3.org/TR/css-tables-3/#layout-principles
             // Unlike other block-level boxes, tables do not fill their containing block by default.
             // When their width computes to auto, they behave as if they had fit-content specified instead.
             // This is different from most block-level boxes, which behave as if they had stretch instead.
-            if (child.style->display == Display::TABLE_BOX) {
+            if (child.style->display == Style::Display::TABLE_BOX) {
                 // Do nothing. 'fit-content' is kinda intrinsic size, when we don't populate knownSize.
             } else if (blockInlineSize) {
                 // When the inline size is not known, we cannot enforce it to the child. (?)
                 Au availableWidth = blockInlineSize.expect() - usedSpacings.margin.horizontal();
-                if (child.style->display == Display::TABLE) {
-                    childInput.knownSize.width = Some(_tableWrapperFitContentWidth(tree, child, availableWidth)
+                if (child.style->display == Style::Display::TABLE) {
+                    childInput.knownSize.width = Some(_tableWrapperFitContentWidth(child, availableWidth)
                                                           .unwrapOr(availableWidth));
                 } else {
                     childInput.knownSize.width = Some(availableWidth);
@@ -195,14 +195,14 @@ void _populateChildSpecifiedSizes(Tree& tree, Box& child, Input& parentInput, In
             }
         } else {
             childInput.knownSize.width = computeSpecifiedBorderBoxWidth(
-                tree, child, child.style->sizing->width, containingBlock,
+                child, child.style->sizing->width, containingBlock,
                 usedSpacings.padding.horizontal() + usedSpacings.borders.horizontal(),
                 childInput.capmin
             );
         }
 
         childInput.knownSize.height = computeSpecifiedBorderBoxHeight(
-            tree, child, child.style->sizing->height, containingBlock,
+            child, child.style->sizing->height, containingBlock,
             usedSpacings.padding.vertical() + usedSpacings.borders.vertical()
         );
     }
@@ -215,8 +215,8 @@ void _populateChildSpecifiedSizes(Tree& tree, Box& child, Input& parentInput, In
 // containing block inline size and the box inline size are known; otherwise 'auto'
 // margins resolve to zero.
 void _resolveAutoHorizontalMargins(Box& child, Input& childInput, UsedSpacings& usedSpacings, Opt<Au> blockInlineSize) {
-    bool startIsAuto = child.style->margin->start.is<Keywords::Auto>().has();
-    bool endIsAuto = child.style->margin->end.is<Keywords::Auto>().has();
+    bool startIsAuto = child.style->margin->start.is<Style::Keywords::Auto>().has();
+    bool endIsAuto = child.style->margin->end.is<Style::Keywords::Auto>().has();
 
     if (not(startIsAuto or endIsAuto))
         return;
@@ -243,41 +243,41 @@ void _resolveAutoHorizontalMargins(Box& child, Input& childInput, UsedSpacings& 
 }
 
 // NOTE: Measures the whole box, without recording breakpoints nor running elements.
-Output _layoutMonolithic(Tree& tree, Box& box, Input input) {
+Output _layoutMonolithic(Box& box, Input input) {
     input.generateFragment = false;
     input.runningPosition = nullptr;
-    tree.fc.enterMonolithicBox();
-    auto output = layoutBorderBox(tree, box, input);
-    tree.fc.leaveMonolithicBox();
+    input.fragmentainer->enterMonolithicBox();
+    auto output = layoutBorderBox(box, input);
+    input.fragmentainer->leaveMonolithicBox();
     return output;
 }
 
-PlacedFloat _placeFloat(Tree& tree, Box& child, Direction direction, Input const& input, Input& childInput, UsedSpacings const& usedSpacings, Floats const& floats, Au blockSize, Au inlineSize) {
+PlacedFloat _placeFloat(Box& child, Style::Direction const& direction, Input const& input, Input& childInput, UsedSpacings const& usedSpacings, Floats const& floats, Au blockSize, Au inlineSize) {
     // NOTE: The float is sized as a whole, not only the part that fits in the current fragmentainer.
-    tree.fc.enterMonolithicBox();
+    input.fragmentainer->enterMonolithicBox();
     Defer _ = [&] {
-        tree.fc.leaveMonolithicBox();
+        input.fragmentainer->leaveMonolithicBox();
     };
 
     Au borderBoxSpacings = usedSpacings.padding.horizontal() + usedSpacings.borders.horizontal();
     Au availableWidth = inlineSize - usedSpacings.margin.horizontal() - borderBoxSpacings;
 
-    if (child.style->display == Display::TABLE) {
+    if (child.style->display == Style::Display::TABLE) {
         // NOTE: Table wrappers got their fit-content width from _populateChildSpecifiedSizes, unless the table has a
         //       specified width, which lives on the table grid box: then the wrapper shrinks to the grid box.
         bool gridBoxWidthIsAuto = iter(child.children()) | Any([](Box const& gridBox) {
-                                      return gridBox.style->display == Display::Internal::TABLE_BOX and
-                                             gridBox.style->sizing->width.is<Keywords::Auto>();
+                                      return gridBox.style->display == Style::Display::Internal::TABLE_BOX and
+                                             gridBox.style->sizing->width.is<Style::Keywords::Auto>();
                                   });
         if (not gridBoxWidthIsAuto)
             childInput.knownSize.width = NONE;
-    } else if (child.style->sizing->width.is<Keywords::Auto>()) {
+    } else if (child.style->sizing->width.is<Style::Keywords::Auto>()) {
         // https://www.w3.org/TR/CSS22/visudet.html#float-width
         // If 'width' is computed as 'auto', the used value is the "shrink-to-fit" width.
-        childInput.knownSize.width = Some(computeFitContentInlineSize(tree, child, availableWidth) + borderBoxSpacings);
+        childInput.knownSize.width = Some(computeFitContentInlineSize(child, availableWidth) + borderBoxSpacings);
     }
 
-    auto measured = _layoutMonolithic(tree, child, childInput);
+    auto measured = _layoutMonolithic(child, childInput);
 
     Au minTop = input.position.y + blockSize;
 
@@ -312,33 +312,33 @@ PlacedFloat _placeFloat(Tree& tree, Box& child, Direction direction, Input const
 // the margin box of the float.
 // NOSPEC: Line boxes can't be shortened around floats, so blocks with inline content avoid floats the same way. A box is
 //         put next to the floats only if it ends before the floats it is next to do, otherwise it goes below them.
-Opt<Range<Au>> _avoidFloats(Tree& tree, Box& child, Input const& input, Input& childInput, UsedSpacings& usedSpacings, Floats const& floats, Au& blockSize, Au inlineSize) {
+Opt<Range<Au>> _avoidFloats(Box& child, Input const& input, Input& childInput, UsedSpacings& usedSpacings, Floats const& floats, Au& blockSize, Au inlineSize) {
     Au top = input.position.y + blockSize;
     if (not floats.nextBottom(top, 0_au))
         return NONE;
 
     // NOTE: The box is measured as a whole, not only the part that fits in the current fragmentainer.
-    tree.fc.enterMonolithicBox();
+    input.fragmentainer->enterMonolithicBox();
     Defer _ = [&] {
-        tree.fc.leaveMonolithicBox();
+        input.fragmentainer->leaveMonolithicBox();
     };
 
     Range<Au> container = {input.position.x, inlineSize};
 
     // NOSPEC: 'auto' margins are resolved again against the space next to the floats.
     UsedSpacings spacings = usedSpacings;
-    spacings.margin = computeMargins(tree, child, childInput.containingBlock);
+    spacings.margin = computeMargins(child, childInput.containingBlock);
     Au margins = spacings.margin.horizontal();
     Au borderBoxSpacings = spacings.padding.horizontal() + spacings.borders.horizontal();
-    Au minContentWidth = computeIntrinsicContentSize(tree, child, IntrinsicSize::MIN_CONTENT).x + borderBoxSpacings + margins;
-    bool stretches = child.style->sizing->width.is<Keywords::Auto>() and child.style->display != Display::TABLE;
+    Au minContentWidth = computeIntrinsicContentSize(child, IntrinsicSize::MIN_CONTENT).x + borderBoxSpacings + margins;
+    bool stretches = child.style->sizing->width.is<Style::Keywords::Auto>() and child.style->display != Style::Display::TABLE;
 
     while (auto floatsBottom = floats.nextBottom(top, 0_au)) {
         auto band = floats.freeBand(top, 0_au, container);
         Au width = stretches ? band.size - margins : childInput.knownSize.width.unwrapOr(band.size - margins);
 
         if (band.size >= max(minContentWidth, width + margins)) {
-            auto measured = _layoutMonolithic(tree, child, childInput.withKnownSize({Some(width), childInput.knownSize.height}));
+            auto measured = _layoutMonolithic(child, childInput.withKnownSize({Some(width), childInput.knownSize.height}));
             if (top + measured.size.y <= floatsBottom.expect()) {
                 childInput.knownSize.width = Some(width);
                 _resolveAutoHorizontalMargins(child, childInput, spacings, Some(band.size));
@@ -359,19 +359,19 @@ Opt<Range<Au>> _avoidFloats(Tree& tree, Box& child, Input const& input, Input& c
 
 // https://www.w3.org/TR/CSS22/visuren.html#normal-flow
 struct BlockFormatingContext : FormatingContext {
-    Au _computeCapmin(Tree& tree, Box& box, Input input, Au inlineSize) {
+    Au _computeCapmin(Box& box, Input input, Au inlineSize) {
         Au capmin{};
         for (auto& c : box.children()) {
-            if (c.style->display != Display::TABLE_BOX) {
+            if (c.style->display != Style::Display::TABLE_BOX) {
                 auto minContentContrib = computeIntrinsicContentSize(
-                    tree, c, IntrinsicSize::MIN_CONTENT
+                    c, IntrinsicSize::MIN_CONTENT
                 );
 
                 Vec2Au containingBlock = {inlineSize, input.knownSize.height.unwrapOr(0_au)};
                 UsedSpacings usedSpacings{
-                    .padding = computePaddings(tree, c, containingBlock),
-                    .borders = computeBorders(tree, c),
-                    .margin = computeMargins(tree, c, containingBlock)
+                    .padding = computePaddings(c, containingBlock),
+                    .borders = computeBorders(c),
+                    .margin = computeMargins(c, containingBlock)
                 };
 
                 capmin = max(
@@ -385,14 +385,14 @@ struct BlockFormatingContext : FormatingContext {
         return capmin;
     }
 
-    Output run(Tree& tree, Box& box, Input input, usize startAt, Opt<usize> stopAt) override {
-        auto fragBuilder = FragmentBuilder{tree, box};
+    Output run(Box& box, Input input, usize startAt, Opt<usize> stopAt) override {
+        auto fragBuilder = FragmentBuilder{box};
 
         Au blockSize = 0_au;
         Au inlineSize = input.knownSize.width.unwrapOr(0_au);
 
         if (box.children().len() == 0) {
-            return fragmentEmptyBox(tree.fc, fragBuilder, input);
+            return fragmentEmptyBox(*input.fragmentainer, fragBuilder, input);
         }
 
         Breakpoint currentBreakpoint;
@@ -433,7 +433,7 @@ struct BlockFormatingContext : FormatingContext {
             if (c.isRunningPositionedBox())
                 continue;
 
-            if (oneOf(c.style->position, Keywords::ABSOLUTE, Keywords::FIXED)) {
+            if (oneOf(c.style->position, Style::Keywords::ABSOLUTE, Style::Keywords::FIXED)) {
                 if (input.generateFragment) {
                     // https://www.w3.org/TR/css-position-3/#staticpos-rect
                     RectAu staticPosRect = {
@@ -459,7 +459,7 @@ struct BlockFormatingContext : FormatingContext {
                     fragBuilder,
                     i,
                     Vec2Au{inlineSize, contentBlockSize()},
-                    c.style->break_->before == BreakBetween::PAGE,
+                    c.style->break_->before == Style::Keywords::PAGE,
                     startAt,
                     input
                 )
@@ -468,12 +468,13 @@ struct BlockFormatingContext : FormatingContext {
             auto childContainingBlock = Vec2Au{inlineSize, input.knownSize.height.unwrapOr(0_au)};
 
             auto usedSpacings = UsedSpacings{
-                .padding = computePaddings(tree, c, childContainingBlock),
-                .borders = computeBorders(tree, c),
-                .margin = computeMargins(tree, c, childContainingBlock)
+                .padding = computePaddings(c, childContainingBlock),
+                .borders = computeBorders(c),
+                .margin = computeMargins(c, childContainingBlock)
             };
 
             Input childInput = {
+                .fragmentainer = input.fragmentainer,
                 .generateFragment = input.generateFragment,
                 .usedSpacings = usedSpacings,
                 .intrinsic = input.intrinsic,
@@ -501,10 +502,10 @@ struct BlockFormatingContext : FormatingContext {
 
             // HACK: Table Box mostly behaves like a block box, let's compute its capmin
             //       and avoid duplicating the layout code
-            if (c.style->display == Display::Internal::TABLE_BOX)
-                childInput.capmin = Some(_computeCapmin(tree, box, input, inlineSize));
+            if (c.style->display == Style::Display::Internal::TABLE_BOX)
+                childInput.capmin = Some(_computeCapmin(box, input, inlineSize));
 
-            _populateChildSpecifiedSizes(tree, c, input, childInput, usedSpacings, input.knownSize.width);
+            _populateChildSpecifiedSizes(c, input, childInput, usedSpacings, input.knownSize.width);
 
             if (not c.isRemovedFromFlow())
                 _resolveAutoHorizontalMargins(c, childInput, usedSpacings, input.knownSize.width);
@@ -513,7 +514,7 @@ struct BlockFormatingContext : FormatingContext {
 
             Opt<PlacedFloat> placedFloat = NONE;
             if (placesFloats and c.isFloating())
-                placedFloat = Some(_placeFloat(tree, c, box.style->direction, input, childInput, usedSpacings, floats, blockSize, inlineSize));
+                placedFloat = Some(_placeFloat(c, box.style->direction, input, childInput, usedSpacings, floats, blockSize, inlineSize));
 
             if (placesFloats and not c.establishesBlockFormatingContext())
                 childInput.floats = floats;
@@ -521,25 +522,25 @@ struct BlockFormatingContext : FormatingContext {
             Opt<Range<Au>> bandNextToFloats = NONE;
             bool avoidsFloats = c.content.is<Rc<Gfx::Prose>>() or c.establishesBlockFormatingContext();
             if (placesFloats and floats.len() and avoidsFloats and not c.isRemovedFromFlow() and not c.isPseudoElement(Dom::PseudoElement::MARKER))
-                bandNextToFloats = _avoidFloats(tree, c, input, childInput, usedSpacings, floats, blockSize, inlineSize);
+                bandNextToFloats = _avoidFloats(c, input, childInput, usedSpacings, floats, blockSize, inlineSize);
 
-            if (box.style->text->align == TextAlign::BLOCK_CENTER and not placedFloat) {
+            if (box.style->text->align == Style::Keywords::VAEV_BLOCK_CENTER and not placedFloat) {
                 Au availableWidth = bandNextToFloats ? bandNextToFloats.expect().size : inlineSize;
-                childInput.position.x += availableWidth / 2 - layoutBorderBox(tree, c, childInput.withGenerateFragment(false)).width() / 2;
+                childInput.position.x += availableWidth / 2 - layoutBorderBox(c, childInput.withGenerateFragment(false)).width() / 2;
             }
 
             if (c.isPseudoElement(Dom::PseudoElement::MARKER)) {
                 // NOSPEC: The spec doesn't define where the marker should be placed.
-                auto width = computeIntrinsicContentSize(tree, c, IntrinsicSize::MAX_CONTENT).x;
+                auto width = computeIntrinsicContentSize(c, IntrinsicSize::MAX_CONTENT).x;
                 childInput.position.x -= width * 2.5;
                 childInput.knownSize.width = Some(width);
             }
 
-            if (c.style->position == Keywords::RELATIVE) {
-                childInput.position += relativePositionOffset(tree, c, input.containingBlock);
+            if (c.style->position == Style::Keywords::RELATIVE) {
+                childInput.position += relativePositionOffset(c, input.containingBlock);
             }
 
-            auto output = layoutBorderBox(tree, c, childInput);
+            auto output = layoutBorderBox(c, childInput);
             fragBuilder.addChildIfAny(output.fragment);
 
             if (placedFloat) {
@@ -557,10 +558,10 @@ struct BlockFormatingContext : FormatingContext {
             }
 
             maybeProcessChildBreakpoint(
-                tree.fc,
+                *input.fragmentainer,
                 currentBreakpoint,
                 i,
-                oneOf(box.style->break_->inside, BreakInside::AVOID, BreakInside::AVOID_PAGE),
+                oneOf(box.style->break_->inside, Style::Keywords::AVOID, Style::Keywords::AVOID_PAGE),
                 output.breakpoint
             );
 
@@ -575,7 +576,7 @@ struct BlockFormatingContext : FormatingContext {
             }
 
             try$(processBreakpointsAfterChild(
-                tree.fc,
+                *input.fragmentainer,
                 fragBuilder,
                 currentBreakpoint,
                 box,
@@ -585,13 +586,13 @@ struct BlockFormatingContext : FormatingContext {
                 input
             ));
 
-            if (tree.fc.allowBreak() and i + 1 == endChildren) {
+            if (input.fragmentainer->allowBreak() and i + 1 == endChildren) {
                 blockWasCompletelyLaidOut = output.completelyLaidOut and i + 1 == box.children().len();
             }
 
             Au childInlineSize = output.size.x + usedSpacings.margin.horizontal();
             if (input.intrinsic == IntrinsicSize::MAX_CONTENT) {
-                if (c.style->clear != Clear::NONE)
+                if (c.style->clear != Style::Keywords::NONE)
                     floatsBesideInlineSize = 0_au;
 
                 if (c.isFloating()) {

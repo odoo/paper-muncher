@@ -10,7 +10,7 @@ namespace Vaev::Layout {
 // MARK: AvailableSpace --------------------------------------------------------
 // https://www.w3.org/TR/css-sizing-3/#available
 
-using AvailableSpaceAxis = Union<Au, Keywords::MinContent, Keywords::MaxContent>;
+using AvailableSpaceAxis = Union<Au, Style::Keywords::MinContent, Style::Keywords::MaxContent>;
 
 struct AvailableSpace {
     AvailableSpaceAxis x;
@@ -43,6 +43,9 @@ struct UsedSpacings {
 };
 
 export struct Input {
+    /// The fragmentainer the layout is flowing into.
+    Opt<Fragmentainer&> fragmentainer = NONE;
+
     /// Parent fragment where the layout will be attached.
     bool generateFragment = false;
     UsedSpacings usedSpacings = {};

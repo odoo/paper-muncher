@@ -8,19 +8,23 @@ import Karm.Core;
 import :props.base;
 import :css.parser;
 import :style.computed;
+import :style.values.keywords;
 
 using namespace Karm;
+using namespace Karm::Literals;
 
 namespace Vaev::Style {
 
 // MARK: Float & Clear ---------------------------------------------------------
 
 export struct FloatProperty : Property {
+    using Value = Css::Float;
+
     struct Registration : Property::Registration {
         Registration() : Property::Registration(Properties::FLOAT) {}
 
-        Rc<Property> initial() const override {
-            return makeRc<FloatProperty>(self(), Float::NONE);
+        InitialValue initial() const override {
+            return "none"s;
         }
 
         Rc<Property> load(ComputedValues const& c) const override {
@@ -28,13 +32,13 @@ export struct FloatProperty : Property {
         }
 
         Res<Rc<Property>> parse(Cursor<Css::Sst>& c) const override {
-            return Ok(makeRc<FloatProperty>(self(), try$(parseValue<Float>(c))));
+            return Ok(makeRc<FloatProperty>(self(), try$(parseValue<Css::Float>(c))));
         }
     };
 
-    Float _value;
+    Value _value;
 
-    FloatProperty(Rc<Property::Registration> registration, Float value)
+    FloatProperty(Rc<Property::Registration> registration, Value value)
         : Property(registration), _value(value) {}
 
     void apply([[maybe_unused]] ComputedValues const& parent, ComputedValues& c, [[maybe_unused]] ComputationContext const& cx) const override {
@@ -42,7 +46,7 @@ export struct FloatProperty : Property {
     }
 
     Res<> serialize(Io::TextWriter& w) const override {
-        return serializeValue(w, _value);
+        return Css::serializeValue(w, _value);
     }
 
     void repr(Io::Emit& e) const override {
@@ -51,11 +55,13 @@ export struct FloatProperty : Property {
 };
 
 export struct ClearProperty : Property {
+    using Value = Css::Clear;
+
     struct Registration : Property::Registration {
         Registration() : Property::Registration(Properties::CLEAR) {}
 
-        Rc<Property> initial() const override {
-            return makeRc<ClearProperty>(self(), Clear::NONE);
+        InitialValue initial() const override {
+            return "none"s;
         }
 
         Rc<Property> load(ComputedValues const& c) const override {
@@ -63,13 +69,13 @@ export struct ClearProperty : Property {
         }
 
         Res<Rc<Property>> parse(Cursor<Css::Sst>& c) const override {
-            return Ok(makeRc<ClearProperty>(self(), try$(parseValue<Clear>(c))));
+            return Ok(makeRc<ClearProperty>(self(), try$(parseValue<Css::Clear>(c))));
         }
     };
 
-    Clear _value;
+    Value _value;
 
-    ClearProperty(Rc<Property::Registration> registration, Clear value)
+    ClearProperty(Rc<Property::Registration> registration, Value value)
         : Property(registration), _value(value) {}
 
     void apply([[maybe_unused]] ComputedValues const& parent, ComputedValues& c, [[maybe_unused]] ComputationContext const& cx) const override {
@@ -77,7 +83,7 @@ export struct ClearProperty : Property {
     }
 
     Res<> serialize(Io::TextWriter& w) const override {
-        return serializeValue(w, _value);
+        return Css::serializeValue(w, _value);
     }
 
     void repr(Io::Emit& e) const override {
