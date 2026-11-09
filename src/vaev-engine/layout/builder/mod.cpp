@@ -398,6 +398,14 @@ void buildSVGElement(Gc::Ref<Dom::Element> el, Box& group) {
         group.add({el->computedValues(), SvgShapeElement::RECT, Some(el)});
     } else if (el->qualifiedName == Svg::PATH_TAG) {
         group.add({el->computedValues(), SvgShapeElement::PATH, Some(el)});
+    } else if (el->qualifiedName == Svg::ELLIPSE_TAG) {
+        group.add({el->computedValues(), SvgShapeElement::ELLIPSE, Some(el)});
+    } else if (el->qualifiedName == Svg::LINE_TAG) {
+        group.add({el->computedValues(), SvgShapeElement::LINE, Some(el)});
+    } else if (el->qualifiedName == Svg::POLYLINE_TAG) {
+        group.add({el->computedValues(), SvgShapeElement::POLYLINE, Some(el)});
+    } else if (el->qualifiedName == Svg::POLYGON_TAG) {
+        group.add({el->computedValues(), SvgShapeElement::POLYGON, Some(el)});
     } else if (el->qualifiedName == Svg::G_TAG) {
         Box nestedGroup{el->computedValues(), Some(el)};
         buildSVGAggregate(el, nestedGroup);
