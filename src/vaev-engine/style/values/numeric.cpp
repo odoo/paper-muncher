@@ -67,13 +67,13 @@ export f64 toComputed(Css::Percentage const& value, f64 percentBasis) {
 // https://drafts.csswg.org/css-values/#lengths
 
 // FIXME: Make Pixel and Percentage backed by f32.
-export using Pixel = Distinct<f64, struct _PixelTag>;
+export using Px = Distinct<f64, struct _PixelTag>;
 
-export Pixel toComputed(Css::PureLength const& value, LengthContext auto const& ctx) {
-    return Pixel{toCanonical(value.unitValue(), ctx).value()};
+export Px toComputed(Css::PureLength const& value, LengthContext auto const& ctx) {
+    return Px{simplify(value.unitValue(), ctx).value()};
 }
 
-export Pixel toComputed(Css::Length const& value, LengthContext auto const& ctx) {
+export Px toComputed(Css::Length const& value, LengthContext auto const& ctx) {
     auto simplified = simplify(
         value.calcTree(),
         ctx,
@@ -82,13 +82,27 @@ export Pixel toComputed(Css::Length const& value, LengthContext auto const& ctx)
     );
 
     if (auto n = simplified.template is<UnitValue>(); n and n->unit() == UnitValue::Unit::PX) {
-        return Pixel{n->value()};
+        return Px{n->value()};
     } else {
         panic("calc didn't simplify to a single value of expected unit");
     }
 }
 
-export Css::Length toSpecified(Pixel const& px) {
+export Opt<Px> toComputed(Css::Length const& value) {
+    auto simplified = simplify(
+        value.calcTree(),
+        NONE,
+        Some(NumericBaseType::LENGTH),
+        NONE
+    );
+
+    if (auto n = simplified.is<UnitValue>(); n and n->unit() == UnitValue::Unit::PX)
+        return Some(Px{n->value()});
+
+    return NONE;
+}
+
+export Css::Length toSpecified(Px const& px) {
     return Css::Length{UNCHECKED, UnitValue{px.value(), UnitValue::Unit::PX}};
 }
 
@@ -129,11 +143,26 @@ export Dppx toComputed(Css::PureResolution const& value) {
     return Dppx{value.unitValue().to(UnitValue::Unit::DPPX)};
 }
 
+export Dppx toComputed(Css::Resolution const& value) {
+    auto simplified = simplify(
+        value.calcTree(),
+        NONE,
+        Some(NumericBaseType::RESOLUTION),
+        NONE
+    );
+
+    if (auto n = simplified.is<UnitValue>(); n and n->unit() == UnitValue::Unit::DPPX) {
+        return Dppx{n->value()};
+    } else {
+        panic("calc didn't simplify to a single value of expected unit");
+    }
+}
+
 // MARK: Length-Percentage ----------------------------------------------------
 // https://drafts.csswg.org/css-values/#typedef-length-percentage
 
-export struct LinearPixelPercentage {
-    Pixel px;
+export struct LinearPxPercent {
+    Px px;
     Percent percentage;
 
     void repr(Io::Emit& e) const {
@@ -141,10 +170,10 @@ export struct LinearPixelPercentage {
     }
 };
 
-export using PixelPercentage = Union<Pixel, Percent, LinearPixelPercentage, Box<Calc>>;
+export using PxPercent = Union<Px, Percent, LinearPxPercent, Box<Calc>>;
 
 // https://drafts.csswg.org/css-values-4/#calc-computed-value
-export PixelPercentage toComputed(Css::LengthPercentage const& value, LengthContext auto const& ctx) {
+export PxPercent toComputed(Css::LengthPercentage const& value, LengthContext auto const& ctx) {
     auto simplified = simplify(
         value.calcTree(),
         ctx,
@@ -154,7 +183,7 @@ export PixelPercentage toComputed(Css::LengthPercentage const& value, LengthCont
 
     if (auto [numeric] = simplified.template is<UnitValue>()) {
         if (numeric.unit() == UnitValue::Unit::PX) {
-            return Pixel{numeric.value()};
+            return Px{numeric.value()};
         }
 
         if (numeric.unit() == UnitValue::Unit::PERCENT) {
@@ -167,22 +196,22 @@ export PixelPercentage toComputed(Css::LengthPercentage const& value, LengthCont
         auto maybePercent = sum->children[0].template is<UnitValue>();
         auto maybePx = sum->children[1].template is<UnitValue>();
         if (maybePercent and maybePx and maybePercent->unit() == UnitValue::Unit::PERCENT and maybePx->unit() == UnitValue::Unit::PX) {
-            return LinearPixelPercentage{Pixel{maybePx->value()}, Percent{maybePercent->value()}};
+            return LinearPxPercent{Px{maybePx->value()}, Percent{maybePercent->value()}};
         }
     }
 
     return makeBox<Calc>(std::move(simplified));
 }
 
-export Css::LengthPercentage toSpecified(PixelPercentage const& value) {
+export Css::LengthPercentage toSpecified(PxPercent const& value) {
     return value.visit(
-        [](Pixel const& px) -> Css::LengthPercentage {
+        [](Px const& px) -> Css::LengthPercentage {
             return Css::LengthPercentage{UNCHECKED, UnitValue{px.value(), UnitValue::Unit::PX}};
         },
         [](Percent const& percentage) -> Css::LengthPercentage {
             return Css::LengthPercentage{UNCHECKED, UnitValue{percentage.value(), UnitValue::Unit::PERCENT}};
         },
-        [](LinearPixelPercentage const& lin) -> Css::LengthPercentage {
+        [](LinearPxPercent const& lin) -> Css::LengthPercentage {
             return Css::LengthPercentage{
                 UNCHECKED,
                 Css::SumNode{
@@ -200,7 +229,7 @@ export Css::LengthPercentage toSpecified(PixelPercentage const& value) {
 }
 
 // For properties whose percentages resolve at computed-value time (e.g. line-height against font-size).
-export Pixel toComputed(Css::LengthPercentage const& value, LengthContext auto const& ctx, f64 percentBasis) {
+export Px toComputed(Css::LengthPercentage const& value, LengthContext auto const& ctx, f64 percentBasis) {
     auto simplified = simplify(
         value.calcTree(),
         ctx,
@@ -209,7 +238,7 @@ export Pixel toComputed(Css::LengthPercentage const& value, LengthContext auto c
     );
 
     if (auto n = simplified.template is<UnitValue>(); n and n->unit() == UnitValue::Unit::PX) {
-        return Pixel{n->value()};
+        return Px{n->value()};
     } else {
         panic("calc didn't simplify to a single value of expected unit");
     }
@@ -219,12 +248,12 @@ export Pixel toComputed(Css::LengthPercentage const& value, LengthContext auto c
 
 namespace Vaev::Literals {
 
-export constexpr Style::Pixel operator""_px(unsigned long long val) {
-    return Style::Pixel{static_cast<f64>(val)};
+export constexpr Style::Px operator""_px(unsigned long long val) {
+    return Style::Px{static_cast<f64>(val)};
 }
 
-export constexpr Style::Pixel operator""_px(long double val) {
-    return Style::Pixel{static_cast<f64>(val)};
+export constexpr Style::Px operator""_px(long double val) {
+    return Style::Px{static_cast<f64>(val)};
 }
 
 export constexpr Style::Deg operator""_deg(unsigned long long val) {
@@ -246,8 +275,8 @@ export constexpr Style::Dppx operator""_dppx(long double val) {
 } // namespace Vaev::Literals
 
 export template <>
-struct Karm::Io::Formatter<Vaev::Style::Pixel> {
-    Res<> format(Io::TextWriter& writer, Vaev::Style::Pixel value) {
+struct Karm::Io::Formatter<Vaev::Style::Px> {
+    Res<> format(Io::TextWriter& writer, Vaev::Style::Px value) {
         return Io::format(writer, "{}px", value.value());
     }
 };

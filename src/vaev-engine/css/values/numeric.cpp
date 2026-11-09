@@ -223,7 +223,7 @@ struct ValueParser<TypedCalc<TYPE, WITH_PERCENT>> {
             return res;
         }
 
-        return Error::invalidData();
+        return numeric.none();
     }
 
     // https://drafts.csswg.org/css-values-4/#calc-syntax

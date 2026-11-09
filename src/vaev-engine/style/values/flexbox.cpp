@@ -22,6 +22,6 @@ export using FlexBasis = Union<
     Keywords::MinContent,
     Keywords::MaxContent,
     Keywords::FitContent,
-    PixelPercentage>;
+    PxPercent>;
 
 } // namespace Vaev::Style

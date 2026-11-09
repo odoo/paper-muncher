@@ -25,9 +25,9 @@ struct SvgFormatingContext : FormatingContext {
     // https://svgwg.org/svg2-draft/coords.html#SizingSVGInCSS
     Opt<f64> intrinsicAspectRatio(Opt<Style::SvgViewBox> const& vb, Style::Size const& width, Style::Size const& height) {
         // 1. If the width and height sizing properties on the ‘svg’ element are both absolute values:
-        auto absolute = [](Style::Size const& size) -> Opt<Style::Pixel> {
-            if (auto pp = size.is<Style::PixelPercentage>())
-                return pp->is<Style::Pixel>();
+        auto absolute = [](Style::Size const& size) -> Opt<Style::Px> {
+            if (auto pp = size.is<Style::PxPercent>())
+                return pp->is<Style::Px>();
             return NONE;
         };
         if (auto w = absolute(width), h = absolute(height); w and h)
@@ -65,8 +65,8 @@ struct SvgFormatingContext : FormatingContext {
         return {
             Layout::resolve(style.svg->x, relativeTo.x),
             Layout::resolve(style.svg->y, relativeTo.y),
-            Layout::resolve(style.sizing->width.is<Style::PixelPercentage>().unwrapOr(Style::Percent{100}), relativeTo.x),
-            Layout::resolve(style.sizing->height.is<Style::PixelPercentage>().unwrapOr(Style::Percent{100}), relativeTo.y),
+            Layout::resolve(style.sizing->width.is<Style::PxPercent>().unwrapOr(Style::Percent{100}), relativeTo.x),
+            Layout::resolve(style.sizing->height.is<Style::PxPercent>().unwrapOr(Style::Percent{100}), relativeTo.y),
         };
     }
 

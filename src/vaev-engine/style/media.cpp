@@ -126,7 +126,7 @@ static auto quirksMediaScreen = Debug::Flag::feature(
 export struct DisplayArea {
     MediaType type = Keywords::SCREEN;
 
-    Math::Vec2<Pixel> viewport = {800_px, 600_px};
+    Math::Vec2<Px> viewport = {800_px, 600_px};
 
     Dppx resolution = 1_dppx;
 
@@ -146,10 +146,10 @@ export struct DisplayArea {
     Pointer anyPointer = Keywords::FINE;
     Hover anyHover = Keywords::HOVER;
 
-    static Math::Vec2<Pixel> _toViewport(Math::Vec2f deviceSize, Dppx resolution) {
+    static Math::Vec2<Px> _toViewport(Math::Vec2f deviceSize, Dppx resolution) {
         return {
-            Pixel{deviceSize.width / resolution.value()},
-            Pixel{deviceSize.height / resolution.value()},
+            Px{deviceSize.width / resolution.value()},
+            Px{deviceSize.height / resolution.value()},
         };
     }
 
@@ -180,7 +180,7 @@ export struct DisplayArea {
         auto pageSize = settings.pageSize();
         return {
             .type = Keywords::PRINT,
-            .viewport = {Pixel{static_cast<f64>(pageSize.width) / settings.scale}, Pixel{static_cast<f64>(pageSize.height) / settings.scale}},
+            .viewport = {Px{static_cast<f64>(pageSize.width) / settings.scale}, Px{static_cast<f64>(pageSize.height) / settings.scale}},
             .resolution = Dppx{settings.scale},
         };
     }
@@ -193,7 +193,7 @@ export struct DisplayArea {
         return {viewport.width.value() * scale(), viewport.height.value() * scale()};
     }
 
-    DisplayArea withViewport(Math::Vec2<Pixel> viewport) const {
+    DisplayArea withViewport(Math::Vec2<Px> viewport) const {
         DisplayArea area = *this;
         area.viewport = viewport;
         return area;
@@ -234,11 +234,11 @@ export struct Media {
 
     /// 4.1. Width: the width feature
     /// https://drafts.csswg.org/mediaqueries/#width
-    Pixel width;
+    Px width;
 
     /// 4.2. Height: the height feature
     /// https://drafts.csswg.org/mediaqueries/#height
-    Pixel height;
+    Px height;
 
     /// 4.3. Aspect-Ratio: the aspect-ratio feature
     /// https://drafts.csswg.org/mediaqueries/#aspect-ratio
@@ -344,8 +344,8 @@ export struct Media {
     ReducedData prefersReducedData;
 
     // Appendix A: Deprecated Media Features
-    Pixel deviceWidth;
-    Pixel deviceHeight;
+    Px deviceWidth;
+    Px deviceHeight;
     f64 deviceAspectRatio;
 
     static Media from(DisplayArea const& area, ViewerPrefs const& prefs) {
@@ -398,8 +398,8 @@ export struct Media {
             .prefersColorScheme = prefs.colorScheme,
             .prefersReducedData = prefs.reducedData,
 
-            .deviceWidth = Pixel{deviceSize.width},
-            .deviceHeight = Pixel{deviceSize.height},
+            .deviceWidth = Px{deviceSize.width},
+            .deviceHeight = Px{deviceSize.height},
             .deviceAspectRatio = ratio(deviceSize.width, deviceSize.height),
         };
     }

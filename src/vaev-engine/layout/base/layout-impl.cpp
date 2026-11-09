@@ -167,7 +167,7 @@ Vec2Au computeIntrinsicContentSize(Box& box, IntrinsicSize intrinsic, Opt<Au> ca
 }
 
 Opt<Au> computeSpecifiedBorderBoxWidth(Box& box, Style::Size size, Vec2Au containingBlock, Au horizontalBorderBox, Opt<Au> capmin) {
-    if (auto calc = size.is<Style::PixelPercentage>()) {
+    if (auto calc = size.is<Style::PxPercent>()) {
         auto specifiedWidth = Layout::resolve(*calc, containingBlock.x);
         if (box.style->boxSizing == Style::Keywords::CONTENT_BOX) {
             specifiedWidth += horizontalBorderBox;
@@ -196,7 +196,7 @@ Opt<Au> computeSpecifiedBorderBoxWidth(Box& box, Style::Size size, Vec2Au contai
 }
 
 Opt<Au> computeSpecifiedBorderBoxHeight(Box& box, Style::Size size, Vec2Au containingBlock, Au verticalBorderBox) {
-    if (auto calc = size.is<Style::PixelPercentage>()) {
+    if (auto calc = size.is<Style::PxPercent>()) {
         auto specifiedHeight = Layout::resolve(*calc, containingBlock.y);
         if (box.style->boxSizing == Style::Keywords::CONTENT_BOX) {
             specifiedHeight += verticalBorderBox;

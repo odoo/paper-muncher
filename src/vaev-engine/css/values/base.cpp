@@ -1,3 +1,7 @@
+module;
+
+#include <karm/macros>
+
 export module Vaev.Engine:css.values.base;
 
 import Karm.Core;
@@ -48,7 +52,10 @@ Res<T> parseValue(Str str) {
     auto diags = Diag::Collector::ignore();
     auto [sst, _] = consumeDeclarationValue(lex, diags);
     Cursor<Sst> content{sst};
-    return ValueParser<T>::parse(content);
+    auto res = try$(ValueParser<T>::parse(content));
+    if (not content.ended())
+        return Error::invalidData("unexpected tokens");
+    return Ok(res);
 }
 
 export template <typename T>

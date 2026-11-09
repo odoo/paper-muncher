@@ -98,4 +98,20 @@ test$("vaev-css-unit-value-serialization") {
     return Ok();
 }
 
+test$("vaev-style-simplify-length-without-context") {
+    // Absolute units still simplify.
+    auto sum = toComputed(try$(_parse<Css::Length>("calc(1in + 4px)")));
+    assertEq$(sum.expect(), 100_px);
+    auto min = toComputed(try$(_parse<Css::Length>("min(1in, 50px)")));
+    assertEq$(min.expect(), 50_px);
+
+    // Relative units can't be resolved: no value, but no panic either.
+    assertEq$(toComputed(try$(_parse<Css::Length>("1em"))), NONE);
+    assertEq$(toComputed(try$(_parse<Css::Length>("calc(1em + 4px)"))), NONE);
+    assertEq$(toComputed(try$(_parse<Css::Length>("min(1em, 10px)"))), NONE);
+    assertEq$(toComputed(try$(_parse<Css::Length>("calc(2 * 1vw)"))), NONE);
+
+    return Ok();
+}
+
 } // namespace Vaev::Style::Tests

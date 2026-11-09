@@ -23,7 +23,7 @@ export using FillRule = Css::FillRule;
 export using Path = Css::Path;
 
 export using ShapeRadius = Union<
-    PixelPercentage,
+    PxPercent,
     Keywords::ClosestSide,
     Keywords::FarthestSide>;
 
@@ -63,8 +63,8 @@ export Css::Ellipse toSpecified(Ellipse const& value) {
 }
 
 export struct Inset {
-    Math::Insets<PixelPercentage> insets;
-    Math::Radii<PixelPercentage> borderRadius;
+    Math::Insets<PxPercent> insets;
+    Math::Radii<PxPercent> borderRadius;
 
     void repr(Io::Emit& e) const {
         e("(inset {} ", insets);
@@ -83,7 +83,7 @@ export Css::Inset toSpecified(Inset const& value) {
 
 export struct Polygon {
     Gfx::FillRule fillRule = Gfx::FillRule::NONZERO;
-    Vec<Pair<PixelPercentage>> points;
+    Vec<Pair<PxPercent>> points;
 
     void repr(Io::Emit& e) const {
         e("(polygon {} {})", fillRule, points);
@@ -105,8 +105,8 @@ export Css::Polygon toSpecified(Polygon const& value) {
 }
 
 export struct Rect {
-    Math::Insets<PixelPercentage> insets;
-    Math::Radii<PixelPercentage> borderRadius;
+    Math::Insets<PxPercent> insets;
+    Math::Radii<PxPercent> borderRadius;
 
     void repr(Io::Emit& e) const {
         e("(rect {} ", insets);
@@ -124,11 +124,11 @@ export Css::Rect toSpecified(Rect const& value) {
 }
 
 export struct Xywh {
-    PixelPercentage x;
-    PixelPercentage y;
-    PixelPercentage width;
-    PixelPercentage height;
-    Math::Radii<PixelPercentage> borderRadius;
+    PxPercent x;
+    PxPercent y;
+    PxPercent width;
+    PxPercent height;
+    Math::Radii<PxPercent> borderRadius;
 
     void repr(Io::Emit& e) const {
         e("(xywh {} {} {} {} ", x, y, width, height);

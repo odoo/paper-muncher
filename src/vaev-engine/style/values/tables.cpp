@@ -20,8 +20,8 @@ export using BorderCollapse = Css::BorderCollapse;
 
 // https://drafts.csswg.org/css-tables-3/#propdef-border-spacing
 export struct BorderSpacing {
-    Pixel horizontal = 0_px;
-    Pixel vertical = 0_px;
+    Px horizontal = 0_px;
+    Px vertical = 0_px;
 };
 
 } // namespace Vaev::Style

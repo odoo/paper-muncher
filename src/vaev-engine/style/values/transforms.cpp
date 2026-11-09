@@ -23,8 +23,8 @@ export struct MatrixTransform {
 };
 
 export struct TranslateTransform {
-    PixelPercentage x;
-    PixelPercentage y;
+    PxPercent x;
+    PxPercent y;
 
     void repr(Io::Emit& e) const {
         e("translate({}, {})", x, y);

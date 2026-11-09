@@ -36,7 +36,7 @@ export struct ColumnWidthProperty : Property {
                     [](Keywords::Auto) -> Value {
                         return Keywords::AUTO;
                     },
-                    [](Style::Pixel width) -> Value {
+                    [](Style::Px width) -> Value {
                         return toSpecified(width);
                     }
                 )
@@ -57,11 +57,11 @@ export struct ColumnWidthProperty : Property {
         // Computed value: the keyword `auto` or an absolute length
         // FIXME: Clamp negative calc() results to 0.
         c.column.cow().width = _value.visit(
-            [](Keywords::Auto) -> Union<Keywords::Auto, Style::Pixel> {
+            [](Keywords::Auto) -> Union<Keywords::Auto, Style::Px> {
                 return Keywords::AUTO;
             },
-            [&](Css::Length const& width) -> Union<Keywords::Auto, Style::Pixel> {
-                return Style::Pixel{toComputed(width, cx).value()};
+            [&](Css::Length const& width) -> Union<Keywords::Auto, Style::Px> {
+                return Style::Px{toComputed(width, cx).value()};
             }
         );
     }
@@ -97,7 +97,7 @@ export struct ColumnHeightProperty : Property {
                     [](Keywords::Auto) -> Value {
                         return Keywords::AUTO;
                     },
-                    [](Style::Pixel height) -> Value {
+                    [](Style::Px height) -> Value {
                         return toSpecified(height);
                     }
                 )
@@ -118,11 +118,11 @@ export struct ColumnHeightProperty : Property {
         // Computed value: the keyword auto or an absolute length
         // FIXME: Clamp negative calc() results to 0.
         c.column.cow().height = _value.visit(
-            [](Keywords::Auto) -> Union<Keywords::Auto, Style::Pixel> {
+            [](Keywords::Auto) -> Union<Keywords::Auto, Style::Px> {
                 return Keywords::AUTO;
             },
-            [&](Css::Length const& height) -> Union<Keywords::Auto, Style::Pixel> {
-                return Style::Pixel{toComputed(height, cx).value()};
+            [&](Css::Length const& height) -> Union<Keywords::Auto, Style::Px> {
+                return Style::Px{toComputed(height, cx).value()};
             }
         );
     }
@@ -188,7 +188,7 @@ export struct ColumnsProperty : Property {
                 [](Keywords::Auto) -> ColumnWidthProperty::Value {
                     return Keywords::AUTO;
                 },
-                [](Style::Pixel width) -> ColumnWidthProperty::Value {
+                [](Style::Px width) -> ColumnWidthProperty::Value {
                     return toSpecified(width);
                 }
             );
@@ -197,7 +197,7 @@ export struct ColumnsProperty : Property {
                 [](Keywords::Auto) -> ColumnHeightProperty::Value {
                     return Keywords::AUTO;
                 },
-                [](Style::Pixel height) -> ColumnHeightProperty::Value {
+                [](Style::Px height) -> ColumnHeightProperty::Value {
                     return toSpecified(height);
                 }
             );

@@ -10,11 +10,11 @@ namespace Vaev::Style {
 
 export struct Viewport {
     // https://drafts.csswg.org/css-values/#small-viewport-size
-    Math::Vec2<Pixel> small;
+    Math::Vec2<Px> small;
     // https://drafts.csswg.org/css-values/#large-viewport-size
-    Math::Vec2<Pixel> large = small;
+    Math::Vec2<Px> large = small;
     // https://drafts.csswg.org/css-values/#dynamic-viewport-size
-    Math::Vec2<Pixel> dynamic = small;
+    Math::Vec2<Px> dynamic = small;
 };
 
 } // namespace Vaev::Style

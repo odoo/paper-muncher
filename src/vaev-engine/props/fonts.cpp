@@ -353,34 +353,34 @@ export struct FontSizeProperty : Property {
                 // NOTE: At this point, cx's font metrics are the parent's, so `em` resolves against the parent font size, and
                 //       percentages are relative to it too. Negative calc() results are clamped to the allowed [0,∞] range.
                 //       https://www.w3.org/TR/css-fonts-4/#font-size-prop
-                return Pixel{max(toComputed(v, cx, cx.parentFontSize).value(), 0.0)};
+                return Px{max(toComputed(v, cx, cx.parentFontSize).value(), 0.0)};
             },
             [&](Keywords::XxSmall) {
-                return Pixel{cx.userFontSize * 0.5};
+                return Px{cx.userFontSize * 0.5};
             },
             [&](Keywords::XSmall) {
-                return Pixel{cx.userFontSize * 0.75};
+                return Px{cx.userFontSize * 0.75};
             },
             [&](Keywords::Small) {
-                return Pixel{cx.userFontSize * 0.875};
+                return Px{cx.userFontSize * 0.875};
             },
             [&](Keywords::Medium) {
-                return Pixel{cx.userFontSize};
+                return Px{cx.userFontSize};
             },
             [&](Keywords::Large) {
-                return Pixel{cx.userFontSize * 1.125};
+                return Px{cx.userFontSize * 1.125};
             },
             [&](Keywords::XLarge) {
-                return Pixel{cx.userFontSize * 1.25};
+                return Px{cx.userFontSize * 1.25};
             },
             [&](Keywords::XxLarge) {
-                return Pixel{cx.userFontSize * 1.5};
+                return Px{cx.userFontSize * 1.5};
             },
             [&](Keywords::Larger) {
-                return Pixel{cx.parentFontSize * 1.25};
+                return Px{cx.parentFontSize * 1.25};
             },
             [&](Keywords::Smaller) {
-                return Pixel{cx.parentFontSize * 0.875};
+                return Px{cx.parentFontSize * 0.875};
             }
         );
     }

@@ -16,6 +16,6 @@ export using Align = Css::Align;
 
 export using Gap = Union<
     Keywords::Normal,
-    PixelPercentage>;
+    PxPercent>;
 
 } // namespace Vaev::Style

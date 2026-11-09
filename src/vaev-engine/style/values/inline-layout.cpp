@@ -12,7 +12,7 @@ using namespace Karm;
 
 namespace Vaev::Style {
 
-export using LineHeight = Union<Keywords::Normal, f64, Pixel>;
+export using LineHeight = Union<Keywords::Normal, f64, Px>;
 
 // https://www.w3.org/TR/css-inline-3/#baseline-source
 export using BaselineSource = Css::BaselineSource;
@@ -24,7 +24,7 @@ export using AlignmentBaseline = Css::AlignmentBaseline;
 export using DominantBaseline = Css::DominantBaseline;
 
 export using BaselineShift = Union<
-    PixelPercentage,
+    PxPercent,
     Keywords::Sub,
     Keywords::Super,
     Keywords::Top,

@@ -40,8 +40,8 @@ export struct LineHeightProperty : Property {
                     [](f64 const& number) -> Value {
                         return Css::Number::fromCanonical(number);
                     },
-                    [](Pixel const& px) -> Value {
-                        return toSpecified(PixelPercentage{px});
+                    [](Px const& px) -> Value {
+                        return toSpecified(PxPercent{px});
                     }
                 )
             );

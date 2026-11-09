@@ -15,7 +15,7 @@ static RectAu _computeInsetModifiedContainingBlock(Box& box, RectAu containingBl
 
     InsetsAu resolvedInsets = {};
 
-    using InsetLength = Style::PixelPercentage;
+    using InsetLength = Style::PxPercent;
 
     bool startIsAuto = style.insets->start.is<Style::Keywords::Auto>().has();
     bool endIsAuto = style.insets->end.is<Style::Keywords::Auto>().has();
@@ -244,7 +244,7 @@ export Output layoutAbsolutePositioned(Input const& input, Box& box, RectAu cont
 }
 
 // https://www.w3.org/TR/css-position-3/#relpos-insets
-Au _negotiateInsetsForRelativePositioning(Union<Style::Keywords::Auto, Style::PixelPercentage> const& start, Union<Style::Keywords::Auto, Style::PixelPercentage> const& end, Au relativeTo) {
+Au _negotiateInsetsForRelativePositioning(Union<Style::Keywords::Auto, Style::PxPercent> const& start, Union<Style::Keywords::Auto, Style::PxPercent> const& end, Au relativeTo) {
     bool startIsAuto = start.is<Style::Keywords::Auto>().has();
     bool endIsAuto = end.is<Style::Keywords::Auto>().has();
 
@@ -256,16 +256,16 @@ Au _negotiateInsetsForRelativePositioning(Union<Style::Keywords::Auto, Style::Pi
 
     // - If only one is auto, its used value becomes the negation of the other, and the box is shifted by the specified amount.
     if (not startIsAuto and endIsAuto) {
-        return Layout::resolve(*start.is<Style::PixelPercentage>(), relativeTo);
+        return Layout::resolve(*start.is<Style::PxPercent>(), relativeTo);
     }
     if (startIsAuto and not endIsAuto) {
-        return -Layout::resolve(*end.is<Style::PixelPercentage>(), relativeTo);
+        return -Layout::resolve(*end.is<Style::PxPercent>(), relativeTo);
     }
 
     // - If neither is auto, the position is over-constrained; (with respect to the writing mode of its containing block)
     //   the computed end side value is ignored, and its used value becomes the negation of the start side.
     // FIXME: Honor writing mode.
-    return Layout::resolve(*start.is<Style::PixelPercentage>(), relativeTo);
+    return Layout::resolve(*start.is<Style::PxPercent>(), relativeTo);
 }
 
 // https://www.w3.org/TR/css-position-3/#relpos-insets

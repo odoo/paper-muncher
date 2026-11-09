@@ -79,7 +79,7 @@ static Gfx::SpanStyle _spanStyleFromStyle(Style::ComputedValues const& style) {
 
             return Some(Au::fromFloatNearest(style.font->size.value() * number));
         },
-        [&](Style::Pixel const& length) -> Opt<Au> {
+        [&](Style::Px const& length) -> Opt<Au> {
             auto result = Au::fromFloatNearest(length.value());
 
             if (result < 0_au)

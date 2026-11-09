@@ -879,7 +879,7 @@ export struct TableFormatingContext : FormatingContext {
         // NOTE: The table does not automatically expand to fill its containing block.
         //       (https://www.w3.org/TR/CSS22/tables.html#width-layout)
 
-        if (not(style.sizing->width.is<Style::Keywords::Auto>() or style.sizing->width.is<Style::PixelPercentage>()))
+        if (not(style.sizing->width.is<Style::Keywords::Auto>() or style.sizing->width.is<Style::PxPercent>()))
             logWarn("width can't be anything other than 'auto' or a length in a table context");
 
         tableUsedWidth = knownSizeX;
@@ -893,10 +893,10 @@ export struct TableFormatingContext : FormatingContext {
         for (auto& col : cols) {
             auto const& width = col.el.style->sizing->width;
 
-            if (not(width.is<Style::Keywords::Auto>() or width.is<Style::PixelPercentage>()))
+            if (not(width.is<Style::Keywords::Auto>() or width.is<Style::PxPercent>()))
                 logWarn("width can't be anything other than 'auto' or a length in a table context");
 
-            if (auto widthCalc = width.is<Style::PixelPercentage>()) {
+            if (auto widthCalc = width.is<Style::PxPercent>()) {
                 for (usize x = col.start; x <= col.end; ++x) {
                     colWidthOrNone[x] = Some(Layout::resolve(*widthCalc, tableUsedWidth));
                 }
@@ -920,7 +920,7 @@ export struct TableFormatingContext : FormatingContext {
                 continue;
             }
 
-            auto cellBoxWidthCalc = cell.box->style->sizing->width.is<Style::PixelPercentage>();
+            auto cellBoxWidthCalc = cell.box->style->sizing->width.is<Style::PxPercent>();
 
             if (not(cell.box->style->sizing->width.is<Style::Keywords::Auto>() or cellBoxWidthCalc))
                 logWarn("width can't be anything other than 'auto' or a length in a table context");
@@ -992,10 +992,10 @@ export struct TableFormatingContext : FormatingContext {
                             usedSpacings.borders.horizontal() +
                             usedSpacings.margin.horizontal();
 
-        if (not(cell.box->style->sizing->width.is<Style::Keywords::Auto>() or cell.box->style->sizing->width.is<Style::PixelPercentage>()))
+        if (not(cell.box->style->sizing->width.is<Style::Keywords::Auto>() or cell.box->style->sizing->width.is<Style::PxPercent>()))
             logWarn("width can't be anything other than 'auto' or a length in a table context");
 
-        if (auto cellBoxWidthCalc = cell.box->style->sizing->width.is<Style::PixelPercentage>()) {
+        if (auto cellBoxWidthCalc = cell.box->style->sizing->width.is<Style::PxPercent>()) {
             auto cellPreferredWidth = Layout::resolve(
                 *cellBoxWidthCalc,
                 tableComputedWidth
@@ -1088,7 +1088,7 @@ export struct TableFormatingContext : FormatingContext {
     void computeAutoWidthOfColGroups(Vec<Au>& minColWidth, Au tableWidth) {
         for (auto& group : colGroups) {
             auto columnGroupWidth = group.el.style->sizing->width;
-            auto columnGroupWidthCalc = columnGroupWidth.is<Style::PixelPercentage>();
+            auto columnGroupWidthCalc = columnGroupWidth.is<Style::PxPercent>();
 
             if (not(columnGroupWidth.is<Style::Keywords::Auto>() or columnGroupWidthCalc))
                 logWarn("width can't be anything other than 'auto' or a length in a table context");
@@ -1116,7 +1116,7 @@ export struct TableFormatingContext : FormatingContext {
     void computeAutoWidthOfCols(Vec<Au>& minColWidth, Vec<Au>& maxColWidth, Au tableWidth) {
         for (auto& [start, end, el] : cols) {
             auto width = el.style->sizing->width;
-            auto widthCalc = width.is<Style::PixelPercentage>();
+            auto widthCalc = width.is<Style::PxPercent>();
 
             if (not(width.is<Style::Keywords::Auto>() or widthCalc))
                 logWarn("width can't be anything other than 'auto' or a length in a table context");
@@ -1266,7 +1266,7 @@ export struct TableFormatingContext : FormatingContext {
 
         for (auto& [row, index] : iter(rows) | Index()) {
             auto& height = row.el.style->sizing->height;
-            auto heightCalc = height.is<Style::PixelPercentage>();
+            auto heightCalc = height.is<Style::PxPercent>();
 
             if (not(height.is<Style::Keywords::Auto>() or heightCalc))
                 logWarn("height can't be anything other than 'auto' or a length in a table context");
@@ -1297,11 +1297,11 @@ export struct TableFormatingContext : FormatingContext {
                 // [A] CSS 2.2 does not specify how cells that span more than one row affect row height calculations except
                 // that the sum of the row heights involved must be great enough to encompass the cell spanning the rows.
 
-                if (not(cell.box->style->sizing->height.is<Style::Keywords::Auto>() or cell.box->style->sizing->height.is<Style::PixelPercentage>()))
+                if (not(cell.box->style->sizing->height.is<Style::Keywords::Auto>() or cell.box->style->sizing->height.is<Style::PxPercent>()))
                     logWarn("height can't be anything other than 'auto' or a length in a table context");
 
                 auto rowSpan = cell.rowSpan;
-                if (auto cellBoxHeightCalc = cell.box->style->sizing->height.is<Style::PixelPercentage>()) {
+                if (auto cellBoxHeightCalc = cell.box->style->sizing->height.is<Style::PxPercent>()) {
                     auto computedHeight = Layout::resolve(
                         *cellBoxHeightCalc,
                         0_au

@@ -16,7 +16,7 @@ using namespace Karm;
 
 namespace Vaev::Style {
 
-export Pixel toComputed(Css::LineWidth const& value, LengthContext auto const& ctx) {
+export Px toComputed(Css::LineWidth const& value, LengthContext auto const& ctx) {
     return value.visit(
         [](Keywords::Thin const&) {
             return 1_px;
@@ -33,7 +33,7 @@ export Pixel toComputed(Css::LineWidth const& value, LengthContext auto const& c
     );
 }
 
-export Math::Radii<PixelPercentage> toComputed(Math::Radii<Css::LengthPercentage> const& value, LengthContext auto const& ctx) {
+export Math::Radii<PxPercent> toComputed(Math::Radii<Css::LengthPercentage> const& value, LengthContext auto const& ctx) {
     return {
         toComputed(value.a, ctx),
         toComputed(value.b, ctx),
@@ -46,7 +46,7 @@ export Math::Radii<PixelPercentage> toComputed(Math::Radii<Css::LengthPercentage
     };
 }
 
-export Math::Radii<Css::LengthPercentage> toSpecified(Math::Radii<PixelPercentage> const& value) {
+export Math::Radii<Css::LengthPercentage> toSpecified(Math::Radii<PxPercent> const& value) {
     return {
         toSpecified(value.a),
         toSpecified(value.b),
@@ -63,8 +63,8 @@ export Math::Radii<Css::LengthPercentage> toSpecified(Math::Radii<PixelPercentag
 // The computed value is a pair of offsets from the top left origin.
 
 export struct Position {
-    PixelPercentage x;
-    PixelPercentage y;
+    PxPercent x;
+    PxPercent y;
 
     static Position center() {
         return {Percent{50}, Percent{50}};
@@ -76,7 +76,7 @@ export struct Position {
 };
 
 export Position toComputed(Css::BackgroundPosition const& value, LengthContext auto const& ctx) {
-    auto offset = [&](bool isCenter, bool isFromEnd, Css::LengthPercentage const& length) -> PixelPercentage {
+    auto offset = [&](bool isCenter, bool isFromEnd, Css::LengthPercentage const& length) -> PxPercent {
         if (isCenter)
             return Percent{50};
 

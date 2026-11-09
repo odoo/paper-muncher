@@ -149,30 +149,30 @@ export struct TransformOriginProperty : Property {
     static Style::Position _resolve(Value const& value, LengthContext auto const& ctx) {
         return {
             value.xOffset.visit(
-                [](Keywords::Left) -> Style::PixelPercentage {
+                [](Keywords::Left) -> Style::PxPercent {
                     return Style::Percent{0};
                 },
-                [](Keywords::Center) -> Style::PixelPercentage {
+                [](Keywords::Center) -> Style::PxPercent {
                     return Style::Percent{50};
                 },
-                [](Keywords::Right) -> Style::PixelPercentage {
+                [](Keywords::Right) -> Style::PxPercent {
                     return Style::Percent{100};
                 },
-                [&](Css::LengthPercentage const& length) -> Style::PixelPercentage {
+                [&](Css::LengthPercentage const& length) -> Style::PxPercent {
                     return toComputed(length, ctx);
                 }
             ),
             value.yOffset.visit(
-                [](Keywords::Top) -> Style::PixelPercentage {
+                [](Keywords::Top) -> Style::PxPercent {
                     return Style::Percent{0};
                 },
-                [](Keywords::Center) -> Style::PixelPercentage {
+                [](Keywords::Center) -> Style::PxPercent {
                     return Style::Percent{50};
                 },
-                [](Keywords::Bottom) -> Style::PixelPercentage {
+                [](Keywords::Bottom) -> Style::PxPercent {
                     return Style::Percent{100};
                 },
-                [&](Css::LengthPercentage const& length) -> Style::PixelPercentage {
+                [&](Css::LengthPercentage const& length) -> Style::PxPercent {
                     return toComputed(length, ctx);
                 }
             ),

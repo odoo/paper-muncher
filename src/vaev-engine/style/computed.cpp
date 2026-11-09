@@ -21,7 +21,7 @@ struct Fonts {
     Gfx::FontWeight weight = Gfx::FontWeight::REGULAR;
     Percent width = Percent{100};
     FontStyle style;
-    Pixel size;
+    Px size;
 };
 
 struct Transforms {
@@ -41,11 +41,11 @@ export struct Table {
 };
 
 export struct SvgGeometry {
-    PixelPercentage x = 0_px;
-    PixelPercentage y = 0_px;
-    PixelPercentage cx = 0_px;
-    PixelPercentage cy = 0_px;
-    PixelPercentage r = 0_px;
+    PxPercent x = 0_px;
+    PxPercent y = 0_px;
+    PxPercent cx = 0_px;
+    PxPercent cy = 0_px;
+    PxPercent r = 0_px;
 
     Union<String, None> d = NONE;
     Opt<SvgViewBox> viewBox = NONE;
@@ -53,7 +53,7 @@ export struct SvgGeometry {
 
 export struct SvgPainting {
     f64 fillOpacity = 1;
-    PixelPercentage strokeWidth = 1_px;
+    PxPercent strokeWidth = 1_px;
     f64 strokeOpacity = 1;
     SvgPaint fill = Some(Gfx::BLACK);
     SvgPaint stroke = NONE;
@@ -104,14 +104,14 @@ export enum struct BorderEdge {
 };
 
 export struct Border {
-    Pixel width = 3_px;
+    Px width = 3_px;
     Gfx::BorderStyle style = Gfx::BorderStyle::NONE;
     Color color = Gfx::BLACK;
 };
 
 export struct Borders {
     Border top, start, bottom, end;
-    Math::Radii<PixelPercentage> radii = {0_px};
+    Math::Radii<PxPercent> radii = {0_px};
 
     Border const& get(BorderEdge edge) const {
         switch (edge) {
@@ -139,8 +139,8 @@ export struct Breaks {
 };
 
 export struct Columns {
-    Union<Keywords::Auto, Pixel> width = Keywords::AUTO;
-    Union<Keywords::Auto, Pixel> height = Keywords::AUTO;
+    Union<Keywords::Auto, Px> width = Keywords::AUTO;
+    Union<Keywords::Auto, Px> height = Keywords::AUTO;
     ColumnCount count = Keywords::AUTO;
 };
 
@@ -180,7 +180,7 @@ export struct Inline {
     BaselineSource baselineSource = Keywords::AUTO;
     AlignmentBaseline alignmentBaseline = Keywords::BASELINE;
     DominantBaseline dominantBaseline = Keywords::AUTO;
-    BaselineShift baselineShift = PixelPercentage{0_px};
+    BaselineShift baselineShift = PxPercent{0_px};
     LineHeight lineHeight = Keywords::NORMAL;
 };
 
@@ -191,18 +191,18 @@ export struct List {
     MarkerSide markerSide = Keywords::MATCH_SELF;
 };
 
-export using Margins = Math::Insets<Union<Keywords::Auto, PixelPercentage>>;
+export using Margins = Math::Insets<Union<Keywords::Auto, PxPercent>>;
 
 export struct Outline {
-    Pixel width = 3_px;
-    Pixel offset = 0_px;
+    Px width = 3_px;
+    Px offset = 0_px;
     Union<Keywords::Auto, Gfx::BorderStyle> style = Gfx::BorderStyle::NONE;
     Gfx::Color color = Gfx::BLUE500;
 };
 
-export using Paddings = Math::Insets<PixelPercentage>;
+export using Paddings = Math::Insets<PxPercent>;
 
-export using BoxInsets = Math::Insets<Union<Keywords::Auto, PixelPercentage>>;
+export using BoxInsets = Math::Insets<Union<Keywords::Auto, PxPercent>>;
 
 export struct Sizing {
     Size width = Keywords::AUTO, height = Keywords::AUTO;

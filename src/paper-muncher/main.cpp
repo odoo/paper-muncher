@@ -1,9 +1,10 @@
 #include <karm/entry>
 
 import Karm.Cli;
-import Karm.Print;
+import Karm.Gfx;
 import Karm.Logger;
 import Karm.Math;
+import Karm.Print;
 
 import Vaev.Engine;
 import PaperMuncher;
@@ -11,28 +12,116 @@ import PaperMuncher;
 using namespace Karm;
 using namespace Karm::Literals;
 using namespace Karm::Ref::Literals;
+using namespace Vaev::Literals;
 
-template <Vaev::Css::ValueParseable T>
-    requires(not Meta::Enum<T>)
-struct Cli::ValueParser<T> {
+template <StrLit K>
+struct Cli::ValueParser<Vaev::Style::Keyword<K>> {
     static Res<> usage(Io::TextWriter& w) {
-        return w.writeStr("value"s);
+        return w.writeStr(Str{K});
     }
 
-    static Res<T> parse(Cursor<Token>& c) {
-        if (c.ended() or c->kind != Token::OPERAND)
-            return Error::invalidData("expected css value");
+    static Res<Vaev::Style::Keyword<K>> parse(Cursor<Token>& c) {
+        using namespace Vaev;
 
-        auto res = try$(Vaev::Css::parseValue<T>(c->value));
+        if (c.ended() or c->kind != Token::OPERAND)
+            return Error::invalidData("expected a css keyword");
+
+        auto specified = try$(Css::parseValue<Css::Keyword<K>>(c->value));
         c.next();
-        return Ok(std::move(res));
+
+        return Ok(specified);
+    }
+};
+
+template <>
+struct Cli::ValueParser<Vaev::Style::Dppx> {
+    static Res<> usage(Io::TextWriter& w) {
+        return w.writeStr("<resolution>"s);
+    }
+
+    static Res<Vaev::Style::Dppx> parse(Cursor<Token>& c) {
+        using namespace Vaev;
+
+        if (c.ended() or c->kind != Token::OPERAND)
+            return Error::invalidData("expected a css <resolution>");
+
+        auto specified = try$(Css::parseValue<Css::Resolution>(c->value));
+        c.next();
+
+        return Ok(Style::toComputed(specified));
+    }
+};
+
+template <>
+struct Cli::ValueParser<Vaev::Style::Px> {
+    static Res<> usage(Io::TextWriter& w) {
+        return w.writeStr("<length>"s);
+    }
+
+    static Res<Vaev::Style::Px> parse(Cursor<Token>& c) {
+        using namespace Vaev;
+
+        if (c.ended() or c->kind != Token::OPERAND)
+            return Error::invalidData("expected a css <length>");
+
+        auto specified = try$(Css::parseValue<Css::Length>(c->value));
+        c.next();
+
+        return Style::toComputed(specified).okOr(Error::invalidData("unsupported relative unit"));
+    }
+};
+
+template <>
+struct Cli::ValueParser<Math::Insets<Vaev::Style::Px>> {
+    static Res<> usage(Io::TextWriter& w) {
+        return w.writeStr("<length>{1,4}"s);
+    }
+
+    static Res<Math::Insets<Vaev::Style::Px>> parse(Cursor<Token>& c) {
+        using namespace Vaev;
+
+        if (c.ended() or c->kind != Token::OPERAND)
+            return Error::invalidData("expected a css margin");
+
+        auto specified = try$(Css::parseValue<Math::Insets<Vaev::Css::Length>>(c->value));
+        c.next();
+
+        auto const compute = [](Css::Length const& length) {
+            return Style::toComputed(length).okOr(Error::invalidData("unsupported relative unit"));
+        };
+
+        return Ok(Math::Insets{
+            try$(compute(specified.start)),
+            try$(compute(specified.top)),
+            try$(compute(specified.end)),
+            try$(compute(specified.bottom)),
+        });
+    }
+};
+
+template <>
+struct Cli::ValueParser<Vaev::Style::Color> {
+    static Res<> usage(Io::TextWriter& w) {
+        return w.writeStr("<color>"s);
+    }
+
+    static Res<Vaev::Style::Color> parse(Cursor<Token>& c) {
+        using namespace Vaev;
+
+        if (c.ended() or c->kind != Token::OPERAND)
+            return Error::invalidData("expected a css <color>");
+
+        auto specified = try$(Css::parseValue<Css::Color>(c->value));
+        c.next();
+
+        return Ok(Style::toComputed(specified, Gfx::ALPHA));
     }
 };
 
 template <>
 struct Cli::ValueParser<Print::PaperStock> {
     static Res<> usage(Io::TextWriter& w) {
-        return w.writeStr("value"s);
+        return w.writeStr("<paper-stock>"s);
     }
 
     static Res<Print::PaperStock> parse(Cursor<Token>& c) {
@@ -94,7 +183,7 @@ Async::Task<> entryPointAsync(Sys::Env& env, Async::CancellationToken ct) {
     auto outputArg = Cli::option<Str>(Some('o'), "output"s, "Output file (default: stdout)"s, "-"s);
     auto batchArg = Cli::option<PaperMuncher::Batch>(NONE, "batch"s, "How to handle multiple input documents (default: concat)"s, PaperMuncher::Batch::CONCAT);
     auto formatArg = Cli::option<Union<FormatInfer, Ref::Uti>>(Some('f'), "format"s, "Override the output format (default: inferred from the output file extension)"s, FormatInfer::INFER);
-    auto densityArg = Cli::option<Vaev::Css::PureResolution>(NONE, "density"s, "Pixel density of the output document, in CSS resolution units (e.g. 96dpi)"s, Vaev::Css::PureResolution{Vaev::Css::UnitValue{1, Vaev::Css::UnitValue::Unit::DPPX}});
+    auto densityArg = Cli::option<Vaev::Style::Dppx>(NONE, "density"s, "Pixel density of the output document, in CSS resolution units (e.g. 96dpi)"s, 1_dppx);
 
     Cli::Section inOutSection{
         .title = "Input/Output Options"s,
@@ -109,17 +198,17 @@ Async::Task<> entryPointAsync(Sys::Env& env, Async::CancellationToken ct) {
 
     auto paperArg = Cli::option<Union<Print::PaperStock, PaperList>>(NONE, "paper"s, "Paper size of the output pages (default: A4)"s, Print::A4);
     auto orientationArg = Cli::option<Print::Orientation>(NONE, "orientation"s, "Page orientation (default: portrait)"s, Print::Orientation::PORTRAIT);
-    auto marginArg = Cli::option<Union<Print::MarginOption, Math::Insets<PaperMuncher::AbsoluteLength>>>(NONE, "margins"s, "Page margins, in CSS units or as a named preset (default: default)"s, Print::MarginOption::DEFAULT);
-    auto backgroundArg = Cli::option<Opt<Vaev::Css::Color>>(NONE, "background"s, "Background color of the output document (default: white for HTML, transparent for SVG)"s, NONE);
+    auto marginArg = Cli::option<Union<Print::MarginOption, Math::Insets<Vaev::Style::Px>>>(NONE, "margins"s, "Page margins, in CSS units or as a named preset (default: default)"s, Print::MarginOption::DEFAULT);
+    auto backgroundArg = Cli::option<Opt<Vaev::Style::Color>>(NONE, "background"s, "Background color of the output document (default: white for HTML, transparent for SVG)"s, NONE);
     Cli::Section paperSection{
         .title = "Paper Options"s,
         .options = {paperArg, orientationArg, marginArg, backgroundArg},
         .epilog = "Use '--paper list' to display all supported standard paper sizes."s
     };
 
-    auto widthArg = Cli::option<Opt<PaperMuncher::AbsoluteLength>>(NONE, "width"s, "Viewport width, in CSS units (e.g. 800px)"s, NONE);
-    auto heightArg = Cli::option<Opt<PaperMuncher::AbsoluteLength>>(NONE, "height"s, "Viewport height, in CSS units (e.g. 600px)"s, NONE);
-    auto scaleArg = Cli::option<Vaev::Css::PureResolution>(NONE, "scale"s, "Scale factor applied to the input document (e.g. 1x)"s, Vaev::Css::PureResolution{Vaev::Css::UnitValue{1, Vaev::Css::UnitValue::Unit::DPPX}});
+    auto widthArg = Cli::option<Opt<Vaev::Style::Px>>(NONE, "width"s, "Viewport width, in CSS units (e.g. 800px)"s, NONE);
+    auto heightArg = Cli::option<Opt<Vaev::Style::Px>>(NONE, "height"s, "Viewport height, in CSS units (e.g. 600px)"s, NONE);
+    auto scaleArg = Cli::option<Vaev::Style::Dppx>(NONE, "scale"s, "Scale factor applied to the input document (e.g. 1x)"s, 1_dppx);
 
     Cli::Section viewportSection{
         .title = "Viewport Options"s,
@@ -128,9 +217,9 @@ Async::Task<> entryPointAsync(Sys::Env& env, Async::CancellationToken ct) {
     };
 
     auto headerArg = Cli::option<Opt<Ref::Url>>(NONE, "header"s, "Document to render as the page header"s, NONE);
-    auto headerSizeArg = Cli::option<Union<Vaev::Css::Keywords::Auto, PaperMuncher::AbsoluteLength>>(NONE, "header-size"s, "Height of the page header (default: auto)"s, Vaev::Css::Keywords::AUTO);
+    auto headerSizeArg = Cli::option<Union<Vaev::Style::Keywords::Auto, Vaev::Style::Px>>(NONE, "header-size"s, "Height of the page header (default: auto)"s, Vaev::Css::Keywords::AUTO);
     auto footerArg = Cli::option<Opt<Ref::Url>>(NONE, "footer"s, "Document to render as the page footer"s, NONE);
-    auto footerSizeArg = Cli::option<Union<Vaev::Css::Keywords::Auto, PaperMuncher::AbsoluteLength>>(NONE, "footer-size"s, "Height of the page footer (default: auto)"s, Vaev::Css::Keywords::AUTO);
+    auto footerSizeArg = Cli::option<Union<Vaev::Style::Keywords::Auto, Vaev::Style::Px>>(NONE, "footer-size"s, "Height of the page footer (default: auto)"s, Vaev::Css::Keywords::AUTO);
 
     Cli::Section decorationSection{
         .title = "Document decoration"s,
@@ -211,7 +300,7 @@ Async::Task<> entryPointAsync(Sys::Env& env, Async::CancellationToken ct) {
             .memory = memoryArg.value(),
         }));
 
-    PaperMuncher::Option options{};
+    PaperMuncher::Options options{};
 
     options.scale = scaleArg.value();
     options.density = densityArg.value();

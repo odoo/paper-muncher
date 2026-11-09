@@ -236,15 +236,17 @@ UnitValue _resolveRelative(UnitValue const& value, LengthContext auto const& ctx
     }
 }
 
-export UnitValue toCanonical(UnitValue const& value, LengthContext auto const& ctx) {
+// https://drafts.csswg.org/css-values-4/#simplify-a-calculation-tree
+export UnitValue simplify(UnitValue const& value, LengthContext auto const& ctx) {
     if (value.baseType() == NumericBaseType::LENGTH and not value.isAbsolute())
         return _resolveRelative(value, ctx);
     return value.canonical();
 }
 
-// Canonical form of a value without a computation context: only absolute
-// units can be converted.
-export constexpr UnitValue toCanonical(UnitValue const& value, None) {
+// https://drafts.csswg.org/css-values-4/#simplify-a-calculation-tree
+export constexpr UnitValue simplify(UnitValue const& value, None = NONE) {
+    if (not value.isAbsolute())
+        return value;
     return value.canonical();
 }
 

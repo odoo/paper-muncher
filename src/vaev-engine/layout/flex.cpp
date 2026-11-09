@@ -267,21 +267,21 @@ struct FlexItem {
     // https://www.w3.org/TR/css-flexbox-1/#valdef-flex-basis-auto
     void computeFlexBaseSize(Opt<Au> mainContainerSize, IntrinsicSize containerSizing) {
         // A NONE return here indicates a CONTENT case for the flex basis
-        auto getDefiniteFlexBasisSize = [](Style::Flex& flexItemProps, FlexAxis& fa, Box* box) -> Opt<Style::PixelPercentage> {
+        auto getDefiniteFlexBasisSize = [](Style::Flex& flexItemProps, FlexAxis& fa, Box* box) -> Opt<Style::PxPercent> {
             if (flexItemProps.basis.is<Style::Keywords::Content>())
                 return NONE;
 
             // from now on flex basis is width
 
-            if (auto basis = flexItemProps.basis.is<Style::PixelPercentage>())
+            if (auto basis = flexItemProps.basis.is<Style::PxPercent>())
                 return Some(*basis);
 
-            if (not fa.mainAxis(box->style->sizing).is<Style::PixelPercentage>())
+            if (not fa.mainAxis(box->style->sizing).is<Style::PxPercent>())
                 return NONE;
 
             // TODO: solve definite values also min and max content
 
-            return Some(fa.mainAxis(box->style->sizing).expect<Style::PixelPercentage>());
+            return Some(fa.mainAxis(box->style->sizing).expect<Style::PxPercent>());
         };
 
         if (auto const& [flexBasisDefiniteSize] = getDefiniteFlexBasisSize(flexItemProps, fa, box)) {
@@ -329,7 +329,7 @@ struct FlexItem {
     Au getMinAutoPrefMainSize(Vec2Au containerSize) const {
         Opt<Au> definiteMaxMainSize;
         auto maxMainSize = fa.maxMainAxis(box->style->sizing);
-        if (auto maxMainSizeCalc = maxMainSize.is<Style::PixelPercentage>()) {
+        if (auto maxMainSizeCalc = maxMainSize.is<Style::PxPercent>()) {
             definiteMaxMainSize = Some(Layout::resolve(*maxMainSizeCalc, fa.mainAxis(containerSize)));
         }
 
@@ -339,7 +339,7 @@ struct FlexItem {
             contentSizeSuggestion = min(contentSizeSuggestion, definiteMaxMainSize.expect());
 
         auto mainAxis = fa.mainAxis(box->style->sizing);
-        if (auto mainAxisCalc = mainAxis.is<Style::PixelPercentage>()) {
+        if (auto mainAxisCalc = mainAxis.is<Style::PxPercent>()) {
             Au specifiedSizeSuggestion = Layout::resolve(
                 *mainAxisCalc,
                 fa.mainAxis(containerSize)
@@ -360,7 +360,7 @@ struct FlexItem {
         Style::MaxSize maxSizeToResolve = isWidth ? box->style->sizing->maxWidth : box->style->sizing->maxHeight;
 
         auto visitor = Visitor{
-            [&](Style::PixelPercentage const& v) {
+            [&](Style::PxPercent const& v) {
                 return Layout::resolve(
                     v,
                     isWidth
@@ -404,7 +404,7 @@ struct FlexItem {
         Au contentContribution = fa.mainAxis(isMin ? minContentSize : maxContentSize) + getMargin(BOTH_MAIN);
 
         auto mainAxis = fa.mainAxis(box->style->sizing);
-        if (auto mainAxisCalc = mainAxis.is<Style::PixelPercentage>()) {
+        if (auto mainAxisCalc = mainAxis.is<Style::PxPercent>()) {
             contentContribution = max(
                 contentContribution,
                 Layout::resolve(
@@ -447,7 +447,7 @@ struct FlexItem {
             );
 
         auto crossAxis = fa.crossAxis(box->style->sizing);
-        if (auto crossAxisCalc = crossAxis.is<Style::PixelPercentage>()) {
+        if (auto crossAxisCalc = crossAxis.is<Style::PxPercent>()) {
             contentContribution = max(
                 contentContribution,
                 Layout::resolve(
@@ -732,8 +732,8 @@ struct FlexFormatingContext : FormatingContext {
 
     void _determineFlexBaseSizeAndHypotheticalMainSize(Box& box, Input input) {
         Opt<Au> containerDefiniteMainSize = fa.mainAxis(input.knownSize);
-        if (fa.mainAxis(box.style->sizing).is<Style::PixelPercentage>()) {
-            containerDefiniteMainSize = Some(Layout::resolve(fa.mainAxis(box.style->sizing).expect<Style::PixelPercentage>(), fa.mainAxis(input.containingBlock)));
+        if (fa.mainAxis(box.style->sizing).is<Style::PxPercent>()) {
+            containerDefiniteMainSize = Some(Layout::resolve(fa.mainAxis(box.style->sizing).expect<Style::PxPercent>(), fa.mainAxis(input.containingBlock)));
         }
 
         for (auto& i : _items) {

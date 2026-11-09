@@ -200,7 +200,7 @@ export Calc simplify(Calc const& calc, auto const& ctx, Opt<NumericBaseType> mai
             // 2. If root is a dimension that is not expressed in its canonical unit,
             //    and there is enough information available to convert it to the canonical unit, do so, and return the value.
             // TODO: 3 & 4
-            return toCanonical(numeric, ctx);
+            return simplify(numeric, ctx);
         },
         // 4. If root is an operator node that’s not one of the calc-operator nodes, and all of its calculation children
         //    are numeric values with enough information to compute the operation root represents, return the result of
@@ -216,6 +216,11 @@ export Calc simplify(Calc const& calc, auto const& ctx, Opt<NumericBaseType> mai
                     // since percentages might resolve against a negative basis, and thus end up with an opposite comparative relationship than
                     // the raw percentage value would seem to indicate.
                     if (numeric.unit() == UnitValue::Unit::PERCENT and not(mainType and mainType.expect() == NumericBaseType::PERCENT))
+                        return Css::FnNode{UNCHECKED, f.name, std::move(simplifiedChildren)};
+
+                    // NOSPEC: A dimension left in a non-canonical unit couldn't be converted (a relative length without
+                    //         a context): the children's values aren't comparable, so the node can't be computed.
+                    if (numeric.unit() != UnitValue::Unit::PERCENT and not numeric.isCanonical())
                         return Css::FnNode{UNCHECKED, f.name, std::move(simplifiedChildren)};
                 } else {
                     return Css::FnNode{UNCHECKED, f.name, std::move(simplifiedChildren)};

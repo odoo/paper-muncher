@@ -18,13 +18,12 @@ import Karm.Ref;
 
 import Vaev.Engine;
 
-import :absoluteLength;
-
 using namespace Karm;
 using namespace Karm::Literals;
 using namespace Karm::Math::Literals;
 using namespace Karm::Fmt::Literals;
 using namespace Karm::Ref::Literals;
+using namespace Vaev::Literals;
 
 namespace PaperMuncher {
 
@@ -81,28 +80,28 @@ export Rc<Http::Client> defaultHttpClient(bool sandboxed) {
     return client;
 }
 
-export struct Option {
-    Vaev::Css::PureResolution scale = Vaev::Css::PureResolution{Vaev::Css::UnitValue{1, Vaev::Css::UnitValue::Unit::DPPX}};
-    Vaev::Css::PureResolution density = Vaev::Css::PureResolution{Vaev::Css::UnitValue{1, Vaev::Css::UnitValue::Unit::DPPX}};
-    Opt<AbsoluteLength> width = NONE;
-    Opt<AbsoluteLength> height = NONE;
-    Opt<Vaev::Css::Color> background = NONE;
+export struct Options {
+    Vaev::Style::Dppx scale = 1_dppx;
+    Vaev::Style::Dppx density = 1_dppx;
+    Opt<Vaev::Style::Px> width = NONE;
+    Opt<Vaev::Style::Px> height = NONE;
+    Opt<Vaev::Style::Color> background = NONE;
     Print::PaperStock stock = Print::A4;
     Print::Orientation orientation = Print::Orientation::PORTRAIT;
-    Union<Print::MarginOption, Math::Insets<AbsoluteLength>> margins = Print::MarginOption::DEFAULT;
+    Union<Print::MarginOption, Math::Insets<Vaev::Style::Px>> margins = Print::MarginOption::DEFAULT;
     Ref::Uti outputFormat = Ref::Uti::PUBLIC_DATA;
     Batch batch = Batch::CONCAT;
     Flow flow = Flow::AUTO;
     Extend extend = Extend::CROP;
-    Union<Vaev::Css::Keywords::Auto, AbsoluteLength> headerSize = Vaev::Css::Keywords::AUTO;
-    Union<Vaev::Css::Keywords::Auto, AbsoluteLength> footerSize = Vaev::Css::Keywords::AUTO;
+    Union<Vaev::Css::Keywords::Auto, Vaev::Style::Px> headerSize = Vaev::Css::Keywords::AUTO;
+    Union<Vaev::Css::Keywords::Auto, Vaev::Style::Px> footerSize = Vaev::Css::Keywords::AUTO;
 
     auto derivePrintSettings() const -> Print::Settings {
         auto stock = this->stock;
         if (this->width or this->height)
             stock = Print::PaperStock::custom(
-                this->width ? Vaev::Layout::Au{this->width->toPx()} : stock.minorAxis,
-                this->height ? Vaev::Layout::Au{this->height->toPx()} : stock.majorAxis
+                this->width ? Vaev::Layout::resolve(*this->width) : stock.minorAxis,
+                this->height ? Vaev::Layout::resolve(*this->height) : stock.majorAxis
             );
 
         Print::Margins margins = Print::MarginOption::DEFAULT;
@@ -110,9 +109,9 @@ export struct Option {
             [&](Print::MarginOption n) {
                 margins = n;
             },
-            [&](Math::Insets<AbsoluteLength> const& insets) {
-                margins = insets.map([&](AbsoluteLength l) {
-                    return Vaev::Layout::Au{l.toPx()};
+            [&](Math::Insets<Vaev::Style::Px> const& insets) {
+                margins = insets.map([&](Vaev::Style::Px l) {
+                    return Vaev::Layout::resolve(l);
                 });
             }
         );
@@ -121,16 +120,16 @@ export struct Option {
             .stock = stock,
             .orientation = this->orientation,
             .margins = margins,
-            .scale = this->scale.toDppx(),
+            .scale = this->scale.value(),
         };
     }
 
     Vaev::Style::DisplayArea deriveArea() const {
-        auto width = this->width ? this->width->toPx() : 800.0;
-        auto height = this->height ? this->height->toPx() : 600.0;
+        auto width = this->width ? this->width->value() : 800.0;
+        auto height = this->height ? this->height->value() : 600.0;
         return Vaev::Style::DisplayArea::forRender(
             {width, height},
-            Vaev::Style::Dppx{this->scale.toDppx()}
+            this->scale
         );
     }
 };
@@ -138,36 +137,43 @@ export struct Option {
 struct HeaderFooterDecorator : Vaev::Driver::PageDecorator {
     Opt<Rc<Vaev::WebView>> headerWebView;
     Opt<Rc<Vaev::WebView>> footerWebView;
-    Union<Vaev::Css::Keywords::Auto, AbsoluteLength> headerSize = Vaev::Css::Keywords::AUTO;
-    Union<Vaev::Css::Keywords::Auto, AbsoluteLength> footerSize = Vaev::Css::Keywords::AUTO;
+    Union<Vaev::Css::Keywords::Auto, Vaev::Style::Px> headerSize = Vaev::Css::Keywords::AUTO;
+    Union<Vaev::Css::Keywords::Auto, Vaev::Style::Px> footerSize = Vaev::Css::Keywords::AUTO;
     Map<Math::Vec2Au, Pair<Vaev::Layout::Au>> _memo;
 
     Vaev::Layout::RectAu layout(Vaev::Style::DisplayArea const& area, Vaev::Style::ViewerPrefs const& prefs, Vaev::Driver::PageLayoutInfos const& infos) override {
         auto [headerHeight, footerHeight] = _memo.lookupOrPut(infos.pageDecoration.size(), [&] {
-            Vaev::Layout::Au headerHeight = 0_au;
-            Vaev::Layout::Au footerHeight = 0_au;
-
-            if (headerSize == Vaev::Css::Keywords::AUTO) {
-                if (auto& [w] = headerWebView) {
-                    w->changeArea(area.withViewport(Vaev::Layout::toPixel(infos.pageDecoration.size())));
-                    w->changePrefs(prefs);
-                    headerHeight = w->borderBox().height;
+            auto headerHeightMemo = headerSize.visit(
+                [&](Vaev::Css::Keywords::Auto){
+                    if (auto& [w] = headerWebView) {
+                        w->changeArea(area.withViewport(Vaev::Layout::toPixel(infos.pageDecoration.size())));
+                        w->changePrefs(prefs);
+                        return w->borderBox().height;
+                    } else {
+                        return 0_au;
+                    }
+                },
+                [&](Vaev::Style::Px const& px) {
+                    return Vaev::Layout::resolve(px);
                 }
-            } else {
-                headerHeight = Vaev::Layout::Au{headerSize.expect<AbsoluteLength>().toPx()};
-            }
+            );
 
-            if (footerSize == Vaev::Css::Keywords::AUTO) {
-                if (auto& [w] = footerWebView) {
-                    w->changeArea(area.withViewport(Vaev::Layout::toPixel(infos.pageDecoration.size())));
-                    w->changePrefs(prefs);
-                    footerHeight = w->borderBox().height;
+            auto footerHeightMemo = footerSize.visit(
+                [&](Vaev::Css::Keywords::Auto){
+                    if (auto& [w] = footerWebView) {
+                        w->changeArea(area.withViewport(Vaev::Layout::toPixel(infos.pageDecoration.size())));
+                        w->changePrefs(prefs);
+                        return w->borderBox().height;
+                    } else {
+                        return 0_au;
+                    }
+                },
+                [&](Vaev::Style::Px const& px) {
+                    return Vaev::Layout::resolve(px);
                 }
-            } else {
-                footerHeight = Vaev::Layout::Au{footerSize.expect<AbsoluteLength>().toPx()};
-            }
+            );
 
-            return Pair{headerHeight, footerHeight};
+            return Pair{headerHeightMemo, footerHeightMemo};
         });
         return infos.pageDecoration.shrink({headerHeight, 0_au, footerHeight});
     }
@@ -221,7 +227,7 @@ Async::Task<> runSingleAsync(
     Rc<Vaev::Loader::ResourceLoader> loader,
     BatchItem const& item,
     Print::Printer& output,
-    Option const& options,
+    Options const& options,
     Async::CancellationToken ct
 ) {
     logInfo("loading {}...", item.input);
@@ -262,7 +268,7 @@ Async::Task<> runSingleAsync(
         auto& page = output.beginPage(size.cast<f64>());
 
         if (options.background.has())
-            page.clear(Vaev::Style::toUsed(*options.background, Gfx::ALPHA));
+            page.clear(Vaev::Style::resolve(*options.background, Gfx::ALPHA));
 
         // NOTE: Override the background of HTML document, since no
         //       one really expect a html document to be transparent
@@ -280,7 +286,7 @@ export Async::Task<> runBatchAsync(
     Rc<Http::Client> client,
     Vec<BatchItem> const& items,
     Ref::Url const& output,
-    Option options,
+    Options options,
     Async::CancellationToken ct
 ) {
     if (options.flow == Flow::AUTO)
@@ -296,7 +302,7 @@ export Async::Task<> runBatchAsync(
             Print::FilePrinter::create(
                 options.outputFormat,
                 {
-                    .density = options.density.toDppx(),
+                    .density = options.density.value(),
                 }
             )
         );
@@ -325,7 +331,7 @@ export Async::Task<> runBatchAsync(
                 Print::FilePrinter::create(
                     options.outputFormat,
                     {
-                        .density = options.density.toDppx(),
+                        .density = options.density.value(),
                     }
                 )
             );

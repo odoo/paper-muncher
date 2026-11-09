@@ -43,7 +43,7 @@ Pair<Layout::RectAu, Layout::RadiiAu> resolveClipGeometryBox(Rc<Layout::Fragment
     );
 }
 
-Math::Radiif resolveRadii(Math::Radii<Style::PixelPercentage> const& baseRadii, Layout::RectAu const& referenceBox) {
+Math::Radiif resolveRadii(Math::Radii<Style::PxPercent> const& baseRadii, Layout::RectAu const& referenceBox) {
     Math::Radiif radii;
     radii.a = Layout::resolve(baseRadii.a, referenceBox.height).cast<f64>();
     radii.b = Layout::resolve(baseRadii.b, referenceBox.width).cast<f64>();
@@ -106,7 +106,7 @@ Tuple<Math::Path, Gfx::FillRule> resolvedClipShape(Style::BasicShapeFunction con
                 auto hSquared = Math::pow2(referenceBox.height.cast<f64>());
                 auto wSquared = Math::pow2(referenceBox.width.cast<f64>());
                 radius = Layout::resolve(
-                                 circle.radius.expect<Style::PixelPercentage>(),
+                                 circle.radius.expect<Style::PxPercent>(),
                                  Layout::Au(Math::sqrt(hSquared + wSquared) / Math::sqrt(2.0))
                              )
                              .cast<f64>();
@@ -165,7 +165,7 @@ Tuple<Math::Path, Gfx::FillRule> resolvedClipShape(Style::BasicShapeFunction con
                 rx = max(Math::abs(referenceBox.width.cast<f64>() - center.x), center.x);
             } else {
                 rx = Layout::resolve(
-                                 ellipse.rx.expect<Style::PixelPercentage>(),
+                                 ellipse.rx.expect<Style::PxPercent>(),
                                  referenceBox.width
                 )
                          .cast<f64>();
@@ -179,7 +179,7 @@ Tuple<Math::Path, Gfx::FillRule> resolvedClipShape(Style::BasicShapeFunction con
             } else {
                 ry =
                     Layout::resolve(
-                                ellipse.ry.expect<Style::PixelPercentage>(),
+                                ellipse.ry.expect<Style::PxPercent>(),
                                 referenceBox.height
                     )
                         .cast<f64>();
