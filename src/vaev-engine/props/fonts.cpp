@@ -14,18 +14,6 @@ using namespace Karm;
 
 namespace Vaev::Css {
 
-export using FontSize = Union<
-    LengthPercentage,
-    Keywords::XxSmall,
-    Keywords::XSmall,
-    Keywords::Small,
-    Keywords::Medium,
-    Keywords::Large,
-    Keywords::XLarge,
-    Keywords::XxLarge,
-    Keywords::Smaller,
-    Keywords::Larger>;
-
 // https://drafts.csswg.org/css-fonts-4/#font-weight-prop
 export enum struct RelativeFontWeight : u8 {
     LIGHTER,
@@ -119,44 +107,6 @@ export Css::FontStyle toSpecified(FontStyle const& value) {
     if (value.val == Gfx::FontStyle::OBLIQUE)
         return Css::FontStyle{Css::PureAngle::fromDegree(value.obliqueAngle.value())};
     return Css::FontStyle{value.val};
-}
-
-export Pixel toComputed(Css::FontSize const& value, FontSizeContext auto const& ctx) {
-    return value.visit(
-        [&](Css::LengthPercentage const& v) {
-            // NOTE: At this point, ctx's font metrics are the parent's, so `em` resolves against the parent font size, and
-            //       percentages are relative to it too. Negative calc() results are clamped to the allowed [0,∞] range.
-            //       https://www.w3.org/TR/css-fonts-4/#font-size-prop
-            return Pixel{max(toComputed(v, ctx, ctx.parentFontSize).value(), 0.0)};
-        },
-        [&](Keywords::XxSmall) {
-            return Pixel{ctx.userFontSize * 0.5};
-        },
-        [&](Keywords::XSmall) {
-            return Pixel{ctx.userFontSize * 0.75};
-        },
-        [&](Keywords::Small) {
-            return Pixel{ctx.userFontSize * 0.875};
-        },
-        [&](Keywords::Medium) {
-            return Pixel{ctx.userFontSize};
-        },
-        [&](Keywords::Large) {
-            return Pixel{ctx.userFontSize * 1.125};
-        },
-        [&](Keywords::XLarge) {
-            return Pixel{ctx.userFontSize * 1.25};
-        },
-        [&](Keywords::XxLarge) {
-            return Pixel{ctx.userFontSize * 1.5};
-        },
-        [&](Keywords::Larger) {
-            return Pixel{ctx.parentFontSize * 1.25};
-        },
-        [&](Keywords::Smaller) {
-            return Pixel{ctx.parentFontSize * 0.875};
-        }
-    );
 }
 
 // MARK: Fonts -----------------------------------------------------------------
@@ -369,6 +319,18 @@ export struct FontStyleProperty : Property {
 
 // https://www.w3.org/TR/css-fonts-4/#font-size-prop
 export struct FontSizeProperty : Property {
+    using Value = Union<
+        Css::LengthPercentage,
+        Keywords::XxSmall,
+        Keywords::XSmall,
+        Keywords::Small,
+        Keywords::Medium,
+        Keywords::Large,
+        Keywords::XLarge,
+        Keywords::XxLarge,
+        Keywords::Smaller,
+        Keywords::Larger>;
+
     struct Registration : Property::Registration {
         Registration()
             : Property::Registration(Properties::FONT_SIZE, {INHERITED, BULK_INHERITED}) {}
@@ -390,17 +352,51 @@ export struct FontSizeProperty : Property {
         }
 
         Res<Rc<Property>> parse(Cursor<Css::Sst>& c) const override {
-            return Ok(makeRc<FontSizeProperty>(self(), try$(parseValue<Css::FontSize>(c))));
+            return Ok(makeRc<FontSizeProperty>(self(), try$(parseValue<Value>(c))));
         }
     };
 
-    Css::FontSize _value;
+    Value _value;
 
-    FontSizeProperty(Rc<Property::Registration> registration, Css::FontSize value)
+    FontSizeProperty(Rc<Property::Registration> registration, Value value)
         : Property(registration), _value(value) {}
 
     void apply([[maybe_unused]] ComputedValues const& parent, ComputedValues& c, [[maybe_unused]] ComputationContext const& cx) const override {
-        c.font.cow().size = toComputed(_value, cx);
+        c.font.cow().size = _value.visit(
+            [&](Css::LengthPercentage const& v) {
+                // NOTE: At this point, cx's font metrics are the parent's, so `em` resolves against the parent font size, and
+                //       percentages are relative to it too. Negative calc() results are clamped to the allowed [0,∞] range.
+                //       https://www.w3.org/TR/css-fonts-4/#font-size-prop
+                return Pixel{max(toComputed(v, cx, cx.parentFontSize).value(), 0.0)};
+            },
+            [&](Keywords::XxSmall) {
+                return Pixel{cx.userFontSize * 0.5};
+            },
+            [&](Keywords::XSmall) {
+                return Pixel{cx.userFontSize * 0.75};
+            },
+            [&](Keywords::Small) {
+                return Pixel{cx.userFontSize * 0.875};
+            },
+            [&](Keywords::Medium) {
+                return Pixel{cx.userFontSize};
+            },
+            [&](Keywords::Large) {
+                return Pixel{cx.userFontSize * 1.125};
+            },
+            [&](Keywords::XLarge) {
+                return Pixel{cx.userFontSize * 1.25};
+            },
+            [&](Keywords::XxLarge) {
+                return Pixel{cx.userFontSize * 1.5};
+            },
+            [&](Keywords::Larger) {
+                return Pixel{cx.parentFontSize * 1.25};
+            },
+            [&](Keywords::Smaller) {
+                return Pixel{cx.parentFontSize * 0.875};
+            }
+        );
     }
 
     Res<> serialize(Io::TextWriter& w) const override {
@@ -419,8 +415,8 @@ export struct FontProperty : Property {
         Opt<Css::FontWeight> weight;
         Css::FontWidth width = Css::FontWidth::NORMAL;
         Css::FontStyle style = Css::FontStyle::NORMAL;
-        Css::FontSize size = Keywords::MEDIUM;
-        Css::LineHeight lineHeight = Keywords::NORMAL;
+        FontSizeProperty::Value size = Keywords::MEDIUM;
+        LineHeightProperty::Value lineHeight = Keywords::NORMAL;
 
         void repr(Io::Emit& e) const {
             e("(font");
@@ -480,7 +476,7 @@ export struct FontProperty : Property {
                     continue;
                 }
 
-                auto fontSize = parseValue<Css::FontSize>(c);
+                auto fontSize = parseValue<FontSizeProperty::Value>(c);
                 if (fontSize) {
                     value.size = fontSize.expect();
                     break;
@@ -490,7 +486,7 @@ export struct FontProperty : Property {
             }
 
             if (c.skip(Css::Token::delim("/")))
-                value.lineHeight = try$(parseValue<Css::LineHeight>(c));
+                value.lineHeight = try$(parseValue<LineHeightProperty::Value>(c));
 
             value.families = {try$(parseValue<FontFamily>(c))};
 

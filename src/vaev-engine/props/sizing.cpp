@@ -11,16 +11,6 @@ import :style.computed;
 
 using namespace Karm;
 
-namespace Vaev::Css {
-
-// https://www.w3.org/TR/css-sizing-3/#propdef-width
-// https://www.w3.org/TR/css-sizing-3/#propdef-height
-export using Size = Union<Keywords::Auto, LengthPercentage, Keywords::Stretch, Keywords::MinContent, Keywords::MaxContent, Keywords::FitContent>;
-
-export using MaxSize = Union<Keywords::None, LengthPercentage, Keywords::Stretch, Keywords::MinContent, Keywords::MaxContent, Keywords::FitContent>;
-
-} // namespace Vaev::Css
-
 namespace Vaev::Style {
 
 // MARK: Sizing ----------------------------------------------------------------
@@ -64,12 +54,14 @@ export struct BoxSizingProperty : Property {
 
 // https://www.w3.org/TR/css-sizing-3/#propdef-width
 export struct WidthProperty : Property {
+    using Value = Union<Keywords::Auto, Css::LengthPercentage, Keywords::Stretch, Keywords::MinContent, Keywords::MaxContent, Keywords::FitContent>;
+
     struct Registration : Property::Registration {
         Registration()
             : Property::Registration(Properties::WIDTH, PRESENTATION_ATTRIBUTE) {}
 
         Rc<Property> initial() const override {
-            return makeRc<WidthProperty>(self(), Css::Size{Keywords::AUTO});
+            return makeRc<WidthProperty>(self(), Value{Keywords::AUTO});
         }
 
         Rc<Property> load(ComputedValues const& c) const override {
@@ -83,13 +75,13 @@ export struct WidthProperty : Property {
         }
 
         Res<Rc<Property>> parse(Cursor<Css::Sst>& c) const override {
-            return Ok(makeRc<WidthProperty>(self(), try$(parseValue<Css::Size>(c))));
+            return Ok(makeRc<WidthProperty>(self(), try$(parseValue<Value>(c))));
         }
     };
 
-    Css::Size _value;
+    Value _value;
 
-    WidthProperty(Rc<Property::Registration> registration, Css::Size value)
+    WidthProperty(Rc<Property::Registration> registration, Value value)
         : Property(registration), _value(value) {}
 
     void apply([[maybe_unused]] ComputedValues const& parent, ComputedValues& c, [[maybe_unused]] ComputationContext const& cx) const override {
@@ -108,12 +100,14 @@ export struct WidthProperty : Property {
 // https://www.w3.org/TR/css-sizing-3/#propdef-height
 
 export struct HeightProperty : Property {
+    using Value = WidthProperty::Value;
+
     struct Registration : Property::Registration {
         Registration()
             : Property::Registration(Properties::HEIGHT, PRESENTATION_ATTRIBUTE) {}
 
         Rc<Property> initial() const override {
-            return makeRc<HeightProperty>(self(), Css::Size{Keywords::AUTO});
+            return makeRc<HeightProperty>(self(), Value{Keywords::AUTO});
         }
 
         Rc<Property> load(ComputedValues const& c) const override {
@@ -127,13 +121,13 @@ export struct HeightProperty : Property {
         }
 
         Res<Rc<Property>> parse(Cursor<Css::Sst>& c) const override {
-            return Ok(makeRc<HeightProperty>(self(), try$(parseValue<Css::Size>(c))));
+            return Ok(makeRc<HeightProperty>(self(), try$(parseValue<Value>(c))));
         }
     };
 
-    Css::Size _value;
+    Value _value;
 
-    HeightProperty(Rc<Property::Registration> registration, Css::Size value)
+    HeightProperty(Rc<Property::Registration> registration, Value value)
         : Property(registration), _value(value) {}
 
     void apply([[maybe_unused]] ComputedValues const& parent, ComputedValues& c, [[maybe_unused]] ComputationContext const& cx) const override {
@@ -151,11 +145,13 @@ export struct HeightProperty : Property {
 
 // https://www.w3.org/TR/css-sizing-3/#propdef-min-width
 export struct MinWidthProperty : Property {
+    using Value = WidthProperty::Value;
+
     struct Registration : Property::Registration {
         Registration() : Property::Registration(Properties::MIN_WIDTH) {}
 
         Rc<Property> initial() const override {
-            return makeRc<MinWidthProperty>(self(), Css::Size{Keywords::AUTO});
+            return makeRc<MinWidthProperty>(self(), Value{Keywords::AUTO});
         }
 
         Rc<Property> load(ComputedValues const& c) const override {
@@ -163,13 +159,13 @@ export struct MinWidthProperty : Property {
         }
 
         Res<Rc<Property>> parse(Cursor<Css::Sst>& c) const override {
-            return Ok(makeRc<MinWidthProperty>(self(), try$(parseValue<Css::Size>(c))));
+            return Ok(makeRc<MinWidthProperty>(self(), try$(parseValue<Value>(c))));
         }
     };
 
-    Css::Size _value;
+    Value _value;
 
-    MinWidthProperty(Rc<Property::Registration> registration, Css::Size value)
+    MinWidthProperty(Rc<Property::Registration> registration, Value value)
         : Property(registration), _value(value) {}
 
     void apply([[maybe_unused]] ComputedValues const& parent, ComputedValues& c, [[maybe_unused]] ComputationContext const& cx) const override {
@@ -187,11 +183,13 @@ export struct MinWidthProperty : Property {
 
 // https://www.w3.org/TR/css-sizing-3/#propdef-min-height
 export struct MinHeightProperty : Property {
+    using Value = WidthProperty::Value;
+
     struct Registration : Property::Registration {
         Registration() : Property::Registration(Properties::MIN_HEIGHT) {}
 
         Rc<Property> initial() const override {
-            return makeRc<MinHeightProperty>(self(), Css::Size{Keywords::AUTO});
+            return makeRc<MinHeightProperty>(self(), Value{Keywords::AUTO});
         }
 
         Rc<Property> load(ComputedValues const& c) const override {
@@ -199,13 +197,13 @@ export struct MinHeightProperty : Property {
         }
 
         Res<Rc<Property>> parse(Cursor<Css::Sst>& c) const override {
-            return Ok(makeRc<MinHeightProperty>(self(), try$(parseValue<Css::Size>(c))));
+            return Ok(makeRc<MinHeightProperty>(self(), try$(parseValue<Value>(c))));
         }
     };
 
-    Css::Size _value;
+    Value _value;
 
-    MinHeightProperty(Rc<Property::Registration> registration, Css::Size value)
+    MinHeightProperty(Rc<Property::Registration> registration, Value value)
         : Property(registration), _value(value) {}
 
     void apply([[maybe_unused]] ComputedValues const& parent, ComputedValues& c, [[maybe_unused]] ComputationContext const& cx) const override {
@@ -224,11 +222,13 @@ export struct MinHeightProperty : Property {
 // https://www.w3.org/TR/css-sizing-3/#propdef-max-width
 
 export struct MaxWidthProperty : Property {
+    using Value = Union<Keywords::None, Css::LengthPercentage, Keywords::Stretch, Keywords::MinContent, Keywords::MaxContent, Keywords::FitContent>;
+
     struct Registration : Property::Registration {
         Registration() : Property::Registration(Properties::MAX_WIDTH) {}
 
         Rc<Property> initial() const override {
-            return makeRc<MaxWidthProperty>(self(), Css::MaxSize{Keywords::NONE});
+            return makeRc<MaxWidthProperty>(self(), Value{Keywords::NONE});
         }
 
         Rc<Property> load(ComputedValues const& c) const override {
@@ -236,13 +236,13 @@ export struct MaxWidthProperty : Property {
         }
 
         Res<Rc<Property>> parse(Cursor<Css::Sst>& c) const override {
-            return Ok(makeRc<MaxWidthProperty>(self(), try$(parseValue<Css::MaxSize>(c))));
+            return Ok(makeRc<MaxWidthProperty>(self(), try$(parseValue<Value>(c))));
         }
     };
 
-    Css::MaxSize _value;
+    Value _value;
 
-    MaxWidthProperty(Rc<Property::Registration> registration, Css::MaxSize value)
+    MaxWidthProperty(Rc<Property::Registration> registration, Value value)
         : Property(registration), _value(value) {}
 
     void apply([[maybe_unused]] ComputedValues const& parent, ComputedValues& c, [[maybe_unused]] ComputationContext const& cx) const override {
@@ -260,11 +260,13 @@ export struct MaxWidthProperty : Property {
 
 // https://www.w3.org/TR/css-sizing-3/#propdef-max-height
 export struct MaxHeightProperty : Property {
+    using Value = MaxWidthProperty::Value;
+
     struct Registration : Property::Registration {
         Registration() : Property::Registration(Properties::MAX_HEIGHT) {}
 
         Rc<Property> initial() const override {
-            return makeRc<MaxHeightProperty>(self(), Css::MaxSize{Keywords::NONE});
+            return makeRc<MaxHeightProperty>(self(), Value{Keywords::NONE});
         }
 
         Rc<Property> load(ComputedValues const& c) const override {
@@ -272,13 +274,13 @@ export struct MaxHeightProperty : Property {
         }
 
         Res<Rc<Property>> parse(Cursor<Css::Sst>& c) const override {
-            return Ok(makeRc<MaxHeightProperty>(self(), try$(parseValue<Css::MaxSize>(c))));
+            return Ok(makeRc<MaxHeightProperty>(self(), try$(parseValue<Value>(c))));
         }
     };
 
-    Css::MaxSize _value;
+    Value _value;
 
-    MaxHeightProperty(Rc<Property::Registration> registration, Css::MaxSize value)
+    MaxHeightProperty(Rc<Property::Registration> registration, Value value)
         : Property(registration), _value(value) {}
 
     void apply([[maybe_unused]] ComputedValues const& parent, ComputedValues& c, [[maybe_unused]] ComputationContext const& cx) const override {

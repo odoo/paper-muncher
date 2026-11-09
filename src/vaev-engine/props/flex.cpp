@@ -11,24 +11,20 @@ import :style.computed;
 
 using namespace Karm;
 
-namespace Vaev::Css {
-
-export using FlexBasis = Union<
-    Keywords::Auto,
-    Keywords::Content,
-    Keywords::MinContent,
-    Keywords::MaxContent,
-    Keywords::FitContent,
-    LengthPercentage>;
-
-} // namespace Vaev::Css
-
 namespace Vaev::Style {
 
 // MARK: Flex ------------------------------------------------------------------
 
 // https://www.w3.org/TR/css-flexbox-1/#flex-basis-property
 export struct FlexBasisProperty : Property {
+    using Value = Union<
+        Keywords::Auto,
+        Keywords::Content,
+        Keywords::MinContent,
+        Keywords::MaxContent,
+        Keywords::FitContent,
+        Css::LengthPercentage>;
+
     struct Registration : Property::Registration {
         Registration() : Property::Registration(Properties::FLEX_BASIS) {}
 
@@ -41,13 +37,13 @@ export struct FlexBasisProperty : Property {
         }
 
         Res<Rc<Property>> parse(Cursor<Css::Sst>& c) const override {
-            return Ok(makeRc<FlexBasisProperty>(self(), try$(parseValue<Css::FlexBasis>(c))));
+            return Ok(makeRc<FlexBasisProperty>(self(), try$(parseValue<Value>(c))));
         }
     };
 
-    Css::FlexBasis _value;
+    Value _value;
 
-    FlexBasisProperty(Rc<Property::Registration> registration, Css::FlexBasis value)
+    FlexBasisProperty(Rc<Property::Registration> registration, Value value)
         : Property(registration), _value(value) {}
 
     void apply([[maybe_unused]] ComputedValues const& parent, ComputedValues& c, [[maybe_unused]] ComputationContext const& cx) const override {
@@ -270,7 +266,7 @@ export struct FlexFlowProperty : Property {
 export struct FlexProperty : Property {
     // <'flex-grow'> <'flex-shrink'>? || <'flex-basis'>
     struct Value {
-        Css::FlexBasis flexBasis = Keywords::AUTO;
+        FlexBasisProperty::Value flexBasis = Keywords::AUTO;
         f64 flexGrow, flexShrink;
     };
 
@@ -320,11 +316,11 @@ export struct FlexProperty : Property {
 
             auto parsedGrowAndMaybeShrink = parseGrowShrink(c, value);
             if (parsedGrowAndMaybeShrink) {
-                auto basis = parseValue<Css::FlexBasis>(c);
+                auto basis = parseValue<FlexBasisProperty::Value>(c);
                 if (basis)
                     value.flexBasis = basis.expect();
             } else {
-                auto basis = parseValue<Css::FlexBasis>(c);
+                auto basis = parseValue<FlexBasisProperty::Value>(c);
                 if (basis)
                     value.flexBasis = basis.expect();
                 else

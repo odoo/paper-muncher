@@ -11,54 +11,12 @@ import :style.computed;
 
 using namespace Karm;
 
-namespace Vaev::Css {
-
-// https://drafts.csswg.org/css-inline/#propdef-baseline-shift
-export using BaselineShift = Union<
-    LengthPercentage,
-    Keywords::Sub,
-    Keywords::Super,
-    Keywords::Top,
-    Keywords::Center,
-    Keywords::Bottom>;
-
-// https://www.w3.org/TR/css-inline-3/#line-height-property
-export using LineHeight = Union<Keywords::Normal, Number, LengthPercentage>;
-
-} // namespace Vaev::Css
-
 namespace Vaev::Style {
-
-export LineHeight toComputed(Css::LineHeight const& value, LengthContext auto const& ctx) {
-    return value.visit(
-        [](Keywords::Normal const& normal) -> LineHeight {
-            return normal;
-        },
-        [](Css::Number const& number) -> LineHeight {
-            return toComputed(number);
-        },
-        [&](Css::LengthPercentage const& length) -> LineHeight {
-            return toComputed(length, ctx, ctx.fontSize);
-        }
-    );
-}
-
-export Css::LineHeight toSpecified(LineHeight const& value) {
-    return value.visit(
-        [](Keywords::Normal const& normal) -> Css::LineHeight {
-            return normal;
-        },
-        [](f64 const& number) -> Css::LineHeight {
-            return Css::Number::fromCanonical(number);
-        },
-        [](Pixel const& px) -> Css::LineHeight {
-            return toSpecified(PixelPercentage{px});
-        }
-    );
-}
 
 // https://drafts.csswg.org/css-inline/#line-height-property
 export struct LineHeightProperty : Property {
+    using Value = Union<Keywords::Normal, Css::Number, Css::LengthPercentage>;
+
     struct Registration : Property::Registration {
         Registration()
             : Property::Registration(Properties::LINE_HEIGHT, INHERITED) {}
@@ -72,21 +30,46 @@ export struct LineHeightProperty : Property {
         }
 
         Rc<Property> load(ComputedValues const& c) const override {
-            return makeRc<LineHeightProperty>(self(), toSpecified(c.inline_->lineHeight));
+            return makeRc<LineHeightProperty>(
+                self(),
+                c.inline_->lineHeight.visit(
+                    [](Keywords::Normal const& normal) -> Value {
+                        return normal;
+                    },
+                    [](f64 const& number) -> Value {
+                        return Css::Number::fromCanonical(number);
+                    },
+                    [](Pixel const& px) -> Value {
+                        return toSpecified(PixelPercentage{px});
+                    }
+                )
+            );
         }
 
         Res<Rc<Property>> parse(Cursor<Css::Sst>& c) const override {
-            return Ok(makeRc<LineHeightProperty>(self(), try$(parseValue<Css::LineHeight>(c))));
+            return Ok(makeRc<LineHeightProperty>(self(), try$(parseValue<Value>(c))));
         }
     };
 
-    Css::LineHeight _value;
+    Value _value;
 
-    LineHeightProperty(Rc<Property::Registration> registration, Css::LineHeight value)
+    LineHeightProperty(Rc<Property::Registration> registration, Value value)
         : Property(registration), _value(value) {}
 
     void apply([[maybe_unused]] ComputedValues const& parent, ComputedValues& c, [[maybe_unused]] ComputationContext const& cx) const override {
-        c.inline_.cow().lineHeight = toComputed(_value, cx);
+        // Computed value: for <length-percentage> the absolute length (percentages against
+        //                 the element's own font size), otherwise as specified.
+        c.inline_.cow().lineHeight = _value.visit(
+            [](Keywords::Normal const& normal) -> LineHeight {
+                return normal;
+            },
+            [](Css::Number const& number) -> LineHeight {
+                return toComputed(number);
+            },
+            [&](Css::LengthPercentage const& length) -> LineHeight {
+                return toComputed(length, cx, cx.fontSize);
+            }
+        );
     }
 
     Res<> serialize(Io::TextWriter& w) const override {
@@ -208,6 +191,14 @@ export struct AlignmentBaselineProperty : Property {
 
 // https://drafts.csswg.org/css-inline/#propdef-baseline-shift
 export struct BaselineShiftProperty : Property {
+    using Value = Union<
+        Css::LengthPercentage,
+        Keywords::Sub,
+        Keywords::Super,
+        Keywords::Top,
+        Keywords::Center,
+        Keywords::Bottom>;
+
     struct Registration : Property::Registration {
         Registration() : Property::Registration(Properties::BASELINE_SHIFT) {}
 
@@ -220,13 +211,13 @@ export struct BaselineShiftProperty : Property {
         }
 
         Res<Rc<Property>> parse(Cursor<Css::Sst>& c) const override {
-            return Ok(makeRc<BaselineShiftProperty>(self(), try$(parseValue<Css::BaselineShift>(c))));
+            return Ok(makeRc<BaselineShiftProperty>(self(), try$(parseValue<Value>(c))));
         }
     };
 
-    Css::BaselineShift _value;
+    Value _value;
 
-    BaselineShiftProperty(Rc<Property::Registration> registration, Css::BaselineShift value)
+    BaselineShiftProperty(Rc<Property::Registration> registration, Value value)
         : Property(registration), _value(value) {}
 
     void apply([[maybe_unused]] ComputedValues const& parent, ComputedValues& c, [[maybe_unused]] ComputationContext const& cx) const override {
@@ -247,7 +238,7 @@ export struct VerticalAlignProperty : Property {
     struct Value {
         Opt<BaselineSource> baselineSource = NONE;
         Opt<AlignmentBaseline> alignmentBaseline = NONE;
-        Opt<Css::BaselineShift> baselineShift = NONE;
+        Opt<BaselineShiftProperty::Value> baselineShift = NONE;
     };
 
     struct Registration : Property::Registration {
@@ -300,7 +291,7 @@ export struct VerticalAlignProperty : Property {
                     return Error::invalidData("duplicated value type");
                 }
 
-                auto maybeBaselineShift = parseValue<Css::BaselineShift>(c);
+                auto maybeBaselineShift = parseValue<BaselineShiftProperty::Value>(c);
                 if (maybeBaselineShift) {
                     if (not value.baselineShift) {
                         value.baselineShift = Some(maybeBaselineShift.expect());
