@@ -24,7 +24,13 @@ export bool skipOmmitableComma(Cursor<Sst>& c) {
 }
 
 export template <typename T>
-struct ValueParser;
+struct ValueParser {
+    static Res<T> parse(Cursor<Sst>& c)
+        requires requires { T::parse(c); }
+    {
+        return T::parse(c);
+    }
+};
 
 export template <typename T>
 concept ValueParseable = requires() {
@@ -46,7 +52,13 @@ Res<T> parseValue(Str str) {
 }
 
 export template <typename T>
-struct ValueSerializer;
+struct ValueSerializer {
+    static Res<> serialize(Io::TextWriter& w, T const& value)
+        requires requires { T::serialize(w, value); }
+    {
+        return T::serialize(w, value);
+    }
+};
 
 export template <typename T>
 concept ValueSerializable = requires() {

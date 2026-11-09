@@ -12,80 +12,6 @@ import :style.computed;
 
 using namespace Karm;
 
-namespace Vaev::Css {
-
-// https://drafts.csswg.org/css-fonts-4/#font-weight-prop
-export enum struct RelativeFontWeight : u8 {
-    LIGHTER,
-    BOLDER,
-
-    _LEN
-};
-
-using _FontWeight = Union<
-    Gfx::FontWeight,
-    RelativeFontWeight>;
-
-export struct FontWeight : _FontWeight {
-    using _FontWeight::_FontWeight;
-
-    bool isRelative() const {
-        return is<RelativeFontWeight>().has();
-    }
-
-    FontWeight()
-        : FontWeight(Gfx::FontWeight::REGULAR) {
-    }
-
-    void repr(Io::Emit& e) const {
-        e("{}", static_cast<Union<Gfx::FontWeight, RelativeFontWeight>>(*this));
-    }
-
-    Gfx::FontWeight resolve() const {
-        if (is<RelativeFontWeight>())
-            return Gfx::FontWeight::REGULAR;
-
-        return expect<Gfx::FontWeight>();
-    }
-
-    Gfx::FontWeight resolve(Gfx::FontWeight const& parent) const {
-        if (is<RelativeFontWeight>()) {
-            if (expect<RelativeFontWeight>() == RelativeFontWeight::LIGHTER)
-                return parent.lighter();
-            return parent.bolder();
-        }
-
-        return expect<Gfx::FontWeight>();
-    }
-};
-
-export template <>
-struct ValueParser<FontWeight> {
-    static Res<FontWeight> parse(Cursor<Sst>& c) {
-        if (c.ended())
-            return Error::invalidData("unexpected end of input");
-
-        if (c.skip(Token::ident("bolder"))) {
-            return Ok(RelativeFontWeight::BOLDER);
-        } else if (c.skip(Token::ident("lighter"))) {
-            return Ok(RelativeFontWeight::LIGHTER);
-        } else {
-            return Ok(try$(parseValue<Gfx::FontWeight>(c)));
-        }
-    }
-};
-
-export template <>
-struct ValueSerializer<FontWeight> {
-    static Res<> serialize(Io::TextWriter& w, FontWeight const& value) {
-        return value.visit([&](auto const& v) {
-            return serializeValue(w, v);
-        });
-    }
-};
-
-} // namespace Vaev::Css
-
 namespace Vaev::Style {
 
 // https://drafts.csswg.org/css-fonts-4/#font-width-prop
@@ -179,6 +105,65 @@ export struct FontFamilyProperty : Property {
 
 // https://www.w3.org/TR/css-fonts-4/#font-weight-prop
 export struct FontWeightProperty : Property {
+    enum struct Relative : u8 {
+        LIGHTER,
+        BOLDER,
+
+        _LEN
+    };
+
+    struct Value : Union<Gfx::FontWeight, Relative> {
+        using _Base = Union<Gfx::FontWeight, Relative>;
+        using _Base::_Base;
+
+        Value()
+            : Value(Gfx::FontWeight::REGULAR) {
+        }
+
+        bool isRelative() const {
+            return is<Relative>().has();
+        }
+
+        Gfx::FontWeight resolve() const {
+            if (is<Relative>())
+                return Gfx::FontWeight::REGULAR;
+
+            return expect<Gfx::FontWeight>();
+        }
+
+        Gfx::FontWeight resolve(Gfx::FontWeight const& parent) const {
+            if (is<Relative>()) {
+                if (expect<Relative>() == Relative::LIGHTER)
+                    return parent.lighter();
+                return parent.bolder();
+            }
+
+            return expect<Gfx::FontWeight>();
+        }
+
+        // <font-weight-absolute> | bolder | lighter
+        static Res<Value> parse(Cursor<Css::Sst>& c) {
+            if (c.ended())
+                return Error::invalidData("unexpected end of input");
+
+            if (c.skip(Css::Token::ident("bolder")))
+                return Ok(Relative::BOLDER);
+            if (c.skip(Css::Token::ident("lighter")))
+                return Ok(Relative::LIGHTER);
+            return Ok(try$(parseValue<Gfx::FontWeight>(c)));
+        }
+
+        static Res<> serialize(Io::TextWriter& w, Value const& value) {
+            return value.visit([&](auto const& v) {
+                return Css::serializeValue(w, v);
+            });
+        }
+
+        void repr(Io::Emit& e) const {
+            e("{}", static_cast<_Base const&>(*this));
+        }
+    };
+
     struct Registration : Property::Registration {
         Registration()
             : Property::Registration(Properties::FONT_WEIGHT, {INHERITED, BULK_INHERITED}) {}
@@ -188,7 +173,7 @@ export struct FontWeightProperty : Property {
         }
 
         Rc<Property> initial() const override {
-            return makeRc<FontWeightProperty>(self(), Css::FontWeight{Gfx::FontWeight::REGULAR});
+            return makeRc<FontWeightProperty>(self(), Value{Gfx::FontWeight::REGULAR});
         }
 
         void inherit(ComputedValues const& parent, ComputedValues& child) const override {
@@ -200,13 +185,13 @@ export struct FontWeightProperty : Property {
         }
 
         Res<Rc<Property>> parse(Cursor<Css::Sst>& c) const override {
-            return Ok(makeRc<FontWeightProperty>(self(), try$(parseValue<Css::FontWeight>(c))));
+            return Ok(makeRc<FontWeightProperty>(self(), try$(parseValue<Value>(c))));
         }
     };
 
-    Css::FontWeight _value;
+    Value _value;
 
-    FontWeightProperty(Rc<Property::Registration> registration, Css::FontWeight value)
+    FontWeightProperty(Rc<Property::Registration> registration, Value value)
         : Property(registration), _value(value) {}
 
     void apply(ComputedValues const& parent, ComputedValues& c, [[maybe_unused]] ComputationContext const& cx) const override {
@@ -214,7 +199,7 @@ export struct FontWeightProperty : Property {
     }
 
     Res<> serialize(Io::TextWriter& w) const override {
-        return serializeValue(w, _value);
+        return Css::serializeValue(w, _value);
     }
 
     void repr(Io::Emit& e) const override {
@@ -412,7 +397,7 @@ export struct FontSizeProperty : Property {
 export struct FontProperty : Property {
     struct Value {
         Vec<FontFamily> families = {"sans-serif"_sym};
-        Opt<Css::FontWeight> weight;
+        Opt<FontWeightProperty::Value> weight;
         Css::FontWidth width = Css::FontWidth::NORMAL;
         Css::FontStyle style = Css::FontStyle::NORMAL;
         FontSizeProperty::Value size = Keywords::MEDIUM;
@@ -462,7 +447,7 @@ export struct FontProperty : Property {
                     continue;
                 }
 
-                auto fontWeight = parseValue<Css::FontWeight>(c);
+                auto fontWeight = parseValue<FontWeightProperty::Value>(c);
                 if (fontWeight) {
                     value.weight = Some(fontWeight.expect());
                     continue;
