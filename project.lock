@@ -21,11 +21,6 @@
             "git": "https://codeberg.org/cute-engineering/ce-libc.git",
             "tag": "v1.5.0"
         },
-        "cute-engineering/ce-libm": {
-            "commit": "8301826a0f0eac2cfa98fe0e88205225196a1a59",
-            "git": "https://codeberg.org/cute-engineering/ce-libm.git",
-            "tag": "v1.4.0"
-        },
         "cute-engineering/ce-mdi": {
             "commit": "6403ae0f9867c2a01b7d982081fe554b627cda8e",
             "git": "https://codeberg.org/cute-engineering/ce-mdi.git",
@@ -37,12 +32,12 @@
             "tag": "v1.9.1"
         },
         "cute-engineering/ce-targets": {
-            "commit": "2dc6872644fc10abe6b96832609dbfb7687b0337",
+            "commit": "a9f2dd23a2f56c2ae3080aea0ef3ed96f6117b36",
             "git": "https://codeberg.org/cute-engineering/ce-targets.git",
             "tag": "v0.9.0"
         },
         "skift/karm": {
-            "commit": "6c1c9b15b8d521253cc1c7e5f7d4bbc10f777ffd",
+            "commit": "bc262954b3741bde5faba7d00cf008d4250a328c",
             "git": "https://codeberg.org/skift/karm.git",
             "tag": "main"
         }
