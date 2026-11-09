@@ -340,7 +340,7 @@ export struct SvgViewBoxProperty : Property {
             : Property::Registration(Properties::VIEWBOX, PRESENTATION_ATTRIBUTE) {}
 
         Rc<Property> initial() const override {
-            return makeRc<SvgViewBoxProperty>(self(), Opt<SvgViewBox>{NONE});
+            return makeRc<SvgViewBoxProperty>(self(), Opt<Css::SvgViewBox>{NONE});
         }
 
         Rc<Property> load(ComputedValues const& c) const override {
@@ -348,7 +348,7 @@ export struct SvgViewBoxProperty : Property {
         }
 
         Res<Rc<Property>> parse(Cursor<Css::Sst>& c) const override {
-            SvgViewBox viewBox;
+            Css::SvgViewBox viewBox;
 
             viewBox.minX = try$(parseValue<f64>(c));
 
@@ -365,9 +365,9 @@ export struct SvgViewBoxProperty : Property {
         }
     };
 
-    Opt<SvgViewBox> _value;
+    Opt<Css::SvgViewBox> _value;
 
-    SvgViewBoxProperty(Rc<Property::Registration> registration, Opt<SvgViewBox> value)
+    SvgViewBoxProperty(Rc<Property::Registration> registration, Opt<Css::SvgViewBox> value)
         : Property(registration), _value(std::move(value)) {}
 
     void apply([[maybe_unused]] ComputedValues const& parent, ComputedValues& c, [[maybe_unused]] ComputationContext const& cx) const override {

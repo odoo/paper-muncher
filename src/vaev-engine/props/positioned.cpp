@@ -23,7 +23,7 @@ export struct PositionProperty : Property {
         Registration() : Property::Registration(Properties::POSITION) {}
 
         Rc<Property> initial() const override {
-            return makeRc<PositionProperty>(self(), Style::PositionScheme{Keywords::STATIC});
+            return makeRc<PositionProperty>(self(), Css::PositionScheme{Keywords::STATIC});
         }
 
         Rc<Property> load(ComputedValues const& c) const override {
@@ -32,7 +32,7 @@ export struct PositionProperty : Property {
 
         Res<Rc<Property>> parse(Cursor<Css::Sst>& c) const override {
             // https://drafts.csswg.org/css-position-3/#propdef-position
-            auto value = [&] -> Res<PositionScheme> {
+            auto value = [&] -> Res<Css::PositionScheme> {
                 if (c.ended())
                     return Error::invalidData("unexpected end of input");
 
@@ -53,7 +53,7 @@ export struct PositionProperty : Property {
                         return Error::invalidData("ill formed custom-ident in running position");
                     }
                     c.next();
-                    return Ok(RunningPosition{res.take()});
+                    return Ok(Css::RunningPosition{res.take()});
 
                 } else
                     return Error::invalidData("expected position");
@@ -62,9 +62,9 @@ export struct PositionProperty : Property {
         }
     };
 
-    Style::PositionScheme _value;
+    Css::PositionScheme _value;
 
-    PositionProperty(Rc<Property::Registration> registration, Style::PositionScheme value)
+    PositionProperty(Rc<Property::Registration> registration, Css::PositionScheme value)
         : Property(registration), _value(value) {}
 
     void apply([[maybe_unused]] ComputedValues const& parent, ComputedValues& c, [[maybe_unused]] ComputationContext const& cx) const override {
@@ -234,7 +234,7 @@ export struct ZIndexProperty : Property {
         Registration() : Property::Registration(Properties::Z_INDEX) {}
 
         Rc<Property> initial() const override {
-            return makeRc<ZIndexProperty>(self(), ZIndex{Keywords::AUTO});
+            return makeRc<ZIndexProperty>(self(), Css::ZIndex{Keywords::AUTO});
         }
 
         Rc<Property> load(ComputedValues const& c) const override {
@@ -242,13 +242,13 @@ export struct ZIndexProperty : Property {
         }
 
         Res<Rc<Property>> parse(Cursor<Css::Sst>& c) const override {
-            return Ok(makeRc<ZIndexProperty>(self(), try$(parseValue<ZIndex>(c))));
+            return Ok(makeRc<ZIndexProperty>(self(), try$(parseValue<Css::ZIndex>(c))));
         }
     };
 
-    ZIndex _value;
+    Css::ZIndex _value;
 
-    ZIndexProperty(Rc<Property::Registration> registration, ZIndex value)
+    ZIndexProperty(Rc<Property::Registration> registration, Css::ZIndex value)
         : Property(registration), _value(value) {}
 
     void apply([[maybe_unused]] ComputedValues const& parent, ComputedValues& c, [[maybe_unused]] ComputationContext const& cx) const override {

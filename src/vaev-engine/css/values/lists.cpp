@@ -10,6 +10,7 @@ import :css.lexer;
 import :css.parser;
 import :css.values.base;
 import :css.values.counterStyles;
+import :css.values.images;
 import :css.values.primitives;
 
 using namespace Karm;
@@ -75,5 +76,38 @@ Res<CountersFunc> CountersFunc::parse(Cursor<Sst>& c) {
     c.next();
     return Ok(CountersFunc{name, join, maybeSymbols});
 }
+
+// https://www.w3.org/TR/css-lists-3/#image-markers
+export using ListImage = Union<Keywords::None, Image>;
+
+// https://www.w3.org/TR/css-lists-3/#list-style-position-property
+export using ListPosition = Union<Keywords::Inside, Keywords::Outside>;
+
+// https://www.w3.org/TR/css-lists-3/#marker-side
+export using MarkerSide = Union<Keywords::MatchSelf, Keywords::MatchParent>;
+
+// https://www.w3.org/TR/css-lists-3/#text-markers
+export using ListType = Union<Keywords::None, CustomIdent, CounterSymbolsFunc, String>;
+
+// https://www.w3.org/TR/css-lists-3/#counter-reset
+export struct CounterReset {
+    CustomIdent name;
+    bool reversed;
+    Opt<Integer> value = Some(0);
+
+    void repr(Io::Emit& e) const {
+        e("(counter-reset {}{} {})", reversed ? "reversed " : "", name, value);
+    }
+};
+
+// https://www.w3.org/TR/css-lists-3/#increment-set
+export struct CounterIncrement {
+    CustomIdent name;
+    Opt<Integer> value;
+
+    void repr(Io::Emit& e) const {
+        e("(counter-increment {} {})", name, value);
+    }
+};
 
 } // namespace Vaev::Css

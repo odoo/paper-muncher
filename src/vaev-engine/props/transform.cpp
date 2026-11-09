@@ -204,7 +204,7 @@ export struct TransformBoxProperty : Property {
         Registration() : Property::Registration(Properties::TRANSFORM_BOX) {}
 
         Rc<Property> initial() const override {
-            return makeRc<TransformBoxProperty>(self(), TransformBox{Keywords::VIEW_BOX});
+            return makeRc<TransformBoxProperty>(self(), Css::TransformBox{Keywords::VIEW_BOX});
         }
 
         Rc<Property> load(ComputedValues const& c) const override {
@@ -212,13 +212,13 @@ export struct TransformBoxProperty : Property {
         }
 
         Res<Rc<Property>> parse(Cursor<Css::Sst>& c) const override {
-            return Ok(makeRc<TransformBoxProperty>(self(), try$(parseValue<TransformBox>(c))));
+            return Ok(makeRc<TransformBoxProperty>(self(), try$(parseValue<Css::TransformBox>(c))));
         }
     };
 
-    TransformBox _value;
+    Css::TransformBox _value;
 
-    TransformBoxProperty(Rc<Property::Registration> registration, TransformBox value)
+    TransformBoxProperty(Rc<Property::Registration> registration, Css::TransformBox value)
         : Property(registration), _value(value) {}
 
     void apply([[maybe_unused]] ComputedValues const& parent, ComputedValues& c, [[maybe_unused]] ComputationContext const& cx) const override {

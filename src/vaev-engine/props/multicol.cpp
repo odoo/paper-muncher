@@ -151,13 +151,13 @@ export struct ColumnCountProperty : Property {
         }
 
         Res<Rc<Property>> parse(Cursor<Css::Sst>& c) const override {
-            return Ok(makeRc<ColumnCountProperty>(self(), try$(parseValue<ColumnCount>(c))));
+            return Ok(makeRc<ColumnCountProperty>(self(), try$(parseValue<Css::ColumnCount>(c))));
         }
     };
 
-    ColumnCount _value;
+    Css::ColumnCount _value;
 
-    ColumnCountProperty(Rc<Property::Registration> registration, ColumnCount value)
+    ColumnCountProperty(Rc<Property::Registration> registration, Css::ColumnCount value)
         : Property(registration), _value(value) {}
 
     void apply([[maybe_unused]] ComputedValues const& parent, ComputedValues& c, [[maybe_unused]] ComputationContext const& cx) const override {
@@ -180,7 +180,7 @@ export struct ColumnsProperty : Property {
             : Property::Registration(Properties::COLUMNS, SHORTHAND) {}
 
         Rc<Property> initial() const override {
-            return makeRc<ColumnsProperty>(self(), Tuple<ColumnWidthProperty::Value, ColumnCount, ColumnHeightProperty::Value>{.v0 = Keywords::AUTO, .v1 = Keywords::AUTO, .v2 = Keywords::AUTO});
+            return makeRc<ColumnsProperty>(self(), Tuple<ColumnWidthProperty::Value, Css::ColumnCount, ColumnHeightProperty::Value>{.v0 = Keywords::AUTO, .v1 = Keywords::AUTO, .v2 = Keywords::AUTO});
         }
 
         Rc<Property> load(ComputedValues const& c) const override {
@@ -202,14 +202,14 @@ export struct ColumnsProperty : Property {
                 }
             );
 
-            return makeRc<ColumnsProperty>(self(), Tuple<ColumnWidthProperty::Value, ColumnCount, ColumnHeightProperty::Value>{.v0 = width, .v1 = c.column->count, .v2 = height});
+            return makeRc<ColumnsProperty>(self(), Tuple<ColumnWidthProperty::Value, Css::ColumnCount, ColumnHeightProperty::Value>{.v0 = width, .v1 = c.column->count, .v2 = height});
         }
 
         Res<Rc<Property>> parse(Cursor<Css::Sst>& c) const override {
             if (c.ended())
                 return Error::invalidData("unexpected end of input");
 
-            Tuple<ColumnWidthProperty::Value, ColumnCount, ColumnHeightProperty::Value> value{Keywords::AUTO, Keywords::AUTO, Keywords::AUTO};
+            Tuple<ColumnWidthProperty::Value, Css::ColumnCount, ColumnHeightProperty::Value> value{Keywords::AUTO, Keywords::AUTO, Keywords::AUTO};
 
             int i = 0;
             while (not c.ended() and c.peek() != Css::Token::delim("/")) {
@@ -229,7 +229,7 @@ export struct ColumnsProperty : Property {
                 }
 
                 if (value.v1 == Keywords::AUTO) {
-                    if (auto count = parseValue<ColumnCount>(c)) {
+                    if (auto count = parseValue<Css::ColumnCount>(c)) {
                         value.v1 = count.take();
                         continue;
                     }
@@ -252,9 +252,9 @@ export struct ColumnsProperty : Property {
         }
     };
 
-    Tuple<ColumnWidthProperty::Value, ColumnCount, ColumnHeightProperty::Value> _value;
+    Tuple<ColumnWidthProperty::Value, Css::ColumnCount, ColumnHeightProperty::Value> _value;
 
-    ColumnsProperty(Rc<Property::Registration> registration, Tuple<ColumnWidthProperty::Value, ColumnCount, ColumnHeightProperty::Value> value)
+    ColumnsProperty(Rc<Property::Registration> registration, Tuple<ColumnWidthProperty::Value, Css::ColumnCount, ColumnHeightProperty::Value> value)
         : Property(registration), _value(value) {}
 
     // FIXME: This property should also resets the column-wrap property to its initial value.

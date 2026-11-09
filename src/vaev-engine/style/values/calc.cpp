@@ -1,6 +1,7 @@
 export module Vaev.Engine:style.values.calc;
 
 import Karm.Core;
+import Karm.Math;
 
 import :css.values.calc;
 import :style.values.unitValue;

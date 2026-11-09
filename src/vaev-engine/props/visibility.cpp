@@ -28,13 +28,13 @@ export struct VisibilityProperty : Property {
         }
 
         Res<Rc<Property>> parse(Cursor<Css::Sst>& c) const override {
-            return Ok(makeRc<VisibilityProperty>(self(), try$(parseValue<Visibility>(c))));
+            return Ok(makeRc<VisibilityProperty>(self(), try$(parseValue<Css::Visibility>(c))));
         }
     };
 
-    Visibility _value;
+    Css::Visibility _value;
 
-    VisibilityProperty(Rc<Property::Registration> registration, Visibility value)
+    VisibilityProperty(Rc<Property::Registration> registration, Css::Visibility value)
         : Property(registration), _value(value) {}
 
     void apply([[maybe_unused]] ComputedValues const& parent, ComputedValues& c, [[maybe_unused]] ComputationContext const& cx) const override {

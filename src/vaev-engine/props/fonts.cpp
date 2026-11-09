@@ -49,7 +49,7 @@ export struct FontFamilyProperty : Property {
         }
 
         Rc<Property> initial() const override {
-            return makeRc<FontFamilyProperty>(self(), Vec<FontFamily>{"sans-serif"_sym});
+            return makeRc<FontFamilyProperty>(self(), Vec<Css::FontFamily>{"sans-serif"_sym});
         }
 
         Rc<Property> load(ComputedValues const& c) const override {
@@ -61,7 +61,7 @@ export struct FontFamilyProperty : Property {
         }
 
         Res<Rc<Property>> parse(Cursor<Css::Sst>& c) const override {
-            Vec<FontFamily> value{};
+            Vec<Css::FontFamily> value{};
             eatWhitespace(c);
             while (not c.ended()) {
                 value.pushBack(try$(parseValue<Css::FontFamily>(c)));
@@ -74,9 +74,9 @@ export struct FontFamilyProperty : Property {
         }
     };
 
-    Vec<FontFamily> _value;
+    Vec<Css::FontFamily> _value;
 
-    FontFamilyProperty(Rc<Property::Registration> registration, Vec<FontFamily> value)
+    FontFamilyProperty(Rc<Property::Registration> registration, Vec<Css::FontFamily> value)
         : Property(registration), _value(std::move(value)) {}
 
     void apply([[maybe_unused]] ComputedValues const& parent, ComputedValues& c, [[maybe_unused]] ComputationContext const& cx) const override {
@@ -397,7 +397,7 @@ export struct FontSizeProperty : Property {
 // https://www.w3.org/TR/css-fonts-4/#font-prop
 export struct FontProperty : Property {
     struct Value {
-        Vec<FontFamily> families = {"sans-serif"_sym};
+        Vec<Css::FontFamily> families = {"sans-serif"_sym};
         Opt<FontWeightProperty::Value> weight;
         Css::FontWidth width = Css::FontWidth::NORMAL;
         Css::FontStyle style = Css::FontStyle::NORMAL;

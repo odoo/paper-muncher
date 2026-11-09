@@ -23,7 +23,7 @@ export struct AlignContentProperty : Property {
         Registration() : Property::Registration(Properties::ALIGN_CONTENT) {}
 
         Rc<Property> initial() const override {
-            return makeRc<AlignContentProperty>(self(), Align::Keywords::STRETCH);
+            return makeRc<AlignContentProperty>(self(), Css::Align::Keywords::STRETCH);
         }
 
         Rc<Property> load(ComputedValues const& c) const override {
@@ -35,9 +35,9 @@ export struct AlignContentProperty : Property {
         }
     };
 
-    Align _value;
+    Css::Align _value;
 
-    AlignContentProperty(Rc<Property::Registration> registration, Align value)
+    AlignContentProperty(Rc<Property::Registration> registration, Css::Align value)
         : Property(registration), _value(value) {}
 
     void apply([[maybe_unused]] ComputedValues const& parent, ComputedValues& c, [[maybe_unused]] ComputationContext const& cx) const override {
@@ -59,7 +59,7 @@ export struct JustifyContentProperty : Property {
         Registration() : Property::Registration(Properties::JUSTIFY_CONTENT) {}
 
         Rc<Property> initial() const override {
-            return makeRc<JustifyContentProperty>(self(), Align::Keywords::FLEX_START);
+            return makeRc<JustifyContentProperty>(self(), Css::Align::Keywords::FLEX_START);
         }
 
         Rc<Property> load(ComputedValues const& c) const override {
@@ -71,9 +71,9 @@ export struct JustifyContentProperty : Property {
         }
     };
 
-    Align _value;
+    Css::Align _value;
 
-    JustifyContentProperty(Rc<Property::Registration> registration, Align value)
+    JustifyContentProperty(Rc<Property::Registration> registration, Css::Align value)
         : Property(registration), _value(value) {}
 
     void apply([[maybe_unused]] ComputedValues const& parent, ComputedValues& c, [[maybe_unused]] ComputationContext const& cx) const override {
@@ -95,7 +95,7 @@ export struct JustifySelfProperty : Property {
         Registration() : Property::Registration(Properties::JUSTIFY_SELF) {}
 
         Rc<Property> initial() const override {
-            return makeRc<JustifySelfProperty>(self(), Align::Keywords::AUTO);
+            return makeRc<JustifySelfProperty>(self(), Css::Align::Keywords::AUTO);
         }
 
         Rc<Property> load(ComputedValues const& c) const override {
@@ -107,9 +107,9 @@ export struct JustifySelfProperty : Property {
         }
     };
 
-    Align _value;
+    Css::Align _value;
 
-    JustifySelfProperty(Rc<Property::Registration> registration, Align value)
+    JustifySelfProperty(Rc<Property::Registration> registration, Css::Align value)
         : Property(registration), _value(value) {}
 
     void apply([[maybe_unused]] ComputedValues const& parent, ComputedValues& c, [[maybe_unused]] ComputationContext const& cx) const override {
@@ -131,7 +131,7 @@ export struct AlignSelfProperty : Property {
         Registration() : Property::Registration(Properties::ALIGN_SELF) {}
 
         Rc<Property> initial() const override {
-            return makeRc<AlignSelfProperty>(self(), Align::Keywords::AUTO);
+            return makeRc<AlignSelfProperty>(self(), Css::Align::Keywords::AUTO);
         }
 
         Rc<Property> load(ComputedValues const& c) const override {
@@ -143,9 +143,9 @@ export struct AlignSelfProperty : Property {
         }
     };
 
-    Align _value;
+    Css::Align _value;
 
-    AlignSelfProperty(Rc<Property::Registration> registration, Align value)
+    AlignSelfProperty(Rc<Property::Registration> registration, Css::Align value)
         : Property(registration), _value(value) {}
 
     void apply([[maybe_unused]] ComputedValues const& parent, ComputedValues& c, [[maybe_unused]] ComputationContext const& cx) const override {
@@ -167,7 +167,7 @@ export struct JustifyItemsProperty : Property {
         Registration() : Property::Registration(Properties::JUSTIFY_ITEMS) {}
 
         Rc<Property> initial() const override {
-            return makeRc<JustifyItemsProperty>(self(), Align::LEGACY);
+            return makeRc<JustifyItemsProperty>(self(), Css::Align::LEGACY);
         }
 
         Rc<Property> load(ComputedValues const& c) const override {
@@ -179,9 +179,9 @@ export struct JustifyItemsProperty : Property {
         }
     };
 
-    Align _value;
+    Css::Align _value;
 
-    JustifyItemsProperty(Rc<Property::Registration> registration, Align value)
+    JustifyItemsProperty(Rc<Property::Registration> registration, Css::Align value)
         : Property(registration), _value(value) {}
 
     void apply([[maybe_unused]] ComputedValues const& parent, ComputedValues& c, [[maybe_unused]] ComputationContext const& cx) const override {
@@ -203,7 +203,7 @@ export struct AlignItemsProperty : Property {
         Registration() : Property::Registration(Properties::ALIGN_ITEMS) {}
 
         Rc<Property> initial() const override {
-            return makeRc<AlignItemsProperty>(self(), Align::Keywords::STRETCH);
+            return makeRc<AlignItemsProperty>(self(), Css::Align::Keywords::STRETCH);
         }
 
         Rc<Property> load(ComputedValues const& c) const override {
@@ -215,9 +215,9 @@ export struct AlignItemsProperty : Property {
         }
     };
 
-    Align _value;
+    Css::Align _value;
 
-    AlignItemsProperty(Rc<Property::Registration> registration, Align value)
+    AlignItemsProperty(Rc<Property::Registration> registration, Css::Align value)
         : Property(registration), _value(value) {}
 
     void apply([[maybe_unused]] ComputedValues const& parent, ComputedValues& c, [[maybe_unused]] ComputationContext const& cx) const override {

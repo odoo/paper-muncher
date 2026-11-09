@@ -10,6 +10,7 @@ import :css.lexer;
 import :css.parser;
 import :css.serializer;
 import :css.values.base;
+import :css.values.keywords;
 import :css.values.primitives;
 
 using namespace Karm;
@@ -495,5 +496,10 @@ Res<> Display::serialize(Io::TextWriter& w, Display const& value) {
         unreachable();
     }
 }
+
+export using Visibility = Union<
+    Keywords::Visible,
+    Keywords::Hidden,
+    Keywords::Collapse>;
 
 } // namespace Vaev::Css

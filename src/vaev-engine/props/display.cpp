@@ -20,7 +20,7 @@ export struct DisplayProperty : Property {
         Registration() : Property::Registration(Properties::DISPLAY) {}
 
         Rc<Property> initial() const override {
-            return makeRc<DisplayProperty>(self(), Display{Display::FLOW, Display::INLINE});
+            return makeRc<DisplayProperty>(self(), Css::Display{Css::Display::FLOW, Css::Display::INLINE});
         }
 
         Rc<Property> load(ComputedValues const& s) const override {
@@ -32,9 +32,9 @@ export struct DisplayProperty : Property {
         }
     };
 
-    Display _value;
+    Css::Display _value;
 
-    DisplayProperty(Rc<Property::Registration> registration, Display value)
+    DisplayProperty(Rc<Property::Registration> registration, Css::Display value)
         : Property(registration), _value(value) {}
 
     void apply([[maybe_unused]] ComputedValues const& parent, ComputedValues& c, [[maybe_unused]] ComputationContext const& cx) const override {
@@ -67,7 +67,7 @@ export struct ContentProperty : Property {
         Res<Rc<Property>> parse(Cursor<Css::Sst>& c) const override {
             // https://www.w3.org/TR/css-content-3/
             // https://www.w3.org/TR/css-gcpm-3/#funcdef-element
-            auto value = [&] -> Res<ContentValue> {
+            auto value = [&] -> Res<Css::ContentValue> {
                 if (c.ended())
                     return Error::invalidData("unexpected end of input");
 
@@ -95,9 +95,9 @@ export struct ContentProperty : Property {
         }
     };
 
-    ContentValue _value;
+    Css::ContentValue _value;
 
-    ContentProperty(Rc<Property::Registration> registration, ContentValue value)
+    ContentProperty(Rc<Property::Registration> registration, Css::ContentValue value)
         : Property(registration), _value(value) {}
 
     void apply([[maybe_unused]] ComputedValues const& parent, ComputedValues& c, [[maybe_unused]] ComputationContext const& cx) const override {

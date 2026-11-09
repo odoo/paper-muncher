@@ -66,4 +66,12 @@ Res<ElementFunc> ElementFunc::parse(Cursor<Sst>& c) {
     return (Ok(ElementFunc{ident.take(), target}));
 }
 
+export struct RunningPosition {
+    CustomIdent customIdent;
+
+    void repr(Io::Emit& e) const {
+        e("running '{}'", customIdent);
+    }
+};
+
 } // namespace Vaev::Css

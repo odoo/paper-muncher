@@ -74,13 +74,13 @@ export struct FlexDirectionProperty : Property {
         }
 
         Res<Rc<Property>> parse(Cursor<Css::Sst>& c) const override {
-            return Ok(makeRc<FlexDirectionProperty>(self(), try$(parseValue<FlexDirection>(c))));
+            return Ok(makeRc<FlexDirectionProperty>(self(), try$(parseValue<Css::FlexDirection>(c))));
         }
     };
 
-    FlexDirection _value;
+    Css::FlexDirection _value;
 
-    FlexDirectionProperty(Rc<Property::Registration> registration, FlexDirection value)
+    FlexDirectionProperty(Rc<Property::Registration> registration, Css::FlexDirection value)
         : Property(registration), _value(value) {}
 
     void apply([[maybe_unused]] ComputedValues const& parent, ComputedValues& c, [[maybe_unused]] ComputationContext const& cx) const override {
@@ -182,13 +182,13 @@ export struct FlexWrapProperty : Property {
         }
 
         Res<Rc<Property>> parse(Cursor<Css::Sst>& c) const override {
-            return Ok(makeRc<FlexWrapProperty>(self(), try$(parseValue<FlexWrap>(c))));
+            return Ok(makeRc<FlexWrapProperty>(self(), try$(parseValue<Css::FlexWrap>(c))));
         }
     };
 
-    FlexWrap _value;
+    Css::FlexWrap _value;
 
-    FlexWrapProperty(Rc<Property::Registration> registration, FlexWrap value)
+    FlexWrapProperty(Rc<Property::Registration> registration, Css::FlexWrap value)
         : Property(registration), _value(value) {}
 
     void apply([[maybe_unused]] ComputedValues const& parent, ComputedValues& c, [[maybe_unused]] ComputationContext const& cx) const override {
@@ -211,7 +211,7 @@ export struct FlexFlowProperty : Property {
             : Property::Registration(Properties::FLEX_FLOW, SHORTHAND) {}
 
         Rc<Property> initial() const override {
-            return makeRc<FlexFlowProperty>(self(), Tuple<FlexDirection, FlexWrap>{Keywords::ROW, Keywords::NOWRAP});
+            return makeRc<FlexFlowProperty>(self(), Tuple<Css::FlexDirection, Css::FlexWrap>{Keywords::ROW, Keywords::NOWRAP});
         }
 
         Rc<Property> load(ComputedValues const& c) const override {
@@ -222,22 +222,22 @@ export struct FlexFlowProperty : Property {
             if (c.ended())
                 return Error::invalidData("unexpected end of input");
 
-            Tuple<FlexDirection, FlexWrap> value{Keywords::ROW, Keywords::NOWRAP};
+            Tuple<Css::FlexDirection, Css::FlexWrap> value{Keywords::ROW, Keywords::NOWRAP};
 
-            auto direction = parseValue<FlexDirection>(c);
+            auto direction = parseValue<Css::FlexDirection>(c);
             if (direction) {
                 value.v0 = direction.expect();
 
-                auto wrap = parseValue<FlexWrap>(c);
+                auto wrap = parseValue<Css::FlexWrap>(c);
                 if (wrap)
                     value.v1 = wrap.expect();
             } else {
-                auto wrap = parseValue<FlexWrap>(c);
+                auto wrap = parseValue<Css::FlexWrap>(c);
                 if (not wrap)
                     return Error::invalidData("expected flex direction or wrap");
                 value.v1 = wrap.expect();
 
-                direction = parseValue<FlexDirection>(c);
+                direction = parseValue<Css::FlexDirection>(c);
                 if (direction)
                     value.v0 = direction.expect();
             }
@@ -246,9 +246,9 @@ export struct FlexFlowProperty : Property {
         }
     };
 
-    Tuple<FlexDirection, FlexWrap> _value;
+    Tuple<Css::FlexDirection, Css::FlexWrap> _value;
 
-    FlexFlowProperty(Rc<Property::Registration> registration, Tuple<FlexDirection, FlexWrap> value)
+    FlexFlowProperty(Rc<Property::Registration> registration, Tuple<Css::FlexDirection, Css::FlexWrap> value)
         : Property(registration), _value(value) {}
 
     Longhands expand(RegisteredPropertySet& registry, ComputedValues const&, ComputedValues&) const override {

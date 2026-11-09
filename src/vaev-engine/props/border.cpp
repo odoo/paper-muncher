@@ -1078,13 +1078,13 @@ export struct BorderCollapseProperty : Property {
         }
 
         Res<Rc<Property>> parse(Cursor<Css::Sst>& c) const override {
-            return Ok(makeRc<BorderCollapseProperty>(self(), try$(parseValue<BorderCollapse>(c))));
+            return Ok(makeRc<BorderCollapseProperty>(self(), try$(parseValue<Css::BorderCollapse>(c))));
         }
     };
 
-    BorderCollapse _value;
+    Css::BorderCollapse _value;
 
-    BorderCollapseProperty(Rc<Property::Registration> registration, BorderCollapse value)
+    BorderCollapseProperty(Rc<Property::Registration> registration, Css::BorderCollapse value)
         : Property(registration), _value(value) {}
 
     void apply([[maybe_unused]] ComputedValues const& parent, ComputedValues& c, [[maybe_unused]] ComputationContext const& cx) const override {

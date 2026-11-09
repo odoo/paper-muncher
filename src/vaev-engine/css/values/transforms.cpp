@@ -361,4 +361,11 @@ export using TransformFunction = Union<
 
 export using TransformList = Vec<TransformFunction>;
 
+export using TransformBox = Union<
+    Keywords::ContentBox,
+    Keywords::BorderBox,
+    Keywords::FillBox,
+    Keywords::StrokeBox,
+    Keywords::ViewBox>;
+
 } // namespace Vaev::Css

@@ -31,13 +31,13 @@ export struct BoxSizingProperty : Property {
         }
 
         Res<Rc<Property>> parse(Cursor<Css::Sst>& c) const override {
-            return Ok(makeRc<BoxSizingProperty>(self(), try$(parseValue<BoxSizing>(c))));
+            return Ok(makeRc<BoxSizingProperty>(self(), try$(parseValue<Css::BoxSizing>(c))));
         }
     };
 
-    BoxSizing _value;
+    Css::BoxSizing _value;
 
-    BoxSizingProperty(Rc<Property::Registration> registration, BoxSizing value)
+    BoxSizingProperty(Rc<Property::Registration> registration, Css::BoxSizing value)
         : Property(registration), _value(value) {}
 
     void apply([[maybe_unused]] ComputedValues const& parent, ComputedValues& c, [[maybe_unused]] ComputationContext const& cx) const override {

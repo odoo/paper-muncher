@@ -1,6 +1,7 @@
 export module Vaev.Engine:style.values.transforms;
 
 import Karm.Core;
+import Karm.Math;
 
 import :css.values.numeric;
 import :css.values.transforms;
@@ -8,6 +9,8 @@ import :style.values.numeric;
 import :style.values.keywords;
 
 using namespace Karm::Math::Literals;
+
+using namespace Karm;
 
 namespace Vaev::Style {
 
@@ -154,5 +157,7 @@ export Css::TransformFunction toSpecified(TransformFunction const& value) {
         }
     );
 }
+
+export using TransformBox = Css::TransformBox;
 
 } // namespace Vaev::Style

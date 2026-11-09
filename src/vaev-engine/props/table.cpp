@@ -28,13 +28,13 @@ export struct TableLayoutProperty : Property {
         }
 
         Res<Rc<Property>> parse(Cursor<Css::Sst>& c) const override {
-            return Ok(makeRc<TableLayoutProperty>(self(), try$(parseValue<TableLayout>(c))));
+            return Ok(makeRc<TableLayoutProperty>(self(), try$(parseValue<Css::TableLayout>(c))));
         }
     };
 
-    TableLayout _value;
+    Css::TableLayout _value;
 
-    TableLayoutProperty(Rc<Property::Registration> registration, TableLayout value)
+    TableLayoutProperty(Rc<Property::Registration> registration, Css::TableLayout value)
         : Property(registration), _value(value) {}
 
     void apply([[maybe_unused]] ComputedValues const& parent, ComputedValues& c, [[maybe_unused]] ComputationContext const& cx) const override {
@@ -65,13 +65,13 @@ export struct CaptionSideProperty : Property {
         }
 
         Res<Rc<Property>> parse(Cursor<Css::Sst>& c) const override {
-            return Ok(makeRc<CaptionSideProperty>(self(), try$(parseValue<CaptionSide>(c))));
+            return Ok(makeRc<CaptionSideProperty>(self(), try$(parseValue<Css::CaptionSide>(c))));
         }
     };
 
-    CaptionSide _value;
+    Css::CaptionSide _value;
 
-    CaptionSideProperty(Rc<Property::Registration> registration, CaptionSide value)
+    CaptionSideProperty(Rc<Property::Registration> registration, Css::CaptionSide value)
         : Property(registration), _value(value) {}
 
     void apply([[maybe_unused]] ComputedValues const& parent, ComputedValues& c, [[maybe_unused]] ComputationContext const& cx) const override {
