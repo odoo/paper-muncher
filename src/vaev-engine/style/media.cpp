@@ -6,12 +6,108 @@ import Karm.Math;
 import Karm.Logger;
 import Karm.Debug;
 
-import :values;
+import :css.values;
+import :style.values;
+import :style.viewport;
+import :props.base;
+import :props.registry;
 import :css;
 
 using namespace Karm;
+using namespace Vaev::Literals;
 
 namespace Vaev::Style {
+
+// MARK: Media Values ----------------------------------------------------------
+
+// https://drafts.csswg.org/mediaqueries/#media-types
+export using MediaType = Union<
+    Keywords::All,
+    Keywords::Print,
+    Keywords::Screen,
+    Keywords::Tty,
+    Keywords::Tv,
+    Keywords::Projection,
+    Keywords::Handheld,
+    Keywords::Braille,
+    Keywords::Embossed,
+    Keywords::Speech,
+    Keywords::Aural>;
+
+// https://drafts.csswg.org/mediaqueries/#orientation
+export using Orientation = Union<
+    Keywords::Portrait,
+    Keywords::Landscape>;
+
+// https://drafts.csswg.org/mediaqueries/#scan
+export using Scan = Union<
+    Keywords::Interlace,
+    Keywords::Progressive>;
+
+// https://drafts.csswg.org/mediaqueries/#update
+export using Update = Union<
+    Keywords::None,
+    Keywords::Slow,
+    Keywords::Fast>;
+
+// https://drafts.csswg.org/mediaqueries/#mf-overflow-block
+export using OverflowBlock = Union<
+    Keywords::None,
+    Keywords::Scroll,
+    Keywords::Paged>;
+
+// https://drafts.csswg.org/mediaqueries/#mf-overflow-inline
+export using OverflowInline = Union<
+    Keywords::None,
+    Keywords::Scroll>;
+
+// https://drafts.csswg.org/mediaqueries/#color-gamut
+export using ColorGamut = Union<
+    Keywords::Srgb,
+    Keywords::DisplayP3,
+    Keywords::Rec2020>;
+
+// https://drafts.csswg.org/mediaqueries/#pointer
+export using Pointer = Union<
+    Keywords::None,
+    Keywords::Coarse,
+    Keywords::Fine>;
+
+// https://drafts.csswg.org/mediaqueries/#hover
+export using Hover = Union<
+    Keywords::None,
+    Keywords::Hover>;
+
+// https://drafts.csswg.org/mediaqueries/#reduced-motion
+export using ReducedMotion = Union<
+    Keywords::NoPreference,
+    Keywords::Reduce>;
+
+// https://drafts.csswg.org/mediaqueries/#reduced-transparency
+export using ReducedTransparency = Union<
+    Keywords::NoPreference,
+    Keywords::Reduce>;
+
+// https://drafts.csswg.org/mediaqueries/#contrast
+export using Contrast = Union<
+    Keywords::NoPreference,
+    Keywords::More,
+    Keywords::Less>;
+
+// https://drafts.csswg.org/mediaqueries/#forced-colors
+export using Colors = Union<
+    Keywords::None,
+    Keywords::Active>;
+
+// https://drafts.csswg.org/mediaqueries/#color-scheme
+export using ColorScheme = Union<
+    Keywords::Light,
+    Keywords::Dark>;
+
+// https://drafts.csswg.org/mediaqueries/#reduced-data
+export using ReducedData = Union<
+    Keywords::NoPreference,
+    Keywords::Reduce>;
 
 // MARK: wkhtmltopdf Quirks ----------------------------------------------------
 
@@ -28,76 +124,76 @@ static auto quirksMediaScreen = Debug::Flag::feature(
 // MARK: Display Area ----------------------------------------------------------
 
 export struct DisplayArea {
-    MediaType type = MediaType::SCREEN;
+    MediaType type = Keywords::SCREEN;
 
-    Vec2Au viewport = {800_au, 600_au};
+    Math::Vec2<Pixel> viewport = {800_px, 600_px};
 
-    Resolution resolution = Resolution::fromDppx(1);
+    Dppx resolution = 1_dppx;
 
-    Scan scan = Scan::PROGRESSIVE;
+    Scan scan = Keywords::PROGRESSIVE;
     bool grid = false;
-    Update update = Update::FAST;
-    OverflowBlock overflowBlock = OverflowBlock::SCROLL;
-    OverflowInline overflowInline = OverflowInline::SCROLL;
+    Update update = Keywords::FAST;
+    OverflowBlock overflowBlock = Keywords::SCROLL;
+    OverflowInline overflowInline = Keywords::SCROLL;
 
     Integer color = 8;
     Integer colorIndex = 0;
     Integer monochrome = 0;
-    ColorGamut colorGamut = ColorGamut::SRGB;
+    ColorGamut colorGamut = Keywords::SRGB;
 
-    Pointer pointer = Pointer::FINE;
-    Hover hover = Hover::HOVER;
-    Pointer anyPointer = Pointer::FINE;
-    Hover anyHover = Hover::HOVER;
+    Pointer pointer = Keywords::FINE;
+    Hover hover = Keywords::HOVER;
+    Pointer anyPointer = Keywords::FINE;
+    Hover anyHover = Keywords::HOVER;
 
-    static Vec2Au _toViewport(Vec2Au deviceSize, Resolution resolution) {
+    static Math::Vec2<Pixel> _toViewport(Math::Vec2f deviceSize, Dppx resolution) {
         return {
-            Au{deviceSize.width / resolution.toDppx()},
-            Au{deviceSize.height / resolution.toDppx()},
+            Pixel{deviceSize.width / resolution.value()},
+            Pixel{deviceSize.height / resolution.value()},
         };
     }
 
-    static DisplayArea forView(Vec2Au deviceSize, Resolution resolution = Resolution::fromDppx(1)) {
+    static DisplayArea forView(Math::Vec2f deviceSize, Dppx resolution = 1_dppx) {
         return {
-            .type = MediaType::SCREEN,
+            .type = Keywords::SCREEN,
             .viewport = _toViewport(deviceSize, resolution),
             .resolution = resolution,
         };
     }
 
-    static DisplayArea forRender(Vec2Au deviceSize, Resolution resolution) {
+    static DisplayArea forRender(Math::Vec2f deviceSize, Dppx resolution) {
         return {
-            .type = MediaType::SCREEN,
+            .type = Keywords::SCREEN,
             .viewport = _toViewport(deviceSize, resolution),
             .resolution = resolution,
-            .update = Update::NONE,
-            .overflowBlock = OverflowBlock::NONE,
-            .overflowInline = OverflowInline::NONE,
-            .pointer = Pointer::NONE,
-            .hover = Hover::NONE,
-            .anyPointer = Pointer::NONE,
-            .anyHover = Hover::NONE,
+            .update = Keywords::NONE,
+            .overflowBlock = Keywords::NONE,
+            .overflowInline = Keywords::NONE,
+            .pointer = Keywords::NONE,
+            .hover = Keywords::NONE,
+            .anyPointer = Keywords::NONE,
+            .anyHover = Keywords::NONE,
         };
     }
 
     static DisplayArea forPrint(Print::Settings const& settings) {
         auto pageSize = settings.pageSize();
         return {
-            .type = MediaType::PRINT,
-            .viewport = {Au{pageSize.width / settings.scale}, Au{pageSize.height / settings.scale}},
-            .resolution = Resolution::fromDppx(settings.scale),
+            .type = Keywords::PRINT,
+            .viewport = {Pixel{static_cast<f64>(pageSize.width) / settings.scale}, Pixel{static_cast<f64>(pageSize.height) / settings.scale}},
+            .resolution = Dppx{settings.scale},
         };
     }
 
     f64 scale() const {
-        return resolution.toDppx();
+        return resolution.value();
     }
 
-    Vec2Au deviceSize() const {
-        return {Au{viewport.width * scale()}, Au{viewport.height * scale()}};
+    Math::Vec2f deviceSize() const {
+        return {viewport.width.value() * scale(), viewport.height.value() * scale()};
     }
 
-    DisplayArea withViewport(Vec2Au viewport) const {
+    DisplayArea withViewport(Math::Vec2<Pixel> viewport) const {
         DisplayArea area = *this;
         area.viewport = viewport;
         return area;
@@ -109,18 +205,18 @@ export struct DisplayArea {
 // MARK: Viewer Preferences ----------------------------------------------------
 
 export struct ViewerPrefs {
-    ReducedMotion reducedMotion = ReducedMotion::NO_PREFERENCE;
-    ReducedTransparency reducedTransparency = ReducedTransparency::NO_PREFERENCE;
-    Contrast contrast = Contrast::NO_PREFERENCE;
-    Colors forcedColors = Colors::NONE;
-    ColorScheme colorScheme = ColorScheme::LIGHT;
-    ReducedData reducedData = ReducedData::NO_PREFERENCE;
+    ReducedMotion reducedMotion = Keywords::NO_PREFERENCE;
+    ReducedTransparency reducedTransparency = Keywords::NO_PREFERENCE;
+    Contrast contrast = Keywords::NO_PREFERENCE;
+    Colors forcedColors = Keywords::NONE;
+    ColorScheme colorScheme = Keywords::LIGHT;
+    ReducedData reducedData = Keywords::NO_PREFERENCE;
 
     static ViewerPrefs forRender() {
         return {
-            .reducedMotion = ReducedMotion::REDUCE,
-            .reducedTransparency = ReducedTransparency::REDUCE,
-            .contrast = Contrast::MORE,
+            .reducedMotion = Keywords::REDUCE,
+            .reducedTransparency = Keywords::REDUCE,
+            .contrast = Keywords::MORE,
         };
     }
 
@@ -138,29 +234,29 @@ export struct Media {
 
     /// 4.1. Width: the width feature
     /// https://drafts.csswg.org/mediaqueries/#width
-    Au width;
+    Pixel width;
 
     /// 4.2. Height: the height feature
     /// https://drafts.csswg.org/mediaqueries/#height
-    Au height;
+    Pixel height;
 
     /// 4.3. Aspect-Ratio: the aspect-ratio feature
     /// https://drafts.csswg.org/mediaqueries/#aspect-ratio
-    Number aspectRatio;
+    f64 aspectRatio;
 
     /// 4.4. Orientation: the orientation feature
     /// https://drafts.csswg.org/mediaqueries/#orientation
-    Print::Orientation orientation;
+    Orientation orientation;
 
     // 5. MARK: Display Quality Media Features
 
     /// 5.1. Resolution: the resolution feature
     /// https://drafts.csswg.org/mediaqueries/#resolution
-    Resolution resolution;
+    Dppx resolution;
 
     /// 5.2. Scan: the scan feature
     /// https://drafts.csswg.org/mediaqueries/#scan
-    Scan scan = Scan::PROGRESSIVE;
+    Scan scan = Keywords::PROGRESSIVE;
 
     /// 5.3. Grid: the grid feature
     /// https://drafts.csswg.org/mediaqueries/#grid
@@ -248,15 +344,15 @@ export struct Media {
     ReducedData prefersReducedData;
 
     // Appendix A: Deprecated Media Features
-    Au deviceWidth;
-    Au deviceHeight;
-    Number deviceAspectRatio;
+    Pixel deviceWidth;
+    Pixel deviceHeight;
+    f64 deviceAspectRatio;
 
     static Media from(DisplayArea const& area, ViewerPrefs const& prefs) {
-        auto ratio = [](Vec2Au size) -> Number {
-            if (size.height == 0_au)
+        auto ratio = [](f64 width, f64 height) -> f64 {
+            if (height == 0)
                 return 0;
-            return static_cast<f64>(size.width) / static_cast<f64>(size.height);
+            return width / height;
         };
 
         auto viewport = area.viewport;
@@ -266,17 +362,17 @@ export struct Media {
         if (quirksMediaZeroViewport)
             viewport = {};
 
-        if (quirksMediaScreen and type == MediaType::PRINT)
-            type = MediaType::SCREEN;
+        if (quirksMediaScreen and type == Keywords::PRINT)
+            type = Keywords::SCREEN;
 
         return {
             .type = type,
             .width = viewport.width,
             .height = viewport.height,
-            .aspectRatio = ratio(viewport),
+            .aspectRatio = ratio(viewport.width.value(), viewport.height.value()),
             .orientation = viewport.height >= viewport.width
-                               ? Print::Orientation::PORTRAIT
-                               : Print::Orientation::LANDSCAPE,
+                               ? Orientation{Keywords::PORTRAIT}
+                               : Orientation{Keywords::LANDSCAPE},
 
             .resolution = area.resolution,
             .scan = area.scan,
@@ -302,14 +398,31 @@ export struct Media {
             .prefersColorScheme = prefs.colorScheme,
             .prefersReducedData = prefs.reducedData,
 
-            .deviceWidth = deviceSize.width,
-            .deviceHeight = deviceSize.height,
-            .deviceAspectRatio = ratio(deviceSize),
+            .deviceWidth = Pixel{deviceSize.width},
+            .deviceHeight = Pixel{deviceSize.height},
+            .deviceAspectRatio = ratio(deviceSize.width, deviceSize.height),
         };
     }
 
     bool operator==(Media const&) const = default;
 };
+
+// https://drafts.csswg.org/mediaqueries-4/#units
+// Relative length units in media queries are based on the initial value,
+// which means that units are never based on results of declarations.
+static ComputationContext const& _initialComputationContext(Media const& media) {
+    static auto memo = [&] {
+        auto initialStyle = defaultRegistry().initialComputedValues();
+        auto cx = ComputationContext{};
+        cx.populateUsingRootComputedValues(*initialStyle);
+        cx.populateUsingParentComputedValues(*initialStyle);
+        cx.populateUsingOwnComputedValues(*initialStyle);
+        cx.populateUsingViewport(Viewport{.small = {media.width, media.height}});
+        return cx;
+    }();
+
+    return memo;
+}
 
 // MARK: Media Features --------------------------------------------------------
 
@@ -358,30 +471,38 @@ struct RangeFeature {
         return NAME;
     }
 
-    bool match(T actual) const {
-        bool result = true;
+    using Actual = Meta::RemoveConstVolatileRef<decltype(Meta::declval<Media>().*F)>;
 
-        if (lower.type == Bound::INCLUSIVE) {
-            result &= actual >= lower.value;
-        } else if (lower.type == Bound::EXCLUSIVE) {
-            result &= actual > lower.value;
-        }
-
-        if (upper.type == Bound::INCLUSIVE) {
-            result &= actual <= upper.value;
-        } else if (upper.type == Bound::EXCLUSIVE) {
-            result &= actual < upper.value;
-        }
-
-        if (not lower.type and not upper.type) {
-            result = actual != T{};
-        }
-
-        return result;
+    static Actual _computed(T const& value, Media const& media) {
+        if constexpr (Meta::Same<T, Actual>)
+            return value;
+        else if constexpr (requires { toComputed(value, _initialComputationContext(media)); })
+            return toComputed(value, _initialComputationContext(media));
+        else
+            return toComputed(value);
     }
 
     bool match(Media const& media) const {
-        return match(media.*F);
+        Actual actual = media.*F;
+        bool result = true;
+
+        if (lower.type == Bound::INCLUSIVE) {
+            result &= actual >= _computed(lower.value, media);
+        } else if (lower.type == Bound::EXCLUSIVE) {
+            result &= actual > _computed(lower.value, media);
+        }
+
+        if (upper.type == Bound::INCLUSIVE) {
+            result &= actual <= _computed(upper.value, media);
+        } else if (upper.type == Bound::EXCLUSIVE) {
+            result &= actual < _computed(upper.value, media);
+        }
+
+        if (not lower.type and not upper.type) {
+            result = actual != Actual{};
+        }
+
+        return result;
     }
 
     static RangeFeature min(T value) {
@@ -432,33 +553,49 @@ export template <StrLit NAME, typename T, auto Media::* F>
 struct DiscreteFeature {
     using Inner = T;
 
-    enum Type : u8 {
-        NONE,
-        EQUAL,
+    Opt<T> value = NONE;
 
-        _LEN,
-    };
+    DiscreteFeature() = default;
 
-    T value{};
-    Type type = EQUAL;
+    DiscreteFeature(T value)
+        : value(Some(std::move(value))) {}
 
     static constexpr Str name() {
         return NAME;
     }
 
-    static DiscreteFeature make(RangePrefix prefix, T value = {}) {
-        if (prefix == RangePrefix::BOOL)
-            return {.type = NONE};
-        return {value};
+    static DiscreteFeature make(RangePrefix) {
+        return {};
     }
 
-    bool match(T actual) const {
-        if (type == Type::NONE)
-            return actual != T{};
+    static DiscreteFeature make(RangePrefix prefix, T value) {
+        if (prefix == RangePrefix::BOOL)
+            return {};
+        return {std::move(value)};
+    }
+
+    // https://drafts.csswg.org/mediaqueries-5/#mq-boolean-context
+    static bool _trueInBooleanContext(T const& actual) {
+        if constexpr (Meta::Same<T, bool>) {
+            return actual;
+        } else {
+            if constexpr (requires { actual == Keywords::NONE; })
+                if (actual == Keywords::NONE)
+                    return false;
+            if constexpr (requires { actual == Keywords::NO_PREFERENCE; })
+                if (actual == Keywords::NO_PREFERENCE)
+                    return false;
+            return true;
+        }
+    }
+
+    bool match(T const& actual) const {
+        if (not value)
+            return _trueInBooleanContext(actual);
         if constexpr (Meta::Same<T, MediaType>)
-            if (value == MediaType::ALL)
+            if (*value == Keywords::ALL)
                 return true;
-        return actual == value;
+        return actual == *value;
     }
 
     bool match(Media const& media) const {
@@ -466,7 +603,7 @@ struct DiscreteFeature {
     }
 
     void repr(Io::Emit& e) const {
-        e("({}: {} {})", NAME, type, value);
+        e("({}: {})", NAME, value);
     }
 };
 
@@ -478,28 +615,33 @@ export using TypeFeature = DiscreteFeature<"type", MediaType, &Media::type>;
 
 /// 4.1. Width: the width feature
 /// https://drafts.csswg.org/mediaqueries/#width
-export using WidthFeature = RangeFeature<"width", Length, &Media::width>;
+export using WidthFeature = RangeFeature<"width", Css::PureLength, &Media::width>;
 
 /// 4.2. Height: the height feature
 /// https://drafts.csswg.org/mediaqueries/#height
-export using HeightFeature = RangeFeature<"height", Length, &Media::height>;
+export using HeightFeature = RangeFeature<"height", Css::PureLength, &Media::height>;
 
 /// 4.3. Aspect-Ratio: the aspect-ratio feature
 /// https://drafts.csswg.org/mediaqueries/#aspect-ratio
-export using AspectRatioFeature = RangeFeature<"aspect-ratio", Number, &Media::aspectRatio>;
+export using AspectRatioFeature = RangeFeature<"aspect-ratio", f64, &Media::aspectRatio>;
 
 /// 4.4. Orientation: the orientation feature
 /// https://drafts.csswg.org/mediaqueries/#orientation
-export using OrientationFeature = DiscreteFeature<"orientation", Print::Orientation, &Media::orientation>;
+export using OrientationFeature = DiscreteFeature<"orientation", Orientation, &Media::orientation>;
 
 // 5. MARK: Display Quality Media Features
 
 /// 5.1. Resolution: the resolution feature
 /// https://drafts.csswg.org/mediaqueries/#resolution
-export using ResolutionFeature = RangeFeature<"resolution", Resolution, &Media::resolution>;
+export using ResolutionFeature = RangeFeature<"resolution", Css::PureResolution, &Media::resolution>;
 
 /// 5.2. Scan: the scan feature
-/// https://drafts.csswg.org/mediaqueries/#scan
+/// https://drafts.csswg.org/mediaqueries/#orientation
+export using Orientation = Union<
+    Keywords::Portrait,
+    Keywords::Landscape>;
+
+// https://drafts.csswg.org/mediaqueries/#scan
 export using ScanFeature = DiscreteFeature<"scan", Scan, &Media::scan>;
 
 /// 5.3. Grid: the grid feature
@@ -588,9 +730,9 @@ export using PrefersColorSchemeFeature = DiscreteFeature<"prefers-color-scheme",
 export using PrefersReducedDataFeature = DiscreteFeature<"prefers-reduced-data", ReducedData, &Media::prefersReducedData>;
 
 // Appendix A: Deprecated Media Features
-export using DeviceWidthFeature = RangeFeature<"device-width", Length, &Media::deviceWidth>;
-export using DeviceHeightFeature = RangeFeature<"device-height", Length, &Media::deviceHeight>;
-export using DeviceAspectRatioFeature = RangeFeature<"device-aspect-ratio", Number, &Media::deviceAspectRatio>;
+export using DeviceWidthFeature = RangeFeature<"device-width", Css::PureLength, &Media::deviceWidth>;
+export using DeviceHeightFeature = RangeFeature<"device-height", Css::PureLength, &Media::deviceHeight>;
+export using DeviceAspectRatioFeature = RangeFeature<"device-aspect-ratio", f64, &Media::deviceAspectRatio>;
 
 // MARK: Media Feature ---------------------------------------------------------
 
@@ -791,15 +933,15 @@ Pair<RangePrefix, Str> _explodeFeatureName(Io::SScan s) {
         return {RangePrefix::EXACT, s.remStr()};
 }
 
-Feature _parseMediaFeature(Cursor<Css::Sst>& c) {
+Opt<Feature> _parseMediaFeature(Cursor<Css::Sst>& c) {
     if (c.ended()) {
         logWarn("unexpected end of input");
-        return TypeFeature{MediaType::OTHER};
+        return NONE;
     }
 
     if (*c != Css::Token::IDENT) {
         logWarn("expected ident");
-        return TypeFeature{MediaType::OTHER};
+        return NONE;
     }
 
     auto unexplodedName = c.next().token.data;
@@ -831,18 +973,25 @@ Feature _parseMediaFeature(Cursor<Css::Sst>& c) {
 
     if (not prop) {
         logWarn("cannot parse feature: {}", unexplodedName);
-        return TypeFeature{MediaType::OTHER};
+        return NONE;
     }
 
-    return prop.take();
+    return prop;
 }
 
 MediaQuery _parseMediaQueryInfix(Cursor<Css::Sst>& c);
 
+// https://drafts.csswg.org/mediaqueries-4/#error-handling
+// A media query that does not match the grammar in the previous section
+// must be replaced by not all during parsing.
+MediaQuery _matchNothing() {
+    return MediaQuery::negate(TypeFeature{Keywords::ALL});
+}
+
 MediaQuery _parseMediaQueryLeaf(Cursor<Css::Sst>& c) {
     if (c.ended()) {
         logWarn("unexpected end of input");
-        return TypeFeature{MediaType::OTHER};
+        return _matchNothing();
     }
 
     if (c.skip(Css::Token::ident("not"))) {
@@ -854,8 +1003,10 @@ MediaQuery _parseMediaQueryLeaf(Cursor<Css::Sst>& c) {
         return _parseMediaQueryInfix(content);
     } else if (auto type = parseValue<MediaType>(c)) {
         return TypeFeature{type.take()};
+    } else if (auto feature = _parseMediaFeature(c)) {
+        return feature.take();
     } else
-        return _parseMediaFeature(c);
+        return _matchNothing();
 }
 
 MediaQuery _parseMediaQueryInfix(Cursor<Css::Sst>& c) {

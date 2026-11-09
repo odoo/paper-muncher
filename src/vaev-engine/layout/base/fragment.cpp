@@ -4,13 +4,26 @@ import Karm.Core;
 import Karm.Font;
 import Karm.Math;
 
-import :values.length;
+import :layout.length;
+import :style.values.numeric;
 import :layout.box;
 
 using namespace Karm;
 using namespace Karm::Literals;
 
 namespace Vaev::Layout {
+
+export struct UsedBorder {
+    Au width = 0_au;
+    Gfx::BorderStyle style = Gfx::BorderStyle::NONE;
+    Gfx::Color color = Gfx::BLACK;
+
+    void repr(Io::Emit& e) const {
+        e("(used-border {} {})", style, color);
+    }
+};
+
+export using UsedBorders = Math::Insets<UsedBorder>;
 
 static Rc<Gfx::Fontface> _bubbleFontface() {
     static Opt<Rc<Gfx::Fontface>> fontface = NONE;
@@ -312,14 +325,14 @@ export struct SvgShapeFragment : Fragment {
         return objectBoundingBox();
     }
 
-    Opt<Gfx::Fill> resolveFill(Style::SvgPaintProps const& svgPaint) {
+    Opt<Gfx::Fill> resolveFill(Style::SvgPainting const& svgPaint) {
         if (Math::epsilonEq(svgPaint.fillOpacity, 0.))
             return NONE;
 
         if (not svgPaint.fill)
             return NONE;
 
-        if (auto const& [c] = resolve(svgPaint.fill, style().color)) {
+        if (auto const& [c] = Style::resolve(svgPaint.fill, style().color)) {
             auto color = c;
             color = color.withOpacity(svgPaint.fillOpacity);
             if (color.transparent())
@@ -330,7 +343,7 @@ export struct SvgShapeFragment : Fragment {
         return NONE;
     }
 
-    Opt<Gfx::Stroke> resolveStroke(Style::SvgPaintProps const& svgPaint) {
+    Opt<Gfx::Stroke> resolveStroke(Style::SvgPainting const& svgPaint) {
         if (Math::epsilonEq(svgPaint.strokeOpacity, 0.))
             return NONE;
 
@@ -340,7 +353,7 @@ export struct SvgShapeFragment : Fragment {
         if (not svgPaint.stroke)
             return NONE;
 
-        if (auto const& [c] = resolve(svgPaint.stroke, style().color)) {
+        if (auto const& [c] = Style::resolve(svgPaint.stroke, style().color)) {
             auto color = c;
             color = color.withOpacity(svgPaint.strokeOpacity);
             if (color.transparent())
@@ -625,10 +638,10 @@ export struct BoxFragment : Fragment {
         borders.styles[2] = bordersStyle.bottom.style;
         borders.styles[3] = bordersStyle.start.style;
 
-        borders.fills[0] = resolve(bordersStyle.top.color, style.color);
-        borders.fills[1] = resolve(bordersStyle.end.color, style.color);
-        borders.fills[2] = resolve(bordersStyle.bottom.color, style.color);
-        borders.fills[3] = resolve(bordersStyle.start.color, style.color);
+        borders.fills[0] = Style::resolve(bordersStyle.top.color, style.color);
+        borders.fills[1] = Style::resolve(bordersStyle.end.color, style.color);
+        borders.fills[2] = Style::resolve(bordersStyle.bottom.color, style.color);
+        borders.fills[3] = Style::resolve(bordersStyle.start.color, style.color);
 
         return Some(borders);
     }
@@ -661,7 +674,7 @@ export struct BoxFragment : Fragment {
     void paintDecoration(Gfx::Canvas& g) override {
         auto const& background = style().backgrounds;
 
-        auto color = resolve(background->color, style().color);
+        auto color = Style::resolve(background->color, style().color);
 
         Math::Rectf bound = borderBox().round().cast<f64>();
         auto radii = metrics.radii.cast<f64>();
@@ -734,13 +747,13 @@ export struct BoxFragment : Fragment {
             outline.offset = metrics.outlineOffset.cast<f64>();
             auto const& outlineStyle = *style().outline;
 
-            if (outlineStyle.style.is<Keywords::Auto>()) {
+            if (outlineStyle.style.is<Style::Keywords::Auto>()) {
                 outline.style = Gfx::BorderStyle::SOLID;
             } else {
                 outline.style = outlineStyle.style.expect<Gfx::BorderStyle>();
             }
 
-            outline.fill = resolve(outlineStyle.color, style().color);
+            outline.fill = outlineStyle.color;
 
             outOfBandOutlines.pushBack(OutOfBandOutline{
                 .outline = outline,

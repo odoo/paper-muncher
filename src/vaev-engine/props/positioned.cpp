@@ -8,6 +8,8 @@ import Karm.Core;
 import :props.base;
 import :css.parser;
 import :style.computed;
+import :style.values.keywords;
+import :style.values.primitives;
 
 using namespace Karm;
 
@@ -21,7 +23,7 @@ export struct PositionProperty : Property {
         Registration() : Property::Registration(Properties::POSITION) {}
 
         Rc<Property> initial() const override {
-            return makeRc<PositionProperty>(self(), Position{Keywords::STATIC});
+            return makeRc<PositionProperty>(self(), Style::PositionScheme{Keywords::STATIC});
         }
 
         Rc<Property> load(ComputedValues const& c) const override {
@@ -29,13 +31,40 @@ export struct PositionProperty : Property {
         }
 
         Res<Rc<Property>> parse(Cursor<Css::Sst>& c) const override {
-            return Ok(makeRc<PositionProperty>(self(), try$(parseValue<Position>(c))));
+            // https://drafts.csswg.org/css-position-3/#propdef-position
+            auto value = [&] -> Res<PositionScheme> {
+                if (c.ended())
+                    return Error::invalidData("unexpected end of input");
+
+                if (c.skip(Css::Token::ident("static")))
+                    return Ok(Keywords::STATIC);
+                else if (c.skip(Css::Token::ident("relative")))
+                    return Ok(Keywords::RELATIVE);
+                else if (c.skip(Css::Token::ident("absolute")))
+                    return Ok(Keywords::ABSOLUTE);
+                else if (c.skip(Css::Token::ident("fixed")))
+                    return Ok(Keywords::FIXED);
+                else if (c.skip(Css::Token::ident("sticky")))
+                    return Ok(Keywords::STICKY);
+                else if (c->type == Css::Sst::FUNC and c->prefix == Css::Token::function("running(")) {
+                    Cursor<Css::Sst> cur = c->content;
+                    auto res = parseValue<Css::CustomIdent>(cur);
+                    if (not res) {
+                        return Error::invalidData("ill formed custom-ident in running position");
+                    }
+                    c.next();
+                    return Ok(RunningPosition{res.take()});
+
+                } else
+                    return Error::invalidData("expected position");
+            }();
+            return Ok(makeRc<PositionProperty>(self(), try$(value)));
         }
     };
 
-    Position _value;
+    Style::PositionScheme _value;
 
-    PositionProperty(Rc<Property::Registration> registration, Position value)
+    PositionProperty(Rc<Property::Registration> registration, Style::PositionScheme value)
         : Property(registration), _value(value) {}
 
     void apply([[maybe_unused]] ComputedValues const& parent, ComputedValues& c, [[maybe_unused]] ComputationContext const& cx) const override {
@@ -49,7 +78,7 @@ export struct PositionProperty : Property {
 
 // https://www.w3.org/TR/CSS22/visuren.html#propdef-top
 export struct TopProperty : Property {
-    using Value = Union<Keywords::Auto, Calc<PercentOr<Length>>>;
+    using Value = Union<Keywords::Auto, Css::LengthPercentage>;
 
     struct Registration : Property::Registration {
         Registration() : Property::Registration(Properties::TOP) {}
@@ -59,7 +88,7 @@ export struct TopProperty : Property {
         }
 
         Rc<Property> load(ComputedValues const& c) const override {
-            return makeRc<TopProperty>(self(), c.insets->top);
+            return makeRc<TopProperty>(self(), toSpecified(c.insets->top));
         }
 
         Res<Rc<Property>> parse(Cursor<Css::Sst>& c) const override {
@@ -73,7 +102,7 @@ export struct TopProperty : Property {
         : Property(registration), _value(value) {}
 
     void apply([[maybe_unused]] ComputedValues const& parent, ComputedValues& c, [[maybe_unused]] ComputationContext const& cx) const override {
-        c.insets.cow().top = _value;
+        c.insets.cow().top = toComputed(_value, cx);
     }
 
     Res<> serialize(Io::TextWriter& w) const override {
@@ -97,7 +126,7 @@ export struct RightProperty : Property {
         }
 
         Rc<Property> load(ComputedValues const& c) const override {
-            return makeRc<RightProperty>(self(), c.insets->end);
+            return makeRc<RightProperty>(self(), toSpecified(c.insets->end));
         }
 
         Res<Rc<Property>> parse(Cursor<Css::Sst>& c) const override {
@@ -111,7 +140,7 @@ export struct RightProperty : Property {
         : Property(registration), _value(value) {}
 
     void apply([[maybe_unused]] ComputedValues const& parent, ComputedValues& c, [[maybe_unused]] ComputationContext const& cx) const override {
-        c.insets.cow().end = _value;
+        c.insets.cow().end = toComputed(_value, cx);
     }
 
     Res<> serialize(Io::TextWriter& w) const override {
@@ -135,7 +164,7 @@ export struct BottomProperty : Property {
         }
 
         Rc<Property> load(ComputedValues const& c) const override {
-            return makeRc<BottomProperty>(self(), c.insets->bottom);
+            return makeRc<BottomProperty>(self(), toSpecified(c.insets->bottom));
         }
 
         Res<Rc<Property>> parse(Cursor<Css::Sst>& c) const override {
@@ -143,13 +172,13 @@ export struct BottomProperty : Property {
         }
     };
 
-    Union<Keywords::Auto, Calc<PercentOr<Length>>> _value;
+    Value _value;
 
     BottomProperty(Rc<Property::Registration> registration, Value value)
         : Property(registration), _value(value) {}
 
     void apply([[maybe_unused]] ComputedValues const& parent, ComputedValues& c, [[maybe_unused]] ComputationContext const& cx) const override {
-        c.insets.cow().bottom = _value;
+        c.insets.cow().bottom = toComputed(_value, cx);
     }
 
     Res<> serialize(Io::TextWriter& w) const override {
@@ -173,7 +202,7 @@ export struct LeftProperty : Property {
         }
 
         Rc<Property> load(ComputedValues const& c) const override {
-            return makeRc<LeftProperty>(self(), c.insets->start);
+            return makeRc<LeftProperty>(self(), toSpecified(c.insets->start));
         }
 
         Res<Rc<Property>> parse(Cursor<Css::Sst>& c) const override {
@@ -187,7 +216,7 @@ export struct LeftProperty : Property {
         : Property(registration), _value(value) {}
 
     void apply([[maybe_unused]] ComputedValues const& parent, ComputedValues& c, [[maybe_unused]] ComputationContext const& cx) const override {
-        c.insets.cow().start = _value;
+        c.insets.cow().start = toComputed(_value, cx);
     }
 
     Res<> serialize(Io::TextWriter& w) const override {
@@ -227,7 +256,7 @@ export struct ZIndexProperty : Property {
     }
 
     Res<> serialize(Io::TextWriter& w) const override {
-        return serializeValue(w, _value);
+        return Css::serializeValue(w, _value);
     }
 
     void repr(Io::Emit& e) const override {

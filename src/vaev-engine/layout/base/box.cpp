@@ -12,12 +12,21 @@ namespace Vaev::Layout {
 export struct FormatingContext;
 export struct Box;
 
+// https://svgwg.org/svg2-draft/shapes.html#TermShapeElement
+export enum struct SvgShapeElement {
+    RECT,
+    CIRCLE,
+    PATH,
+
+    _LEN
+};
+
 export using Content = Union<
     None,
     Rc<Gfx::Prose>,
     Gfx::Snapshot,
     SvgShapeElement,
-    SvgViewBox>;
+    Style::SvgViewBox>;
 
 struct Box : Meta::NoCopy {
     Rc<Style::ComputedValues const> style;
@@ -99,7 +108,7 @@ struct Box : Meta::NoCopy {
     }
 
     bool isRunningPositionedBox() const {
-        return style->position.is<RunningPosition>().has();
+        return style->position.is<Style::RunningPosition>().has();
     }
 
     bool isRootElementPrincipalBox() const {
@@ -123,14 +132,14 @@ struct Box : Meta::NoCopy {
         if (forceStaticPosition)
             return false;
 
-        return style->position == Keywords::ABSOLUTE or
-               style->position == Keywords::FIXED or
-               style->position.is<RunningPosition>();
+        return style->position == Style::Keywords::ABSOLUTE or
+               style->position == Style::Keywords::FIXED or
+               style->position.is<Style::RunningPosition>();
     }
 
     // https://drafts.csswg.org/css2/#floats
     bool isFloating() const {
-        return style->float_ != Float::NONE;
+        return style->float_ != Style::Keywords::NONE;
     }
 
     // https://www.w3.org/TR/CSS22/visuren.html#block-formatting
@@ -146,11 +155,11 @@ struct Box : Meta::NoCopy {
     bool establishesBlockFormatingContext() const {
         return isRemovedFromFlow() or
                isReplaced() or
-               style->display != Display::Inside::FLOW or
-               style->overflows.x != Overflow::VISIBLE or
-               style->overflows.y != Overflow::VISIBLE or
-               style->overflows.block != Overflow::VISIBLE or
-               style->overflows.inline_ != Overflow::VISIBLE;
+               style->display != Style::Display::Inside::FLOW or
+               style->overflows.x != Style::Keywords::VISIBLE or
+               style->overflows.y != Style::Keywords::VISIBLE or
+               style->overflows.block != Style::Keywords::VISIBLE or
+               style->overflows.inline_ != Style::Keywords::VISIBLE;
     }
 
     // https://www.w3.org/TR/CSS22/zindex.html
@@ -164,12 +173,12 @@ struct Box : Meta::NoCopy {
     }
 
     bool isPositioned() const {
-        return style->position != Keywords::STATIC;
+        return style->position != Style::Keywords::STATIC;
     }
 
     // https://drafts.csswg.org/css-tables-3/#table-wrapper-box
     bool isTableWrapperBox() const {
-        return style->display == Display::Inside::TABLE;
+        return style->display == Style::Display::Inside::TABLE;
     }
 
     bool isPseudoElement(Symbol type) const {

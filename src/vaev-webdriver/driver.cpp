@@ -188,17 +188,17 @@ export struct WebDriver {
     // https://www.w3.org/TR/webdriver2/#resizing-and-positioning-windows
 
     // https://www.w3.org/TR/webdriver2/#get-window-rect
-    Res<RectAu> getWindowRect(Ref::Uuid sessionId) {
+    Res<Layout::RectAu> getWindowRect(Ref::Uuid sessionId) {
         auto session = try$(getSession(sessionId));
         auto webview = try$(session->currentBrowsingContext());
-        return Ok(webview->_area.viewport);
+        return Ok(Layout::RectAu{Layout::resolve(webview->_area.viewport)});
     }
 
     // https://www.w3.org/TR/webdriver2/#set-window-rect
-    Res<RectAu> setWindowRect(Ref::Uuid sessionId, RectAu rect) {
+    Res<Layout::RectAu> setWindowRect(Ref::Uuid sessionId, Layout::RectAu rect) {
         auto session = try$(getSession(sessionId));
         auto webview = try$(session->currentBrowsingContext());
-        webview->changeArea(webview->_area.withViewport(rect.size()));
+        webview->changeArea(webview->_area.withViewport(Layout::toPixel(rect.size())));
         return Ok(rect);
     }
 

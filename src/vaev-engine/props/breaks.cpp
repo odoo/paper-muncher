@@ -8,6 +8,7 @@ import Karm.Core;
 import :props.base;
 import :css.parser;
 import :style.computed;
+import :style.values.keywords;
 
 using namespace Karm;
 
@@ -21,7 +22,7 @@ export struct BreakAfterProperty : Property {
         Registration() : Property::Registration(Properties::BREAK_AFTER) {}
 
         Rc<Property> initial() const override {
-            return makeRc<BreakAfterProperty>(self(), BreakBetween::AUTO);
+            return makeRc<BreakAfterProperty>(self(), Keywords::AUTO);
         }
 
         Rc<Property> load(ComputedValues const& c) const override {
@@ -43,7 +44,7 @@ export struct BreakAfterProperty : Property {
     }
 
     Res<> serialize(Io::TextWriter& w) const override {
-        return serializeValue(w, _value);
+        return Css::serializeValue(w, _value);
     }
 
     void repr(Io::Emit& e) const override {
@@ -57,7 +58,7 @@ export struct BreakBeforeProperty : Property {
         Registration() : Property::Registration(Properties::BREAK_BEFORE) {}
 
         Rc<Property> initial() const override {
-            return makeRc<BreakBeforeProperty>(self(), BreakBetween::AUTO);
+            return makeRc<BreakBeforeProperty>(self(), Keywords::AUTO);
         }
 
         Rc<Property> load(ComputedValues const& c) const override {
@@ -79,7 +80,7 @@ export struct BreakBeforeProperty : Property {
     }
 
     Res<> serialize(Io::TextWriter& w) const override {
-        return serializeValue(w, _value);
+        return Css::serializeValue(w, _value);
     }
 
     void repr(Io::Emit& e) const override {
@@ -93,7 +94,7 @@ export struct BreakInsideProperty : Property {
         Registration() : Property::Registration(Properties::BREAK_INSIDE) {}
 
         Rc<Property> initial() const override {
-            return makeRc<BreakInsideProperty>(self(), BreakInside::AUTO);
+            return makeRc<BreakInsideProperty>(self(), Keywords::AUTO);
         }
 
         Rc<Property> load(ComputedValues const& c) const override {
@@ -115,7 +116,7 @@ export struct BreakInsideProperty : Property {
     }
 
     Res<> serialize(Io::TextWriter& w) const override {
-        return serializeValue(w, _value);
+        return Css::serializeValue(w, _value);
     }
 
     void repr(Io::Emit& e) const override {
@@ -128,20 +129,20 @@ export struct BreakInsideProperty : Property {
 // https://www.w3.org/TR/css-break-3/#page-break-properties
 static Res<BreakBetween> _parseLegacyPageBreak(Cursor<Css::Sst>& c) {
     if (c.skip(Css::Token::ident("auto")))
-        return Ok(BreakBetween::AUTO);
+        return Ok(Keywords::AUTO);
     if (c.skip(Css::Token::ident("always")))
-        return Ok(BreakBetween::PAGE);
+        return Ok(Keywords::PAGE);
     if (c.skip(Css::Token::ident("avoid")))
-        return Ok(BreakBetween::AVOID);
+        return Ok(Keywords::AVOID);
     if (c.skip(Css::Token::ident("left")))
-        return Ok(BreakBetween::LEFT);
+        return Ok(Keywords::LEFT);
     if (c.skip(Css::Token::ident("right")))
-        return Ok(BreakBetween::RIGHT);
+        return Ok(Keywords::RIGHT);
     return Error::invalidData("expected auto, always, avoid, left or right");
 }
 
 static void _reprLegacyPageBreak(Io::Emit& e, BreakBetween value) {
-    if (value == BreakBetween::PAGE)
+    if (value == Keywords::PAGE)
         e("always");
     else
         e("{}", value);
@@ -153,7 +154,7 @@ export struct PageBreakAfterProperty : Property {
         Registration() : Property::Registration(Properties::PAGE_BREAK_AFTER, SHORTHAND) {}
 
         Rc<Property> initial() const override {
-            return makeRc<PageBreakAfterProperty>(self(), BreakBetween::AUTO);
+            return makeRc<PageBreakAfterProperty>(self(), Keywords::AUTO);
         }
 
         Rc<Property> load(ComputedValues const& c) const override {
@@ -187,7 +188,7 @@ export struct PageBreakBeforeProperty : Property {
         Registration() : Property::Registration(Properties::PAGE_BREAK_BEFORE, SHORTHAND) {}
 
         Rc<Property> initial() const override {
-            return makeRc<PageBreakBeforeProperty>(self(), BreakBetween::AUTO);
+            return makeRc<PageBreakBeforeProperty>(self(), Keywords::AUTO);
         }
 
         Rc<Property> load(ComputedValues const& c) const override {
@@ -221,7 +222,7 @@ export struct PageBreakInsideProperty : Property {
         Registration() : Property::Registration(Properties::PAGE_BREAK_INSIDE, SHORTHAND) {}
 
         Rc<Property> initial() const override {
-            return makeRc<PageBreakInsideProperty>(self(), BreakInside::AUTO);
+            return makeRc<PageBreakInsideProperty>(self(), Keywords::AUTO);
         }
 
         Rc<Property> load(ComputedValues const& c) const override {
@@ -230,9 +231,9 @@ export struct PageBreakInsideProperty : Property {
 
         Res<Rc<Property>> parse(Cursor<Css::Sst>& c) const override {
             if (c.skip(Css::Token::ident("auto")))
-                return Ok(makeRc<PageBreakInsideProperty>(self(), BreakInside::AUTO));
+                return Ok(makeRc<PageBreakInsideProperty>(self(), Keywords::AUTO));
             if (c.skip(Css::Token::ident("avoid")))
-                return Ok(makeRc<PageBreakInsideProperty>(self(), BreakInside::AVOID));
+                return Ok(makeRc<PageBreakInsideProperty>(self(), Keywords::AVOID));
             return Error::invalidData("expected auto or avoid");
         }
     };

@@ -8,6 +8,7 @@ import Karm.Core;
 import :props.base;
 import :css.parser;
 import :style.computed;
+import :style.values.keywords;
 
 using namespace Karm;
 
@@ -27,7 +28,7 @@ export struct DisplayProperty : Property {
         }
 
         Res<Rc<Property>> parse(Cursor<Css::Sst>& c) const override {
-            return Ok(makeRc<DisplayProperty>(self(), try$(parseValue<Display>(c))));
+            return Ok(makeRc<DisplayProperty>(self(), try$(parseValue<Css::Display>(c))));
         }
     };
 
@@ -41,7 +42,7 @@ export struct DisplayProperty : Property {
     }
 
     Res<> serialize(Io::TextWriter& w) const override {
-        return serializeValue(w, _value);
+        return Css::serializeValue(w, _value);
     }
 
     void repr(Io::Emit& e) const override {
@@ -64,13 +65,39 @@ export struct ContentProperty : Property {
         }
 
         Res<Rc<Property>> parse(Cursor<Css::Sst>& c) const override {
-            return Ok(makeRc<ContentProperty>(self(), try$(parseValue<Content>(c))));
+            // https://www.w3.org/TR/css-content-3/
+            // https://www.w3.org/TR/css-gcpm-3/#funcdef-element
+            auto value = [&] -> Res<ContentValue> {
+                if (c.ended())
+                    return Error::invalidData("unexpected end of input");
+
+                if (c.skip(Css::Token::ident("normal")))
+                    return Ok(Keywords::NORMAL);
+                else if (c.skip(Css::Token::ident("open-quote")))
+                    return Ok(String{"“"});
+                else if (c.skip(Css::Token::ident("close-quote")))
+                    return Ok(String{"”"});
+                else if (c->prefix == Css::Token::function("element(")) {
+                    Cursor<Css::Sst> cur = c->content;
+                    auto element = try$(parseValue<Css::ElementFunc>(cur));
+                    c.next();
+                    return Ok(element);
+                } else if (c->prefix == Css::Token::function("counter(")) {
+                    return parseValue<Css::CounterFunc>(c);
+                } else if (c->prefix == Css::Token::function("counters(")) {
+                    return parseValue<Css::CountersFunc>(c);
+                } else if (c->type == Css::Sst::TOKEN and c->token.type == Css::Token::STRING) {
+                    return Ok(try$(parseValue<String>(c)));
+                } else
+                    return Error::invalidData("expected content");
+            }();
+            return Ok(makeRc<ContentProperty>(self(), try$(value)));
         }
     };
 
-    Content _value;
+    ContentValue _value;
 
-    ContentProperty(Rc<Property::Registration> registration, Content value)
+    ContentProperty(Rc<Property::Registration> registration, ContentValue value)
         : Property(registration), _value(value) {}
 
     void apply([[maybe_unused]] ComputedValues const& parent, ComputedValues& c, [[maybe_unused]] ComputationContext const& cx) const override {
@@ -96,7 +123,7 @@ export struct OrderProperty : Property {
         }
 
         Res<Rc<Property>> parse(Cursor<Css::Sst>& c) const override {
-            return Ok(makeRc<OrderProperty>(self(), try$(parseValue<Integer>(c))));
+            return Ok(makeRc<OrderProperty>(self(), try$(parseValue<Css::Integer>(c))));
         }
     };
 

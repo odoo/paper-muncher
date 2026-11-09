@@ -14,7 +14,8 @@ import :dom.document;
 import :loader.loader;
 import :layout;
 import :paint;
-import :values;
+import :css.values;
+import :style.values;
 import :driver.print;
 
 using namespace Karm;
@@ -25,7 +26,7 @@ static auto dumpFragments = Debug::Flag::debug("web-fragments"s, "Dump the const
 static auto dumpStacking = Debug::Flag::debug("web-stacking"s, "Dump the stacking context tree"s);
 
 export struct RenderResult {
-    Rc<Layout::Tree> tree;
+    Rc<Layout::Box> root;
     Rc<Layout::Fragment> fragments;
     Rc<Paint::StackingContext> stacking;
 };
@@ -106,19 +107,18 @@ export struct WebView {
 
         computeStyle();
 
-        Style::Viewport viewport = {.small = _area.viewport};
-        auto tree = makeRc<Layout::Tree>(
-            Layout::buildDocument(_document.upgrade()),
-            viewport
-        );
+        auto root = makeRc<Layout::Box>(Layout::buildDocument(_document.upgrade()));
+        Layout::Fragmentainer fragmentainer;
 
+        auto viewport = Layout::resolve(_area.viewport);
         auto layout = Layout::layoutRoot(
-            *tree,
+            *root,
             {
+                .fragmentainer = Some<Layout::Fragmentainer&>(fragmentainer),
                 .generateFragment = true,
-                .knownSize = {Some(viewport.small.width), NONE},
-                .availableSpace = {viewport.small.width, 0_au},
-                .containingBlock = {viewport.small.width, viewport.small.height},
+                .knownSize = {Some(viewport.width), NONE},
+                .availableSpace = {viewport.width, 0_au},
+                .containingBlock = viewport,
             }
         );
 
@@ -131,7 +131,7 @@ export struct WebView {
             logDebugIf(dumpStacking, "stacking: {}", stacking);
 
         _render = Some(RenderResult{
-            tree,
+            root,
             *layout.fragment,
             stacking,
         });
@@ -155,11 +155,11 @@ export struct WebView {
         _render = NONE;
     }
 
-    RectAu scrollableOverflow() {
+    Layout::RectAu scrollableOverflow() {
         return ensureRender().stacking->scrollableOverflow();
     }
 
-    RectAu borderBox() {
+    Layout::RectAu borderBox() {
         return ensureRender().fragments->borderBox();
     }
 

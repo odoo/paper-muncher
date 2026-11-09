@@ -8,6 +8,7 @@ import Karm.Core;
 import :props.base;
 import :css.parser;
 import :style.computed;
+import :style.values.keywords;
 
 using namespace Karm;
 
@@ -21,25 +22,25 @@ export struct BorderTopColorProperty : Property {
         Registration() : Property::Registration(Properties::BORDER_TOP_COLOR) {}
 
         Rc<Property> initial() const override {
-            return makeRc<BorderTopColorProperty>(self(), BLACK);
+            return makeRc<BorderTopColorProperty>(self(), Css::BLACK);
         }
 
         Rc<Property> load(ComputedValues const& c) const override {
-            return makeRc<BorderTopColorProperty>(self(), c.borders->top.color);
+            return makeRc<BorderTopColorProperty>(self(), toSpecified(c.borders->top.color));
         }
 
         Res<Rc<Property>> parse(Cursor<Css::Sst>& c) const override {
-            return Ok(makeRc<BorderTopColorProperty>(self(), try$(parseValue<Color>(c))));
+            return Ok(makeRc<BorderTopColorProperty>(self(), try$(parseValue<Css::Color>(c))));
         }
     };
 
-    Color _value;
+    Css::Color _value;
 
-    BorderTopColorProperty(Rc<Property::Registration> registration, Color value)
+    BorderTopColorProperty(Rc<Property::Registration> registration, Css::Color value)
         : Property(registration), _value(value) {}
 
     void apply([[maybe_unused]] ComputedValues const& parent, ComputedValues& c, [[maybe_unused]] ComputationContext const& cx) const override {
-        c.borders.cow().top.color = _value;
+        c.borders.cow().top.color = toComputed(_value, c.color);
     }
 
     Res<> serialize(Io::TextWriter& w) const override {
@@ -57,25 +58,25 @@ export struct BorderRightColorProperty : Property {
         Registration() : Property::Registration(Properties::BORDER_RIGHT_COLOR) {}
 
         Rc<Property> initial() const override {
-            return makeRc<BorderRightColorProperty>(self(), BLACK);
+            return makeRc<BorderRightColorProperty>(self(), Css::BLACK);
         }
 
         Rc<Property> load(ComputedValues const& c) const override {
-            return makeRc<BorderRightColorProperty>(self(), c.borders->end.color);
+            return makeRc<BorderRightColorProperty>(self(), toSpecified(c.borders->end.color));
         }
 
         Res<Rc<Property>> parse(Cursor<Css::Sst>& c) const override {
-            return Ok(makeRc<BorderRightColorProperty>(self(), try$(parseValue<Color>(c))));
+            return Ok(makeRc<BorderRightColorProperty>(self(), try$(parseValue<Css::Color>(c))));
         }
     };
 
-    Color _value;
+    Css::Color _value;
 
-    BorderRightColorProperty(Rc<Property::Registration> registration, Color value)
+    BorderRightColorProperty(Rc<Property::Registration> registration, Css::Color value)
         : Property(registration), _value(value) {}
 
     void apply([[maybe_unused]] ComputedValues const& parent, ComputedValues& c, [[maybe_unused]] ComputationContext const& cx) const override {
-        c.borders.cow().end.color = _value;
+        c.borders.cow().end.color = toComputed(_value, c.color);
     }
 
     Res<> serialize(Io::TextWriter& w) const override {
@@ -93,25 +94,25 @@ export struct BorderBottomColorProperty : Property {
         Registration() : Property::Registration(Properties::BORDER_BOTTOM_COLOR) {}
 
         Rc<Property> initial() const override {
-            return makeRc<BorderBottomColorProperty>(self(), BLACK);
+            return makeRc<BorderBottomColorProperty>(self(), Css::BLACK);
         }
 
         Rc<Property> load(ComputedValues const& c) const override {
-            return makeRc<BorderBottomColorProperty>(self(), c.borders->bottom.color);
+            return makeRc<BorderBottomColorProperty>(self(), toSpecified(c.borders->bottom.color));
         }
 
         Res<Rc<Property>> parse(Cursor<Css::Sst>& c) const override {
-            return Ok(makeRc<BorderBottomColorProperty>(self(), try$(parseValue<Color>(c))));
+            return Ok(makeRc<BorderBottomColorProperty>(self(), try$(parseValue<Css::Color>(c))));
         }
     };
 
-    Color _value;
+    Css::Color _value;
 
-    BorderBottomColorProperty(Rc<Property::Registration> registration, Color value)
+    BorderBottomColorProperty(Rc<Property::Registration> registration, Css::Color value)
         : Property(registration), _value(value) {}
 
     void apply([[maybe_unused]] ComputedValues const& parent, ComputedValues& c, [[maybe_unused]] ComputationContext const& cx) const override {
-        c.borders.cow().bottom.color = _value;
+        c.borders.cow().bottom.color = toComputed(_value, c.color);
     }
 
     Res<> serialize(Io::TextWriter& w) const override {
@@ -129,25 +130,25 @@ export struct BorderLeftColorProperty : Property {
         Registration() : Property::Registration(Properties::BORDER_LEFT_COLOR) {}
 
         Rc<Property> initial() const override {
-            return makeRc<BorderLeftColorProperty>(self(), BLACK);
+            return makeRc<BorderLeftColorProperty>(self(), Css::BLACK);
         }
 
         Rc<Property> load(ComputedValues const& c) const override {
-            return makeRc<BorderLeftColorProperty>(self(), c.borders->start.color);
+            return makeRc<BorderLeftColorProperty>(self(), toSpecified(c.borders->start.color));
         }
 
         Res<Rc<Property>> parse(Cursor<Css::Sst>& c) const override {
-            return Ok(makeRc<BorderLeftColorProperty>(self(), try$(parseValue<Color>(c))));
+            return Ok(makeRc<BorderLeftColorProperty>(self(), try$(parseValue<Css::Color>(c))));
         }
     };
 
-    Color _value;
+    Css::Color _value;
 
-    BorderLeftColorProperty(Rc<Property::Registration> registration, Color value)
+    BorderLeftColorProperty(Rc<Property::Registration> registration, Css::Color value)
         : Property(registration), _value(value) {}
 
     void apply([[maybe_unused]] ComputedValues const& parent, ComputedValues& c, [[maybe_unused]] ComputationContext const& cx) const override {
-        c.borders.cow().start.color = _value;
+        c.borders.cow().start.color = toComputed(_value, c.color);
     }
 
     Res<> serialize(Io::TextWriter& w) const override {
@@ -165,30 +166,29 @@ export struct BorderColorProperty : Property {
             : Property::Registration(Properties::BORDER_COLOR, SHORTHAND) {}
 
         Rc<Property> initial() const override {
-            return makeRc<BorderColorProperty>(self(), Math::Insets<Color>{BLACK});
+            return makeRc<BorderColorProperty>(self(), Math::Insets<Css::Color>{Css::BLACK});
         }
 
         Rc<Property> load(ComputedValues const& c) const override {
             return makeRc<BorderColorProperty>(
                 self(),
-                Math::Insets{
-                    c.borders->start.color,
-                    c.borders->end.color,
-                    c.borders->top.color,
-                    c.borders->bottom.color,
+                Math::Insets<Css::Color>{
+                    toSpecified(c.borders->top.color),
+                    toSpecified(c.borders->end.color),
+                    toSpecified(c.borders->bottom.color),
+                    toSpecified(c.borders->start.color),
                 }
-                    .cast<Color>()
             );
         }
 
         Res<Rc<Property>> parse(Cursor<Css::Sst>& c) const override {
-            return Ok(makeRc<BorderColorProperty>(self(), try$(parseValue<Math::Insets<Color>>(c))));
+            return Ok(makeRc<BorderColorProperty>(self(), try$(parseValue<Math::Insets<Css::Color>>(c))));
         }
     };
 
-    Math::Insets<Color> _value;
+    Math::Insets<Css::Color> _value;
 
-    BorderColorProperty(Rc<Property::Registration> registration, Math::Insets<Color> value)
+    BorderColorProperty(Rc<Property::Registration> registration, Math::Insets<Css::Color> value)
         : Property(registration), _value(value) {}
 
     Longhands expand(RegisteredPropertySet& registry, ComputedValues const&, ComputedValues&) const override {
@@ -233,7 +233,7 @@ export struct BorderLeftStyleProperty : Property {
     }
 
     Res<> serialize(Io::TextWriter& w) const override {
-        return serializeValue(w, _value);
+        return Css::serializeValue(w, _value);
     }
 
     void repr(Io::Emit& e) const override {
@@ -269,7 +269,7 @@ export struct BorderTopStyleProperty : Property {
     }
 
     Res<> serialize(Io::TextWriter& w) const override {
-        return serializeValue(w, _value);
+        return Css::serializeValue(w, _value);
     }
 
     void repr(Io::Emit& e) const override {
@@ -305,7 +305,7 @@ export struct BorderRightStyleProperty : Property {
     }
 
     Res<> serialize(Io::TextWriter& w) const override {
-        return serializeValue(w, _value);
+        return Css::serializeValue(w, _value);
     }
 
     void repr(Io::Emit& e) const override {
@@ -341,7 +341,7 @@ export struct BorderBottomStyleProperty : Property {
     }
 
     Res<> serialize(Io::TextWriter& w) const override {
-        return serializeValue(w, _value);
+        return Css::serializeValue(w, _value);
     }
 
     void repr(Io::Emit& e) const override {
@@ -406,21 +406,21 @@ export struct BorderTopWidthProperty : Property {
         }
 
         Rc<Property> load(ComputedValues const& c) const override {
-            return makeRc<BorderTopWidthProperty>(self(), c.borders->top.width);
+            return makeRc<BorderTopWidthProperty>(self(), toSpecified(c.borders->top.width));
         }
 
         Res<Rc<Property>> parse(Cursor<Css::Sst>& c) const override {
-            return Ok(makeRc<BorderTopWidthProperty>(self(), try$(parseValue<LineWidth>(c))));
+            return Ok(makeRc<BorderTopWidthProperty>(self(), try$(parseValue<Css::LineWidth>(c))));
         }
     };
 
-    LineWidth _value;
+    Css::LineWidth _value;
 
-    BorderTopWidthProperty(Rc<Property::Registration> registration, LineWidth value)
+    BorderTopWidthProperty(Rc<Property::Registration> registration, Css::LineWidth value)
         : Property(registration), _value(value) {}
 
     void apply([[maybe_unused]] ComputedValues const& parent, ComputedValues& c, [[maybe_unused]] ComputationContext const& cx) const override {
-        c.borders.cow().top.width = _value;
+        c.borders.cow().top.width = toComputed(_value, cx);
     }
 
     Res<> serialize(Io::TextWriter& w) const override {
@@ -442,21 +442,21 @@ export struct BorderRightWidthProperty : Property {
         }
 
         Rc<Property> load(ComputedValues const& c) const override {
-            return makeRc<BorderRightWidthProperty>(self(), c.borders->end.width);
+            return makeRc<BorderRightWidthProperty>(self(), toSpecified(c.borders->end.width));
         }
 
         Res<Rc<Property>> parse(Cursor<Css::Sst>& c) const override {
-            return Ok(makeRc<BorderRightWidthProperty>(self(), try$(parseValue<LineWidth>(c))));
+            return Ok(makeRc<BorderRightWidthProperty>(self(), try$(parseValue<Css::LineWidth>(c))));
         }
     };
 
-    LineWidth _value;
+    Css::LineWidth _value;
 
-    BorderRightWidthProperty(Rc<Property::Registration> registration, LineWidth value)
+    BorderRightWidthProperty(Rc<Property::Registration> registration, Css::LineWidth value)
         : Property(registration), _value(value) {}
 
     void apply([[maybe_unused]] ComputedValues const& parent, ComputedValues& c, [[maybe_unused]] ComputationContext const& cx) const override {
-        c.borders.cow().end.width = _value;
+        c.borders.cow().end.width = toComputed(_value, cx);
     }
 
     Res<> serialize(Io::TextWriter& w) const override {
@@ -478,21 +478,21 @@ export struct BorderBottomWidthProperty : Property {
         }
 
         Rc<Property> load(ComputedValues const& c) const override {
-            return makeRc<BorderBottomWidthProperty>(self(), c.borders->bottom.width);
+            return makeRc<BorderBottomWidthProperty>(self(), toSpecified(c.borders->bottom.width));
         }
 
         Res<Rc<Property>> parse(Cursor<Css::Sst>& c) const override {
-            return Ok(makeRc<BorderBottomWidthProperty>(self(), try$(parseValue<Calc<Length>>(c))));
+            return Ok(makeRc<BorderBottomWidthProperty>(self(), try$(parseValue<Css::LineWidth>(c))));
         }
     };
 
-    LineWidth _value;
+    Css::LineWidth _value;
 
-    BorderBottomWidthProperty(Rc<Property::Registration> registration, LineWidth value)
+    BorderBottomWidthProperty(Rc<Property::Registration> registration, Css::LineWidth value)
         : Property(registration), _value(value) {}
 
     void apply([[maybe_unused]] ComputedValues const& parent, ComputedValues& c, [[maybe_unused]] ComputationContext const& cx) const override {
-        c.borders.cow().bottom.width = _value;
+        c.borders.cow().bottom.width = toComputed(_value, cx);
     }
 
     Res<> serialize(Io::TextWriter& w) const override {
@@ -514,21 +514,21 @@ export struct BorderLeftWidthProperty : Property {
         }
 
         Rc<Property> load(ComputedValues const& c) const override {
-            return makeRc<BorderLeftWidthProperty>(self(), c.borders->start.width);
+            return makeRc<BorderLeftWidthProperty>(self(), toSpecified(c.borders->start.width));
         }
 
         Res<Rc<Property>> parse(Cursor<Css::Sst>& c) const override {
-            return Ok(makeRc<BorderLeftWidthProperty>(self(), try$(parseValue<LineWidth>(c))));
+            return Ok(makeRc<BorderLeftWidthProperty>(self(), try$(parseValue<Css::LineWidth>(c))));
         }
     };
 
-    LineWidth _value;
+    Css::LineWidth _value;
 
-    BorderLeftWidthProperty(Rc<Property::Registration> registration, LineWidth value)
+    BorderLeftWidthProperty(Rc<Property::Registration> registration, Css::LineWidth value)
         : Property(registration), _value(value) {}
 
     void apply([[maybe_unused]] ComputedValues const& parent, ComputedValues& c, [[maybe_unused]] ComputationContext const& cx) const override {
-        c.borders.cow().start.width = _value;
+        c.borders.cow().start.width = toComputed(_value, cx);
     }
 
     Res<> serialize(Io::TextWriter& w) const override {
@@ -546,33 +546,30 @@ export struct BorderTopRightRadiusProperty : Property {
         Registration() : Property::Registration(Properties::BORDER_TOP_RIGHT_RADIUS) {}
 
         Rc<Property> initial() const override {
-            return makeRc<BorderTopRightRadiusProperty>(self(), makeArray<Calc<PercentOr<Length>>, 2>(Length{}));
+            return makeRc<BorderTopRightRadiusProperty>(self(), makeArray<Css::LengthPercentage, 2>(Css::LengthPercentage::fromCanonical(0)));
         }
 
         Rc<Property> load(ComputedValues const& c) const override {
-            return makeRc<BorderTopRightRadiusProperty>(self(), Array{
-                                                                    c.borders->radii.c,
-                                                                    c.borders->radii.d,
-                                                                });
+            return makeRc<BorderTopRightRadiusProperty>(self(), Array{toSpecified(c.borders->radii.c), toSpecified(c.borders->radii.d)});
         }
 
         Res<Rc<Property>> parse(Cursor<Css::Sst>& c) const override {
-            auto first = try$(parseValue<Calc<PercentOr<Length>>>(c));
+            auto first = try$(parseValue<Css::LengthPercentage>(c));
             Array value{first, first};
             if (not c.ended())
-                value[1] = try$(parseValue<Calc<PercentOr<Length>>>(c));
+                value[1] = try$(parseValue<Css::LengthPercentage>(c));
             return Ok(makeRc<BorderTopRightRadiusProperty>(self(), value));
         }
     };
 
-    Array<Calc<PercentOr<Length>>, 2> _value;
+    Array<Css::LengthPercentage, 2> _value;
 
-    BorderTopRightRadiusProperty(Rc<Property::Registration> registration, Array<Calc<PercentOr<Length>>, 2> value)
+    BorderTopRightRadiusProperty(Rc<Property::Registration> registration, Array<Css::LengthPercentage, 2> value)
         : Property(registration), _value(value) {}
 
     void apply([[maybe_unused]] ComputedValues const& parent, ComputedValues& c, [[maybe_unused]] ComputationContext const& cx) const override {
-        c.borders.cow().radii.c = _value[0];
-        c.borders.cow().radii.d = _value[1];
+        c.borders.cow().radii.c = toComputed(_value[0], cx);
+        c.borders.cow().radii.d = toComputed(_value[1], cx);
     }
 
     Res<> serialize(Io::TextWriter& w) const override {
@@ -590,36 +587,33 @@ export struct BorderTopLeftRadiusProperty : Property {
         Registration() : Property::Registration(Properties::BORDER_TOP_LEFT_RADIUS) {}
 
         Rc<Property> initial() const override {
-            return makeRc<BorderTopLeftRadiusProperty>(self(), makeArray<Calc<PercentOr<Length>>, 2>(Length{}));
+            return makeRc<BorderTopLeftRadiusProperty>(self(), makeArray<Css::LengthPercentage, 2>(Css::LengthPercentage::fromCanonical(0)));
         }
 
         Rc<Property> load(ComputedValues const& c) const override {
             return makeRc<BorderTopLeftRadiusProperty>(
                 self(),
-                Array{
-                    c.borders->radii.a,
-                    c.borders->radii.b,
-                }
+                Array{toSpecified(c.borders->radii.b), toSpecified(c.borders->radii.a)}
             );
         }
 
         Res<Rc<Property>> parse(Cursor<Css::Sst>& c) const override {
-            auto first = try$(parseValue<Calc<PercentOr<Length>>>(c));
+            auto first = try$(parseValue<Css::LengthPercentage>(c));
             Array value{first, first};
             if (not c.ended())
-                value[1] = try$(parseValue<Calc<PercentOr<Length>>>(c));
+                value[1] = try$(parseValue<Css::LengthPercentage>(c));
             return Ok(makeRc<BorderTopLeftRadiusProperty>(self(), value));
         }
     };
 
-    Array<Calc<PercentOr<Length>>, 2> _value;
+    Array<Css::LengthPercentage, 2> _value;
 
-    BorderTopLeftRadiusProperty(Rc<Property::Registration> registration, Array<Calc<PercentOr<Length>>, 2> value)
+    BorderTopLeftRadiusProperty(Rc<Property::Registration> registration, Array<Css::LengthPercentage, 2> value)
         : Property(registration), _value(value) {}
 
     void apply([[maybe_unused]] ComputedValues const& parent, ComputedValues& c, [[maybe_unused]] ComputationContext const& cx) const override {
-        c.borders.cow().radii.a = _value[1];
-        c.borders.cow().radii.b = _value[0];
+        c.borders.cow().radii.a = toComputed(_value[1], cx);
+        c.borders.cow().radii.b = toComputed(_value[0], cx);
     }
 
     Res<> serialize(Io::TextWriter& w) const override {
@@ -637,33 +631,30 @@ export struct BorderBottomRightRadiusProperty : Property {
         Registration() : Property::Registration(Properties::BORDER_BOTTOM_RIGHT_RADIUS) {}
 
         Rc<Property> initial() const override {
-            return makeRc<BorderBottomRightRadiusProperty>(self(), makeArray<Calc<PercentOr<Length>>, 2>(Length{}));
+            return makeRc<BorderBottomRightRadiusProperty>(self(), makeArray<Css::LengthPercentage, 2>(Css::LengthPercentage::fromCanonical(0)));
         }
 
         Rc<Property> load(ComputedValues const& c) const override {
-            return makeRc<BorderBottomRightRadiusProperty>(self(), Array{
-                                                                       c.borders->radii.e,
-                                                                       c.borders->radii.f,
-                                                                   });
+            return makeRc<BorderBottomRightRadiusProperty>(self(), Array{toSpecified(c.borders->radii.f), toSpecified(c.borders->radii.e)});
         }
 
         Res<Rc<Property>> parse(Cursor<Css::Sst>& c) const override {
-            auto first = try$(parseValue<Calc<PercentOr<Length>>>(c));
+            auto first = try$(parseValue<Css::LengthPercentage>(c));
             Array value{first, first};
             if (not c.ended())
-                value[1] = try$(parseValue<Calc<PercentOr<Length>>>(c));
+                value[1] = try$(parseValue<Css::LengthPercentage>(c));
             return Ok(makeRc<BorderBottomRightRadiusProperty>(self(), value));
         }
     };
 
-    Array<Calc<PercentOr<Length>>, 2> _value;
+    Array<Css::LengthPercentage, 2> _value;
 
-    BorderBottomRightRadiusProperty(Rc<Property::Registration> registration, Array<Calc<PercentOr<Length>>, 2> value)
+    BorderBottomRightRadiusProperty(Rc<Property::Registration> registration, Array<Css::LengthPercentage, 2> value)
         : Property(registration), _value(value) {}
 
     void apply([[maybe_unused]] ComputedValues const& parent, ComputedValues& c, [[maybe_unused]] ComputationContext const& cx) const override {
-        c.borders.cow().radii.e = _value[1];
-        c.borders.cow().radii.f = _value[0];
+        c.borders.cow().radii.e = toComputed(_value[1], cx);
+        c.borders.cow().radii.f = toComputed(_value[0], cx);
     }
 
     Res<> serialize(Io::TextWriter& w) const override {
@@ -681,36 +672,33 @@ export struct BorderBottomLeftRadiusProperty : Property {
         Registration() : Property::Registration(Properties::BORDER_BOTTOM_LEFT_RADIUS) {}
 
         Rc<Property> initial() const override {
-            return makeRc<BorderBottomLeftRadiusProperty>(self(), makeArray<Calc<PercentOr<Length>>, 2>(Length{}));
+            return makeRc<BorderBottomLeftRadiusProperty>(self(), makeArray<Css::LengthPercentage, 2>(Css::LengthPercentage::fromCanonical(0)));
         }
 
         Rc<Property> load(ComputedValues const& c) const override {
             return makeRc<BorderBottomLeftRadiusProperty>(
                 self(),
-                Array{
-                    c.borders->radii.g,
-                    c.borders->radii.h,
-                }
+                Array{toSpecified(c.borders->radii.g), toSpecified(c.borders->radii.h)}
             );
         }
 
         Res<Rc<Property>> parse(Cursor<Css::Sst>& c) const override {
-            auto first = try$(parseValue<Calc<PercentOr<Length>>>(c));
+            auto first = try$(parseValue<Css::LengthPercentage>(c));
             Array value{first, first};
             if (not c.ended())
-                value[1] = try$(parseValue<Calc<PercentOr<Length>>>(c));
+                value[1] = try$(parseValue<Css::LengthPercentage>(c));
             return Ok(makeRc<BorderBottomLeftRadiusProperty>(self(), value));
         }
     };
 
-    Array<Calc<PercentOr<Length>>, 2> _value;
+    Array<Css::LengthPercentage, 2> _value;
 
-    BorderBottomLeftRadiusProperty(Rc<Property::Registration> registration, Array<Calc<PercentOr<Length>>, 2> value)
+    BorderBottomLeftRadiusProperty(Rc<Property::Registration> registration, Array<Css::LengthPercentage, 2> value)
         : Property(registration), _value(value) {}
 
     void apply([[maybe_unused]] ComputedValues const& parent, ComputedValues& c, [[maybe_unused]] ComputationContext const& cx) const override {
-        c.borders.cow().radii.g = _value[0];
-        c.borders.cow().radii.h = _value[1];
+        c.borders.cow().radii.g = toComputed(_value[0], cx);
+        c.borders.cow().radii.h = toComputed(_value[1], cx);
     }
 
     Res<> serialize(Io::TextWriter& w) const override {
@@ -728,33 +716,33 @@ export struct BorderRadiusProperty : Property {
         Registration() : Property::Registration(Properties::BORDER_RADIUS, SHORTHAND) {}
 
         Rc<Property> initial() const override {
-            return makeRc<BorderRadiusProperty>(self(), Math::Radii{Calc<PercentOr<Length>>(Length{})});
+            return makeRc<BorderRadiusProperty>(self(), Math::Radii<Css::LengthPercentage>{Css::LengthPercentage::fromCanonical(0)});
         }
 
         Rc<Property> load(ComputedValues const& c) const override {
-            return makeRc<BorderRadiusProperty>(self(), c.borders->radii);
+            return makeRc<BorderRadiusProperty>(self(), toSpecified(c.borders->radii));
         }
 
         Res<Rc<Property>> parse(Cursor<Css::Sst>& c) const override {
-            auto radii = try$(parseValue<Math::Radii<Calc<PercentOr<Length>>>>(c));
+            auto radii = try$(parseValue<Math::Radii<Css::LengthPercentage>>(c));
             return Ok(makeRc<BorderRadiusProperty>(self(), radii));
         }
     };
 
-    Math::Radii<Calc<PercentOr<Length>>> _value;
+    Math::Radii<Css::LengthPercentage> _value;
 
-    BorderRadiusProperty(Rc<Property::Registration> registration, Math::Radii<Calc<PercentOr<Length>>> value)
+    BorderRadiusProperty(Rc<Property::Registration> registration, Math::Radii<Css::LengthPercentage> value)
         : Property(registration), _value(value) {}
 
     void apply([[maybe_unused]] ComputedValues const& parent, ComputedValues& c, [[maybe_unused]] ComputationContext const& cx) const override {
-        c.borders.cow().radii = _value;
+        c.borders.cow().radii = toComputed(_value, cx);
     }
 
     Longhands expand(RegisteredPropertySet& registry, ComputedValues const&, ComputedValues&) const override {
         return {
-            makeRc<BorderTopLeftRadiusProperty>(registry.resolveRegistration(Properties::BORDER_TOP_LEFT_RADIUS, {}).expect(), Array{_value.a, _value.b}),
+            makeRc<BorderTopLeftRadiusProperty>(registry.resolveRegistration(Properties::BORDER_TOP_LEFT_RADIUS, {}).expect(), Array{_value.b, _value.a}),
             makeRc<BorderTopRightRadiusProperty>(registry.resolveRegistration(Properties::BORDER_TOP_RIGHT_RADIUS, {}).expect(), Array{_value.c, _value.d}),
-            makeRc<BorderBottomRightRadiusProperty>(registry.resolveRegistration(Properties::BORDER_BOTTOM_RIGHT_RADIUS, {}).expect(), Array{_value.e, _value.f}),
+            makeRc<BorderBottomRightRadiusProperty>(registry.resolveRegistration(Properties::BORDER_BOTTOM_RIGHT_RADIUS, {}).expect(), Array{_value.f, _value.e}),
             makeRc<BorderBottomLeftRadiusProperty>(registry.resolveRegistration(Properties::BORDER_BOTTOM_LEFT_RADIUS, {}).expect(), Array{_value.g, _value.h}),
         };
     }
@@ -766,48 +754,84 @@ export struct BorderRadiusProperty : Property {
 
 // https://www.w3.org/TR/css-backgrounds-3/#border-shorthands
 export struct BorderTopProperty : Property {
-    struct Registration : Property::Registration {
-        Registration()
-            : Property::Registration(Properties::BORDER_TOP, SHORTHAND) {}
+    // https://drafts.csswg.org/css-backgrounds/#border-shorthands
+    struct Value {
+        Css::LineWidth width = Keywords::MEDIUM;
+        Gfx::BorderStyle style = Gfx::BorderStyle::NONE;
+        Css::Color color = Keywords::CURRENT_COLOR;
 
-        Rc<Property> initial() const override {
-            return makeRc<BorderTopProperty>(self(), SpecifiedBorder{});
+        static Value fromComputed(Border const& value) {
+            return {toSpecified(value.width), value.style, toSpecified(value.color)};
         }
 
-        Rc<Property> load(ComputedValues const& c) const override {
-            return makeRc<BorderTopProperty>(self(), c.borders->top);
-        }
-
-        Res<Rc<Property>> parse(Cursor<Css::Sst>& c) const override {
-            SpecifiedBorder value;
+        static Res<Value> parse(Cursor<Css::Sst>& c) {
+            // https://drafts.csswg.org/css-backgrounds/#border-shorthands
+            // <line-width> || <line-style> || <color>, each at most once.
+            Value border;
+            bool widthSet = false;
+            bool styleSet = false;
+            bool colorSet = false;
             while (not c.ended()) {
-                auto width = parseValue<Calc<Length>>(c);
+                Css::eatWhitespace(c);
+
+                auto width = parseValue<Css::LineWidth>(c);
                 if (width) {
-                    value.width = width.expect();
+                    if (widthSet)
+                        return Error::invalidData("duplicated border width");
+                    border.width = width.expect();
+                    widthSet = true;
                     continue;
                 }
 
-                auto color = parseValue<Color>(c);
+                auto color = parseValue<Css::Color>(c);
                 if (color) {
-                    value.color = color.expect();
+                    if (colorSet)
+                        return Error::invalidData("duplicated border color");
+                    border.color = color.expect();
+                    colorSet = true;
                     continue;
                 }
 
                 auto style = parseValue<Gfx::BorderStyle>(c);
                 if (style) {
-                    value.style = style.expect();
+                    if (styleSet)
+                        return Error::invalidData("duplicated border style");
+                    border.style = style.expect();
+                    styleSet = true;
                     continue;
                 }
 
                 break;
             }
-            return Ok(makeRc<BorderTopProperty>(self(), value));
+
+            return Ok(border);
+        }
+
+        void repr(Io::Emit& e) const {
+            e("(border {} {} {})", width, style, color);
         }
     };
 
-    SpecifiedBorder _value;
+    struct Registration : Property::Registration {
+        Registration()
+            : Property::Registration(Properties::BORDER_TOP, SHORTHAND) {}
 
-    BorderTopProperty(Rc<Property::Registration> registration, SpecifiedBorder value)
+        Rc<Property> initial() const override {
+            return makeRc<BorderTopProperty>(self(), Value{});
+        }
+
+        Rc<Property> load(ComputedValues const& c) const override {
+            return makeRc<BorderTopProperty>(self(), Value::fromComputed(c.borders->top));
+        }
+
+        Res<Rc<Property>> parse(Cursor<Css::Sst>& c) const override {
+            return Ok(makeRc<BorderTopProperty>(self(), try$(parseValue<Value>(c))));
+        }
+    };
+
+    Value _value;
+
+    BorderTopProperty(Rc<Property::Registration> registration, Value value)
         : Property(registration), _value(value) {}
 
     Longhands expand(RegisteredPropertySet& registry, ComputedValues const&, ComputedValues&) const override {
@@ -825,26 +849,28 @@ export struct BorderTopProperty : Property {
 
 // https://www.w3.org/TR/css-backgrounds-3/#border-shorthands
 export struct BorderRightProperty : Property {
+    using Value = BorderTopProperty::Value;
+
     struct Registration : Property::Registration {
         Registration()
             : Property::Registration(Properties::BORDER_RIGHT, SHORTHAND) {}
 
         Rc<Property> initial() const override {
-            return makeRc<BorderRightProperty>(self(), SpecifiedBorder{});
+            return makeRc<BorderRightProperty>(self(), Value{});
         }
 
         Rc<Property> load(ComputedValues const& c) const override {
-            return makeRc<BorderRightProperty>(self(), c.borders->end);
+            return makeRc<BorderRightProperty>(self(), Value::fromComputed(c.borders->end));
         }
 
         Res<Rc<Property>> parse(Cursor<Css::Sst>& c) const override {
-            return Ok(makeRc<BorderRightProperty>(self(), try$(parseValue<SpecifiedBorder>(c))));
+            return Ok(makeRc<BorderRightProperty>(self(), try$(parseValue<Value>(c))));
         }
     };
 
-    SpecifiedBorder _value;
+    Value _value;
 
-    BorderRightProperty(Rc<Property::Registration> registration, SpecifiedBorder value)
+    BorderRightProperty(Rc<Property::Registration> registration, Value value)
         : Property(registration), _value(value) {}
 
     Longhands expand(RegisteredPropertySet& registry, ComputedValues const&, ComputedValues&) const override {
@@ -862,26 +888,28 @@ export struct BorderRightProperty : Property {
 
 // https://www.w3.org/TR/css-backgrounds-3/#border-shorthands
 export struct BorderBottomProperty : Property {
+    using Value = BorderTopProperty::Value;
+
     struct Registration : Property::Registration {
         Registration()
             : Property::Registration(Properties::BORDER_BOTTOM, SHORTHAND) {}
 
         Rc<Property> initial() const override {
-            return makeRc<BorderBottomProperty>(self(), SpecifiedBorder{});
+            return makeRc<BorderBottomProperty>(self(), Value{});
         }
 
         Rc<Property> load(ComputedValues const& c) const override {
-            return makeRc<BorderBottomProperty>(self(), c.borders->bottom);
+            return makeRc<BorderBottomProperty>(self(), Value::fromComputed(c.borders->bottom));
         }
 
         Res<Rc<Property>> parse(Cursor<Css::Sst>& c) const override {
-            return Ok(makeRc<BorderBottomProperty>(self(), try$(parseValue<SpecifiedBorder>(c))));
+            return Ok(makeRc<BorderBottomProperty>(self(), try$(parseValue<Value>(c))));
         }
     };
 
-    SpecifiedBorder _value;
+    Value _value;
 
-    BorderBottomProperty(Rc<Property::Registration> registration, SpecifiedBorder value)
+    BorderBottomProperty(Rc<Property::Registration> registration, Value value)
         : Property(registration), _value(value) {}
 
     Longhands expand(RegisteredPropertySet& registry, ComputedValues const&, ComputedValues&) const override {
@@ -899,26 +927,28 @@ export struct BorderBottomProperty : Property {
 
 // https://www.w3.org/TR/css-backgrounds-3/#border-shorthands
 export struct BorderLeftProperty : Property {
+    using Value = BorderTopProperty::Value;
+
     struct Registration : Property::Registration {
         Registration()
             : Property::Registration(Properties::BORDER_LEFT, SHORTHAND) {}
 
         Rc<Property> initial() const override {
-            return makeRc<BorderLeftProperty>(self(), SpecifiedBorder{});
+            return makeRc<BorderLeftProperty>(self(), Value{});
         }
 
         Rc<Property> load(ComputedValues const& c) const override {
-            return makeRc<BorderLeftProperty>(self(), c.borders->start);
+            return makeRc<BorderLeftProperty>(self(), Value::fromComputed(c.borders->start));
         }
 
         Res<Rc<Property>> parse(Cursor<Css::Sst>& c) const override {
-            return Ok(makeRc<BorderLeftProperty>(self(), try$(parseValue<SpecifiedBorder>(c))));
+            return Ok(makeRc<BorderLeftProperty>(self(), try$(parseValue<Value>(c))));
         }
     };
 
-    SpecifiedBorder _value;
+    Value _value;
 
-    BorderLeftProperty(Rc<Property::Registration> registration, SpecifiedBorder value)
+    BorderLeftProperty(Rc<Property::Registration> registration, Value value)
         : Property(registration), _value(value) {}
 
     Longhands expand(RegisteredPropertySet& registry, ComputedValues const&, ComputedValues&) const override {
@@ -936,26 +966,28 @@ export struct BorderLeftProperty : Property {
 
 // https://www.w3.org/TR/css-backgrounds-3/#border-shorthands
 export struct BorderProperty : Property {
+    using Value = BorderTopProperty::Value;
+
     struct Registration : Property::Registration {
         Registration()
             : Property::Registration(Properties::BORDER, SHORTHAND) {}
 
         Rc<Property> initial() const override {
-            return makeRc<BorderProperty>(self(), SpecifiedBorder{});
+            return makeRc<BorderProperty>(self(), Value{});
         }
 
         Rc<Property> load(ComputedValues const& c) const override {
-            return makeRc<BorderProperty>(self(), c.borders->top);
+            return makeRc<BorderProperty>(self(), Value::fromComputed(c.borders->top));
         }
 
         Res<Rc<Property>> parse(Cursor<Css::Sst>& c) const override {
-            return Ok(makeRc<BorderProperty>(self(), try$(parseValue<SpecifiedBorder>(c))));
+            return Ok(makeRc<BorderProperty>(self(), try$(parseValue<Value>(c))));
         }
     };
 
-    SpecifiedBorder _value;
+    Value _value;
 
-    BorderProperty(Rc<Property::Registration> registration, SpecifiedBorder value)
+    BorderProperty(Rc<Property::Registration> registration, Value value)
         : Property(registration), _value(value) {}
 
     Longhands expand(RegisteredPropertySet& registry, ComputedValues const&, ComputedValues&) const override {
@@ -990,29 +1022,29 @@ export struct BorderWidthProperty : Property {
             : Property::Registration(Properties::BORDER_WIDTH, SHORTHAND) {}
 
         Rc<Property> initial() const override {
-            return makeRc<BorderWidthProperty>(self(), Math::Insets{LineWidth{Keywords::MEDIUM}});
+            return makeRc<BorderWidthProperty>(self(), Math::Insets{Css::LineWidth{Keywords::MEDIUM}});
         }
 
         Rc<Property> load(ComputedValues const& c) const override {
             return makeRc<BorderWidthProperty>(
                 self(),
-                Math::Insets{
-                    c.borders->start.width,
-                    c.borders->end.width,
-                    c.borders->top.width,
-                    c.borders->bottom.width,
+                Math::Insets<Css::LineWidth>{
+                    toSpecified(c.borders->top.width),
+                    toSpecified(c.borders->end.width),
+                    toSpecified(c.borders->bottom.width),
+                    toSpecified(c.borders->start.width),
                 }
             );
         }
 
         Res<Rc<Property>> parse(Cursor<Css::Sst>& c) const override {
-            return Ok(makeRc<BorderWidthProperty>(self(), try$(parseValue<Math::Insets<LineWidth>>(c))));
+            return Ok(makeRc<BorderWidthProperty>(self(), try$(parseValue<Math::Insets<Css::LineWidth>>(c))));
         }
     };
 
-    Math::Insets<LineWidth> _value;
+    Math::Insets<Css::LineWidth> _value;
 
-    BorderWidthProperty(Rc<Property::Registration> registration, Math::Insets<LineWidth> value)
+    BorderWidthProperty(Rc<Property::Registration> registration, Math::Insets<Css::LineWidth> value)
         : Property(registration), _value(value) {}
 
     Longhands expand(RegisteredPropertySet& registry, ComputedValues const&, ComputedValues&) const override {
@@ -1038,7 +1070,7 @@ export struct BorderCollapseProperty : Property {
             : Property::Registration(Properties::BORDER_COLLAPSE, {INHERITED, BULK_INHERITED}) {}
 
         Rc<Property> initial() const override {
-            return makeRc<BorderCollapseProperty>(self(), BorderCollapse::SEPARATE);
+            return makeRc<BorderCollapseProperty>(self(), Keywords::SEPARATE);
         }
 
         Rc<Property> load(ComputedValues const& c) const override {
@@ -1060,7 +1092,7 @@ export struct BorderCollapseProperty : Property {
     }
 
     Res<> serialize(Io::TextWriter& w) const override {
-        return serializeValue(w, _value);
+        return Css::serializeValue(w, _value);
     }
 
     void repr(Io::Emit& e) const override {
@@ -1070,34 +1102,72 @@ export struct BorderCollapseProperty : Property {
 
 // https://www.w3.org/TR/CSS22/tables.html#propdef-border-spacing
 export struct BorderSpacingProperty : Property {
+    // <length>{1,2}
+    struct Value {
+        Css::Length horizontal, vertical;
+
+        void repr(Io::Emit& e) const {
+            e("({}, {})", horizontal, vertical);
+        }
+    };
+
     struct Registration : Property::Registration {
         Registration()
             : Property::Registration(Properties::BORDER_SPACING, {INHERITED, BULK_INHERITED}) {}
 
         Rc<Property> initial() const override {
-            return makeRc<BorderSpacingProperty>(self(), BorderSpacing{0_au, 0_au});
+            return makeRc<BorderSpacingProperty>(self(), Value{Css::Length::fromCanonical(0), Css::Length::fromCanonical(0)});
         }
 
         Rc<Property> load(ComputedValues const& c) const override {
-            return makeRc<BorderSpacingProperty>(self(), c.table->spacing);
+            return makeRc<BorderSpacingProperty>(
+                self(),
+                Value{toSpecified(c.table->spacing.horizontal), toSpecified(c.table->spacing.vertical)}
+            );
         }
 
         Res<Rc<Property>> parse(Cursor<Css::Sst>& c) const override {
-            return Ok(makeRc<BorderSpacingProperty>(self(), try$(parseValue<BorderSpacing>(c))));
+            if (c.ended())
+                return Error::invalidData("unexpected end of input");
+
+            auto horizontal = parseValue<Css::Length>(c);
+            if (not horizontal)
+                return Error::invalidData("expected length parameter for border-spacing");
+
+            auto vertical = parseValue<Css::Length>(c);
+            if (not vertical)
+                return Ok(makeRc<BorderSpacingProperty>(self(), Value{horizontal.expect(), horizontal.expect()}));
+            return Ok(makeRc<BorderSpacingProperty>(self(), Value{horizontal.take(), vertical.take()}));
         }
     };
 
-    BorderSpacing _value;
+    Value _value;
 
-    BorderSpacingProperty(Rc<Property::Registration> registration, BorderSpacing value)
+    BorderSpacingProperty(Rc<Property::Registration> registration, Value value)
         : Property(registration), _value(value) {}
 
     void apply([[maybe_unused]] ComputedValues const& parent, ComputedValues& c, [[maybe_unused]] ComputationContext const& cx) const override {
-        c.table.cow().spacing = _value;
+        c.table.cow().spacing = {toComputed(_value.horizontal, cx), toComputed(_value.vertical, cx)};
     }
 
+    // https://drafts.csswg.org/cssom/#serialize-a-css-value
     Res<> serialize(Io::TextWriter& w) const override {
-        return serializeValue(w, _value);
+        // If component values can be omitted or replaced with a shorter representation
+        // without changing the meaning of the value, omit/replace them.
+        Io::StringWriter horizontal;
+        try$(serializeValue(horizontal, _value.horizontal));
+        Io::StringWriter vertical;
+        try$(serializeValue(vertical, _value.vertical));
+
+        auto h = horizontal.take();
+        auto v = vertical.take();
+        try$(w.writeStr(h.str()));
+
+        if (h == v)
+            return Ok();
+
+        try$(w.writeRune(' '));
+        return w.writeStr(v.str());
     }
 
     void repr(Io::Emit& e) const override {

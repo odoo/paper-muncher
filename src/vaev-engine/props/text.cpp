@@ -8,6 +8,7 @@ import Karm.Core;
 import :props.base;
 import :css.parser;
 import :style.computed;
+import :style.values.keywords;
 
 using namespace Karm;
 
@@ -24,7 +25,7 @@ export struct TextAlignProperty : Property {
             : Property::Registration(Properties::TEXT_ALIGN, {INHERITED, BULK_INHERITED}) {}
 
         Rc<Property> initial() const override {
-            return makeRc<TextAlignProperty>(self(), TextAlign::LEFT);
+            return makeRc<TextAlignProperty>(self(), Keywords::LEFT);
         }
 
         void inherit(ComputedValues const& parent, ComputedValues& child) const override {
@@ -36,29 +37,11 @@ export struct TextAlignProperty : Property {
         }
 
         Res<Rc<Property>> parse(Cursor<Css::Sst>& c) const override {
-            TextAlign value;
-            if (c.skip(Css::Token::ident("left"))) {
-                value = TextAlign::LEFT;
-            } else if (c.skip(Css::Token::ident("right"))) {
-                value = TextAlign::RIGHT;
-            } else if (c.skip(Css::Token::ident("center"))) {
-                value = TextAlign::CENTER;
-            } else if (c.skip(Css::Token::ident("justify"))) {
-                value = TextAlign::JUSTIFY;
-            } else if (c.skip(Css::Token::ident("start"))) {
-                value = TextAlign::START;
-            } else if (c.skip(Css::Token::ident("end"))) {
-                value = TextAlign::END;
-            } else if (
-                c.skip(Css::Token::ident("-vaev-block-center")) or
-                c.skip(Css::Token::ident("-webkit-center")) or
-                c.skip(Css::Token::ident("-moz-center"))
-            ) {
-                value = TextAlign::BLOCK_CENTER;
-            } else {
-                return Error::invalidData("expected text-align");
-            }
-            return Ok(makeRc<TextAlignProperty>(self(), value));
+            // NOSPEC: Legacy aliases of -vaev-block-center.
+            if (c.skip(Css::Token::ident("-webkit-center")) or c.skip(Css::Token::ident("-moz-center")))
+                return Ok(makeRc<TextAlignProperty>(self(), Keywords::VAEV_BLOCK_CENTER));
+
+            return Ok(makeRc<TextAlignProperty>(self(), try$(parseValue<TextAlign>(c))));
         }
     };
 
@@ -73,9 +56,9 @@ export struct TextAlignProperty : Property {
 
     Res<> serialize(Io::TextWriter& w) const override {
         // NOSPEC: Non-standard value, written with the name res/html.css uses.
-        if (_value == TextAlign::BLOCK_CENTER)
+        if (_value == Keywords::VAEV_BLOCK_CENTER)
             return w.writeStr("-vaev-block-center"s);
-        return serializeValue(w, _value);
+        return Css::serializeValue(w, _value);
     }
 
     void repr(Io::Emit& e) const override {
@@ -91,7 +74,7 @@ export struct TextTransformProperty : Property {
             : Property::Registration(Properties::TEXT_TRANSFORM, {INHERITED, BULK_INHERITED}) {}
 
         Rc<Property> initial() const override {
-            return makeRc<TextTransformProperty>(self(), TextTransform::NONE);
+            return makeRc<TextTransformProperty>(self(), Keywords::NONE);
         }
 
         void inherit(ComputedValues const& parent, ComputedValues& child) const override {
@@ -106,18 +89,7 @@ export struct TextTransformProperty : Property {
             if (c.ended())
                 return Error::invalidData("unexpected end of input");
 
-            TextTransform value;
-            if (c.skip(Css::Token::ident("none"))) {
-                value = TextTransform::NONE;
-            } else if (c.skip(Css::Token::ident("uppercase"))) {
-                value = TextTransform::UPPERCASE;
-            } else if (c.skip(Css::Token::ident("lowercase"))) {
-                value = TextTransform::LOWERCASE;
-            } else {
-                return Error::invalidData("expected text-transform");
-            }
-
-            return Ok(makeRc<TextTransformProperty>(self(), value));
+            return Ok(makeRc<TextTransformProperty>(self(), try$(parseValue<TextTransform>(c))));
         }
     };
 
@@ -131,7 +103,7 @@ export struct TextTransformProperty : Property {
     }
 
     Res<> serialize(Io::TextWriter& w) const override {
-        return serializeValue(w, _value);
+        return Css::serializeValue(w, _value);
     }
 
     void repr(Io::Emit& e) const override {
@@ -147,7 +119,7 @@ export struct WhiteSpaceProperty : Property {
             : Property::Registration(Properties::WHITE_SPACE, {INHERITED, BULK_INHERITED}) {}
 
         Rc<Property> initial() const override {
-            return makeRc<WhiteSpaceProperty>(self(), WhiteSpace::NORMAL);
+            return makeRc<WhiteSpaceProperty>(self(), Keywords::NORMAL);
         }
 
         void inherit(ComputedValues const& parent, ComputedValues& child) const override {
@@ -159,24 +131,7 @@ export struct WhiteSpaceProperty : Property {
         }
 
         Res<Rc<Property>> parse(Cursor<Css::Sst>& c) const override {
-            WhiteSpace value;
-            if (c.skip(Css::Token::ident("normal"))) {
-                value = WhiteSpace::NORMAL;
-            } else if (c.skip(Css::Token::ident("nowrap"))) {
-                value = WhiteSpace::NOWRAP;
-            } else if (c.skip(Css::Token::ident("pre"))) {
-                value = WhiteSpace::PRE;
-            } else if (c.skip(Css::Token::ident("pre-wrap"))) {
-                value = WhiteSpace::PRE_WRAP;
-            } else if (c.skip(Css::Token::ident("pre-line"))) {
-                value = WhiteSpace::PRE_LINE;
-            } else if (c.skip(Css::Token::ident("break-spaces"))) {
-                value = WhiteSpace::BREAK_SPACES;
-            } else {
-                return Error::invalidData("expected white-space");
-            }
-
-            return Ok(makeRc<WhiteSpaceProperty>(self(), value));
+            return Ok(makeRc<WhiteSpaceProperty>(self(), try$(parseValue<WhiteSpace>(c))));
         }
     };
 
@@ -190,7 +145,7 @@ export struct WhiteSpaceProperty : Property {
     }
 
     Res<> serialize(Io::TextWriter& w) const override {
-        return serializeValue(w, _value);
+        return Css::serializeValue(w, _value);
     }
 
     void repr(Io::Emit& e) const override {

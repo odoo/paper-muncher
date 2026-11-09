@@ -8,6 +8,7 @@ import Karm.Core;
 import :props.base;
 import :css.parser;
 import :style.computed;
+import :style.values.keywords;
 
 using namespace Karm;
 
@@ -18,6 +19,21 @@ namespace Vaev::Style {
 
 // https://drafts.csswg.org/css-transforms/#transform-origin-property
 export struct TransformOriginProperty : Property {
+    // https://drafts.csswg.org/css-transforms/#transform-origin-property
+    struct Value {
+        using OneValue = Union<Keywords::Left, Keywords::Center, Keywords::Right, Keywords::Top, Keywords::Bottom, Css::LengthPercentage>;
+
+        using XOffset = Union<Keywords::Left, Keywords::Center, Keywords::Right, Css::LengthPercentage>;
+        using YOffset = Union<Keywords::Top, Keywords::Center, Keywords::Bottom, Css::LengthPercentage>;
+
+        XOffset xOffset;
+        YOffset yOffset;
+
+        void repr(Io::Emit& e) const {
+            e("{} {}", xOffset, yOffset);
+        }
+    };
+
     struct Registration : Property::Registration {
         Registration()
             : Property::Registration(Properties::TRANSFORM_ORIGIN, PRESENTATION_ATTRIBUTE) {}
@@ -30,33 +46,151 @@ export struct TransformOriginProperty : Property {
         Rc<Property> initial() const override {
             return makeRc<TransformOriginProperty>(
                 self(),
-                TransformOrigin{
-                    .xOffset = Calc<PercentOr<Length>>{Percent{50}},
-                    .yOffset = Calc<PercentOr<Length>>{Percent{50}},
+                Value{
+                    .xOffset = Css::LengthPercentage::fromPercentage(50),
+                    .yOffset = Css::LengthPercentage::fromPercentage(50),
                 }
             );
         }
 
         Rc<Property> load(ComputedValues const& c) const override {
-            return makeRc<TransformOriginProperty>(self(), c.transform->origin);
+            return makeRc<TransformOriginProperty>(
+                self(),
+                Value{
+                    .xOffset = toSpecified(c.transform->origin.x),
+                    .yOffset = toSpecified(c.transform->origin.y),
+                }
+            );
+        }
+
+        static Res<Value> _twoValues(Cursor<Css::Sst>& c) {
+            auto xoffset = try$(parseValue<Value::XOffset>(c));
+            if (c.ended())
+                return Error::invalidData("unexpected end of input after x-offset");
+
+            auto yoffset = try$(parseValue<Value::YOffset>(c));
+
+            return Ok(Value{
+                .xOffset = std::move(xoffset),
+                .yOffset = std::move(yoffset),
+            });
+        }
+
+        static Res<Value> _parse(Cursor<Css::Sst>& c) {
+            if (c.ended())
+                return Error::invalidData("unexpected end of input");
+
+            {
+                auto rollback = c.rollbackPoint();
+                auto maybeTwoValues = _twoValues(c);
+                if (maybeTwoValues) {
+                    rollback.disarm();
+                    return maybeTwoValues;
+                }
+            }
+
+            auto singleValue = try$(parseValue<Value::OneValue>(c));
+
+            return singleValue.visit(
+                [&](Keywords::Center) -> Res<Value> {
+                    return Ok(Value{
+                        .xOffset = Keywords::CENTER,
+                        .yOffset = Keywords::CENTER,
+                    });
+                },
+
+                [&](Keywords::Left) -> Res<Value> {
+                    return Ok(Value{
+                        .xOffset = Keywords::LEFT,
+                        .yOffset = Keywords::CENTER, // default y-offset
+                    });
+                },
+                [&](Keywords::Right) -> Res<Value> {
+                    return Ok(Value{
+                        .xOffset = Keywords::RIGHT,
+                        .yOffset = Keywords::CENTER, // default y-offset
+                    });
+                },
+
+                [&](Keywords::Top) -> Res<Value> {
+                    return Ok(Value{
+                        .xOffset = Keywords::CENTER, // default x-offset
+                        .yOffset = Keywords::TOP,
+                    });
+                },
+                [&](Keywords::Bottom) -> Res<Value> {
+                    return Ok(Value{
+                        .xOffset = Keywords::CENTER, // default x-offset
+                        .yOffset = Keywords::BOTTOM,
+                    });
+                },
+
+                [&](Css::LengthPercentage value) -> Res<Value> {
+                    return Ok(Value{
+                        .xOffset = std::move(value),
+                        .yOffset = Keywords::CENTER, // default y-offset
+                    });
+                }
+            );
         }
 
         Res<Rc<Property>> parse(Cursor<Css::Sst>& c) const override {
-            return Ok(makeRc<TransformOriginProperty>(self(), try$(parseValue<TransformOrigin>(c))));
+            return Ok(makeRc<TransformOriginProperty>(self(), try$(_parse(c))));
         }
     };
 
-    TransformOrigin _value;
+    Value _value;
 
-    TransformOriginProperty(Rc<Property::Registration> registration, TransformOrigin value)
+    TransformOriginProperty(Rc<Property::Registration> registration, Value value)
         : Property(registration), _value(value) {}
 
-    void apply([[maybe_unused]] ComputedValues const& parent, ComputedValues& c, [[maybe_unused]] ComputationContext const& cx) const override {
-        c.transform.cow().origin = _value;
+    // NOTE: The computed value is "for <length> the absolute value, otherwise a percentage",
+    //       so keywords are turned into percentages.
+    static Style::Position _resolve(Value const& value, LengthContext auto const& ctx) {
+        return {
+            value.xOffset.visit(
+                [](Keywords::Left) -> Style::PixelPercentage {
+                    return Style::Percent{0};
+                },
+                [](Keywords::Center) -> Style::PixelPercentage {
+                    return Style::Percent{50};
+                },
+                [](Keywords::Right) -> Style::PixelPercentage {
+                    return Style::Percent{100};
+                },
+                [&](Css::LengthPercentage const& length) -> Style::PixelPercentage {
+                    return toComputed(length, ctx);
+                }
+            ),
+            value.yOffset.visit(
+                [](Keywords::Top) -> Style::PixelPercentage {
+                    return Style::Percent{0};
+                },
+                [](Keywords::Center) -> Style::PixelPercentage {
+                    return Style::Percent{50};
+                },
+                [](Keywords::Bottom) -> Style::PixelPercentage {
+                    return Style::Percent{100};
+                },
+                [&](Css::LengthPercentage const& length) -> Style::PixelPercentage {
+                    return toComputed(length, ctx);
+                }
+            ),
+        };
     }
 
+    void apply([[maybe_unused]] ComputedValues const& parent, ComputedValues& c, [[maybe_unused]] ComputationContext const& cx) const override {
+        c.transform.cow().origin = _resolve(_value, cx);
+    }
+
+    // https://drafts.csswg.org/cssom/#serialize-a-css-value
     Res<> serialize(Io::TextWriter& w) const override {
-        return serializeValue(w, _value);
+        // If either of the above syntactic translations would be less backwards-compatible, do not perform them.
+        try$(serializeValue(w, _value.xOffset));
+        try$(w.writeRune(' '));
+        try$(serializeValue(w, _value.yOffset));
+
+        return Ok();
     }
 
     void repr(Io::Emit& e) const override {
@@ -92,7 +226,7 @@ export struct TransformBoxProperty : Property {
     }
 
     Res<> serialize(Io::TextWriter& w) const override {
-        return serializeValue(w, _value);
+        return Css::serializeValue(w, _value);
     }
 
     void repr(Io::Emit& e) const override {
@@ -102,6 +236,37 @@ export struct TransformBoxProperty : Property {
 
 // https://drafts.csswg.org/css-transforms/#propdef-transform
 export struct TransformProperty : Property {
+    using Value = Union<Keywords::None, Css::TransformList>;
+
+    // Computed value: as specified, but with lengths made absolute.
+    static Style::Transform _resolve(Value const& value, LengthContext auto const& ctx) {
+        return value.visit(
+            [](Keywords::None) -> Style::Transform {
+                return Keywords::NONE;
+            },
+            [&](Css::TransformList const& list) -> Style::Transform {
+                Style::TransformList result;
+                for (auto const& function : list)
+                    result.pushBack(toComputed(function, ctx));
+                return result;
+            }
+        );
+    }
+
+    static Value _toSpecified(Style::Transform const& value) {
+        return value.visit(
+            [](Keywords::None) -> Value {
+                return Keywords::NONE;
+            },
+            [](Style::TransformList const& list) -> Value {
+                Css::TransformList result;
+                for (auto const& function : list)
+                    result.pushBack(toSpecified(function));
+                return result;
+            }
+        );
+    }
+
     struct Registration : Property::Registration {
         Registration()
             : Property::Registration(Properties::TRANSFORM, PRESENTATION_ATTRIBUTE) {}
@@ -112,11 +277,11 @@ export struct TransformProperty : Property {
         }
 
         Rc<Property> initial() const override {
-            return makeRc<TransformProperty>(self(), Transform{Keywords::NONE});
+            return makeRc<TransformProperty>(self(), Value{Keywords::NONE});
         }
 
         Rc<Property> load(ComputedValues const& c) const override {
-            return makeRc<TransformProperty>(self(), c.transform->transform);
+            return makeRc<TransformProperty>(self(), _toSpecified(c.transform->transform));
         }
 
         // https://www.w3.org/TR/SVG11/coords.html#TransformAttribute
@@ -129,19 +294,19 @@ export struct TransformProperty : Property {
             Cursor<Css::Sst> content = c.content;
             eatWhitespace(content);
 
-            auto angle = parseValue<Number>(content);
+            auto angle = parseValue<f64>(content);
             if (not angle)
                 return NONE;
 
             skipOmmitableComma(content);
 
-            auto cx = parseValue<Number>(content);
+            auto cx = parseValue<f64>(content);
             if (not cx)
                 return NONE;
 
             skipOmmitableComma(content);
 
-            auto cy = parseValue<Number>(content);
+            auto cy = parseValue<f64>(content);
             if (not cy)
                 return NONE;
 
@@ -211,17 +376,29 @@ export struct TransformProperty : Property {
         }
 
         Res<Rc<Property>> parse(Cursor<Css::Sst>& c) const override {
-            return Ok(makeRc<TransformProperty>(self(), try$(parseValue<Transform>(c))));
+            if (c.ended())
+                return Error::invalidData("unexpected end of input");
+
+            if (c.skip(Css::Token::ident("none")))
+                return Ok(makeRc<TransformProperty>(self(), Value{Keywords::NONE}));
+
+            Css::TransformList functions;
+            while (not c.ended() and c->type == Css::Sst::FUNC) {
+                functions.pushBack(try$(parseValue<Css::TransformFunction>(c)));
+                eatWhitespace(c);
+            }
+
+            return Ok(makeRc<TransformProperty>(self(), Value{std::move(functions)}));
         }
     };
 
-    Transform _value;
+    Value _value;
 
-    TransformProperty(Rc<Property::Registration> registration, Transform value)
+    TransformProperty(Rc<Property::Registration> registration, Value value)
         : Property(registration), _value(value) {}
 
     void apply([[maybe_unused]] ComputedValues const& parent, ComputedValues& c, [[maybe_unused]] ComputationContext const& cx) const override {
-        c.transform.cow().transform = _value;
+        c.transform.cow().transform = _resolve(_value, cx);
     }
 
     void repr(Io::Emit& e) const override {

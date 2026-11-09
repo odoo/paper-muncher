@@ -7,48 +7,49 @@ import Vaev.Engine;
 
 using namespace Karm;
 using namespace Karm::Math::Literals;
+using namespace Vaev::Literals;
 
 namespace Vaev::Style::Tests {
 
 static Media const TEST_MEDIA = {
-    .type = MediaType::SCREEN,
-    .width = 1920_au,
-    .height = 1080_au,
+    .type = Keywords::SCREEN,
+    .width = 1920_px,
+    .height = 1080_px,
     .aspectRatio = 16.0 / 9.0,
-    .orientation = Print::Orientation::LANDSCAPE,
+    .orientation = Style::Keywords::LANDSCAPE,
 
-    .resolution = Resolution::fromDpi(96),
-    .scan = Scan::PROGRESSIVE,
+    .resolution = 1_dppx,
+    .scan = Keywords::PROGRESSIVE,
     .grid = false,
-    .update = Update::NONE,
-    .overflowBlock = OverflowBlock::NONE,
-    .overflowInline = OverflowInline::NONE,
+    .update = Keywords::NONE,
+    .overflowBlock = Keywords::NONE,
+    .overflowInline = Keywords::NONE,
 
     .color = 8,
     .colorIndex = 256,
     .monochrome = 0,
-    .colorGamut = ColorGamut::SRGB,
-    .pointer = Pointer::NONE,
-    .hover = Hover::NONE,
-    .anyPointer = Pointer::FINE,
-    .anyHover = Hover::HOVER,
+    .colorGamut = Keywords::SRGB,
+    .pointer = Keywords::NONE,
+    .hover = Keywords::NONE,
+    .anyPointer = Keywords::FINE,
+    .anyHover = Keywords::HOVER,
 
-    .prefersReducedMotion = ReducedMotion::REDUCE,
-    .prefersReducedTransparency = ReducedTransparency::NO_PREFERENCE,
-    .prefersContrast = Contrast::LESS,
-    .forcedColors = Colors::NONE,
-    .prefersColorScheme = ColorScheme::LIGHT,
-    .prefersReducedData = ReducedData::REDUCE,
+    .prefersReducedMotion = Keywords::REDUCE,
+    .prefersReducedTransparency = Keywords::NO_PREFERENCE,
+    .prefersContrast = Keywords::LESS,
+    .forcedColors = Keywords::NONE,
+    .prefersColorScheme = Keywords::LIGHT,
+    .prefersReducedData = Keywords::REDUCE,
 
-    .deviceWidth = 1920_au,
-    .deviceHeight = 1080_au,
+    .deviceWidth = 1920_px,
+    .deviceHeight = 1080_px,
     .deviceAspectRatio = 16.0 / 9.0,
 };
 
 test$("logical-and") {
     auto query = MediaQuery::combineAnd(
-        TypeFeature{MediaType::SCREEN},
-        WidthFeature::min(1920_au)
+        TypeFeature{Keywords::SCREEN},
+        WidthFeature::min(Css::PureLength{Css::UnitValue{1920, Css::UnitValue::Unit::PX}})
     );
 
     assert$(query.match(TEST_MEDIA));
@@ -58,8 +59,8 @@ test$("logical-and") {
 
 test$("logical-or") {
     auto query = MediaQuery::combineOr(
-        TypeFeature{MediaType::SCREEN},
-        WidthFeature::min(1920_au)
+        TypeFeature{Keywords::SCREEN},
+        WidthFeature::min(Css::PureLength{Css::UnitValue{1920, Css::UnitValue::Unit::PX}})
     );
 
     assert$(query.match(TEST_MEDIA));
@@ -68,7 +69,7 @@ test$("logical-or") {
 }
 
 test$("logical-not") {
-    auto query = MediaQuery::negate(TypeFeature{MediaType::PRINT});
+    auto query = MediaQuery::negate(TypeFeature{Keywords::PRINT});
 
     assert$(query.match(TEST_MEDIA));
 
@@ -76,7 +77,7 @@ test$("logical-not") {
 }
 
 test$("logical-only") {
-    auto query = MediaQuery::only(TypeFeature{MediaType::SCREEN});
+    auto query = MediaQuery::only(TypeFeature{Keywords::SCREEN});
 
     assert$(query.match(TEST_MEDIA));
 

@@ -17,6 +17,8 @@ import Karm.Font;
 import :webview;
 import :layout.values;
 
+using namespace Vaev::Literals;
+
 namespace Vaev::Loader {
 
 Async::Task<Gfx::Snapshot> _fetchImageContentAsync(Http::Client& client, Ref::Url url, Async::CancellationToken ct) {
@@ -34,20 +36,19 @@ Async::Task<Gfx::Snapshot> _fetchImageContentAsync(Http::Client& client, Ref::Ur
 
         // FIXME: Properly determine the size of the SVG
         // https://www.w3.org/TR/SVG2/coords.html#SizingSVGInCSS
-        webview->changeArea(Style::DisplayArea::forRender({}, Resolution::fromDppx(1)));
+        webview->changeArea(Style::DisplayArea::forRender({}, 1_dppx));
         webview->changePrefs(Style::ViewerPrefs::forRender());
         co_trya$(webview->loadLocationAsync(url, Ref::Uti::PUBLIC_OPEN, ct));
         webview->computeStyle();
         auto root = webview->document()->documentElement();
-        Layout::Resolver resolver;
 
         // NOSPEC: The spec references a “default object size” but does not define explicit values.
         //         Historically, browsers (including Chrome) default to 300x150, as mentioned in older drafts:
         //         https://www.w3.org/TR/2011/WD-css3-images-20110908/#default-object-size
-        auto width = resolver.resolve(root->computedValues()->sizing->width.unwrapOr<Calc<PercentOr<Length>>>(Length{300_au}), 300_au);
-        auto height = resolver.resolve(root->computedValues()->sizing->height.unwrapOr<Calc<PercentOr<Length>>>(Length{300_au}), 300_au);
+        auto width = Layout::resolve(root->computedValues()->sizing->width.unwrapOr<Style::PixelPercentage>(Style::Pixel{300}), 300_au);
+        auto height = Layout::resolve(root->computedValues()->sizing->height.unwrapOr<Style::PixelPercentage>(Style::Pixel{300}), 300_au);
 
-        webview->changeArea(Style::DisplayArea::forRender({width, height}, Resolution::fromDppx(1)));
+        webview->changeArea(Style::DisplayArea::forRender(Layout::Vec2Au{width, height}.cast<f64>(), 1_dppx));
         co_return Ok(webview->snapshot());
     } else {
         auto image = Karm::Image::load(data);
@@ -115,9 +116,9 @@ Async::_Task<Rc<Font::Database>> _loadFontfacesAsync(Http::Client& client, Dom::
 
             for (auto const& src : ff.sources) {
                 if (not src.identifier.is<Ref::Url>()) {
-                    auto result = fontDatabase->queryExact(src.identifier.expect<FontFamily>().name);
+                    auto result = fontDatabase->queryExact(src.identifier.expect<Style::FontFamily>().name);
                     if (not result) {
-                        logWarn("Failed to assets font {}", src.identifier.expect<FontFamily>().name);
+                        logWarn("Failed to assets font {}", src.identifier.expect<Style::FontFamily>().name);
                         continue;
                     }
                     break;

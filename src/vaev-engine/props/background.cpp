@@ -8,9 +8,11 @@ import Karm.Core;
 import :props.base;
 import :css.parser;
 import :style.computed;
-import :values.base;
-import :values.primitives;
-import :values.background;
+import :css.values.base;
+import :css.values.primitives;
+import :css.values.backgrounds;
+import :style.values.backgrounds;
+import :style.values.keywords;
 
 using namespace Karm;
 
@@ -24,25 +26,25 @@ export struct BackgroundColorProperty : Property {
         Registration() : Property::Registration(Properties::BACKGROUND_COLOR) {}
 
         Rc<Property> initial() const override {
-            return makeRc<BackgroundColorProperty>(self(), TRANSPARENT);
+            return makeRc<BackgroundColorProperty>(self(), Gfx::ALPHA);
         }
 
         Rc<Property> load(ComputedValues const& c) const override {
-            return makeRc<BackgroundColorProperty>(self(), c.backgrounds->color);
+            return makeRc<BackgroundColorProperty>(self(), toSpecified(c.backgrounds->color));
         }
 
         Res<Rc<Property>> parse(Cursor<Css::Sst>& c) const override {
-            return Ok(makeRc<BackgroundColorProperty>(self(), try$(parseValue<Color>(c))));
+            return Ok(makeRc<BackgroundColorProperty>(self(), try$(parseValue<Css::Color>(c))));
         }
     };
 
-    Color _value;
+    Css::Color _value;
 
-    BackgroundColorProperty(Rc<Property::Registration> registration, Color value)
+    BackgroundColorProperty(Rc<Property::Registration> registration, Css::Color value)
         : Property(registration), _value(value) {}
 
     void apply([[maybe_unused]] ComputedValues const& parent, ComputedValues& c, [[maybe_unused]] ComputationContext const& cx) const override {
-        c.backgrounds.cow().color = _value;
+        c.backgrounds.cow().color = toComputed(_value, c.color);
     }
 
     Res<> serialize(Io::TextWriter& w) const override {
@@ -62,11 +64,11 @@ export struct BackgroundAttachmentProperty : Property {
         Registration() : Property::Registration(Properties::BACKGROUND_ATTACHMENT) {}
 
         Rc<Property> initial() const override {
-            return makeRc<BackgroundAttachmentProperty>(self(), Vec<BackgroundAttachment>{Keywords::SCROLL});
+            return makeRc<BackgroundAttachmentProperty>(self(), Vec<Css::BackgroundAttachment>{Keywords::SCROLL});
         }
 
         Rc<Property> load(ComputedValues const& c) const override {
-            Vec<BackgroundAttachment> layers;
+            Vec<Css::BackgroundAttachment> layers;
             for (auto const& l : c.backgrounds->layers)
                 layers.pushBack(l.attachment);
             return makeRc<BackgroundAttachmentProperty>(self(), std::move(layers));
@@ -74,9 +76,9 @@ export struct BackgroundAttachmentProperty : Property {
 
         Res<Rc<Property>> parse(Cursor<Css::Sst>& c) const override {
 
-            Vec<BackgroundAttachment> value;
+            Vec<Css::BackgroundAttachment> value;
             while (not c.ended()) {
-                value.pushBack(try$(parseValue<BackgroundAttachment>(c)));
+                value.pushBack(try$(parseValue<Css::BackgroundAttachment>(c)));
                 eatWhitespace(c);
             }
 
@@ -84,9 +86,9 @@ export struct BackgroundAttachmentProperty : Property {
         }
     };
 
-    Vec<BackgroundAttachment> _value;
+    Vec<Css::BackgroundAttachment> _value;
 
-    BackgroundAttachmentProperty(Rc<Property::Registration> registration, Vec<BackgroundAttachment> value)
+    BackgroundAttachmentProperty(Rc<Property::Registration> registration, Vec<Css::BackgroundAttachment> value)
         : Property(registration), _value(std::move(value)) {}
 
     void apply([[maybe_unused]] ComputedValues const& parent, ComputedValues& c, [[maybe_unused]] ComputationContext const& cx) const override {
@@ -107,22 +109,22 @@ export struct BackgroundImageProperty : Property {
         Registration() : Property::Registration(Properties::BACKGROUND_IMAGE) {}
 
         Rc<Property> initial() const override {
-            return makeRc<BackgroundImageProperty>(self(), Vec<Image>{});
+            return makeRc<BackgroundImageProperty>(self(), Vec<Css::Image>{});
         }
 
         Rc<Property> load(ComputedValues const&) const override {
-            return makeRc<BackgroundImageProperty>(self(), Vec<Image>{});
+            return makeRc<BackgroundImageProperty>(self(), Vec<Css::Image>{});
         }
 
         Res<Rc<Property>> parse(Cursor<Css::Sst>&) const override {
             // TODO
-            return Ok(makeRc<BackgroundImageProperty>(self(), Vec<Image>{}));
+            return Ok(makeRc<BackgroundImageProperty>(self(), Vec<Css::Image>{}));
         }
     };
 
-    Vec<Image> _value;
+    Vec<Css::Image> _value;
 
-    BackgroundImageProperty(Rc<Property::Registration> registration, Vec<Image> value)
+    BackgroundImageProperty(Rc<Property::Registration> registration, Vec<Css::Image> value)
         : Property(registration), _value(std::move(value)) {}
 
     void apply(ComputedValues const&, ComputedValues&, [[maybe_unused]] ComputationContext const& cx) const override {
@@ -140,22 +142,22 @@ export struct BackgroundPositionProperty : Property {
         Registration() : Property::Registration(Properties::BACKGROUND_POSITION) {}
 
         Rc<Property> initial() const override {
-            return makeRc<BackgroundPositionProperty>(self(), Vec<BackgroundPosition>{});
+            return makeRc<BackgroundPositionProperty>(self(), Vec<Css::BackgroundPosition>{});
         }
 
         Rc<Property> load(ComputedValues const&) const override {
-            return makeRc<BackgroundPositionProperty>(self(), Vec<BackgroundPosition>{});
+            return makeRc<BackgroundPositionProperty>(self(), Vec<Css::BackgroundPosition>{});
         }
 
         Res<Rc<Property>> parse(Cursor<Css::Sst>&) const override {
             // TODO
-            return Ok(makeRc<BackgroundPositionProperty>(self(), Vec<BackgroundPosition>{}));
+            return Ok(makeRc<BackgroundPositionProperty>(self(), Vec<Css::BackgroundPosition>{}));
         }
     };
 
-    Vec<BackgroundPosition> _value;
+    Vec<Css::BackgroundPosition> _value;
 
-    BackgroundPositionProperty(Rc<Property::Registration> registration, Vec<BackgroundPosition> value)
+    BackgroundPositionProperty(Rc<Property::Registration> registration, Vec<Css::BackgroundPosition> value)
         : Property(registration), _value(std::move(value)) {}
 
     void apply(ComputedValues const&, ComputedValues&, [[maybe_unused]] ComputationContext const& cx) const override {
@@ -173,23 +175,23 @@ export struct BackgroundRepeatProperty : Property {
         Registration() : Property::Registration(Properties::BACKGROUND_REPEAT) {}
 
         Rc<Property> initial() const override {
-            return makeRc<BackgroundRepeatProperty>(self(), Vec<BackgroundRepeat>{BackgroundRepeat::REPEAT});
+            return makeRc<BackgroundRepeatProperty>(self(), Vec<Css::BackgroundRepeat>{Css::BackgroundRepeat::REPEAT});
         }
 
         Rc<Property> load(ComputedValues const&) const override {
             // TODO
-            return makeRc<BackgroundRepeatProperty>(self(), Vec<BackgroundRepeat>{BackgroundRepeat::REPEAT});
+            return makeRc<BackgroundRepeatProperty>(self(), Vec<Css::BackgroundRepeat>{Css::BackgroundRepeat::REPEAT});
         }
 
         Res<Rc<Property>> parse(Cursor<Css::Sst>&) const override {
             // TODO
-            return Ok(makeRc<BackgroundRepeatProperty>(self(), Vec<BackgroundRepeat>{}));
+            return Ok(makeRc<BackgroundRepeatProperty>(self(), Vec<Css::BackgroundRepeat>{}));
         }
     };
 
-    Vec<BackgroundRepeat> _value;
+    Vec<Css::BackgroundRepeat> _value;
 
-    BackgroundRepeatProperty(Rc<Property::Registration> registration, Vec<BackgroundRepeat> value)
+    BackgroundRepeatProperty(Rc<Property::Registration> registration, Vec<Css::BackgroundRepeat> value)
         : Property(registration),
           _value(std::move(value)) {}
 
@@ -204,28 +206,45 @@ export struct BackgroundRepeatProperty : Property {
 
 // https://www.w3.org/TR/CSS22/colors.html#x10
 export struct BackgroundProperty : Property {
+    struct Value {
+        Css::Color color = Gfx::ALPHA;
+        Vec<Css::BackgroundLayer> layers = {};
+
+        void repr(Io::Emit& e) const {
+            e("(background");
+            e(" color={}", color);
+            e(" layers={}", layers);
+            e(")");
+        }
+    };
+
     struct Registration : Property::Registration {
         Registration()
             : Property::Registration(Properties::BACKGROUND, SHORTHAND) {}
 
         Rc<Property> initial() const override {
-            return makeRc<BackgroundProperty>(self(), SpecifiedBackground{TRANSPARENT});
+            return makeRc<BackgroundProperty>(self(), Value{Gfx::ALPHA});
         }
 
         Rc<Property> load(ComputedValues const& c) const override {
-            return makeRc<BackgroundProperty>(self(), *c.backgrounds);
+            return makeRc<BackgroundProperty>(self(), [&] {
+                Value value{toSpecified(c.backgrounds->color), {}};
+                for (auto const& layer : c.backgrounds->layers)
+                    value.layers.pushBack(toSpecified(layer));
+                return value;
+            }());
         }
 
         Res<Rc<Property>> parse(Cursor<Css::Sst>& c) const override {
-            SpecifiedBackground value;
-            value.color = try$(parseValue<Color>(c));
+            Value value;
+            value.color = try$(parseValue<Css::Color>(c));
             return Ok(makeRc<BackgroundProperty>(self(), std::move(value)));
         }
     };
 
-    SpecifiedBackground _value;
+    Value _value;
 
-    BackgroundProperty(Rc<Property::Registration> registration, SpecifiedBackground value)
+    BackgroundProperty(Rc<Property::Registration> registration, Value value)
         : Property(registration), _value(std::move(value)) {}
 
     Longhands expand(RegisteredPropertySet& registry, ComputedValues const&, ComputedValues&) const override {
@@ -249,7 +268,7 @@ export struct ColorProperty : Property {
             : Property::Registration(Properties::COLOR, INHERITED) {}
 
         Rc<Property> initial() const override {
-            return makeRc<ColorProperty>(self(), BLACK);
+            return makeRc<ColorProperty>(self(), Css::BLACK);
         }
 
         void inherit(ComputedValues const& parent, ComputedValues& child) const override {
@@ -261,18 +280,18 @@ export struct ColorProperty : Property {
         }
 
         Res<Rc<Property>> parse(Cursor<Css::Sst>& c) const override {
-            return Ok(makeRc<ColorProperty>(self(), try$(parseValue<Color>(c))));
+            return Ok(makeRc<ColorProperty>(self(), try$(parseValue<Css::Color>(c))));
         }
     };
 
-    Color _value;
+    Css::Color _value;
 
-    ColorProperty(Rc<Property::Registration> registration, Color value)
+    ColorProperty(Rc<Property::Registration> registration, Css::Color value)
         : Property(registration), _value(value) {}
 
     void apply(ComputedValues const& parent, ComputedValues& c, [[maybe_unused]] ComputationContext const& cx) const override {
         // In the color property, the used value of currentcolor is the resolved inherited value.
-        c.color = resolve(_value, parent.color);
+        c.color = toUsed(_value, parent.color);
     }
 
     Res<> serialize(Io::TextWriter& w) const override {
