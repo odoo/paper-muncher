@@ -69,6 +69,10 @@ enum struct SvgShapeElement {
     RECT,
     CIRCLE,
     PATH,
+    ELLIPSE,
+    LINE,
+    POLYLINE,
+    POLYGON,
 
     _LEN
 };

@@ -123,6 +123,74 @@ struct SvgFormatingContext : FormatingContext {
         };
     }
 
+    // https://svgwg.org/svg2-draft/shapes.html#EllipseElement
+    static EllipseAu _resolveEllipse(Style::ComputedValues const& style, Vec2Au const& relativeTo) {
+        Opt<Au> rx = NONE;
+        Opt<Au> ry = NONE;
+
+        if (auto v = style.svg->rx.is<PercentOr<Length>>())
+            rx = Some(Layout::resolve(*v, relativeTo.x));
+
+        if (auto v = style.svg->ry.is<PercentOr<Length>>())
+            ry = Some(Layout::resolve(*v, relativeTo.y));
+
+        // A computed value of zero for either dimension, or a computed value of auto for both dimensions, disables
+        // rendering of the element.
+        if ((rx and *rx == 0_au) or (ry and *ry == 0_au) or (not rx and not ry))
+            return {};
+
+        // An auto value for either rx or ry is converted to a used value, following the rules given above for
+        // rectangles (but without any clamping based on width or height).
+        if (not rx)
+            rx = ry;
+        if (not ry)
+            ry = rx;
+
+        return {
+            Layout::resolve(style.svg->cx, relativeTo.x),
+            Layout::resolve(style.svg->cy, relativeTo.y),
+            rx.expect(),
+            ry.expect(),
+        };
+    }
+
+    // https://svgwg.org/svg2-draft/shapes.html#LineElement
+    static Math::Path _resolveLine(Box const& box, Vec2Au const& relativeTo) {
+        auto el = box.origin->expect<Gc::Ref<Dom::Element>>();
+
+        // FIXME: Trailing content is ignored instead of making the value invalid.
+        auto coord = [&](Dom::QualifiedName name, Au relative) {
+            return parseValue<Union<Number, PercentOr<Length>>>(el->getAttribute(name).unwrapOr("0"s))
+                .unwrapOr(Number{0})
+                .visit(
+                    [](Number number) {
+                        return number;
+                    },
+                    [&](PercentOr<Length> const& value) {
+                        return Layout::resolve(value, relative).cast<f64>();
+                    }
+                );
+        };
+
+        Math::Path path;
+
+        // - perform an absolute moveto operation to absolute location (x1,y1)
+        path.moveTo({coord(Svg::X1_ATTR, relativeTo.x), coord(Svg::Y1_ATTR, relativeTo.y)});
+
+        // - perform an absolute lineto operation to absolute location (x2,y2)
+        path.lineTo({coord(Svg::X2_ATTR, relativeTo.x), coord(Svg::Y2_ATTR, relativeTo.y)});
+
+        return path;
+    }
+
+    // https://svgwg.org/svg2-draft/shapes.html#PolylineElement
+    // https://svgwg.org/svg2-draft/shapes.html#PolygonElement
+    static Math::Path _resolvePoly(Box const& box, bool closed) {
+        auto el = box.origin->expect<Gc::Ref<Dom::Element>>();
+        auto points = el->getAttribute(Svg::POINTS_ATTR).unwrapOr(""s);
+        return Math::Path::fromSvg(closed ? Io::format("M{}z", points) : Io::format("M{}", points));
+    }
+
     static void _commitShape(Box& box, FragmentBuilder& fragBuilder, Vec2Au relativeTo) {
         Au resolvedStrokeWidth = Vaev::Layout::resolve(box.style->svgPaint->strokeWidth, normalizedDiagonal(relativeTo));
         auto shape = box.content.expect<SvgShapeElement>();
@@ -143,6 +211,30 @@ struct SvgFormatingContext : FormatingContext {
         case SvgShapeElement::PATH:
             fragBuilder.addChildIfAny(
                 Some(makeRc<SvgShapeFragment>(box, _resolveShape(*box.style), resolvedStrokeWidth))
+            );
+            break;
+
+        case SvgShapeElement::ELLIPSE:
+            fragBuilder.addChildIfAny(
+                Some(makeRc<SvgShapeFragment>(box, _resolveEllipse(*box.style, relativeTo), resolvedStrokeWidth))
+            );
+            break;
+
+        case SvgShapeElement::LINE:
+            fragBuilder.addChildIfAny(
+                Some(makeRc<SvgShapeFragment>(box, _resolveLine(box, relativeTo), resolvedStrokeWidth))
+            );
+            break;
+
+        case SvgShapeElement::POLYLINE:
+            fragBuilder.addChildIfAny(
+                Some(makeRc<SvgShapeFragment>(box, _resolvePoly(box, false), resolvedStrokeWidth))
+            );
+            break;
+
+        case SvgShapeElement::POLYGON:
+            fragBuilder.addChildIfAny(
+                Some(makeRc<SvgShapeFragment>(box, _resolvePoly(box, true), resolvedStrokeWidth))
             );
             break;
 
