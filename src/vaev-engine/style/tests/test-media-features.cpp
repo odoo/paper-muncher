@@ -6,98 +6,113 @@ import Karm.Math;
 
 using namespace Karm;
 using namespace Karm::Math::Literals;
+using namespace Vaev::Literals;
 
 namespace Vaev::Style::Tests {
 
 static Media const TEST_MEDIA = {
-    .type = MediaType::SCREEN,
-    .width = 1920_au,
-    .height = 1080_au,
+    .type = Keywords::SCREEN,
+    .width = 1920_px,
+    .height = 1080_px,
     .aspectRatio = 16.0 / 9.0,
-    .orientation = Print::Orientation::LANDSCAPE,
+    .orientation = Keywords::LANDSCAPE,
 
-    .resolution = Resolution::fromDpi(96),
-    .scan = Scan::PROGRESSIVE,
+    .resolution = 1_dppx,
+    .scan = Keywords::PROGRESSIVE,
     .grid = false,
-    .update = Update::NONE,
-    .overflowBlock = OverflowBlock::NONE,
-    .overflowInline = OverflowInline::NONE,
+    .update = Keywords::NONE,
+    .overflowBlock = Keywords::NONE,
+    .overflowInline = Keywords::NONE,
 
     .color = 8,
     .colorIndex = 256,
     .monochrome = 0,
-    .colorGamut = ColorGamut::SRGB,
-    .pointer = Pointer::NONE,
-    .hover = Hover::NONE,
-    .anyPointer = Pointer::FINE,
-    .anyHover = Hover::HOVER,
+    .colorGamut = Keywords::SRGB,
+    .pointer = Keywords::NONE,
+    .hover = Keywords::NONE,
+    .anyPointer = Keywords::FINE,
+    .anyHover = Keywords::HOVER,
 
-    .prefersReducedMotion = ReducedMotion::REDUCE,
-    .prefersReducedTransparency = ReducedTransparency::NO_PREFERENCE,
-    .prefersContrast = Contrast::LESS,
-    .forcedColors = Colors::NONE,
-    .prefersColorScheme = ColorScheme::LIGHT,
-    .prefersReducedData = ReducedData::REDUCE,
+    .prefersReducedMotion = Keywords::REDUCE,
+    .prefersReducedTransparency = Keywords::NO_PREFERENCE,
+    .prefersContrast = Keywords::LESS,
+    .forcedColors = Keywords::NONE,
+    .prefersColorScheme = Keywords::LIGHT,
+    .prefersReducedData = Keywords::REDUCE,
 
-    .deviceWidth = 1920_au,
-    .deviceHeight = 1080_au,
+    .deviceWidth = 1920_px,
+    .deviceHeight = 1080_px,
     .deviceAspectRatio = 16.0 / 9.0,
 };
 
 test$("feature-type") {
-    assert$(TypeFeature{MediaType::SCREEN}.match(TEST_MEDIA));
+    assert$(TypeFeature{Keywords::SCREEN}.match(TEST_MEDIA));
 
     return Ok();
 }
 
 test$("feature-width") {
-    assert$(WidthFeature::min(1000_au).match(TEST_MEDIA));
+    assert$(WidthFeature::min(Css::px(1000)).match(TEST_MEDIA));
 
-    assert$(WidthFeature::max(2000_au).match(TEST_MEDIA));
+    assert$(WidthFeature::max(Css::px(2000)).match(TEST_MEDIA));
 
-    assert$(WidthFeature::exact(1920_au).match(TEST_MEDIA));
+    assert$(WidthFeature::exact(Css::px(1920)).match(TEST_MEDIA));
+
+    return Ok();
+}
+
+test$("feature-viewport-units-follow-media") {
+    auto vw = Css::parseValue<Css::Length>("100vw").take();
+
+    Media portrait = TEST_MEDIA;
+    portrait.width = 1080_px;
+    portrait.height = 1920_px;
+
+    // height <= 100vw holds in landscape, not in portrait.
+    assert$(HeightFeature::max(vw).match(TEST_MEDIA));
+    assert$(not HeightFeature::max(vw).match(portrait));
 
     return Ok();
 }
 
 test$("feature-height") {
-    assert$(HeightFeature::min(1000_au).match(TEST_MEDIA));
+    assert$(HeightFeature::min(Css::px(1000)).match(TEST_MEDIA));
 
-    assert$(HeightFeature::max(2000_au).match(TEST_MEDIA));
+    assert$(HeightFeature::max(Css::px(2000)).match(TEST_MEDIA));
 
-    assert$(HeightFeature::exact(1080_au).match(TEST_MEDIA));
+    assert$(HeightFeature::exact(Css::px(1080)).match(TEST_MEDIA));
 
     return Ok();
 }
 
 test$("feature-aspect-ratio") {
-    assert$(AspectRatioFeature::min(16.0 / 9.0).match(TEST_MEDIA));
+    assert$(AspectRatioFeature::min(Css::number(16.0 / 9.0)).match(TEST_MEDIA));
 
-    assert$(AspectRatioFeature::max(16.0 / 9.0).match(TEST_MEDIA));
+    assert$(AspectRatioFeature::max(Css::number(16.0 / 9.0)).match(TEST_MEDIA));
 
-    assert$(AspectRatioFeature::exact(16.0 / 9.0).match(TEST_MEDIA));
+    assert$(AspectRatioFeature::exact(Css::number(16.0 / 9.0)).match(TEST_MEDIA));
 
     return Ok();
 }
 
 test$("feature-orientation") {
-    assert$(OrientationFeature{Print::Orientation::LANDSCAPE}.match(TEST_MEDIA));
+    assert$(OrientationFeature{Keywords::LANDSCAPE}.match(TEST_MEDIA));
 
     return Ok();
 }
 
 test$("feature-resolution") {
-    assert$(ResolutionFeature::min(Resolution::fromDpi(96)).match(TEST_MEDIA));
+    assert$(ResolutionFeature::min(Css::dppx(1)).match(TEST_MEDIA));
 
-    assert$(ResolutionFeature::max(Resolution::fromDpi(96)).match(TEST_MEDIA));
+    assert$(ResolutionFeature::max(Css::dppx(1)).match(TEST_MEDIA));
 
-    assert$(ResolutionFeature::exact(Resolution::fromDpi(96)).match(TEST_MEDIA));
+    assert$(ResolutionFeature::exact(Css::dppx(1)).match(TEST_MEDIA));
 
     return Ok();
 }
 
 test$("feature-scan") {
-    assert$(ScanFeature{Scan::PROGRESSIVE}.match(TEST_MEDIA));
+    assert$(ScanFeature{Keywords::PROGRESSIVE}.match(TEST_MEDIA));
 
     return Ok();
 }
@@ -109,19 +124,19 @@ test$("feature-grid") {
 }
 
 test$("feature-update") {
-    assert$(UpdateFeature{Update::NONE}.match(TEST_MEDIA));
+    assert$(UpdateFeature{Keywords::NONE}.match(TEST_MEDIA));
 
     return Ok();
 }
 
 test$("feature-overflow-block") {
-    assert$(OverflowBlockFeature{OverflowBlock::NONE}.match(TEST_MEDIA));
+    assert$(OverflowBlockFeature{Keywords::NONE}.match(TEST_MEDIA));
 
     return Ok();
 }
 
 test$("feature-overflow-inline") {
-    assert$(OverflowInlineFeature{OverflowInline::NONE}.match(TEST_MEDIA));
+    assert$(OverflowInlineFeature{Keywords::NONE}.match(TEST_MEDIA));
 
     return Ok();
 }
@@ -157,97 +172,97 @@ test$("feature-monochrome") {
 }
 
 test$("feature-color-gamut") {
-    assert$(ColorGamutFeature{ColorGamut::SRGB}.match(TEST_MEDIA));
+    assert$(ColorGamutFeature{Keywords::SRGB}.match(TEST_MEDIA));
 
     return Ok();
 }
 
 test$("feature-pointer") {
-    assert$(PointerFeature{Pointer::NONE}.match(TEST_MEDIA));
+    assert$(PointerFeature{Keywords::NONE}.match(TEST_MEDIA));
 
     return Ok();
 }
 
 test$("feature-hover") {
-    assert$(HoverFeature{Hover::NONE}.match(TEST_MEDIA));
+    assert$(HoverFeature{Keywords::NONE}.match(TEST_MEDIA));
 
     return Ok();
 }
 
 test$("feature-any-pointer") {
-    assert$(AnyPointerFeature{Pointer::FINE}.match(TEST_MEDIA));
+    assert$(AnyPointerFeature{Keywords::FINE}.match(TEST_MEDIA));
 
     return Ok();
 }
 
 test$("feature-any-hover") {
-    assert$(AnyHoverFeature{Hover::HOVER}.match(TEST_MEDIA));
+    assert$(AnyHoverFeature{Keywords::HOVER}.match(TEST_MEDIA));
 
     return Ok();
 }
 
 test$("feature-prefers-reduced-motion") {
-    assert$(PrefersReducedMotionFeature{ReducedMotion::REDUCE}.match(TEST_MEDIA));
+    assert$(PrefersReducedMotionFeature{Keywords::REDUCE}.match(TEST_MEDIA));
 
     return Ok();
 }
 
 test$("feature-prefers-reduced-transparency") {
-    assert$(PrefersReducedTransparencyFeature{ReducedTransparency::NO_PREFERENCE}.match(TEST_MEDIA));
+    assert$(PrefersReducedTransparencyFeature{Keywords::NO_PREFERENCE}.match(TEST_MEDIA));
 
     return Ok();
 }
 
 test$("feature-prefers-contrast") {
-    assert$(PrefersContrastFeature{Contrast::LESS}.match(TEST_MEDIA));
+    assert$(PrefersContrastFeature{Keywords::LESS}.match(TEST_MEDIA));
 
     return Ok();
 }
 
 test$("feature-forced-colors") {
-    assert$(ForcedColorsFeature{Colors::NONE}.match(TEST_MEDIA));
+    assert$(ForcedColorsFeature{Keywords::NONE}.match(TEST_MEDIA));
 
     return Ok();
 }
 
 test$("feature-prefers-color-scheme") {
-    assert$(PrefersColorSchemeFeature{ColorScheme::LIGHT}.match(TEST_MEDIA));
+    assert$(PrefersColorSchemeFeature{Keywords::LIGHT}.match(TEST_MEDIA));
 
     return Ok();
 }
 
 test$("feature-prefers-reduced-data") {
-    assert$(PrefersReducedDataFeature{ReducedData::REDUCE}.match(TEST_MEDIA));
+    assert$(PrefersReducedDataFeature{Keywords::REDUCE}.match(TEST_MEDIA));
 
     return Ok();
 }
 
 test$("feature-device-width") {
-    assert$(DeviceWidthFeature::min(1920_au).match(TEST_MEDIA));
+    assert$(DeviceWidthFeature::min(Css::px(1920)).match(TEST_MEDIA));
 
-    assert$(DeviceWidthFeature::max(1920_au).match(TEST_MEDIA));
+    assert$(DeviceWidthFeature::max(Css::px(1920)).match(TEST_MEDIA));
 
-    assert$(DeviceWidthFeature::exact(1920_au).match(TEST_MEDIA));
+    assert$(DeviceWidthFeature::exact(Css::px(1920)).match(TEST_MEDIA));
 
     return Ok();
 }
 
 test$("feature-device-height") {
-    assert$(DeviceHeightFeature::min(1080_au).match(TEST_MEDIA));
+    assert$(DeviceHeightFeature::min(Css::px(1080)).match(TEST_MEDIA));
 
-    assert$(DeviceHeightFeature::max(1080_au).match(TEST_MEDIA));
+    assert$(DeviceHeightFeature::max(Css::px(1080)).match(TEST_MEDIA));
 
-    assert$(DeviceHeightFeature::exact(1080_au).match(TEST_MEDIA));
+    assert$(DeviceHeightFeature::exact(Css::px(1080)).match(TEST_MEDIA));
 
     return Ok();
 }
 
 test$("feature-device-aspect-ratio") {
-    assert$(DeviceAspectRatioFeature::min(16.0 / 9.0).match(TEST_MEDIA));
+    assert$(DeviceAspectRatioFeature::min(Css::number(16.0 / 9.0)).match(TEST_MEDIA));
 
-    assert$(DeviceAspectRatioFeature::max(16.0 / 9.0).match(TEST_MEDIA));
+    assert$(DeviceAspectRatioFeature::max(Css::number(16.0 / 9.0)).match(TEST_MEDIA));
 
-    assert$(DeviceAspectRatioFeature::exact(16.0 / 9.0).match(TEST_MEDIA));
+    assert$(DeviceAspectRatioFeature::exact(Css::number(16.0 / 9.0)).match(TEST_MEDIA));
 
     return Ok();
 }

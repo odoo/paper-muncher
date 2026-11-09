@@ -10,6 +10,7 @@ import :css.parser;
 import :style.computed;
 
 using namespace Karm;
+using namespace Karm::Literals;
 
 namespace Vaev::Style {
 
@@ -17,6 +18,8 @@ namespace Vaev::Style {
 
 // https://svgwg.org/svg2-draft/geometry.html#XProperty
 export struct SvgXProperty : Property {
+    using Value = Css::LengthPercentage;
+
     struct Registration : Property::Registration {
         Registration()
             : Property::Registration(Properties::X, PRESENTATION_ATTRIBUTE) {}
@@ -26,7 +29,7 @@ export struct SvgXProperty : Property {
         }
 
         Rc<Property> load(ComputedValues const& c) const override {
-            return makeRc<SvgXProperty>(self(), c.svg->x);
+            return makeRc<SvgXProperty>(self(), toSpecified(c.svg->x));
         }
 
         Res<Rc<Property>> parsePresentationAttribute(Str style) override {
@@ -34,21 +37,21 @@ export struct SvgXProperty : Property {
         }
 
         Res<Rc<Property>> parse(Cursor<Css::Sst>& c) const override {
-            return Ok(makeRc<SvgXProperty>(self(), try$(parseValue<PercentOr<Length>>(c))));
+            return Ok(makeRc<SvgXProperty>(self(), try$(parseValue<Value>(c))));
         }
     };
 
-    PercentOr<Length> _value;
+    Value _value;
 
-    SvgXProperty(Rc<Property::Registration> registration, PercentOr<Length> value)
+    SvgXProperty(Rc<Property::Registration> registration, Value value)
         : Property(registration), _value(value) {}
 
     void apply([[maybe_unused]] ComputedValues const& parent, ComputedValues& c, [[maybe_unused]] ComputationContext const& cx) const override {
-        c.svg.cow().x = _value;
+        c.svg.cow().x = toComputed(_value, cx);
     }
 
     Res<> serialize(Io::TextWriter& w) const override {
-        return serializeValue(w, _value);
+        return Css::serializeValue(w, _value);
     }
 
     void repr(Io::Emit& e) const override {
@@ -58,6 +61,8 @@ export struct SvgXProperty : Property {
 
 // https://svgwg.org/svg2-draft/geometry.html#YProperty
 export struct SvgYProperty : Property {
+    using Value = Css::LengthPercentage;
+
     struct Registration : Property::Registration {
         Registration()
             : Property::Registration(Properties::Y, PRESENTATION_ATTRIBUTE) {}
@@ -67,7 +72,7 @@ export struct SvgYProperty : Property {
         }
 
         Rc<Property> load(ComputedValues const& c) const override {
-            return makeRc<SvgYProperty>(self(), c.svg->y);
+            return makeRc<SvgYProperty>(self(), toSpecified(c.svg->y));
         }
 
         Res<Rc<Property>> parsePresentationAttribute(Str style) override {
@@ -75,21 +80,21 @@ export struct SvgYProperty : Property {
         }
 
         Res<Rc<Property>> parse(Cursor<Css::Sst>& c) const override {
-            return Ok(makeRc<SvgYProperty>(self(), try$(parseValue<PercentOr<Length>>(c))));
+            return Ok(makeRc<SvgYProperty>(self(), try$(parseValue<Value>(c))));
         }
     };
 
-    PercentOr<Length> _value;
+    Value _value;
 
-    SvgYProperty(Rc<Property::Registration> registration, PercentOr<Length> value)
+    SvgYProperty(Rc<Property::Registration> registration, Value value)
         : Property(registration), _value(value) {}
 
     void apply([[maybe_unused]] ComputedValues const& parent, ComputedValues& c, [[maybe_unused]] ComputationContext const& cx) const override {
-        c.svg.cow().y = _value;
+        c.svg.cow().y = toComputed(_value, cx);
     }
 
     Res<> serialize(Io::TextWriter& w) const override {
-        return serializeValue(w, _value);
+        return Css::serializeValue(w, _value);
     }
 
     void repr(Io::Emit& e) const override {
@@ -99,6 +104,8 @@ export struct SvgYProperty : Property {
 
 // https://svgwg.org/svg2-draft/geometry.html#CXProperty
 export struct SvgCXProperty : Property {
+    using Value = Css::LengthPercentage;
+
     struct Registration : Property::Registration {
         Registration()
             : Property::Registration(Properties::CX, PRESENTATION_ATTRIBUTE) {}
@@ -108,7 +115,7 @@ export struct SvgCXProperty : Property {
         }
 
         Rc<Property> load(ComputedValues const& c) const override {
-            return makeRc<SvgCXProperty>(self(), c.svg->cx);
+            return makeRc<SvgCXProperty>(self(), toSpecified(c.svg->cx));
         }
 
         Res<Rc<Property>> parsePresentationAttribute(Str style) override {
@@ -116,21 +123,21 @@ export struct SvgCXProperty : Property {
         }
 
         Res<Rc<Property>> parse(Cursor<Css::Sst>& c) const override {
-            return Ok(makeRc<SvgCXProperty>(self(), try$(parseValue<PercentOr<Length>>(c))));
+            return Ok(makeRc<SvgCXProperty>(self(), try$(parseValue<Value>(c))));
         }
     };
 
-    PercentOr<Length> _value;
+    Value _value;
 
-    SvgCXProperty(Rc<Property::Registration> registration, PercentOr<Length> value)
+    SvgCXProperty(Rc<Property::Registration> registration, Value value)
         : Property(registration), _value(value) {}
 
     void apply([[maybe_unused]] ComputedValues const& parent, ComputedValues& c, [[maybe_unused]] ComputationContext const& cx) const override {
-        c.svg.cow().cx = _value;
+        c.svg.cow().cx = toComputed(_value, cx);
     }
 
     Res<> serialize(Io::TextWriter& w) const override {
-        return serializeValue(w, _value);
+        return Css::serializeValue(w, _value);
     }
 
     void repr(Io::Emit& e) const override {
@@ -140,6 +147,8 @@ export struct SvgCXProperty : Property {
 
 // https://svgwg.org/svg2-draft/geometry.html#CYProperty
 export struct SvgCYProperty : Property {
+    using Value = Css::LengthPercentage;
+
     struct Registration : Property::Registration {
         Registration()
             : Property::Registration(Properties::CY, PRESENTATION_ATTRIBUTE) {}
@@ -149,7 +158,7 @@ export struct SvgCYProperty : Property {
         }
 
         Rc<Property> load(ComputedValues const& c) const override {
-            return makeRc<SvgCYProperty>(self(), c.svg->cy);
+            return makeRc<SvgCYProperty>(self(), toSpecified(c.svg->cy));
         }
 
         Res<Rc<Property>> parsePresentationAttribute(Str style) override {
@@ -157,21 +166,21 @@ export struct SvgCYProperty : Property {
         }
 
         Res<Rc<Property>> parse(Cursor<Css::Sst>& c) const override {
-            return Ok(makeRc<SvgCYProperty>(self(), try$(parseValue<PercentOr<Length>>(c))));
+            return Ok(makeRc<SvgCYProperty>(self(), try$(parseValue<Value>(c))));
         }
     };
 
-    PercentOr<Length> _value;
+    Value _value;
 
-    SvgCYProperty(Rc<Property::Registration> registration, PercentOr<Length> value)
+    SvgCYProperty(Rc<Property::Registration> registration, Value value)
         : Property(registration), _value(value) {}
 
     void apply([[maybe_unused]] ComputedValues const& parent, ComputedValues& c, [[maybe_unused]] ComputationContext const& cx) const override {
-        c.svg.cow().cy = _value;
+        c.svg.cow().cy = toComputed(_value, cx);
     }
 
     Res<> serialize(Io::TextWriter& w) const override {
-        return serializeValue(w, _value);
+        return Css::serializeValue(w, _value);
     }
 
     void repr(Io::Emit& e) const override {
@@ -181,6 +190,8 @@ export struct SvgCYProperty : Property {
 
 // https://svgwg.org/svg2-draft/geometry.html#RProperty
 export struct SvgRProperty : Property {
+    using Value = Css::LengthPercentage;
+
     struct Registration : Property::Registration {
         Registration()
             : Property::Registration(Properties::R, PRESENTATION_ATTRIBUTE) {}
@@ -190,7 +201,7 @@ export struct SvgRProperty : Property {
         }
 
         Rc<Property> load(ComputedValues const& c) const override {
-            return makeRc<SvgRProperty>(self(), c.svg->r);
+            return makeRc<SvgRProperty>(self(), toSpecified(c.svg->r));
         }
 
         Res<Rc<Property>> parsePresentationAttribute(Str style) override {
@@ -198,21 +209,21 @@ export struct SvgRProperty : Property {
         }
 
         Res<Rc<Property>> parse(Cursor<Css::Sst>& c) const override {
-            return Ok(makeRc<SvgRProperty>(self(), try$(parseValue<PercentOr<Length>>(c))));
+            return Ok(makeRc<SvgRProperty>(self(), try$(parseValue<Value>(c))));
         }
     };
 
-    PercentOr<Length> _value;
+    Value _value;
 
-    SvgRProperty(Rc<Property::Registration> registration, PercentOr<Length> value)
+    SvgRProperty(Rc<Property::Registration> registration, Value value)
         : Property(registration), _value(value) {}
 
     void apply([[maybe_unused]] ComputedValues const& parent, ComputedValues& c, [[maybe_unused]] ComputationContext const& cx) const override {
-        c.svg.cow().r = _value;
+        c.svg.cow().r = toComputed(_value, cx);
     }
 
     Res<> serialize(Io::TextWriter& w) const override {
-        return serializeValue(w, _value);
+        return Css::serializeValue(w, _value);
     }
 
     void repr(Io::Emit& e) const override {
@@ -222,6 +233,8 @@ export struct SvgRProperty : Property {
 
 // https://svgwg.org/svg2-draft/geometry.html#RxProperty
 export struct SvgRxProperty : Property {
+    using Value = Union<Keywords::Auto, Css::LengthPercentage>;
+
     struct Registration : Property::Registration {
         Registration()
             : Property::Registration(Properties::RX, PRESENTATION_ATTRIBUTE) {}
@@ -231,7 +244,7 @@ export struct SvgRxProperty : Property {
         }
 
         Rc<Property> load(ComputedValues const& c) const override {
-            return makeRc<SvgRxProperty>(self(), c.svg->rx);
+            return makeRc<SvgRxProperty>(self(), toSpecified(c.svg->rx));
         }
 
         Res<Rc<Property>> parsePresentationAttribute(Str style) override {
@@ -241,22 +254,21 @@ export struct SvgRxProperty : Property {
         }
 
         Res<Rc<Property>> parse(Cursor<Css::Sst>& c) const override {
-            // FIXME: Negative values are invalid and must be ignored.
-            return Ok(makeRc<SvgRxProperty>(self(), try$(parseValue<Union<Keywords::Auto, PercentOr<Length>>>(c))));
+            return Ok(makeRc<SvgRxProperty>(self(), try$(parseValue<Value>(c))));
         }
     };
 
-    Union<Keywords::Auto, PercentOr<Length>> _value;
+    Value _value;
 
-    SvgRxProperty(Rc<Property::Registration> registration, Union<Keywords::Auto, PercentOr<Length>> value)
+    SvgRxProperty(Rc<Property::Registration> registration, Value value)
         : Property(registration), _value(value) {}
 
     void apply([[maybe_unused]] ComputedValues const& parent, ComputedValues& c, [[maybe_unused]] ComputationContext const& cx) const override {
-        c.svg.cow().rx = _value;
+        c.svg.cow().rx = toComputed(_value, cx);
     }
 
     Res<> serialize(Io::TextWriter& w) const override {
-        return serializeValue(w, _value);
+        return Css::serializeValue(w, _value);
     }
 
     void repr(Io::Emit& e) const override {
@@ -266,6 +278,8 @@ export struct SvgRxProperty : Property {
 
 // https://svgwg.org/svg2-draft/geometry.html#RyProperty
 export struct SvgRyProperty : Property {
+    using Value = Union<Keywords::Auto, Css::LengthPercentage>;
+
     struct Registration : Property::Registration {
         Registration()
             : Property::Registration(Properties::RY, PRESENTATION_ATTRIBUTE) {}
@@ -275,7 +289,7 @@ export struct SvgRyProperty : Property {
         }
 
         Rc<Property> load(ComputedValues const& c) const override {
-            return makeRc<SvgRyProperty>(self(), c.svg->ry);
+            return makeRc<SvgRyProperty>(self(), toSpecified(c.svg->ry));
         }
 
         Res<Rc<Property>> parsePresentationAttribute(Str style) override {
@@ -285,22 +299,21 @@ export struct SvgRyProperty : Property {
         }
 
         Res<Rc<Property>> parse(Cursor<Css::Sst>& c) const override {
-            // FIXME: Negative values are invalid and must be ignored.
-            return Ok(makeRc<SvgRyProperty>(self(), try$(parseValue<Union<Keywords::Auto, PercentOr<Length>>>(c))));
+            return Ok(makeRc<SvgRyProperty>(self(), try$(parseValue<Value>(c))));
         }
     };
 
-    Union<Keywords::Auto, PercentOr<Length>> _value;
+    Value _value;
 
-    SvgRyProperty(Rc<Property::Registration> registration, Union<Keywords::Auto, PercentOr<Length>> value)
+    SvgRyProperty(Rc<Property::Registration> registration, Value value)
         : Property(registration), _value(value) {}
 
     void apply([[maybe_unused]] ComputedValues const& parent, ComputedValues& c, [[maybe_unused]] ComputationContext const& cx) const override {
-        c.svg.cow().ry = _value;
+        c.svg.cow().ry = toComputed(_value, cx);
     }
 
     Res<> serialize(Io::TextWriter& w) const override {
-        return serializeValue(w, _value);
+        return Css::serializeValue(w, _value);
     }
 
     void repr(Io::Emit& e) const override {
@@ -310,6 +323,8 @@ export struct SvgRyProperty : Property {
 
 // https://svgwg.org/svg2-draft/painting.html#FillProperty
 export struct SvgFillProperty : Property {
+    using Value = Css::SvgPaint;
+
     struct Registration : Property::Registration {
         Registration()
             : Property::Registration(Properties::FILL, {PRESENTATION_ATTRIBUTE, INHERITED, BULK_INHERITED}) {}
@@ -319,25 +334,25 @@ export struct SvgFillProperty : Property {
         }
 
         Rc<Property> load(ComputedValues const& c) const override {
-            return makeRc<SvgFillProperty>(self(), SvgPaint{c.svgPaint->fill});
+            return makeRc<SvgFillProperty>(self(), toSpecified(c.svgPaint->fill));
         }
 
         Res<Rc<Property>> parse(Cursor<Css::Sst>& c) const override {
-            return Ok(makeRc<SvgFillProperty>(self(), try$(parseValue<SvgPaint>(c))));
+            return Ok(makeRc<SvgFillProperty>(self(), try$(parseValue<Value>(c))));
         }
     };
 
-    SvgPaint _value;
+    Value _value;
 
-    SvgFillProperty(Rc<Property::Registration> registration, SvgPaint value)
+    SvgFillProperty(Rc<Property::Registration> registration, Value value)
         : Property(registration), _value(value) {}
 
     void apply([[maybe_unused]] ComputedValues const& parent, ComputedValues& c, [[maybe_unused]] ComputationContext const& cx) const override {
-        c.svgPaint.cow().fill = _value;
+        c.svgPaint.cow().fill = toComputed(_value, c.color);
     }
 
     Res<> serialize(Io::TextWriter& w) const override {
-        return serializeValue(w, _value);
+        return Css::serializeValue(w, _value);
     }
 
     void repr(Io::Emit& e) const override {
@@ -347,6 +362,8 @@ export struct SvgFillProperty : Property {
 
 // https://svgwg.org/svg2-draft/paths.html#TheDProperty
 export struct SvgDProperty : Property {
+    using Value = Union<String, None>;
+
     struct Registration : Property::Registration {
         Registration()
             : Property::Registration(Properties::D, PRESENTATION_ATTRIBUTE) {}
@@ -395,9 +412,9 @@ export struct SvgDProperty : Property {
         }
     };
 
-    Union<String, None> _value;
+    Value _value;
 
-    SvgDProperty(Rc<Property::Registration> registration, Union<String, None> value)
+    SvgDProperty(Rc<Property::Registration> registration, Value value)
         : Property(registration), _value(value) {}
 
     void apply([[maybe_unused]] ComputedValues const& parent, ComputedValues& c, [[maybe_unused]] ComputationContext const& cx) const override {
@@ -409,7 +426,7 @@ export struct SvgDProperty : Property {
             [&](String const& path) -> Res<> {
                 // https://drafts.csswg.org/css-shapes-1/#basic-shape-serialization
                 try$(w.writeStr("path("s));
-                try$(serializeValue(w, path));
+                try$(Css::serializeValue(w, path));
                 return w.writeRune(')');
             },
             [&](None) -> Res<> {
@@ -426,6 +443,8 @@ export struct SvgDProperty : Property {
 
 // https://svgwg.org/svg2-draft/coords.html#ViewBoxAttribute
 export struct SvgViewBoxProperty : Property {
+    using Value = Opt<Css::SvgViewBox>;
+
     struct Registration : Property::Registration {
         Registration()
             : Property::Registration(Properties::VIEWBOX, PRESENTATION_ATTRIBUTE) {}
@@ -440,28 +459,28 @@ export struct SvgViewBoxProperty : Property {
 
         Res<Rc<Property>> parse(Cursor<Css::Sst>& c) const override {
             if (c.skip(Css::Token::ident("none")))
-                return Ok(makeRc<SvgViewBoxProperty>(self(), Opt<SvgViewBox>{NONE}));
+                return Ok(makeRc<SvgViewBoxProperty>(self(), Opt<Css::SvgViewBox>{NONE}));
 
-            SvgViewBox viewBox;
+            Css::SvgViewBox viewBox;
 
-            viewBox.minX = try$(parseValue<Number>(c));
-
-            c.skip(Css::Token::COMMA);
-            viewBox.minY = try$(parseValue<Number>(c));
+            viewBox.minX = try$(parseValue<f64>(c));
 
             c.skip(Css::Token::COMMA);
-            viewBox.width = try$(parseValue<Number>(c));
+            viewBox.minY = try$(parseValue<f64>(c));
 
             c.skip(Css::Token::COMMA);
-            viewBox.height = try$(parseValue<Number>(c));
+            viewBox.width = try$(parseValue<f64>(c));
+
+            c.skip(Css::Token::COMMA);
+            viewBox.height = try$(parseValue<f64>(c));
 
             return Ok(makeRc<SvgViewBoxProperty>(self(), Some(std::move(viewBox))));
         }
     };
 
-    Opt<SvgViewBox> _value;
+    Value _value;
 
-    SvgViewBoxProperty(Rc<Property::Registration> registration, Opt<SvgViewBox> value)
+    SvgViewBoxProperty(Rc<Property::Registration> registration, Value value)
         : Property(registration), _value(std::move(value)) {}
 
     void apply([[maybe_unused]] ComputedValues const& parent, ComputedValues& c, [[maybe_unused]] ComputationContext const& cx) const override {
@@ -470,7 +489,7 @@ export struct SvgViewBoxProperty : Property {
 
     Res<> serialize(Io::TextWriter& w) const override {
         if (auto const& [viewBox] = _value)
-            return serializeValue(w, viewBox);
+            return Css::serializeValue(w, viewBox);
 
         // NOSPEC: An unspecified viewBox has no serialized form.
         return Ok();
@@ -483,6 +502,8 @@ export struct SvgViewBoxProperty : Property {
 
 // https://svgwg.org/svg2-draft/painting.html#SpecifyingStrokePaint
 export struct SvgStrokeProperty : Property {
+    using Value = Css::SvgPaint;
+
     struct Registration : Property::Registration {
         Registration()
             : Property::Registration(Properties::STROKE, {PRESENTATION_ATTRIBUTE, INHERITED, BULK_INHERITED}) {}
@@ -492,25 +513,25 @@ export struct SvgStrokeProperty : Property {
         }
 
         Rc<Property> load(ComputedValues const& c) const override {
-            return makeRc<SvgStrokeProperty>(self(), SvgPaint{c.svgPaint->stroke});
+            return makeRc<SvgStrokeProperty>(self(), toSpecified(c.svgPaint->stroke));
         }
 
         Res<Rc<Property>> parse(Cursor<Css::Sst>& c) const override {
-            return Ok(makeRc<SvgStrokeProperty>(self(), try$(parseValue<SvgPaint>(c))));
+            return Ok(makeRc<SvgStrokeProperty>(self(), try$(parseValue<Value>(c))));
         }
     };
 
-    SvgPaint _value;
+    Value _value;
 
-    SvgStrokeProperty(Rc<Property::Registration> registration, SvgPaint value)
+    SvgStrokeProperty(Rc<Property::Registration> registration, Value value)
         : Property(registration), _value(value) {}
 
     void apply([[maybe_unused]] ComputedValues const& parent, ComputedValues& c, [[maybe_unused]] ComputationContext const& cx) const override {
-        c.svgPaint.cow().stroke = _value;
+        c.svgPaint.cow().stroke = toComputed(_value, c.color);
     }
 
     Res<> serialize(Io::TextWriter& w) const override {
-        return serializeValue(w, _value);
+        return Css::serializeValue(w, _value);
     }
 
     void repr(Io::Emit& e) const override {
@@ -520,6 +541,8 @@ export struct SvgStrokeProperty : Property {
 
 // https://svgwg.org/svg2-draft/painting.html#StrokeOpacity
 export struct SvgStrokeOpacityProperty : Property {
+    using Value = Css::OpacityValue;
+
     struct Registration : Property::Registration {
         Registration()
             : Property::Registration(Properties::STROKE_OPACITY, {INHERITED, BULK_INHERITED}) {}
@@ -529,30 +552,25 @@ export struct SvgStrokeOpacityProperty : Property {
         }
 
         Rc<Property> load(ComputedValues const& c) const override {
-            return makeRc<SvgStrokeOpacityProperty>(self(), c.svgPaint->strokeOpacity);
+            return makeRc<SvgStrokeOpacityProperty>(self(), toSpecified(c.svgPaint->strokeOpacity));
         }
 
         Res<Rc<Property>> parse(Cursor<Css::Sst>& c) const override {
-            auto maybePercent = parseValue<Percent>(c);
-            if (maybePercent) {
-                return Ok(makeRc<SvgStrokeOpacityProperty>(self(), maybePercent.expect().value() / 100));
-            } else {
-                return Ok(makeRc<SvgStrokeOpacityProperty>(self(), try$(parseValue<Number>(c))));
-            }
+            return Ok(makeRc<SvgStrokeOpacityProperty>(self(), try$(parseValue<Value>(c))));
         }
     };
 
-    Number _value;
+    Value _value;
 
-    SvgStrokeOpacityProperty(Rc<Property::Registration> registration, Number value)
+    SvgStrokeOpacityProperty(Rc<Property::Registration> registration, Value value)
         : Property(registration), _value(value) {}
 
     void apply([[maybe_unused]] ComputedValues const& parent, ComputedValues& c, [[maybe_unused]] ComputationContext const& cx) const override {
-        c.svgPaint.cow().strokeOpacity = _value;
+        c.svgPaint.cow().strokeOpacity = toComputed(_value);
     }
 
     Res<> serialize(Io::TextWriter& w) const override {
-        return serializeValue(w, _value);
+        return Css::serializeValue(w, _value);
     }
 
     void repr(Io::Emit& e) const override {
@@ -562,6 +580,8 @@ export struct SvgStrokeOpacityProperty : Property {
 
 // https://svgwg.org/svg2-draft/painting.html#FillOpacity
 export struct FillOpacityProperty : Property {
+    using Value = Css::OpacityValue;
+
     struct Registration : Property::Registration {
         Registration()
             : Property::Registration(Properties::FILL_OPACITY, {PRESENTATION_ATTRIBUTE, INHERITED, BULK_INHERITED}) {}
@@ -571,30 +591,25 @@ export struct FillOpacityProperty : Property {
         }
 
         Rc<Property> load(ComputedValues const& c) const override {
-            return makeRc<FillOpacityProperty>(self(), c.svgPaint->fillOpacity);
+            return makeRc<FillOpacityProperty>(self(), toSpecified(c.svgPaint->fillOpacity));
         }
 
         Res<Rc<Property>> parse(Cursor<Css::Sst>& c) const override {
-            auto maybePercent = parseValue<Percent>(c);
-            if (maybePercent) {
-                return Ok(makeRc<FillOpacityProperty>(self(), maybePercent.expect().value() / 100));
-            } else {
-                return Ok(makeRc<FillOpacityProperty>(self(), try$(parseValue<Number>(c))));
-            }
+            return Ok(makeRc<FillOpacityProperty>(self(), try$(parseValue<Value>(c))));
         }
     };
 
-    Number _value;
+    Value _value;
 
-    FillOpacityProperty(Rc<Property::Registration> registration, Number value)
+    FillOpacityProperty(Rc<Property::Registration> registration, Value value)
         : Property(registration), _value(value) {}
 
     void apply([[maybe_unused]] ComputedValues const& parent, ComputedValues& c, [[maybe_unused]] ComputationContext const& cx) const override {
-        c.svgPaint.cow().fillOpacity = _value;
+        c.svgPaint.cow().fillOpacity = toComputed(_value);
     }
 
     Res<> serialize(Io::TextWriter& w) const override {
-        return serializeValue(w, _value);
+        return Css::serializeValue(w, _value);
     }
 
     void repr(Io::Emit& e) const override {
@@ -604,6 +619,8 @@ export struct FillOpacityProperty : Property {
 
 // https://svgwg.org/svg2-draft/painting.html#StrokeWidth
 export struct StrokeWidthProperty : Property {
+    using Value = Css::LengthPercentage;
+
     struct Registration : Property::Registration {
         Registration()
             : Property::Registration(Properties::STROKE_WIDTH, {PRESENTATION_ATTRIBUTE, INHERITED, BULK_INHERITED}) {}
@@ -613,28 +630,28 @@ export struct StrokeWidthProperty : Property {
         }
 
         Rc<Property> load(ComputedValues const& c) const override {
-            return makeRc<StrokeWidthProperty>(self(), c.svgPaint->strokeWidth);
+            return makeRc<StrokeWidthProperty>(self(), toSpecified(c.svgPaint->strokeWidth));
         }
 
         // https://svgwg.org/svg2-draft/painting.html#StrokeWidth
         Res<Rc<Property>> parse(Cursor<Css::Sst>& c) const override {
-            if (auto number = parseValue<Number>(c))
-                return Ok(makeRc<StrokeWidthProperty>(self(), PercentOr<Length>{Length::fromPx(number.take())}));
-            return Ok(makeRc<StrokeWidthProperty>(self(), try$(parseValue<PercentOr<Length>>(c))));
+            if (auto number = parseValue<f64>(c))
+                return Ok(makeRc<StrokeWidthProperty>(self(), Css::px(number.take())));
+            return Ok(makeRc<StrokeWidthProperty>(self(), try$(parseValue<Value>(c))));
         }
     };
 
-    PercentOr<Length> _value;
+    Value _value;
 
-    StrokeWidthProperty(Rc<Property::Registration> registration, PercentOr<Length> value)
+    StrokeWidthProperty(Rc<Property::Registration> registration, Value value)
         : Property(registration), _value(value) {}
 
     void apply([[maybe_unused]] ComputedValues const& parent, ComputedValues& c, [[maybe_unused]] ComputationContext const& cx) const override {
-        c.svgPaint.cow().strokeWidth = _value;
+        c.svgPaint.cow().strokeWidth = toComputed(_value, cx);
     }
 
     Res<> serialize(Io::TextWriter& w) const override {
-        return serializeValue(w, _value);
+        return Css::serializeValue(w, _value);
     }
 
     void repr(Io::Emit& e) const override {

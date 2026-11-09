@@ -8,8 +8,10 @@ import Karm.Core;
 import :props.base;
 import :css.parser;
 import :style.computed;
+import :style.values.keywords;
 
 using namespace Karm;
+using namespace Karm::Literals;
 
 namespace Vaev::Style {
 
@@ -17,6 +19,14 @@ namespace Vaev::Style {
 
 // https://www.w3.org/TR/css-flexbox-1/#flex-basis-property
 export struct FlexBasisProperty : Property {
+    using Value = Union<
+        Keywords::Auto,
+        Keywords::Content,
+        Keywords::MinContent,
+        Keywords::MaxContent,
+        Keywords::FitContent,
+        Css::LengthPercentage>;
+
     struct Registration : Property::Registration {
         Registration() : Property::Registration(Properties::FLEX_BASIS) {}
 
@@ -25,25 +35,25 @@ export struct FlexBasisProperty : Property {
         }
 
         Rc<Property> load(ComputedValues const& c) const override {
-            return makeRc<FlexBasisProperty>(self(), c.flex->basis);
+            return makeRc<FlexBasisProperty>(self(), toSpecified(c.flex->basis));
         }
 
         Res<Rc<Property>> parse(Cursor<Css::Sst>& c) const override {
-            return Ok(makeRc<FlexBasisProperty>(self(), try$(parseValue<FlexBasis>(c))));
+            return Ok(makeRc<FlexBasisProperty>(self(), try$(parseValue<Value>(c))));
         }
     };
 
-    FlexBasis _value;
+    Value _value;
 
-    FlexBasisProperty(Rc<Property::Registration> registration, FlexBasis value)
+    FlexBasisProperty(Rc<Property::Registration> registration, Value value)
         : Property(registration), _value(value) {}
 
     void apply([[maybe_unused]] ComputedValues const& parent, ComputedValues& c, [[maybe_unused]] ComputationContext const& cx) const override {
-        c.flex.cow().basis = _value;
+        c.flex.cow().basis = toComputed(_value, cx);
     }
 
     Res<> serialize(Io::TextWriter& w) const override {
-        return serializeValue(w, _value);
+        return Css::serializeValue(w, _value);
     }
 
     void repr(Io::Emit& e) const override {
@@ -53,6 +63,8 @@ export struct FlexBasisProperty : Property {
 
 // https://www.w3.org/TR/css-flexbox-1/#propdef-flex-direction
 export struct FlexDirectionProperty : Property {
+    using Value = Css::FlexDirection;
+
     struct Registration : Property::Registration {
         Registration() : Property::Registration(Properties::FLEX_DIRECTION) {}
 
@@ -65,13 +77,13 @@ export struct FlexDirectionProperty : Property {
         }
 
         Res<Rc<Property>> parse(Cursor<Css::Sst>& c) const override {
-            return Ok(makeRc<FlexDirectionProperty>(self(), try$(parseValue<FlexDirection>(c))));
+            return Ok(makeRc<FlexDirectionProperty>(self(), try$(parseValue<Value>(c))));
         }
     };
 
-    FlexDirection _value;
+    Value _value;
 
-    FlexDirectionProperty(Rc<Property::Registration> registration, FlexDirection value)
+    FlexDirectionProperty(Rc<Property::Registration> registration, Value value)
         : Property(registration), _value(value) {}
 
     void apply([[maybe_unused]] ComputedValues const& parent, ComputedValues& c, [[maybe_unused]] ComputationContext const& cx) const override {
@@ -79,7 +91,7 @@ export struct FlexDirectionProperty : Property {
     }
 
     Res<> serialize(Io::TextWriter& w) const override {
-        return serializeValue(w, _value);
+        return Css::serializeValue(w, _value);
     }
 
     void repr(Io::Emit& e) const override {
@@ -89,6 +101,8 @@ export struct FlexDirectionProperty : Property {
 
 // https://www.w3.org/TR/css-flexbox-1/#flex-grow-property
 export struct FlexGrowProperty : Property {
+    using Value = Css::Number;
+
     struct Registration : Property::Registration {
         Registration() : Property::Registration(Properties::FLEX_GROW) {}
 
@@ -97,25 +111,25 @@ export struct FlexGrowProperty : Property {
         }
 
         Rc<Property> load(ComputedValues const& c) const override {
-            return makeRc<FlexGrowProperty>(self(), c.flex->grow);
+            return makeRc<FlexGrowProperty>(self(), toSpecified(c.flex->grow));
         }
 
         Res<Rc<Property>> parse(Cursor<Css::Sst>& c) const override {
-            return Ok(makeRc<FlexGrowProperty>(self(), try$(parseValue<Number>(c))));
+            return Ok(makeRc<FlexGrowProperty>(self(), try$(parseValue<Value>(c))));
         }
     };
 
-    Number _value;
+    Value _value;
 
-    FlexGrowProperty(Rc<Property::Registration> registration, Number value)
+    FlexGrowProperty(Rc<Property::Registration> registration, Value value)
         : Property(registration), _value(value) {}
 
     void apply([[maybe_unused]] ComputedValues const& parent, ComputedValues& c, [[maybe_unused]] ComputationContext const& cx) const override {
-        c.flex.cow().grow = _value;
+        c.flex.cow().grow = toComputed(_value);
     }
 
     Res<> serialize(Io::TextWriter& w) const override {
-        return serializeValue(w, _value);
+        return Css::serializeValue(w, _value);
     }
 
     void repr(Io::Emit& e) const override {
@@ -125,6 +139,8 @@ export struct FlexGrowProperty : Property {
 
 // https://www.w3.org/TR/css-flexbox-1/#propdef-flex-shrink
 export struct FlexShrinkProperty : Property {
+    using Value = Css::Number;
+
     struct Registration : Property::Registration {
         Registration() : Property::Registration(Properties::FLEX_SHRINK) {}
 
@@ -133,25 +149,25 @@ export struct FlexShrinkProperty : Property {
         }
 
         Rc<Property> load(ComputedValues const& c) const override {
-            return makeRc<FlexShrinkProperty>(self(), c.flex->shrink);
+            return makeRc<FlexShrinkProperty>(self(), toSpecified(c.flex->shrink));
         }
 
         Res<Rc<Property>> parse(Cursor<Css::Sst>& c) const override {
-            return Ok(makeRc<FlexShrinkProperty>(self(), try$(parseValue<Number>(c))));
+            return Ok(makeRc<FlexShrinkProperty>(self(), try$(parseValue<Value>(c))));
         }
     };
 
-    Number _value;
+    Value _value;
 
-    FlexShrinkProperty(Rc<Property::Registration> registration, Number value)
+    FlexShrinkProperty(Rc<Property::Registration> registration, Value value)
         : Property(registration), _value(value) {}
 
     void apply([[maybe_unused]] ComputedValues const& parent, ComputedValues& c, [[maybe_unused]] ComputationContext const& cx) const override {
-        c.flex.cow().shrink = _value;
+        c.flex.cow().shrink = toComputed(_value);
     }
 
     Res<> serialize(Io::TextWriter& w) const override {
-        return serializeValue(w, _value);
+        return Css::serializeValue(w, _value);
     }
 
     void repr(Io::Emit& e) const override {
@@ -161,6 +177,8 @@ export struct FlexShrinkProperty : Property {
 
 // https://www.w3.org/TR/css-flexbox-1/#propdef-flex-wrap
 export struct FlexWrapProperty : Property {
+    using Value = Css::FlexWrap;
+
     struct Registration : Property::Registration {
         Registration() : Property::Registration(Properties::FLEX_WRAP) {}
 
@@ -173,13 +191,13 @@ export struct FlexWrapProperty : Property {
         }
 
         Res<Rc<Property>> parse(Cursor<Css::Sst>& c) const override {
-            return Ok(makeRc<FlexWrapProperty>(self(), try$(parseValue<FlexWrap>(c))));
+            return Ok(makeRc<FlexWrapProperty>(self(), try$(parseValue<Value>(c))));
         }
     };
 
-    FlexWrap _value;
+    Value _value;
 
-    FlexWrapProperty(Rc<Property::Registration> registration, FlexWrap value)
+    FlexWrapProperty(Rc<Property::Registration> registration, Value value)
         : Property(registration), _value(value) {}
 
     void apply([[maybe_unused]] ComputedValues const& parent, ComputedValues& c, [[maybe_unused]] ComputationContext const& cx) const override {
@@ -187,7 +205,7 @@ export struct FlexWrapProperty : Property {
     }
 
     Res<> serialize(Io::TextWriter& w) const override {
-        return serializeValue(w, _value);
+        return Css::serializeValue(w, _value);
     }
 
     void repr(Io::Emit& e) const override {
@@ -197,6 +215,8 @@ export struct FlexWrapProperty : Property {
 
 // https://www.w3.org/TR/css-flexbox-1/#propdef-flex-flow
 export struct FlexFlowProperty : Property {
+    using Value = Tuple<Css::FlexDirection, Css::FlexWrap>;
+
     struct Registration : Property::Registration {
         Registration()
             : Property::Registration(Properties::FLEX_FLOW, SHORTHAND) {}
@@ -213,22 +233,22 @@ export struct FlexFlowProperty : Property {
             if (c.ended())
                 return Error::invalidData("unexpected end of input");
 
-            Tuple value{FlexDirection::ROW, FlexWrap::NOWRAP};
+            auto value = Value{Keywords::ROW, Keywords::NOWRAP};
 
-            auto direction = parseValue<FlexDirection>(c);
+            auto direction = parseValue<Css::FlexDirection>(c);
             if (direction) {
                 value.v0 = direction.expect();
 
-                auto wrap = parseValue<FlexWrap>(c);
+                auto wrap = parseValue<Css::FlexWrap>(c);
                 if (wrap)
                     value.v1 = wrap.expect();
             } else {
-                auto wrap = parseValue<FlexWrap>(c);
+                auto wrap = parseValue<Css::FlexWrap>(c);
                 if (not wrap)
                     return Error::invalidData("expected flex direction or wrap");
                 value.v1 = wrap.expect();
 
-                direction = parseValue<FlexDirection>(c);
+                direction = parseValue<Css::FlexDirection>(c);
                 if (direction)
                     value.v0 = direction.expect();
             }
@@ -237,9 +257,9 @@ export struct FlexFlowProperty : Property {
         }
     };
 
-    Tuple<FlexDirection, FlexWrap> _value;
+    Value _value;
 
-    FlexFlowProperty(Rc<Property::Registration> registration, Tuple<FlexDirection, FlexWrap> value)
+    FlexFlowProperty(Rc<Property::Registration> registration, Value value)
         : Property(registration), _value(value) {}
 
     Longhands expand(RegisteredPropertySet& registry, ComputedValues const&, ComputedValues&) const override {
@@ -256,6 +276,11 @@ export struct FlexFlowProperty : Property {
 
 // https://www.w3.org/TR/css-flexbox-1/#propdef-flex
 export struct FlexProperty : Property {
+    struct Value {
+        FlexBasisProperty::Value flexBasis = Keywords::AUTO;
+        Css::Number flexGrow, flexShrink;
+    };
+
     struct Registration : Property::Registration {
         Registration()
             : Property::Registration(Properties::FLEX, SHORTHAND) {}
@@ -265,35 +290,41 @@ export struct FlexProperty : Property {
         }
 
         Rc<Property> load(ComputedValues const& c) const override {
-            return makeRc<FlexProperty>(self(), FlexItemProps{c.flex->basis, c.flex->grow, c.flex->shrink});
+            return makeRc<FlexProperty>(
+                self(),
+                Value{
+                    toSpecified(c.flex->basis),
+                    toSpecified(c.flex->grow),
+                    toSpecified(c.flex->shrink),
+            });
         }
 
         Res<Rc<Property>> parse(Cursor<Css::Sst>& c) const override {
             if (c.ended())
                 return Error::invalidData("unexpected end of input");
 
-            FlexItemProps value{Keywords::AUTO, 0, 1};
+            Value value{Keywords::AUTO, Css::number(0), Css::number(1)};
 
             if (c.skip(Css::Token::ident("none"))) {
-                value = {Keywords::AUTO, 0, 0};
+                value = {Keywords::AUTO, Css::number(0), Css::number(0)};
                 return Ok(makeRc<FlexProperty>(self(), value));
             } else if (c.skip(Css::Token::ident("initial"))) {
-                value = {Keywords::AUTO, 0, 1};
+                value = {Keywords::AUTO, Css::number(0), Css::number(1)};
                 return Ok(makeRc<FlexProperty>(self(), value));
             }
 
             // default values if these parameters are omitted
-            value.flexGrow = value.flexShrink = 1;
-            value.flexBasis = Calc<PercentOr<Length>>(Length{});
+            value.flexGrow = value.flexShrink = Css::number(1);
+            value.flexBasis = Css::LengthPercentage{Css::px(0)};
 
-            auto parseGrowShrink = [](Cursor<Css::Sst>& c, FlexItemProps& value) -> Res<> {
-                auto grow = parseValue<Number>(c);
+            auto parseGrowShrink = [](Cursor<Css::Sst>& c, Value& value) -> Res<> {
+                auto grow = parseValue<Css::Number>(c);
                 if (not grow)
                     return Error::invalidData("expected flex item grow");
 
                 value.flexGrow = grow.expect();
 
-                auto shrink = parseValue<Number>(c);
+                auto shrink = parseValue<Css::Number>(c);
                 if (shrink)
                     value.flexShrink = shrink.expect();
 
@@ -302,11 +333,11 @@ export struct FlexProperty : Property {
 
             auto parsedGrowAndMaybeShrink = parseGrowShrink(c, value);
             if (parsedGrowAndMaybeShrink) {
-                auto basis = parseValue<FlexBasis>(c);
+                auto basis = parseValue<FlexBasisProperty::Value>(c);
                 if (basis)
                     value.flexBasis = basis.expect();
             } else {
-                auto basis = parseValue<FlexBasis>(c);
+                auto basis = parseValue<FlexBasisProperty::Value>(c);
                 if (basis)
                     value.flexBasis = basis.expect();
                 else
@@ -318,9 +349,9 @@ export struct FlexProperty : Property {
         }
     };
 
-    FlexItemProps _value;
+    Value _value;
 
-    FlexProperty(Rc<Property::Registration> registration, FlexItemProps value)
+    FlexProperty(Rc<Property::Registration> registration, Value value)
         : Property(registration), _value(value) {}
 
     Longhands expand(RegisteredPropertySet& registry, ComputedValues const&, ComputedValues&) const override {

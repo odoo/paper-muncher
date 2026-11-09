@@ -1,6 +1,7 @@
 export module Vaev.Engine;
 
 export import :css;
+export import :css.values;
 export import :dom;
 export import :driver;
 export import :html;
@@ -8,6 +9,6 @@ export import :layout;
 export import :loader;
 export import :props;
 export import :style;
-export import :values;
+export import :style.values;
 export import :webview;
 export import :xml;

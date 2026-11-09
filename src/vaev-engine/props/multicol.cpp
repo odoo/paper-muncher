@@ -8,13 +8,17 @@ import Karm.Core;
 import :props.base;
 import :css.parser;
 import :style.computed;
+import :style.values.keywords;
 
 using namespace Karm;
+using namespace Karm::Literals;
 
 namespace Vaev::Style {
 
 // https://drafts.csswg.org/css-multicol-2/#cw
 export struct ColumnWidthProperty : Property {
+    using Value = Union<Keywords::Auto, Css::Length>;
+
     struct Registration : Property::Registration {
         Registration()
             : Property::Registration(Properties::COLUMN_WIDTH) {}
@@ -24,44 +28,25 @@ export struct ColumnWidthProperty : Property {
         }
 
         Rc<Property> load(ComputedValues const& c) const override {
-            return makeRc<ColumnWidthProperty>(
-                self(),
-                c.column->width.visit(
-                    [](Keywords::Auto) -> ColumnWidth {
-                        return Keywords::AUTO;
-                    },
-                    [](Au width) -> ColumnWidth {
-                        return Calc<Length>{width};
-                    }
-                )
-            );
+            return makeRc<ColumnWidthProperty>(self(), Value{toSpecified(c.column->width)});
         }
 
         Res<Rc<Property>> parse(Cursor<Css::Sst>& c) const override {
-            return Ok(makeRc<ColumnWidthProperty>(self(), try$(parseValue<ColumnWidth>(c))));
+            return Ok(makeRc<ColumnWidthProperty>(self(), try$(parseValue<Value>(c))));
         }
     };
 
-    ColumnWidth _value;
+    Value _value;
 
-    ColumnWidthProperty(Rc<Property::Registration> registration, ColumnWidth value)
+    ColumnWidthProperty(Rc<Property::Registration> registration, Value value)
         : Property(registration), _value(value) {}
 
     void apply([[maybe_unused]] ComputedValues const& parent, ComputedValues& c, ComputationContext const& cx) const override {
-        // Computed value: the keyword `auto` or an absolute length
-        // FIXME: Clamp negative calc() results to 0.
-        c.column.cow().width = _value.visit(
-            [](Keywords::Auto) -> Union<Keywords::Auto, Au> {
-                return Keywords::AUTO;
-            },
-            [&](Calc<Length> const& width) -> Union<Keywords::Auto, Au> {
-                return resolve(width, cx);
-            }
-        );
+        c.column.cow().width = toComputed(_value, cx);
     }
 
     Res<> serialize(Io::TextWriter& w) const override {
-        return serializeValue(w, _value);
+        return Css::serializeValue(w, _value);
     }
 
     void repr(Io::Emit& e) const override {
@@ -71,6 +56,8 @@ export struct ColumnWidthProperty : Property {
 
 // https://drafts.csswg.org/css-multicol-2/#ch
 export struct ColumnHeightProperty : Property {
+    using Value = Union<Keywords::Auto, Css::Length>;
+
     struct Registration : Property::Registration {
         Registration()
             : Property::Registration(Properties::COLUMN_HEIGHT) {}
@@ -80,44 +67,25 @@ export struct ColumnHeightProperty : Property {
         }
 
         Rc<Property> load(ComputedValues const& c) const override {
-            return makeRc<ColumnHeightProperty>(
-                self(),
-                c.column->height.visit(
-                    [](Keywords::Auto) -> ColumnHeight {
-                        return Keywords::AUTO;
-                    },
-                    [](Au height) -> ColumnHeight {
-                        return Calc<Length>{height};
-                    }
-                )
-            );
+            return makeRc<ColumnHeightProperty>(self(), Value{toSpecified(c.column->height)});
         }
 
         Res<Rc<Property>> parse(Cursor<Css::Sst>& c) const override {
-            return Ok(makeRc<ColumnHeightProperty>(self(), try$(parseValue<ColumnHeight>(c))));
+            return Ok(makeRc<ColumnHeightProperty>(self(), try$(parseValue<Value>(c))));
         }
     };
 
-    ColumnHeight _value;
+    Value _value;
 
-    ColumnHeightProperty(Rc<Property::Registration> registration, ColumnHeight value)
+    ColumnHeightProperty(Rc<Property::Registration> registration, Value value)
         : Property(registration), _value(value) {}
 
     void apply([[maybe_unused]] ComputedValues const& parent, ComputedValues& c, ComputationContext const& cx) const override {
-        // Computed value: the keyword auto or an absolute length
-        // FIXME: Clamp negative calc() results to 0.
-        c.column.cow().height = _value.visit(
-            [](Keywords::Auto) -> Union<Keywords::Auto, Au> {
-                return Keywords::AUTO;
-            },
-            [&](Calc<Length> const& height) -> Union<Keywords::Auto, Au> {
-                return resolve(height, cx);
-            }
-        );
+        c.column.cow().height = toComputed(_value, cx);
     }
 
     Res<> serialize(Io::TextWriter& w) const override {
-        return serializeValue(w, _value);
+        return Css::serializeValue(w, _value);
     }
 
     void repr(Io::Emit& e) const override {
@@ -127,6 +95,8 @@ export struct ColumnHeightProperty : Property {
 
 // https://drafts.csswg.org/css-multicol-2/#cc
 export struct ColumnCountProperty : Property {
+    using Value = Css::ColumnCount;
+
     struct Registration : Property::Registration {
         Registration()
             : Property::Registration(Properties::COLUMN_COUNT) {}
@@ -140,13 +110,13 @@ export struct ColumnCountProperty : Property {
         }
 
         Res<Rc<Property>> parse(Cursor<Css::Sst>& c) const override {
-            return Ok(makeRc<ColumnCountProperty>(self(), try$(parseValue<ColumnCount>(c))));
+            return Ok(makeRc<ColumnCountProperty>(self(), try$(parseValue<Value>(c))));
         }
     };
 
-    ColumnCount _value;
+    Value _value;
 
-    ColumnCountProperty(Rc<Property::Registration> registration, ColumnCount value)
+    ColumnCountProperty(Rc<Property::Registration> registration, Value value)
         : Property(registration), _value(value) {}
 
     void apply([[maybe_unused]] ComputedValues const& parent, ComputedValues& c, [[maybe_unused]] ComputationContext const& cx) const override {
@@ -154,7 +124,7 @@ export struct ColumnCountProperty : Property {
     }
 
     Res<> serialize(Io::TextWriter& w) const override {
-        return serializeValue(w, _value);
+        return Css::serializeValue(w, _value);
     }
 
     void repr(Io::Emit& e) const override {
@@ -164,6 +134,12 @@ export struct ColumnCountProperty : Property {
 
 // https://drafts.csswg.org/css-multicol-2/#columns
 export struct ColumnsProperty : Property {
+    struct Value {
+        ColumnWidthProperty::Value width;
+        ColumnCountProperty::Value count;
+        ColumnHeightProperty::Value height;
+    };
+
     struct Registration : Property::Registration {
         Registration()
             : Property::Registration(Properties::COLUMNS, SHORTHAND) {}
@@ -173,32 +149,21 @@ export struct ColumnsProperty : Property {
         }
 
         Rc<Property> load(ComputedValues const& c) const override {
-            auto width = c.column->width.visit(
-                [](Keywords::Auto) -> ColumnWidth {
-                    return Keywords::AUTO;
-                },
-                [](Au width) -> ColumnWidth {
-                    return Calc<Length>{width};
+            return makeRc<ColumnsProperty>(
+                self(),
+                Value{
+                    .width = toSpecified(c.column->width),
+                    .count = c.column->count,
+                    .height = toSpecified(c.column->height),
                 }
             );
-
-            auto height = c.column->height.visit(
-                [](Keywords::Auto) -> ColumnHeight {
-                    return Keywords::AUTO;
-                },
-                [](Au height) -> ColumnHeight {
-                    return Calc<Length>{height};
-                }
-            );
-
-            return makeRc<ColumnsProperty>(self(), Tuple<ColumnWidth, ColumnCount, ColumnHeight>{.v0 = width, .v1 = c.column->count, .v2 = height});
         }
 
         Res<Rc<Property>> parse(Cursor<Css::Sst>& c) const override {
             if (c.ended())
                 return Error::invalidData("unexpected end of input");
 
-            Tuple<ColumnWidth, ColumnCount, ColumnHeight> value{Keywords::AUTO, Keywords::AUTO, Keywords::AUTO};
+            Value value{Keywords::AUTO, Keywords::AUTO, Keywords::AUTO};
 
             int i = 0;
             while (not c.ended() and c.peek() != Css::Token::delim("/")) {
@@ -210,16 +175,16 @@ export struct ColumnsProperty : Property {
                     continue;
                 }
 
-                if (value.v0 == Keywords::AUTO) {
-                    if (auto width = parseValue<ColumnWidth>(c)) {
-                        value.v0 = width.take();
+                if (value.width == Keywords::AUTO) {
+                    if (auto width = parseValue<ColumnWidthProperty::Value>(c)) {
+                        value.width = width.take();
                         continue;
                     }
                 }
 
-                if (value.v1 == Keywords::AUTO) {
-                    if (auto count = parseValue<ColumnCount>(c)) {
-                        value.v1 = count.take();
+                if (value.count == Keywords::AUTO) {
+                    if (auto count = parseValue<Css::ColumnCount>(c)) {
+                        value.count = count.take();
                         continue;
                     }
                 }
@@ -231,8 +196,8 @@ export struct ColumnsProperty : Property {
                 return Error::invalidData("at least one column-width or column-count value must be present");
 
             if (c.skip(Css::Token::delim("/"))) {
-                if (auto height = parseValue<ColumnHeight>(c))
-                    value.v2 = height.take();
+                if (auto height = parseValue<ColumnHeightProperty::Value>(c))
+                    value.height = height.take();
                 else
                     return Error::invalidData("unexpected token");
             }
@@ -241,17 +206,17 @@ export struct ColumnsProperty : Property {
         }
     };
 
-    Tuple<ColumnWidth, ColumnCount, ColumnHeight> _value;
+    Value _value;
 
-    ColumnsProperty(Rc<Property::Registration> registration, Tuple<ColumnWidth, ColumnCount, ColumnHeight> value)
+    ColumnsProperty(Rc<Property::Registration> registration, Value value)
         : Property(registration), _value(value) {}
 
     // FIXME: This property should also resets the column-wrap property to its initial value.
     Longhands expand(RegisteredPropertySet& registry, ComputedValues const&, ComputedValues&) const override {
         return {
-            makeRc<ColumnWidthProperty>(registry.resolveRegistration(Properties::COLUMN_WIDTH, {}).expect(), _value.v0),
-            makeRc<ColumnCountProperty>(registry.resolveRegistration(Properties::COLUMN_COUNT, {}).expect(), _value.v1),
-            makeRc<ColumnHeightProperty>(registry.resolveRegistration(Properties::COLUMN_HEIGHT, {}).expect(), _value.v2),
+            makeRc<ColumnWidthProperty>(registry.resolveRegistration(Properties::COLUMN_WIDTH, {}).expect(), _value.width),
+            makeRc<ColumnCountProperty>(registry.resolveRegistration(Properties::COLUMN_COUNT, {}).expect(), _value.count),
+            makeRc<ColumnHeightProperty>(registry.resolveRegistration(Properties::COLUMN_HEIGHT, {}).expect(), _value.height),
         };
     }
 
@@ -259,31 +224,31 @@ export struct ColumnsProperty : Property {
     Res<> serialize(Io::TextWriter& w) const override {
         // If component values can be omitted or replaced with a shorter representation without
         // changing the meaning of the value, omit/replace them.
-        if (_value.v0 == Keywords::AUTO and _value.v1 == Keywords::AUTO)
-            try$(serializeValue(w, _value.v0));
-        else if (_value.v0 == Keywords::AUTO)
-            try$(serializeValue(w, _value.v1));
-        else if (_value.v1 == Keywords::AUTO)
-            try$(serializeValue(w, _value.v0));
+        if (_value.width == Keywords::AUTO and _value.count == Keywords::AUTO)
+            try$(Css::serializeValue(w, _value.width));
+        else if (_value.width == Keywords::AUTO)
+            try$(Css::serializeValue(w, _value.count));
+        else if (_value.count == Keywords::AUTO)
+            try$(Css::serializeValue(w, _value.width));
         else {
             // If certain component values can appear in any order without changing the meaning of the value
             // (a pattern typically represented by a double bar || in the value syntax), reorder the component
             // values to use the canonical order of component values as given in the property definition table.
-            try$(serializeValue(w, _value.v0));
+            try$(Css::serializeValue(w, _value.width));
             try$(w.writeRune(' '));
-            try$(serializeValue(w, _value.v1));
+            try$(Css::serializeValue(w, _value.count));
         }
 
-        if (_value.v2 != Keywords::AUTO) {
+        if (_value.height != Keywords::AUTO) {
             try$(w.writeStr(" / "s));
-            try$(serializeValue(w, _value.v2));
+            try$(Css::serializeValue(w, _value.height));
         }
 
         return Ok();
     }
 
     void repr(Io::Emit& e) const override {
-        e("{} {} {}", _value.v0, _value.v1, _value.v2);
+        e("{} {} {}", _value.width, _value.count, _value.height);
     }
 };
 

@@ -6,19 +6,19 @@ import Karm.Math;
 import Karm.Logger;
 import Karm.Core;
 
-import :values;
+import :style.values;
 import :layout.base;
 import :layout.layout;
 
 namespace Vaev::Layout {
 
 struct ReplacedFormatingContext : FormatingContext {
-    Output run(Tree& tree, Box& box, Input input, [[maybe_unused]] usize startAt, [[maybe_unused]] Opt<usize> stopAt) override {
-        auto fragBuilder = FragmentBuilder{tree, box};
+    Output run(Box& box, Input input, [[maybe_unused]] usize startAt, [[maybe_unused]] Opt<usize> stopAt) override {
+        auto fragBuilder = FragmentBuilder{box};
 
-        tree.fc.enterMonolithicBox();
+        input.fragmentainer->enterMonolithicBox();
         Defer _ = [&] {
-            tree.fc.leaveMonolithicBox();
+            input.fragmentainer->leaveMonolithicBox();
         };
 
         Vec2Au size = {};
@@ -31,15 +31,15 @@ struct ReplacedFormatingContext : FormatingContext {
                 .aspectRatio = Some(naturalSize.width / naturalSize.height),
             };
 
-            auto specifiedSize = resolvePreferredSize(tree, box, input.containingBlock);
+            auto specifiedSize = resolvePreferredSize(*box.style, input.containingBlock);
             auto tentativeSize = resolveObjectDefaultSizing(naturalDimensions, specifiedSize);
-            size = applyReplacedMinMaxSizeConstraints(tree, box, tentativeSize, input.containingBlock, specifiedSize);
+            size = applyReplacedMinMaxSizeConstraints(*box.style, tentativeSize, input.containingBlock, specifiedSize);
         } else {
             panic("unsupported replaced content");
         }
 
-        if (tree.fc.allowBreak() and
-            not tree.fc.acceptsFit(
+        if (input.fragmentainer->allowBreak() and
+            not input.fragmentainer->acceptsFit(
                 input.position.y,
                 size.y,
                 input.pendingVerticalSizes

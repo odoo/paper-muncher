@@ -6,13 +6,18 @@ export module Vaev.Engine:props.counter;
 
 import :props.base;
 import :style.counter;
+import :style.values.keywords;
+import :style.values.primitives;
 
 using namespace Karm;
+using namespace Karm::Literals;
 
 namespace Vaev::Style {
 
 // https://drafts.csswg.org/css-lists/#counter-reset
 export struct CounterResetProperty : Property {
+    using Value = Vec<Css::CounterReset>;
+
     struct Registration : Property::Registration {
         Registration() : Property::Registration(Properties::COUNTER_RESET) {}
 
@@ -26,15 +31,15 @@ export struct CounterResetProperty : Property {
 
         Res<Rc<Property>> parse(Cursor<Css::Sst>& c) const override {
             if (parseValue<Keywords::None>(c))
-                return Ok(makeRc<CounterResetProperty>(self(), Vec<CounterProps::Reset>{}));
-            auto value = try$(parseValue<Vec<CounterProps::Reset>>(c));
+                return Ok(makeRc<CounterResetProperty>(self(), Vec<Css::CounterReset>{}));
+            auto value = try$(parseValue<Value>(c));
             return Ok(makeRc<CounterResetProperty>(self(), value));
         }
     };
 
-    Vec<CounterProps::Reset> _value;
+    Value _value;
 
-    CounterResetProperty(Rc<Property::Registration> registration, Vec<CounterProps::Reset> value)
+    CounterResetProperty(Rc<Property::Registration> registration, Value value)
         : Property(registration), _value(value) {}
 
     void apply(ComputedValues const&, ComputedValues& c, [[maybe_unused]] ComputationContext const& cx) const override {
@@ -48,6 +53,8 @@ export struct CounterResetProperty : Property {
 
 // https://drafts.csswg.org/css-lists/#propdef-counter-increment
 export struct CounterIncrementProperty : Property {
+    using Value = Vec<Css::CounterIncrement>;
+
     struct Registration : Property::Registration {
         Registration() : Property::Registration(Properties::COUNTER_INCREMENT) {}
 
@@ -61,15 +68,15 @@ export struct CounterIncrementProperty : Property {
 
         Res<Rc<Property>> parse(Cursor<Css::Sst>& c) const override {
             if (parseValue<Keywords::None>(c))
-                return Ok(makeRc<CounterIncrementProperty>(self(), Vec<CounterProps::Increment>{}));
-            auto value = try$(parseValue<Vec<CounterProps::Increment>>(c));
+                return Ok(makeRc<CounterIncrementProperty>(self(), Vec<Css::CounterIncrement>{}));
+            auto value = try$(parseValue<Value>(c));
             return Ok(makeRc<CounterIncrementProperty>(self(), value));
         }
     };
 
-    Vec<CounterProps::Increment> _value;
+    Value _value;
 
-    CounterIncrementProperty(Rc<Property::Registration> registration, Vec<CounterProps::Increment> value)
+    CounterIncrementProperty(Rc<Property::Registration> registration, Value value)
         : Property(registration), _value(value) {}
 
     void apply(ComputedValues const&, ComputedValues& c, [[maybe_unused]] ComputationContext const& cx) const override {
@@ -83,6 +90,8 @@ export struct CounterIncrementProperty : Property {
 
 // https://drafts.csswg.org/css-lists/#propdef-counter-set
 export struct CounterSetProperty : Property {
+    using Value = Vec<Css::CounterIncrement>;
+
     struct Registration : Property::Registration {
         Registration() : Property::Registration(Properties::COUNTER_SET) {}
 
@@ -96,15 +105,15 @@ export struct CounterSetProperty : Property {
 
         Res<Rc<Property>> parse(Cursor<Css::Sst>& c) const override {
             if (parseValue<Keywords::None>(c))
-                return Ok(makeRc<CounterSetProperty>(self(), Vec<CounterProps::Set>{}));
-            auto value = try$(parseValue<Vec<CounterProps::Set>>(c));
+                return Ok(makeRc<CounterSetProperty>(self(), Vec<Css::CounterIncrement>{}));
+            auto value = try$(parseValue<Value>(c));
             return Ok(makeRc<CounterSetProperty>(self(), value));
         }
     };
 
-    Vec<CounterProps::Set> _value;
+    Value _value;
 
-    CounterSetProperty(Rc<Property::Registration> registration, Vec<CounterProps::Set> value)
+    CounterSetProperty(Rc<Property::Registration> registration, Value value)
         : Property(registration), _value(value) {}
 
     void apply(ComputedValues const&, ComputedValues& c, [[maybe_unused]] ComputationContext const& cx) const override {

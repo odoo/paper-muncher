@@ -8,13 +8,17 @@ import Karm.Core;
 import :props.base;
 import :css.parser;
 import :style.computed;
+import :style.values.keywords;
 
 using namespace Karm;
+using namespace Karm::Literals;
 
 namespace Vaev::Style {
 
-// https://www.w3.org/TR/CSS22/visuren.html#propdef-display
+// https://drafts.csswg.org/css-display/#the-display-properties
 export struct DisplayProperty : Property {
+    using Value = Css::Display;
+
     struct Registration : Property::Registration {
         Registration() : Property::Registration(Properties::DISPLAY) {}
 
@@ -27,13 +31,13 @@ export struct DisplayProperty : Property {
         }
 
         Res<Rc<Property>> parse(Cursor<Css::Sst>& c) const override {
-            return Ok(makeRc<DisplayProperty>(self(), try$(parseValue<Display>(c))));
+            return Ok(makeRc<DisplayProperty>(self(), try$(parseValue<Value>(c))));
         }
     };
 
-    Display _value;
+    Value _value;
 
-    DisplayProperty(Rc<Property::Registration> registration, Display value)
+    DisplayProperty(Rc<Property::Registration> registration, Value value)
         : Property(registration), _value(value) {}
 
     void apply([[maybe_unused]] ComputedValues const& parent, ComputedValues& c, [[maybe_unused]] ComputationContext const& cx) const override {
@@ -41,7 +45,7 @@ export struct DisplayProperty : Property {
     }
 
     Res<> serialize(Io::TextWriter& w) const override {
-        return serializeValue(w, _value);
+        return Css::serializeValue(w, _value);
     }
 
     void repr(Io::Emit& e) const override {
@@ -52,6 +56,8 @@ export struct DisplayProperty : Property {
 // https://www.w3.org/TR/css-gcpm-3/
 // https://drafts.csswg.org/css-content/#content-property
 export struct ContentProperty : Property {
+    using Value = Css::ContentValue;
+
     struct Registration : Property::Registration {
         Registration() : Property::Registration(Properties::CONTENT) {}
 
@@ -64,13 +70,13 @@ export struct ContentProperty : Property {
         }
 
         Res<Rc<Property>> parse(Cursor<Css::Sst>& c) const override {
-            return Ok(makeRc<ContentProperty>(self(), try$(parseValue<Content>(c))));
+            return Ok(makeRc<ContentProperty>(self(), try$(parseValue<Value>(c))));
         }
     };
 
-    Content _value;
+    Value _value;
 
-    ContentProperty(Rc<Property::Registration> registration, Content value)
+    ContentProperty(Rc<Property::Registration> registration, Value value)
         : Property(registration), _value(value) {}
 
     void apply([[maybe_unused]] ComputedValues const& parent, ComputedValues& c, [[maybe_unused]] ComputationContext const& cx) const override {
@@ -84,6 +90,8 @@ export struct ContentProperty : Property {
 
 // https://www.w3.org/TR/css-display-3/#order-property
 export struct OrderProperty : Property {
+    using Value = Integer;
+
     struct Registration : Property::Registration {
         Registration() : Property::Registration(Properties::ORDER) {}
 
@@ -96,13 +104,13 @@ export struct OrderProperty : Property {
         }
 
         Res<Rc<Property>> parse(Cursor<Css::Sst>& c) const override {
-            return Ok(makeRc<OrderProperty>(self(), try$(parseValue<Integer>(c))));
+            return Ok(makeRc<OrderProperty>(self(), try$(parseValue<Value>(c))));
         }
     };
 
-    Integer _value;
+    Value _value;
 
-    OrderProperty(Rc<Property::Registration> registration, Integer value)
+    OrderProperty(Rc<Property::Registration> registration, Value value)
         : Property(registration), _value(value) {}
 
     void apply([[maybe_unused]] ComputedValues const& parent, ComputedValues& c, [[maybe_unused]] ComputationContext const& cx) const override {

@@ -7,8 +7,8 @@ export module Vaev.Engine:layout.runningPosition;
 import Karm.Core;
 import Karm.Math;
 
-import :values.insets;
-import :values.content;
+import :style.values;
+import :style.values.generic;
 import :layout.box;
 
 using namespace Karm;
@@ -19,10 +19,10 @@ namespace Vaev::Layout {
 
 export struct RunningPositionInfo {
     usize pageNumber;
-    RunningPosition running;
+    Style::RunningPosition running;
     Dom::OriginatingElement element;
 
-    RunningPositionInfo(usize page, RunningPosition running, Dom::OriginatingElement element)
+    RunningPositionInfo(usize page, Style::RunningPosition running, Dom::OriginatingElement element)
         : pageNumber(page), running(running), element(element) {
     }
 
@@ -33,12 +33,12 @@ export struct RunningPositionInfo {
 
 // Mapping the different Running positions to their respective names and their page.
 struct RunningPositionMap {
-    Map<CustomIdent, Vec<RunningPositionInfo>> content;
+    Map<Style::CustomIdent, Vec<RunningPositionInfo>> content;
 
     void add(usize pageNumber, Layout::Box& box) {
         auto& style = box.style;
 
-        if (auto position = style->position.is<RunningPosition>()) {
+        if (auto position = style->position.is<Style::RunningPosition>()) {
             auto const origin = box.origin;
             if (not box.origin)
                 return;
@@ -49,15 +49,15 @@ struct RunningPositionMap {
     }
 
     // https://www.w3.org/TR/css-gcpm-3/#using-named-strings
-    Res<RunningPositionInfo> match(ElementFunc elt, usize pageNumber) {
+    Res<RunningPositionInfo> match(Style::ElementFunc elt, usize pageNumber) {
         auto id = elt.customIdent;
         auto const& list = try$(content.lookup(id).okOr(Error::notFound("element not found")));
 
         switch (elt.target) {
-        case ElementFunc::Target::UNDEFINED:
+        case Style::ElementFunc::Target::UNDEFINED:
             return Ok(list[0]);
 
-        case ElementFunc::Target::START:
+        case Style::ElementFunc::Target::START:
             for (usize i = 0; i < list.len(); i++) {
                 auto elt = list[i];
                 if (elt.pageNumber == pageNumber and i > 0) {
@@ -66,13 +66,13 @@ struct RunningPositionMap {
             }
             return Ok(list[0]);
 
-        case ElementFunc::Target::FIRST:
-        case ElementFunc::Target::FIRST_EXCEPT: {
+        case Style::ElementFunc::Target::FIRST:
+        case Style::ElementFunc::Target::FIRST_EXCEPT: {
             auto elements = _searchPage(list, pageNumber);
             return Ok(elements[0]);
         }
 
-        case ElementFunc::Target::LAST: {
+        case Style::ElementFunc::Target::LAST: {
             auto elements = _searchPage(list, pageNumber);
             return Ok(elements[elements.len() - 1]);
         }
