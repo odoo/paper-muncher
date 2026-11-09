@@ -223,6 +223,8 @@ export RegisteredPropertySet const& defaultRegistry() {
         registry.registerProperty<SvgCXProperty>();
         registry.registerProperty<SvgCYProperty>();
         registry.registerProperty<SvgRProperty>();
+        registry.registerProperty<SvgRxProperty>();
+        registry.registerProperty<SvgRyProperty>();
         registry.registerProperty<SvgFillProperty>();
         registry.registerProperty<SvgDProperty>();
         registry.registerProperty<SvgStrokeProperty>();

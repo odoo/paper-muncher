@@ -220,6 +220,94 @@ export struct SvgRProperty : Property {
     }
 };
 
+// https://svgwg.org/svg2-draft/geometry.html#RxProperty
+export struct SvgRxProperty : Property {
+    struct Registration : Property::Registration {
+        Registration()
+            : Property::Registration(Properties::RX, PRESENTATION_ATTRIBUTE) {}
+
+        Rc<Property> initial() const override {
+            return makeRc<SvgRxProperty>(self(), Keywords::AUTO);
+        }
+
+        Rc<Property> load(ComputedValues const& c) const override {
+            return makeRc<SvgRxProperty>(self(), c.svg->rx);
+        }
+
+        Res<Rc<Property>> parsePresentationAttribute(Str style) override {
+            if (auto property = Property::Registration::parsePresentationAttribute(style))
+                return property;
+            return Property::Registration::parsePresentationAttribute(Io::format("{}px", style));
+        }
+
+        Res<Rc<Property>> parse(Cursor<Css::Sst>& c) const override {
+            // FIXME: Negative values are invalid and must be ignored.
+            return Ok(makeRc<SvgRxProperty>(self(), try$(parseValue<Union<Keywords::Auto, PercentOr<Length>>>(c))));
+        }
+    };
+
+    Union<Keywords::Auto, PercentOr<Length>> _value;
+
+    SvgRxProperty(Rc<Property::Registration> registration, Union<Keywords::Auto, PercentOr<Length>> value)
+        : Property(registration), _value(value) {}
+
+    void apply([[maybe_unused]] ComputedValues const& parent, ComputedValues& c, [[maybe_unused]] ComputationContext const& cx) const override {
+        c.svg.cow().rx = _value;
+    }
+
+    Res<> serialize(Io::TextWriter& w) const override {
+        return serializeValue(w, _value);
+    }
+
+    void repr(Io::Emit& e) const override {
+        e("{}", _value);
+    }
+};
+
+// https://svgwg.org/svg2-draft/geometry.html#RyProperty
+export struct SvgRyProperty : Property {
+    struct Registration : Property::Registration {
+        Registration()
+            : Property::Registration(Properties::RY, PRESENTATION_ATTRIBUTE) {}
+
+        Rc<Property> initial() const override {
+            return makeRc<SvgRyProperty>(self(), Keywords::AUTO);
+        }
+
+        Rc<Property> load(ComputedValues const& c) const override {
+            return makeRc<SvgRyProperty>(self(), c.svg->ry);
+        }
+
+        Res<Rc<Property>> parsePresentationAttribute(Str style) override {
+            if (auto property = Property::Registration::parsePresentationAttribute(style))
+                return property;
+            return Property::Registration::parsePresentationAttribute(Io::format("{}px", style));
+        }
+
+        Res<Rc<Property>> parse(Cursor<Css::Sst>& c) const override {
+            // FIXME: Negative values are invalid and must be ignored.
+            return Ok(makeRc<SvgRyProperty>(self(), try$(parseValue<Union<Keywords::Auto, PercentOr<Length>>>(c))));
+        }
+    };
+
+    Union<Keywords::Auto, PercentOr<Length>> _value;
+
+    SvgRyProperty(Rc<Property::Registration> registration, Union<Keywords::Auto, PercentOr<Length>> value)
+        : Property(registration), _value(value) {}
+
+    void apply([[maybe_unused]] ComputedValues const& parent, ComputedValues& c, [[maybe_unused]] ComputationContext const& cx) const override {
+        c.svg.cow().ry = _value;
+    }
+
+    Res<> serialize(Io::TextWriter& w) const override {
+        return serializeValue(w, _value);
+    }
+
+    void repr(Io::Emit& e) const override {
+        e("{}", _value);
+    }
+};
+
 // https://svgwg.org/svg2-draft/painting.html#FillProperty
 export struct SvgFillProperty : Property {
     struct Registration : Property::Registration {
