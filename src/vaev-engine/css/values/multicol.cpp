@@ -1,0 +1,17 @@
+export module Vaev.Engine:css.values.multicol;
+
+import Karm.Core;
+
+import :css.values.keywords;
+import :css.values.primitives;
+
+using namespace Karm;
+
+namespace Vaev::Css {
+
+// https://drafts.csswg.org/css-multicol-2/#cc
+export using ColumnCount = Union<
+    Keywords::Auto,
+    Integer>;
+
+} // namespace Vaev::Css

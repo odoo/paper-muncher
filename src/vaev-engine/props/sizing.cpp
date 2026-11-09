@@ -8,8 +8,10 @@ import Karm.Core;
 import :props.base;
 import :css.parser;
 import :style.computed;
+import :style.values.keywords;
 
 using namespace Karm;
+using namespace Karm::Literals;
 
 namespace Vaev::Style {
 
@@ -18,6 +20,8 @@ namespace Vaev::Style {
 
 // https://www.w3.org/TR/css-sizing-3/#box-sizing
 export struct BoxSizingProperty : Property {
+    using Value = Css::BoxSizing;
+
     struct Registration : Property::Registration {
         Registration() : Property::Registration(Properties::BOX_SIZING) {}
 
@@ -30,13 +34,13 @@ export struct BoxSizingProperty : Property {
         }
 
         Res<Rc<Property>> parse(Cursor<Css::Sst>& c) const override {
-            return Ok(makeRc<BoxSizingProperty>(self(), try$(parseValue<BoxSizing>(c))));
+            return Ok(makeRc<BoxSizingProperty>(self(), try$(parseValue<Value>(c))));
         }
     };
 
-    BoxSizing _value;
+    Value _value;
 
-    BoxSizingProperty(Rc<Property::Registration> registration, BoxSizing value)
+    BoxSizingProperty(Rc<Property::Registration> registration, Value value)
         : Property(registration), _value(value) {}
 
     void apply([[maybe_unused]] ComputedValues const& parent, ComputedValues& c, [[maybe_unused]] ComputationContext const& cx) const override {
@@ -44,7 +48,7 @@ export struct BoxSizingProperty : Property {
     }
 
     Res<> serialize(Io::TextWriter& w) const override {
-        return serializeValue(w, _value);
+        return Css::serializeValue(w, _value);
     }
 
     void repr(Io::Emit& e) const override {
@@ -54,6 +58,14 @@ export struct BoxSizingProperty : Property {
 
 // https://www.w3.org/TR/css-sizing-3/#propdef-width
 export struct WidthProperty : Property {
+    using Value = Union<
+        Keywords::Auto,
+        Css::LengthPercentage,
+        Keywords::Stretch,
+        Keywords::MinContent,
+        Keywords::MaxContent,
+        Keywords::FitContent>;
+
     struct Registration : Property::Registration {
         Registration()
             : Property::Registration(Properties::WIDTH, PRESENTATION_ATTRIBUTE) {}
@@ -63,7 +75,7 @@ export struct WidthProperty : Property {
         }
 
         Rc<Property> load(ComputedValues const& c) const override {
-            return makeRc<WidthProperty>(self(), c.sizing->width);
+            return makeRc<WidthProperty>(self(), toSpecified(c.sizing->width));
         }
 
         Res<Rc<Property>> parsePresentationAttribute(Str style) override {
@@ -73,21 +85,21 @@ export struct WidthProperty : Property {
         }
 
         Res<Rc<Property>> parse(Cursor<Css::Sst>& c) const override {
-            return Ok(makeRc<WidthProperty>(self(), try$(parseValue<Size>(c))));
+            return Ok(makeRc<WidthProperty>(self(), try$(parseValue<Value>(c))));
         }
     };
 
-    Size _value;
+    Value _value;
 
-    WidthProperty(Rc<Property::Registration> registration, Size value)
+    WidthProperty(Rc<Property::Registration> registration, Value value)
         : Property(registration), _value(value) {}
 
     void apply([[maybe_unused]] ComputedValues const& parent, ComputedValues& c, [[maybe_unused]] ComputationContext const& cx) const override {
-        c.sizing.cow().width = _value;
+        c.sizing.cow().width = toComputed(_value, cx);
     }
 
     Res<> serialize(Io::TextWriter& w) const override {
-        return serializeValue(w, _value);
+        return Css::serializeValue(w, _value);
     }
 
     void repr(Io::Emit& e) const override {
@@ -98,6 +110,8 @@ export struct WidthProperty : Property {
 // https://www.w3.org/TR/css-sizing-3/#propdef-height
 
 export struct HeightProperty : Property {
+    using Value = WidthProperty::Value;
+
     struct Registration : Property::Registration {
         Registration()
             : Property::Registration(Properties::HEIGHT, PRESENTATION_ATTRIBUTE) {}
@@ -107,7 +121,7 @@ export struct HeightProperty : Property {
         }
 
         Rc<Property> load(ComputedValues const& c) const override {
-            return makeRc<HeightProperty>(self(), c.sizing->height);
+            return makeRc<HeightProperty>(self(), toSpecified(c.sizing->height));
         }
 
         Res<Rc<Property>> parsePresentationAttribute(Str style) override {
@@ -117,21 +131,21 @@ export struct HeightProperty : Property {
         }
 
         Res<Rc<Property>> parse(Cursor<Css::Sst>& c) const override {
-            return Ok(makeRc<HeightProperty>(self(), try$(parseValue<Size>(c))));
+            return Ok(makeRc<HeightProperty>(self(), try$(parseValue<Value>(c))));
         }
     };
 
-    Size _value;
+    Value _value;
 
-    HeightProperty(Rc<Property::Registration> registration, Size value)
+    HeightProperty(Rc<Property::Registration> registration, Value value)
         : Property(registration), _value(value) {}
 
     void apply([[maybe_unused]] ComputedValues const& parent, ComputedValues& c, [[maybe_unused]] ComputationContext const& cx) const override {
-        c.sizing.cow().height = _value;
+        c.sizing.cow().height = toComputed(_value, cx);
     }
 
     Res<> serialize(Io::TextWriter& w) const override {
-        return serializeValue(w, _value);
+        return Css::serializeValue(w, _value);
     }
 
     void repr(Io::Emit& e) const override {
@@ -141,6 +155,8 @@ export struct HeightProperty : Property {
 
 // https://www.w3.org/TR/css-sizing-3/#propdef-min-width
 export struct MinWidthProperty : Property {
+    using Value = WidthProperty::Value;
+
     struct Registration : Property::Registration {
         Registration() : Property::Registration(Properties::MIN_WIDTH) {}
 
@@ -149,25 +165,25 @@ export struct MinWidthProperty : Property {
         }
 
         Rc<Property> load(ComputedValues const& c) const override {
-            return makeRc<MinWidthProperty>(self(), c.sizing->minWidth);
+            return makeRc<MinWidthProperty>(self(), toSpecified(c.sizing->minWidth));
         }
 
         Res<Rc<Property>> parse(Cursor<Css::Sst>& c) const override {
-            return Ok(makeRc<MinWidthProperty>(self(), try$(parseValue<Size>(c))));
+            return Ok(makeRc<MinWidthProperty>(self(), try$(parseValue<Value>(c))));
         }
     };
 
-    Size _value;
+    Value _value;
 
-    MinWidthProperty(Rc<Property::Registration> registration, Size value)
+    MinWidthProperty(Rc<Property::Registration> registration, Value value)
         : Property(registration), _value(value) {}
 
     void apply([[maybe_unused]] ComputedValues const& parent, ComputedValues& c, [[maybe_unused]] ComputationContext const& cx) const override {
-        c.sizing.cow().minWidth = _value;
+        c.sizing.cow().minWidth = toComputed(_value, cx);
     }
 
     Res<> serialize(Io::TextWriter& w) const override {
-        return serializeValue(w, _value);
+        return Css::serializeValue(w, _value);
     }
 
     void repr(Io::Emit& e) const override {
@@ -177,6 +193,8 @@ export struct MinWidthProperty : Property {
 
 // https://www.w3.org/TR/css-sizing-3/#propdef-min-height
 export struct MinHeightProperty : Property {
+    using Value = WidthProperty::Value;
+
     struct Registration : Property::Registration {
         Registration() : Property::Registration(Properties::MIN_HEIGHT) {}
 
@@ -185,25 +203,25 @@ export struct MinHeightProperty : Property {
         }
 
         Rc<Property> load(ComputedValues const& c) const override {
-            return makeRc<MinHeightProperty>(self(), c.sizing->minHeight);
+            return makeRc<MinHeightProperty>(self(), toSpecified(c.sizing->minHeight));
         }
 
         Res<Rc<Property>> parse(Cursor<Css::Sst>& c) const override {
-            return Ok(makeRc<MinHeightProperty>(self(), try$(parseValue<Size>(c))));
+            return Ok(makeRc<MinHeightProperty>(self(), try$(parseValue<Value>(c))));
         }
     };
 
-    Size _value;
+    Value _value;
 
-    MinHeightProperty(Rc<Property::Registration> registration, Size value)
+    MinHeightProperty(Rc<Property::Registration> registration, Value value)
         : Property(registration), _value(value) {}
 
     void apply([[maybe_unused]] ComputedValues const& parent, ComputedValues& c, [[maybe_unused]] ComputationContext const& cx) const override {
-        c.sizing.cow().minHeight = _value;
+        c.sizing.cow().minHeight = toComputed(_value, cx);
     }
 
     Res<> serialize(Io::TextWriter& w) const override {
-        return serializeValue(w, _value);
+        return Css::serializeValue(w, _value);
     }
 
     void repr(Io::Emit& e) const override {
@@ -214,6 +232,8 @@ export struct MinHeightProperty : Property {
 // https://www.w3.org/TR/css-sizing-3/#propdef-max-width
 
 export struct MaxWidthProperty : Property {
+    using Value = Union<Keywords::None, Css::LengthPercentage, Keywords::Stretch, Keywords::MinContent, Keywords::MaxContent, Keywords::FitContent>;
+
     struct Registration : Property::Registration {
         Registration() : Property::Registration(Properties::MAX_WIDTH) {}
 
@@ -222,25 +242,25 @@ export struct MaxWidthProperty : Property {
         }
 
         Rc<Property> load(ComputedValues const& c) const override {
-            return makeRc<MaxWidthProperty>(self(), c.sizing->maxWidth);
+            return makeRc<MaxWidthProperty>(self(), toSpecified(c.sizing->maxWidth));
         }
 
         Res<Rc<Property>> parse(Cursor<Css::Sst>& c) const override {
-            return Ok(makeRc<MaxWidthProperty>(self(), try$(parseValue<MaxSize>(c))));
+            return Ok(makeRc<MaxWidthProperty>(self(), try$(parseValue<Value>(c))));
         }
     };
 
-    MaxSize _value;
+    Value _value;
 
-    MaxWidthProperty(Rc<Property::Registration> registration, MaxSize value)
+    MaxWidthProperty(Rc<Property::Registration> registration, Value value)
         : Property(registration), _value(value) {}
 
     void apply([[maybe_unused]] ComputedValues const& parent, ComputedValues& c, [[maybe_unused]] ComputationContext const& cx) const override {
-        c.sizing.cow().maxWidth = _value;
+        c.sizing.cow().maxWidth = toComputed(_value, cx);
     }
 
     Res<> serialize(Io::TextWriter& w) const override {
-        return serializeValue(w, _value);
+        return Css::serializeValue(w, _value);
     }
 
     void repr(Io::Emit& e) const override {
@@ -250,6 +270,8 @@ export struct MaxWidthProperty : Property {
 
 // https://www.w3.org/TR/css-sizing-3/#propdef-max-height
 export struct MaxHeightProperty : Property {
+    using Value = MaxWidthProperty::Value;
+
     struct Registration : Property::Registration {
         Registration() : Property::Registration(Properties::MAX_HEIGHT) {}
 
@@ -258,25 +280,25 @@ export struct MaxHeightProperty : Property {
         }
 
         Rc<Property> load(ComputedValues const& c) const override {
-            return makeRc<MaxHeightProperty>(self(), c.sizing->maxHeight);
+            return makeRc<MaxHeightProperty>(self(), toSpecified(c.sizing->maxHeight));
         }
 
         Res<Rc<Property>> parse(Cursor<Css::Sst>& c) const override {
-            return Ok(makeRc<MaxHeightProperty>(self(), try$(parseValue<MaxSize>(c))));
+            return Ok(makeRc<MaxHeightProperty>(self(), try$(parseValue<Value>(c))));
         }
     };
 
-    MaxSize _value;
+    Value _value;
 
-    MaxHeightProperty(Rc<Property::Registration> registration, MaxSize value)
+    MaxHeightProperty(Rc<Property::Registration> registration, Value value)
         : Property(registration), _value(value) {}
 
     void apply([[maybe_unused]] ComputedValues const& parent, ComputedValues& c, [[maybe_unused]] ComputationContext const& cx) const override {
-        c.sizing.cow().maxHeight = _value;
+        c.sizing.cow().maxHeight = toComputed(_value, cx);
     }
 
     Res<> serialize(Io::TextWriter& w) const override {
-        return serializeValue(w, _value);
+        return Css::serializeValue(w, _value);
     }
 
     void repr(Io::Emit& e) const override {

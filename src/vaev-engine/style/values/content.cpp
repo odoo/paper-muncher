@@ -1,0 +1,14 @@
+export module Vaev.Engine:style.values.content;
+
+import Karm.Core;
+
+import :css.values.content;
+
+using namespace Karm;
+
+namespace Vaev::Style {
+
+// https://drafts.csswg.org/css-content-3/#content-property
+export using ContentValue = Css::ContentValue;
+
+} // namespace Vaev::Style

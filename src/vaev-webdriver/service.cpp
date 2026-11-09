@@ -315,19 +315,19 @@ export Rc<Http::Handler> createService(Rc<WebDriver> webdriver) {
 
             Serde::Value parameters = co_trya$(req->readJsonAsync(ct));
 
-            RectAu rect = co_try$(webdriver->getWindowRect(sessionId));
+            Layout::RectAu rect = co_try$(webdriver->getWindowRect(sessionId));
 
             if (auto value = parameters.getOr("width", NONE); value.isInt())
-                rect.width = Au(value.asInt());
+                rect.width = Layout::Au(value.asInt());
 
             if (auto value = parameters.getOr("height", NONE); value.isInt())
-                rect.height = Au(value.asInt());
+                rect.height = Layout::Au(value.asInt());
 
             if (auto value = parameters.getOr("x", NONE); value.isInt())
-                rect.x = Au(value.asInt());
+                rect.x = Layout::Au(value.asInt());
 
             if (auto value = parameters.getOr("y", NONE); value.isInt())
-                rect.y = Au(value.asInt());
+                rect.y = Layout::Au(value.asInt());
 
             auto windowRect = co_try$(webdriver->setWindowRect(sessionId, rect));
             co_trya$(_sendSuccessAsync(

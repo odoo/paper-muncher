@@ -17,6 +17,7 @@ import :style.origin;
 import :style.page;
 import :style.selector;
 import :style.matcher;
+import :style.values.primitives;
 
 using namespace Karm;
 

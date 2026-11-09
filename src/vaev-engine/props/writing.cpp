@@ -8,13 +8,17 @@ import Karm.Core;
 import :props.base;
 import :css.parser;
 import :style.computed;
+import :style.values.keywords;
 
 using namespace Karm;
+using namespace Karm::Literals;
 
 namespace Vaev::Style {
 
 // https://drafts.csswg.org/css-writing-modes-4/#propdef-writing-mode
 export struct WritingModeProperty : Property {
+    using Value = Css::WritingMode;
+
     struct Registration : Property::Registration {
         Registration()
             : Property::Registration(Properties::WRITING_MODE, INHERITED) {}
@@ -32,13 +36,13 @@ export struct WritingModeProperty : Property {
         }
 
         Res<Rc<Property>> parse(Cursor<Css::Sst>& c) const override {
-            return Ok(makeRc<WritingModeProperty>(self(), try$(parseValue<WritingMode>(c))));
+            return Ok(makeRc<WritingModeProperty>(self(), try$(parseValue<Value>(c))));
         }
     };
 
-    WritingMode _value;
+    Value _value;
 
-    WritingModeProperty(Rc<Property::Registration> registration, WritingMode value)
+    WritingModeProperty(Rc<Property::Registration> registration, Value value)
         : Property(registration), _value(value) {}
 
     void apply([[maybe_unused]] ComputedValues const& parent, ComputedValues& c, [[maybe_unused]] ComputationContext const& cx) const override {
@@ -46,7 +50,7 @@ export struct WritingModeProperty : Property {
     }
 
     Res<> serialize(Io::TextWriter& w) const override {
-        return serializeValue(w, _value);
+        return Css::serializeValue(w, _value);
     }
 
     void repr(Io::Emit& e) const override {
@@ -56,6 +60,8 @@ export struct WritingModeProperty : Property {
 
 // https://drafts.csswg.org/css-writing-modes-4/#propdef-direction
 export struct DirectionProperty : Property {
+    using Value = Css::Direction;
+
     struct Registration : Property::Registration {
         Registration()
             : Property::Registration(Properties::DIRECTION, {INHERITED, ALL_EXCLUDED}) {}
@@ -73,13 +79,13 @@ export struct DirectionProperty : Property {
         }
 
         Res<Rc<Property>> parse(Cursor<Css::Sst>& c) const override {
-            return Ok(makeRc<DirectionProperty>(self(), try$(parseValue<Direction>(c))));
+            return Ok(makeRc<DirectionProperty>(self(), try$(parseValue<Value>(c))));
         }
     };
 
-    Direction _value;
+    Value _value;
 
-    DirectionProperty(Rc<Property::Registration> registration, Direction value)
+    DirectionProperty(Rc<Property::Registration> registration, Value value)
         : Property(registration), _value(value) {}
 
     void apply([[maybe_unused]] ComputedValues const& parent, ComputedValues& c, [[maybe_unused]] ComputationContext const& cx) const override {
@@ -87,7 +93,7 @@ export struct DirectionProperty : Property {
     }
 
     Res<> serialize(Io::TextWriter& w) const override {
-        return serializeValue(w, _value);
+        return Css::serializeValue(w, _value);
     }
 
     void repr(Io::Emit& e) const override {

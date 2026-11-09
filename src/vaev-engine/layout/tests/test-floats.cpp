@@ -12,12 +12,12 @@ namespace Vaev::Layout::Tests {
 static Range<Au> const CONTAINER = {0_au, 200_au};
 
 test$("float-side-rtl") {
-    assertEq$(resolveFloatSide(Float::LEFT, Keywords::RTL), FloatSide::LEFT);
-    assertEq$(resolveFloatSide(Float::RIGHT, Keywords::RTL), FloatSide::RIGHT);
-    assertEq$(resolveFloatSide(Float::INLINE_START, Keywords::LTR), FloatSide::LEFT);
-    assertEq$(resolveFloatSide(Float::INLINE_END, Keywords::LTR), FloatSide::RIGHT);
-    assertEq$(resolveFloatSide(Float::INLINE_START, Keywords::RTL), FloatSide::RIGHT);
-    assertEq$(resolveFloatSide(Float::INLINE_END, Keywords::RTL), FloatSide::LEFT);
+    assertEq$(resolveFloatSide(Keywords::LEFT, Keywords::RTL), FloatSide::LEFT);
+    assertEq$(resolveFloatSide(Keywords::RIGHT, Keywords::RTL), FloatSide::RIGHT);
+    assertEq$(resolveFloatSide(Keywords::INLINE_START, Keywords::LTR), FloatSide::LEFT);
+    assertEq$(resolveFloatSide(Keywords::INLINE_END, Keywords::LTR), FloatSide::RIGHT);
+    assertEq$(resolveFloatSide(Keywords::INLINE_START, Keywords::RTL), FloatSide::RIGHT);
+    assertEq$(resolveFloatSide(Keywords::INLINE_END, Keywords::RTL), FloatSide::LEFT);
     return Ok();
 }
 
@@ -94,15 +94,15 @@ test$("float-place-not-above-previous-float") {
 
 test$("float-clearance") {
     Floats floats;
-    assertEq$(floats.clearance(Clear::BOTH, Keywords::LTR), NONE);
+    assertEq$(floats.clearance(Keywords::BOTH, Keywords::LTR), NONE);
 
     floats.add({FloatSide::RIGHT, {150_au, 0_au, 50_au, 60_au}});
-    assertEq$(floats.clearance(Clear::LEFT, Keywords::LTR), NONE);
-    assertEq$(floats.clearance(Clear::NONE, Keywords::LTR), NONE);
-    assertEq$(floats.clearance(Clear::RIGHT, Keywords::LTR), Opt<Au>{Some(60_au)});
-    assertEq$(floats.clearance(Clear::BOTH, Keywords::LTR), Opt<Au>{Some(60_au)});
-    assertEq$(floats.clearance(Clear::INLINE_END, Keywords::LTR), Opt<Au>{Some(60_au)});
-    assertEq$(floats.clearance(Clear::INLINE_END, Keywords::RTL), NONE);
+    assertEq$(floats.clearance(Keywords::LEFT, Keywords::LTR), NONE);
+    assertEq$(floats.clearance(Keywords::NONE, Keywords::LTR), NONE);
+    assertEq$(floats.clearance(Keywords::RIGHT, Keywords::LTR), Opt<Au>{Some(60_au)});
+    assertEq$(floats.clearance(Keywords::BOTH, Keywords::LTR), Opt<Au>{Some(60_au)});
+    assertEq$(floats.clearance(Keywords::INLINE_END, Keywords::LTR), Opt<Au>{Some(60_au)});
+    assertEq$(floats.clearance(Keywords::INLINE_END, Keywords::RTL), NONE);
     return Ok();
 }
 

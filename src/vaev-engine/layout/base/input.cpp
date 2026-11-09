@@ -43,6 +43,9 @@ struct UsedSpacings {
 };
 
 export struct Input {
+    /// The fragmentainer the layout is flowing into.
+    Opt<Fragmentainer&> fragmentainer = NONE;
+
     /// Parent fragment where the layout will be attached.
     bool generateFragment = false;
     UsedSpacings usedSpacings = {};

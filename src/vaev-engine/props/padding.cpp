@@ -10,6 +10,7 @@ import :css.parser;
 import :style.computed;
 
 using namespace Karm;
+using namespace Karm::Literals;
 
 namespace Vaev::Style {
 
@@ -18,6 +19,8 @@ namespace Vaev::Style {
 // https://www.w3.org/TR/css-box-3/#propdef-padding
 
 export struct PaddingTopProperty : Property {
+    using Value = Css::LengthPercentage;
+
     struct Registration : Property::Registration {
         Registration() : Property::Registration(Properties::PADDING_TOP) {}
 
@@ -26,25 +29,25 @@ export struct PaddingTopProperty : Property {
         }
 
         Rc<Property> load(ComputedValues const& c) const override {
-            return makeRc<PaddingTopProperty>(self(), c.padding->top);
+            return makeRc<PaddingTopProperty>(self(), toSpecified(c.padding->top));
         }
 
         Res<Rc<Property>> parse(Cursor<Css::Sst>& c) const override {
-            return Ok(makeRc<PaddingTopProperty>(self(), try$(parseValue<Calc<PercentOr<Length>>>(c))));
+            return Ok(makeRc<PaddingTopProperty>(self(), try$(parseValue<Value>(c))));
         }
     };
 
-    Calc<PercentOr<Length>> _value;
+    Value _value;
 
-    PaddingTopProperty(Rc<Property::Registration> registration, Calc<PercentOr<Length>> value)
+    PaddingTopProperty(Rc<Property::Registration> registration, Value value)
         : Property(registration), _value(value) {}
 
     void apply([[maybe_unused]] ComputedValues const& parent, ComputedValues& c, [[maybe_unused]] ComputationContext const& cx) const override {
-        c.padding.cow().top = _value;
+        c.padding.cow().top = toComputed(_value, cx);
     }
 
     Res<> serialize(Io::TextWriter& w) const override {
-        return serializeValue(w, _value);
+        return Css::serializeValue(w, _value);
     }
 
     void repr(Io::Emit& e) const override {
@@ -53,6 +56,8 @@ export struct PaddingTopProperty : Property {
 };
 
 export struct PaddingRightProperty : Property {
+    using Value = Css::LengthPercentage;
+
     struct Registration : Property::Registration {
         Registration() : Property::Registration(Properties::PADDING_RIGHT) {}
 
@@ -61,25 +66,25 @@ export struct PaddingRightProperty : Property {
         }
 
         Rc<Property> load(ComputedValues const& c) const override {
-            return makeRc<PaddingRightProperty>(self(), c.padding->end);
+            return makeRc<PaddingRightProperty>(self(), toSpecified(c.padding->end));
         }
 
         Res<Rc<Property>> parse(Cursor<Css::Sst>& c) const override {
-            return Ok(makeRc<PaddingRightProperty>(self(), try$(parseValue<Calc<PercentOr<Length>>>(c))));
+            return Ok(makeRc<PaddingRightProperty>(self(), try$(parseValue<Value>(c))));
         }
     };
 
-    Calc<PercentOr<Length>> _value;
+    Value _value;
 
-    PaddingRightProperty(Rc<Property::Registration> registration, Calc<PercentOr<Length>> value)
+    PaddingRightProperty(Rc<Property::Registration> registration, Value value)
         : Property(registration), _value(value) {}
 
     void apply([[maybe_unused]] ComputedValues const& parent, ComputedValues& c, [[maybe_unused]] ComputationContext const& cx) const override {
-        c.padding.cow().end = _value;
+        c.padding.cow().end = toComputed(_value, cx);
     }
 
     Res<> serialize(Io::TextWriter& w) const override {
-        return serializeValue(w, _value);
+        return Css::serializeValue(w, _value);
     }
 
     void repr(Io::Emit& e) const override {
@@ -88,6 +93,8 @@ export struct PaddingRightProperty : Property {
 };
 
 export struct PaddingBottomProperty : Property {
+    using Value = Css::LengthPercentage;
+
     struct Registration : Property::Registration {
         Registration() : Property::Registration(Properties::PADDING_BOTTOM) {}
 
@@ -96,25 +103,25 @@ export struct PaddingBottomProperty : Property {
         }
 
         Rc<Property> load(ComputedValues const& c) const override {
-            return makeRc<PaddingBottomProperty>(self(), c.padding->bottom);
+            return makeRc<PaddingBottomProperty>(self(), toSpecified(c.padding->bottom));
         }
 
         Res<Rc<Property>> parse(Cursor<Css::Sst>& c) const override {
-            return Ok(makeRc<PaddingBottomProperty>(self(), try$(parseValue<Calc<PercentOr<Length>>>(c))));
+            return Ok(makeRc<PaddingBottomProperty>(self(), try$(parseValue<Value>(c))));
         }
     };
 
-    Calc<PercentOr<Length>> _value;
+    Value _value;
 
-    PaddingBottomProperty(Rc<Property::Registration> registration, Calc<PercentOr<Length>> value)
+    PaddingBottomProperty(Rc<Property::Registration> registration, Value value)
         : Property(registration), _value(value) {}
 
     void apply([[maybe_unused]] ComputedValues const& parent, ComputedValues& c, [[maybe_unused]] ComputationContext const& cx) const override {
-        c.padding.cow().bottom = _value;
+        c.padding.cow().bottom = toComputed(_value, cx);
     }
 
     Res<> serialize(Io::TextWriter& w) const override {
-        return serializeValue(w, _value);
+        return Css::serializeValue(w, _value);
     }
 
     void repr(Io::Emit& e) const override {
@@ -123,6 +130,8 @@ export struct PaddingBottomProperty : Property {
 };
 
 export struct PaddingLeftProperty : Property {
+    using Value = Css::LengthPercentage;
+
     struct Registration : Property::Registration {
         Registration() : Property::Registration(Properties::PADDING_LEFT) {}
 
@@ -131,25 +140,25 @@ export struct PaddingLeftProperty : Property {
         }
 
         Rc<Property> load(ComputedValues const& c) const override {
-            return makeRc<PaddingLeftProperty>(self(), c.padding->start);
+            return makeRc<PaddingLeftProperty>(self(), toSpecified(c.padding->start));
         }
 
         Res<Rc<Property>> parse(Cursor<Css::Sst>& c) const override {
-            return Ok(makeRc<PaddingLeftProperty>(self(), try$(parseValue<Calc<PercentOr<Length>>>(c))));
+            return Ok(makeRc<PaddingLeftProperty>(self(), try$(parseValue<Value>(c))));
         }
     };
 
-    Calc<PercentOr<Length>> _value;
+    Value _value;
 
-    PaddingLeftProperty(Rc<Property::Registration> registration, Calc<PercentOr<Length>> value)
+    PaddingLeftProperty(Rc<Property::Registration> registration, Value value)
         : Property(registration), _value(value) {}
 
     void apply([[maybe_unused]] ComputedValues const& parent, ComputedValues& c, [[maybe_unused]] ComputationContext const& cx) const override {
-        c.padding.cow().start = _value;
+        c.padding.cow().start = toComputed(_value, cx);
     }
 
     Res<> serialize(Io::TextWriter& w) const override {
-        return serializeValue(w, _value);
+        return Css::serializeValue(w, _value);
     }
 
     void repr(Io::Emit& e) const override {
@@ -158,6 +167,8 @@ export struct PaddingLeftProperty : Property {
 };
 
 export struct PaddingInlineStartProperty : Property {
+    using Value = Css::LengthPercentage;
+
     struct Registration : Property::Registration {
         Registration() : Property::Registration(Properties::PADDING_INLINE_START, LOGICAL) {}
 
@@ -166,17 +177,17 @@ export struct PaddingInlineStartProperty : Property {
         }
 
         Rc<Property> load(ComputedValues const& c) const override {
-            return makeRc<PaddingInlineStartProperty>(self(), c.padding->start);
+            return makeRc<PaddingInlineStartProperty>(self(), toSpecified(c.padding->start));
         }
 
         Res<Rc<Property>> parse(Cursor<Css::Sst>& c) const override {
-            return Ok(makeRc<PaddingInlineStartProperty>(self(), try$(parseValue<Calc<PercentOr<Length>>>(c))));
+            return Ok(makeRc<PaddingInlineStartProperty>(self(), try$(parseValue<Value>(c))));
         }
     };
 
-    Calc<PercentOr<Length>> _value;
+    Value _value;
 
-    PaddingInlineStartProperty(Rc<Property::Registration> registration, Calc<PercentOr<Length>> value)
+    PaddingInlineStartProperty(Rc<Property::Registration> registration, Value value)
         : Property(registration), _value(value) {}
 
     // FIXME: Take writing mode into account
@@ -187,7 +198,7 @@ export struct PaddingInlineStartProperty : Property {
     }
 
     Res<> serialize(Io::TextWriter& w) const override {
-        return serializeValue(w, _value);
+        return Css::serializeValue(w, _value);
     }
 
     void repr(Io::Emit& e) const override {
@@ -196,6 +207,8 @@ export struct PaddingInlineStartProperty : Property {
 };
 
 export struct PaddingInlineEndProperty : Property {
+    using Value = Css::LengthPercentage;
+
     struct Registration : Property::Registration {
         Registration() : Property::Registration(Properties::PADDING_INLINE_END, LOGICAL) {}
 
@@ -204,17 +217,17 @@ export struct PaddingInlineEndProperty : Property {
         }
 
         Rc<Property> load(ComputedValues const& c) const override {
-            return makeRc<PaddingInlineEndProperty>(self(), c.padding->end);
+            return makeRc<PaddingInlineEndProperty>(self(), toSpecified(c.padding->end));
         }
 
         Res<Rc<Property>> parse(Cursor<Css::Sst>& c) const override {
-            return Ok(makeRc<PaddingInlineEndProperty>(self(), try$(parseValue<Calc<PercentOr<Length>>>(c))));
+            return Ok(makeRc<PaddingInlineEndProperty>(self(), try$(parseValue<Value>(c))));
         }
     };
 
-    Calc<PercentOr<Length>> _value;
+    Value _value;
 
-    PaddingInlineEndProperty(Rc<Property::Registration> registration, Calc<PercentOr<Length>> value)
+    PaddingInlineEndProperty(Rc<Property::Registration> registration, Value value)
         : Property(registration), _value(value) {}
 
     // FIXME: Take writing mode into account
@@ -225,7 +238,7 @@ export struct PaddingInlineEndProperty : Property {
     }
 
     Res<> serialize(Io::TextWriter& w) const override {
-        return serializeValue(w, _value);
+        return Css::serializeValue(w, _value);
     }
 
     void repr(Io::Emit& e) const override {
@@ -234,6 +247,8 @@ export struct PaddingInlineEndProperty : Property {
 };
 
 export struct PaddingProperty : Property {
+    using Value = Math::Insets<Css::LengthPercentage>;
+
     struct Registration : Property::Registration {
         Registration()
             : Property::Registration(Properties::PADDING, SHORTHAND) {}
@@ -243,17 +258,17 @@ export struct PaddingProperty : Property {
         }
 
         Rc<Property> load(ComputedValues const& c) const override {
-            return makeRc<PaddingProperty>(self(), *c.padding);
+            return makeRc<PaddingProperty>(self(), toSpecified(*c.padding));
         }
 
         Res<Rc<Property>> parse(Cursor<Css::Sst>& c) const override {
-            return Ok(makeRc<PaddingProperty>(self(), try$(parseValue<Math::Insets<Calc<PercentOr<Length>>>>(c))));
+            return Ok(makeRc<PaddingProperty>(self(), try$(parseValue<Value>(c))));
         }
     };
 
-    Math::Insets<Calc<PercentOr<Length>>> _value;
+    Value _value;
 
-    PaddingProperty(Rc<Property::Registration> registration, Math::Insets<Calc<PercentOr<Length>>> value)
+    PaddingProperty(Rc<Property::Registration> registration, Value value)
         : Property(registration), _value(value) {}
 
     Longhands expand(RegisteredPropertySet& registry, ComputedValues const&, ComputedValues&) const override {
