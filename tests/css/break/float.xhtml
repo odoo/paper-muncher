@@ -1,0 +1,84 @@
+<tests>
+<test name="float-avoid-break-moves-to-next-page" flow="paginate" width="200px" height="200px" margins="0">
+<container>
+    <html lang="en" xmlns="http://www.w3.org/1999/xhtml">
+
+    <head>
+        <style>
+            :root {
+                background-color: white;
+            }
+
+            body {
+                margin: 0;
+            }
+
+            .filler {
+                height: 150px;
+                background-color: salmon;
+            }
+
+            .float {
+                width: 50px;
+                height: 100px;
+                background-color: lightseagreen;
+            }
+        </style>
+    </head>
+
+    <body>
+        <slot />
+    </body>
+
+    </html>
+</container>
+
+<rendering>
+    <div class="filler"></div>
+    <div class="float" style="break-before: page; margin-left: 150px;"></div>
+</rendering>
+
+<rendering>
+    <div class="filler"></div>
+    <div class="float" style="float: right; break-inside: avoid;"></div>
+</rendering>
+</test>
+
+<test name="float-taller-than-page" flow="paginate" width="200px" height="200px" margins="0">
+<container>
+    <html lang="en" xmlns="http://www.w3.org/1999/xhtml">
+
+    <head>
+        <style>
+            :root {
+                background-color: white;
+            }
+
+            body {
+                margin: 0;
+            }
+
+            .float {
+                width: 50px;
+                height: 300px;
+                background-color: lightseagreen;
+            }
+        </style>
+    </head>
+
+    <body>
+        <slot />
+    </body>
+
+    </html>
+</container>
+
+<rendering>
+    <div class="float" style="margin-left: 150px;">x</div>
+</rendering>
+
+<rendering>
+    <div class="float" style="float: right;">x</div>
+</rendering>
+</test>
+</tests>

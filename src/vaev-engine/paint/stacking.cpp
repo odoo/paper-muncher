@@ -283,7 +283,9 @@ export struct StackingContext {
             // 6. non-positioned, block-level descendants, paint a block’s decorations
             if (e.paintingOrder == PaintingOrder::IN_FLOW)
                 e.paintBoxDecoration(g);
+        }
 
+        for (auto& e : layers) {
             // 7. non-positioned floating descendants, in tree order
             if (e.paintingOrder == PaintingOrder::FLOAT)
                 e.paintStackingContext(g, viewBox);

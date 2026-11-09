@@ -132,9 +132,12 @@ Async::Task<Gc::Ref<Dom::Document>> _loadDocumentAsync(Gc::Heap& heap, Ref::Url 
     }
 }
 
+Async::Task<Gfx::Snapshot> _fetchImageContentAsync(Http::Client& client, Ref::Url url, Async::CancellationToken ct);
+
 export struct ResourceLoader {
     Rc<Http::Client> _client;
     Map<String, Rc<Style::StyleSheet>> _stylesheets;
+    Map<String, Gfx::Snapshot> _images;
 
     ResourceLoader(Rc<Http::Client> client)
         : _client(std::move(client)) {}
@@ -172,6 +175,16 @@ export struct ResourceLoader {
         _stylesheets.put(key, sheet);
         co_return Ok(sheet);
     }
+
+    Async::Task<Gfx::Snapshot> fetchImageAsync(Ref::Url url, Async::CancellationToken ct) {
+        auto key = Io::format("{}", url);
+        if (auto cached = _images.lookup(key))
+            co_return Ok(cached.take());
+
+        auto image = co_trya$(_fetchImageContentAsync(*_client, url, ct));
+        _images.put(key, image);
+        co_return Ok(image);
+    }
 };
 
 export Async::Task<Gc::Ref<Dom::Document>> viewSourceAsync(Gc::Heap& heap, ResourceLoader& loader, Ref::Url const& url, Async::CancellationToken ct) {
@@ -191,8 +204,6 @@ export Async::Task<Gc::Ref<Dom::Document>> viewSourceAsync(Gc::Heap& heap, Resou
 
     co_return Ok(dom);
 }
-
-Async::Task<Gfx::Snapshot> _fetchImageContentAsync(Http::Client& client, Ref::Url url, Async::CancellationToken ct);
 
 Gfx::Snapshot _missingImagePlaceholder() {
     return Gfx::Snapshot::from(Karm::Image::loadOrFallback("bundle://vaev-engine/missing.qoi"_url).expect());
@@ -214,7 +225,7 @@ Async::Task<> _fetchResourcesAsync(ResourceLoader& loader, Dom::Document& docume
         }
 
         auto url = Ref::Url::parse(*src, Some(node->baseURI()));
-        auto image = co_await _fetchImageContentAsync(loader.client(), url, ct);
+        auto image = co_await loader.fetchImageAsync(url, ct);
         if (not image) {
             el->imageContent = Some(_missingImagePlaceholder());
             logWarn("failed to fetch image from {}: {}", url, image);

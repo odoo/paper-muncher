@@ -4,6 +4,7 @@ module;
 
 export module Vaev.Engine:layout.block;
 
+import Karm.Gfx;
 import Karm.Math;
 import Karm.Core;
 
@@ -101,7 +102,16 @@ Output fragmentEmptyBox(Fragmentainer const& fc, FragmentBuilder& fragBuilder, I
         input.knownSize.height.unwrapOr(0_au),
     };
     if (fc.isDiscoveryMode()) {
-        if (fc.acceptsFit(
+        // https://www.w3.org/TR/css-break-3/#unforced-breaks
+        // However, the UA must not break at the top of the page, i.e. it must place at least some content on each
+        // fragmentainer, so that each fragmentainer has a non-zero amount of content, in order to guarantee progress
+        // through the content.
+        // NOTE: An empty box taller than the fragmentainer never fits, so it is accepted where it stands and sliced at
+        //       the fragmentainer's end, instead of being pushed to the next fragmentainer forever.
+        // FIXME: The rest of the box should continue on the next fragmentainer instead of being dropped.
+        bool fitsInEmptyFragmentainer = knownSize.y + input.pendingVerticalSizes <= fc.size().y;
+        if (not fitsInEmptyFragmentainer or
+            fc.acceptsFit(
                 input.position.y,
                 knownSize.y,
                 input.pendingVerticalSizes
@@ -232,6 +242,121 @@ void _resolveAutoHorizontalMargins(Box& child, Input& childInput, UsedSpacings& 
     }
 }
 
+// NOTE: Measures the whole box, without recording breakpoints nor running elements.
+Output _layoutMonolithic(Box& box, Input input) {
+    input.generateFragment = false;
+    input.runningPosition = nullptr;
+    input.fragmentainer->enterMonolithicBox();
+    auto output = layoutBorderBox(box, input);
+    input.fragmentainer->leaveMonolithicBox();
+    return output;
+}
+
+PlacedFloat _placeFloat(Box& child, Style::Direction const& direction, Input const& input, Input& childInput, UsedSpacings const& usedSpacings, Floats const& floats, Au blockSize, Au inlineSize) {
+    // NOTE: The float is sized as a whole, not only the part that fits in the current fragmentainer.
+    input.fragmentainer->enterMonolithicBox();
+    Defer _ = [&] {
+        input.fragmentainer->leaveMonolithicBox();
+    };
+
+    Au borderBoxSpacings = usedSpacings.padding.horizontal() + usedSpacings.borders.horizontal();
+    Au availableWidth = inlineSize - usedSpacings.margin.horizontal() - borderBoxSpacings;
+
+    if (child.style->display == Style::Display::TABLE) {
+        // NOTE: Table wrappers got their fit-content width from _populateChildSpecifiedSizes, unless the table has a
+        //       specified width, which lives on the table grid box: then the wrapper shrinks to the grid box.
+        bool gridBoxWidthIsAuto = iter(child.children()) | Any([](Box const& gridBox) {
+                                      return gridBox.style->display == Style::Display::Internal::TABLE_BOX and
+                                             gridBox.style->sizing->width.is<Style::Keywords::Auto>();
+                                  });
+        if (not gridBoxWidthIsAuto)
+            childInput.knownSize.width = NONE;
+    } else if (child.style->sizing->width.is<Style::Keywords::Auto>()) {
+        // https://www.w3.org/TR/CSS22/visudet.html#float-width
+        // If 'width' is computed as 'auto', the used value is the "shrink-to-fit" width.
+        childInput.knownSize.width = Some(computeFitContentInlineSize(child, availableWidth) + borderBoxSpacings);
+    }
+
+    auto measured = _layoutMonolithic(child, childInput);
+
+    Au minTop = input.position.y + blockSize;
+
+    // https://www.w3.org/TR/CSS22/visuren.html#flow-control
+    // The top outer edge of the float must be below the bottom outer edge of all earlier left-floating boxes (in the
+    // case of 'clear: left'), or all earlier right-floating boxes (in the case of 'clear: right'), or both ('clear:
+    // both').
+    if (auto clearance = floats.clearance(child.style->clear, direction))
+        minTop = max(minTop, clearance.expect());
+
+    auto side = resolveFloatSide(child.style->float_, direction);
+    auto marginBox = floats.place(
+        side,
+        measured.size + usedSpacings.margin.all(),
+        minTop,
+        {input.position.x, inlineSize}
+    );
+
+    childInput.knownSize.width = Some(measured.size.x);
+    childInput.position = marginBox.xy + usedSpacings.margin.topStart();
+    return {side, marginBox};
+}
+
+// https://www.w3.org/TR/CSS22/visuren.html#floats
+// The border box of a table, a block-level replaced element, or an element in the normal flow that establishes a new
+// block formatting context (such as an element with 'overflow' other than 'visible') must not overlap the margin box of
+// any floats in the same block formatting context as the element itself. If necessary, implementations should clear
+// the said element by placing it below any preceding floats, but may place it adjacent to such floats if there is
+// sufficient space. They may even make the border box of said element narrower than defined by section 10.3.3. CSS2
+// does not define when a UA may put said element next to the float or by how much said element may become narrower.
+// However, the current and subsequent line boxes created next to the float are shortened as necessary to make room for
+// the margin box of the float.
+// NOSPEC: Line boxes can't be shortened around floats, so blocks with inline content avoid floats the same way. A box is
+//         put next to the floats only if it ends before the floats it is next to do, otherwise it goes below them.
+Opt<Range<Au>> _avoidFloats(Box& child, Input const& input, Input& childInput, UsedSpacings& usedSpacings, Floats const& floats, Au& blockSize, Au inlineSize) {
+    Au top = input.position.y + blockSize;
+    if (not floats.nextBottom(top, 0_au))
+        return NONE;
+
+    // NOTE: The box is measured as a whole, not only the part that fits in the current fragmentainer.
+    input.fragmentainer->enterMonolithicBox();
+    Defer _ = [&] {
+        input.fragmentainer->leaveMonolithicBox();
+    };
+
+    Range<Au> container = {input.position.x, inlineSize};
+
+    // NOSPEC: 'auto' margins are resolved again against the space next to the floats.
+    UsedSpacings spacings = usedSpacings;
+    spacings.margin = computeMargins(child, childInput.containingBlock);
+    Au margins = spacings.margin.horizontal();
+    Au borderBoxSpacings = spacings.padding.horizontal() + spacings.borders.horizontal();
+    Au minContentWidth = computeIntrinsicContentSize(child, IntrinsicSize::MIN_CONTENT).x + borderBoxSpacings + margins;
+    bool stretches = child.style->sizing->width.is<Style::Keywords::Auto>() and child.style->display != Style::Display::TABLE;
+
+    while (auto floatsBottom = floats.nextBottom(top, 0_au)) {
+        auto band = floats.freeBand(top, 0_au, container);
+        Au width = stretches ? band.size - margins : childInput.knownSize.width.unwrapOr(band.size - margins);
+
+        if (band.size >= max(minContentWidth, width + margins)) {
+            auto measured = _layoutMonolithic(child, childInput.withKnownSize({Some(width), childInput.knownSize.height}));
+            if (top + measured.size.y <= floatsBottom.expect()) {
+                childInput.knownSize.width = Some(width);
+                _resolveAutoHorizontalMargins(child, childInput, spacings, Some(band.size));
+                childInput.position = {band.start + spacings.margin.start, top};
+                usedSpacings = spacings;
+                blockSize = top - input.position.y;
+                return Some(band);
+            }
+        }
+
+        top = floatsBottom.expect();
+        childInput.position.y = top;
+    }
+
+    blockSize = top - input.position.y;
+    return NONE;
+}
+
 // https://www.w3.org/TR/CSS22/visuren.html#normal-flow
 struct BlockFormatingContext : FormatingContext {
     Au _computeCapmin(Box& box, Input input, Au inlineSize) {
@@ -271,13 +396,34 @@ struct BlockFormatingContext : FormatingContext {
         }
 
         Breakpoint currentBreakpoint;
-        BaselinePositionsSet firstBaselineSet, lastBaselineSet;
+        Opt<BaselinePositionsSet> firstBaselineSet = NONE;
+        BaselinePositionsSet lastBaselineSet;
+
+        // NOTE: Floats can only be placed once the inline size is known.
+        bool placesFloats = input.knownSize.width.has() and not isMinMaxIntrinsicSize(input.intrinsic);
+        Floats floats = input.floats;
+        Opt<Au> placedFloatsBottom = NONE;
+
+        // https://www.w3.org/TR/CSS22/visudet.html#normal-block
+        // Only children in the normal flow are taken into account (i.e., floating boxes and absolutely positioned boxes
+        // are ignored, and relatively positioned boxes are considered without their offset).
+        // NOSPEC: Every box grows to include the floats it places, not only block formatting context roots, so a float
+        //         never overlaps the content that follows its parent.
+        auto contentBlockSize = [&] {
+            if (not placedFloatsBottom)
+                return blockSize;
+            return max(blockSize, placedFloatsBottom.expect() - input.position.y);
+        };
 
         usize endChildren = stopAt.unwrapOr(box.children().len());
 
         bool blockWasCompletelyLaidOut = false;
 
         Au lastMarginBottom = 0_au;
+
+        // NOSPEC: In max-content sizing, the floats are placed beside the content that avoids them, so their widths add
+        //         up with it instead of competing with it.
+        Au floatsBesideInlineSize = 0_au;
 
         Vec<Rc<PlaceholderFragment>> outOfFlowChildren;
 
@@ -312,16 +458,12 @@ struct BlockFormatingContext : FormatingContext {
                 processBreakpointsBeforeChild(
                     fragBuilder,
                     i,
-                    Vec2Au{inlineSize, blockSize},
+                    Vec2Au{inlineSize, contentBlockSize()},
                     c.style->break_->before == Style::Keywords::PAGE,
                     startAt,
                     input
                 )
             );
-
-            // TODO: Implement floating
-            // if (c.style->float_ != Keywords::NONE)
-            //     continue;
 
             auto childContainingBlock = Vec2Au{inlineSize, input.knownSize.height.unwrapOr(0_au)};
 
@@ -352,6 +494,10 @@ struct BlockFormatingContext : FormatingContext {
 
                 Au collapsedMargin = maxPositive - Math::abs(minNegative);
                 blockSize += collapsedMargin - lastMarginBottom;
+
+                auto clearance = placesFloats ? floats.clearance(c.style->clear, box.style->direction) : NONE;
+                if (clearance)
+                    blockSize = max(blockSize, clearance.expect() - input.position.y);
             }
 
             // HACK: Table Box mostly behaves like a block box, let's compute its capmin
@@ -365,8 +511,23 @@ struct BlockFormatingContext : FormatingContext {
                 _resolveAutoHorizontalMargins(c, childInput, usedSpacings, input.knownSize.width);
 
             childInput.position = input.position + Vec2Au{usedSpacings.margin.start, blockSize};
-            if (box.style->text->align == Style::Keywords::VAEV_BLOCK_CENTER)
-                childInput.position.x += inlineSize / 2 - layoutBorderBox(c, childInput.withGenerateFragment(false)).width() / 2;
+
+            Opt<PlacedFloat> placedFloat = NONE;
+            if (placesFloats and c.isFloating())
+                placedFloat = Some(_placeFloat(c, box.style->direction, input, childInput, usedSpacings, floats, blockSize, inlineSize));
+
+            if (placesFloats and not c.establishesBlockFormatingContext())
+                childInput.floats = floats;
+
+            Opt<Range<Au>> bandNextToFloats = NONE;
+            bool avoidsFloats = c.content.is<Rc<Gfx::Prose>>() or c.establishesBlockFormatingContext();
+            if (placesFloats and floats.len() and avoidsFloats and not c.isRemovedFromFlow() and not c.isPseudoElement(Dom::PseudoElement::MARKER))
+                bandNextToFloats = _avoidFloats(c, input, childInput, usedSpacings, floats, blockSize, inlineSize);
+
+            if (box.style->text->align == Style::Keywords::VAEV_BLOCK_CENTER and not placedFloat) {
+                Au availableWidth = bandNextToFloats ? bandNextToFloats.expect().size : inlineSize;
+                childInput.position.x += availableWidth / 2 - layoutBorderBox(c, childInput.withGenerateFragment(false)).width() / 2;
+            }
 
             if (c.isPseudoElement(Dom::PseudoElement::MARKER)) {
                 // NOSPEC: The spec doesn't define where the marker should be placed.
@@ -381,6 +542,13 @@ struct BlockFormatingContext : FormatingContext {
 
             auto output = layoutBorderBox(c, childInput);
             fragBuilder.addChildIfAny(output.fragment);
+
+            if (placedFloat) {
+                placedFloat->marginBox.height = output.size.y + usedSpacings.margin.vertical();
+                floats.add(*placedFloat);
+                Au bottom = placedFloat->marginBox.bottom();
+                placedFloatsBottom = Some(max(placedFloatsBottom.unwrapOr(bottom), bottom));
+            }
 
             outOfFlowChildren.pushBack(output.outOfFlowStash);
 
@@ -397,9 +565,15 @@ struct BlockFormatingContext : FormatingContext {
                 output.breakpoint
             );
 
-            if (i == startAt)
-                firstBaselineSet = output.firstBaselineSet.translate(childInput.position.y - input.position.y);
-            lastBaselineSet = output.lastBaselineSet.translate(childInput.position.y - input.position.y);
+            // https://www.w3.org/TR/css-align-3/#baseline-export
+            // The first/last baseline set of a block container is taken from the first/last in-flow line box in the
+            // block container or the first/last in-flow block-level child in the block container that contributes a
+            // set of first/last baselines, whichever comes first/last.
+            if (not c.isFloating()) {
+                if (not firstBaselineSet)
+                    firstBaselineSet = Some(output.firstBaselineSet.translate(childInput.position.y - input.position.y));
+                lastBaselineSet = output.lastBaselineSet.translate(childInput.position.y - input.position.y);
+            }
 
             try$(processBreakpointsAfterChild(
                 *input.fragmentainer,
@@ -407,7 +581,7 @@ struct BlockFormatingContext : FormatingContext {
                 currentBreakpoint,
                 box,
                 i,
-                Vec2Au{inlineSize, blockSize},
+                Vec2Au{inlineSize, contentBlockSize()},
                 output.completelyLaidOut,
                 input
             ));
@@ -416,12 +590,27 @@ struct BlockFormatingContext : FormatingContext {
                 blockWasCompletelyLaidOut = output.completelyLaidOut and i + 1 == box.children().len();
             }
 
-            inlineSize = max(inlineSize, output.size.x + usedSpacings.margin.horizontal());
+            Au childInlineSize = output.size.x + usedSpacings.margin.horizontal();
+            if (input.intrinsic == IntrinsicSize::MAX_CONTENT) {
+                if (c.style->clear != Style::Keywords::NONE)
+                    floatsBesideInlineSize = 0_au;
+
+                if (c.isFloating()) {
+                    floatsBesideInlineSize += childInlineSize;
+                    childInlineSize = floatsBesideInlineSize;
+                } else {
+                    if (avoidsFloats)
+                        childInlineSize += floatsBesideInlineSize;
+                    floatsBesideInlineSize = 0_au;
+                }
+            }
+
+            inlineSize = max(inlineSize, childInlineSize);
         }
 
         auto size = Vec2Au{
             input.knownSize.width.unwrapOr(inlineSize),
-            input.knownSize.height.unwrapOr(blockSize)
+            input.knownSize.height.unwrapOr(contentBlockSize())
         };
 
         return {
@@ -429,7 +618,7 @@ struct BlockFormatingContext : FormatingContext {
             .size = size,
             .completelyLaidOut = blockWasCompletelyLaidOut,
             .breakpoint = Some(currentBreakpoint),
-            .firstBaselineSet = firstBaselineSet,
+            .firstBaselineSet = firstBaselineSet.unwrapOr({}),
             .lastBaselineSet = lastBaselineSet,
             .outOfFlowStash = std::move(outOfFlowChildren),
         };

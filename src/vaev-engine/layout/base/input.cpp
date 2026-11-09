@@ -1,6 +1,7 @@
 export module Vaev.Engine:layout.input;
 
 import :layout.breaks;
+import :layout.floats;
 import :layout.fragment;
 import :layout.runningPosition;
 
@@ -60,6 +61,9 @@ export struct Input {
 
     // To be used between table wrapper and table box
     Opt<Au> capmin = NONE;
+
+    // Floats of the parent block formatting context, empty when this box establishes a new one.
+    Floats floats = {};
 
     // TODO: instead of stringing this around, maybe change this (and check method of fragmentainer) to a
     // "availableSpaceInFragmentainer" parameter

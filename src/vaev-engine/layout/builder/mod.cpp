@@ -783,6 +783,8 @@ static Box _createTableWrapperAndBuildTable(BuilderContext bc, Rc<Style::Compute
     wrapperStyle->margin = tableStyle->margin;
     wrapperStyle->position = tableStyle->position;
     wrapperStyle->float_ = tableStyle->float_;
+    // NOTE: 'clear' applies to block-level boxes, and the table wrapper box is the block-level box of the table.
+    wrapperStyle->clear = tableStyle->clear;
     wrapperStyle->insets = tableStyle->insets;
 
     Box wrapper = {wrapperStyle, Some(tableBoxEl)};
@@ -855,7 +857,7 @@ static void _buildChildBoxDisplay(BuilderContext bc, Gc::Ref<Dom::Node> node, St
     if (display == Style::Display::NONE)
         return;
 
-    // Display::CONTENTS
+    // Style::Display::CONTENTS
     _buildChildren(bc, node);
 }
 
@@ -870,6 +872,18 @@ static void _buildChildDefaultDisplay(BuilderContext bc, Gc::Ref<Dom::Element> c
     if (bc.from == BuilderContext::From::FLEX) {
         display = childStyle->display.blockify();
         _innerDisplayDispatchCreationOfBlockLevelBox(bc, child, childStyle, display);
+        return;
+    }
+
+    if (childStyle->float_ != Style::Keywords::NONE) {
+        // NOSPEC: A float that follows inline content stays an atomic inline-level box, so it can be placed on the
+        //         line where it appears. Otherwise, it is a block-level box of its block container.
+        if (bc.hasRootInlineBox() and bc.rootInlineBox().isActive()) {
+            _innerDisplayDispatchCreationOfInlineLevelBox(bc, child, childStyle, display);
+        } else {
+            bc.flushRootInlineBoxIntoAnonymousBox();
+            _innerDisplayDispatchCreationOfBlockLevelBox(bc, child, childStyle, display);
+        }
         return;
     }
 

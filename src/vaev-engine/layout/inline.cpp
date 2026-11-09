@@ -34,6 +34,59 @@ struct InlineFormatingContext : FormatingContext {
         };
     }
 
+    // https://www.w3.org/TR/CSS22/visuren.html#floats
+    // However, the current and subsequent line boxes created next to the float are shortened as necessary to make room
+    // for the margin box of the float.
+    // NOSPEC: Line boxes are not shortened around floats. A float is put at the top of the first line, starting from the
+    //         line it appears on, whose text and floats leave room for it, or below the last line.
+    static Vec2Au _floatPositionInProse(Gfx::Prose const& prose, Floats const& placed, usize runeIndex, FloatSide side, Au marginWidth, Au inlineSize, Au proseHeight) {
+        Range<Au> container = {0_au, inlineSize};
+        Au minTop = placed.topNotAboveEarlierFloats(0_au);
+
+        for (auto const& line : prose._lines) {
+            if (line.runeRange.end() <= runeIndex)
+                continue;
+
+            Au top = line.baseline - line.ascent;
+            if (top < minTop or not placed.fits(side, {marginWidth, 0_au}, top, container))
+                continue;
+
+            Au x = alignFloatInBand(side, placed.freeBand(top, 0_au, container), marginWidth);
+            auto blocks = line.blocks(prose);
+            if (isEmpty(blocks))
+                return {x, top};
+
+            Au textStart = first(blocks).pos;
+            Au textEnd = last(blocks).pos + last(blocks).width;
+            if (side == FloatSide::LEFT ? x + marginWidth <= textStart : textEnd <= x)
+                return {x, top};
+        }
+
+        return placed.place(side, {marginWidth, 0_au}, proseHeight, container).xy;
+    }
+
+    static UsedSpacings _usedSpacings(Box& box, Vec2Au containingBlock) {
+        return {
+            .padding = computePaddings(box, containingBlock),
+            .borders = computeBorders(box),
+            .margin = computeMargins(box, containingBlock),
+        };
+    }
+
+    // https://www.w3.org/TR/CSS22/visudet.html#float-width
+    // If 'width' is computed as 'auto', the used value is the "shrink-to-fit" width.
+    static Au _floatBorderBoxWidth(Box& box, UsedSpacings const& usedSpacings, Vec2Au containingBlock, IntrinsicSize intrinsic) {
+        Au borderBoxSpacings = usedSpacings.padding.horizontal() + usedSpacings.borders.horizontal();
+        if (auto width = computeSpecifiedBorderBoxWidth(box, box.style->sizing->width, containingBlock, borderBoxSpacings))
+            return width.expect();
+
+        if (isMinMaxIntrinsicSize(intrinsic))
+            return computeIntrinsicContentSize(box, intrinsic).x + borderBoxSpacings;
+
+        Au availableWidth = containingBlock.x - usedSpacings.margin.horizontal() - borderBoxSpacings;
+        return computeFitContentInlineSize(box, availableWidth) + borderBoxSpacings;
+    }
+
     Output run(Box& box, Input input, [[maybe_unused]] usize startAt, [[maybe_unused]] Opt<usize> stopAt) override {
         auto fragBuilder = FragmentBuilder{box};
 
@@ -60,6 +113,21 @@ struct InlineFormatingContext : FormatingContext {
         for (auto strutCell : prose->cellsWithStruts()) {
             auto boxStrutCell = strutCell->strut(*prose);
             auto& atomicBox = box.children()[boxStrutCell->id];
+
+            // NOSPEC: Floats take no room on their line, except when sizing under a min-content or max-content
+            //         constraint where they count like an inline-block, so that shrink-to-fit containers fit them.
+            if (atomicBox.isFloating()) {
+                boxStrutCell->size = {};
+                if (isMinMaxIntrinsicSize(input.intrinsic)) {
+                    auto childContainingBlock = Vec2Au{
+                        input.knownSize.width.unwrapOr(0_au),
+                        input.knownSize.height.unwrapOr(0_au),
+                    };
+                    auto usedSpacings = _usedSpacings(atomicBox, childContainingBlock);
+                    boxStrutCell->size.x = _floatBorderBoxWidth(atomicBox, usedSpacings, childContainingBlock, input.intrinsic) + usedSpacings.margin.horizontal();
+                }
+                continue;
+            }
 
             if (atomicBox.isRemovedFromFlow())
                 continue;
@@ -108,6 +176,56 @@ struct InlineFormatingContext : FormatingContext {
         auto firstBaselineSet = _computeBaselinePositions(prose->_rootSpan->style.font.metrics(), first(prose->_lines).baseline);
         auto lastBaselineSet = _computeBaselinePositions(prose->_rootSpan->style.font.metrics(), last(prose->_lines).baseline);
 
+        // NOTE: Floats can only be placed once the inline size is known.
+        bool placesFloats = input.knownSize.width.has() and not isMinMaxIntrinsicSize(input.intrinsic);
+        Floats placedFloats;
+        Au contentHeight = size.y;
+
+        // FIXME: Floats in inline content are not fragmented, the part of a float below the fragmentainer's end is lost.
+        if (placesFloats) {
+            for (auto strutCell : prose->cellsWithStruts()) {
+                auto boxStrutCell = strutCell->strut(*prose);
+                auto& atomicBox = box.children()[boxStrutCell->id];
+
+                if (not atomicBox.isFloating())
+                    continue;
+
+                auto childContainingBlock = Vec2Au{inlineSize, input.knownSize.height.unwrapOr(0_au)};
+                auto usedSpacings = _usedSpacings(atomicBox, childContainingBlock);
+
+                Au width = _floatBorderBoxWidth(atomicBox, usedSpacings, childContainingBlock, input.intrinsic);
+                Au marginWidth = width + usedSpacings.margin.horizontal();
+
+                auto side = resolveFloatSide(atomicBox.style->float_, box.style->direction);
+                auto positionInProse = _floatPositionInProse(*prose, placedFloats, strutCell->runeRange.start, side, marginWidth, inlineSize, size.y);
+
+                Input childInput{
+                    .fragmentainer = input.fragmentainer,
+                    .generateFragment = input.generateFragment,
+                    .usedSpacings = usedSpacings,
+                    .knownSize = {
+                        Some(width),
+                        computeSpecifiedBorderBoxHeight(
+                            atomicBox, atomicBox.style->sizing->height, childContainingBlock,
+                            usedSpacings.padding.vertical() + usedSpacings.borders.vertical()
+                        ),
+                    },
+                    .position = input.position + positionInProse + usedSpacings.margin.topStart(),
+                    .containingBlock = childContainingBlock,
+                    .runningPosition = input.runningPosition,
+                    .pageNumber = input.pageNumber,
+                };
+
+                auto output = layoutBorderBox(atomicBox, childInput);
+                outOfFlowChildren.pushBack(output.outOfFlowStash);
+                fragBuilder.addChildIfAny(output.fragment);
+
+                Au marginHeight = output.size.y + usedSpacings.margin.vertical();
+                placedFloats.add({side, {positionInProse, {marginWidth, marginHeight}}});
+                contentHeight = max(contentHeight, positionInProse.y + marginHeight);
+            }
+        }
+
         if (input.generateFragment) {
             for (auto strutCell : prose->cellsWithStruts()) {
                 auto runeIdx = strutCell->runeRange.start;
@@ -115,6 +233,9 @@ struct InlineFormatingContext : FormatingContext {
 
                 auto boxStrutCell = strutCell->strut(*prose);
                 auto& atomicBox = box.children()[boxStrutCell->id];
+
+                if (placesFloats and atomicBox.isFloating())
+                    continue;
 
                 if (oneOf(atomicBox.style->position, Style::Keywords::ABSOLUTE, Style::Keywords::FIXED)) {
                     if (input.generateFragment) {
@@ -201,9 +322,13 @@ struct InlineFormatingContext : FormatingContext {
             };
         }
 
+        // https://www.w3.org/TR/CSS22/visudet.html#normal-block
+        // Only children in the normal flow are taken into account (i.e., floating boxes and absolutely positioned boxes
+        // are ignored, and relatively positioned boxes are considered without their offset).
+        // NOSPEC: Like in block layout, every box grows to include the floats it places.
         auto outputSize = Vec2Au{
             input.knownSize.width.unwrapOr(size.x),
-            input.knownSize.height.unwrapOr(size.y),
+            input.knownSize.height.unwrapOr(contentHeight),
         };
 
         return {

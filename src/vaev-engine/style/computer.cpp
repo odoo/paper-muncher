@@ -401,6 +401,22 @@ export struct Computer {
         if (not pseudoElement)
             _considerElementAttributes(values, el);
 
+        // https://www.w3.org/TR/CSS22/visuren.html#dis-pos-flo
+        // Otherwise, if 'position' has the value 'absolute' or 'fixed', the box is absolutely positioned, the computed
+        // value of 'float' is 'none', and display is set according to the table below.
+        // NOSPEC: Their display is not blockified, and running elements are not floated either.
+        // Otherwise, if 'float' has a value other than 'none', the box is floated and 'display' is set according to the
+        // table below.
+        bool positionedOutOfFlow =
+            oneOf(values->position, Keywords::ABSOLUTE, Keywords::FIXED) or
+            values->position.is<RunningPosition>();
+        if (values->float_ != Keywords::NONE) {
+            if (positionedOutOfFlow)
+                values.cow().float_ = Keywords::NONE;
+            else
+                values.cow().display = values->display.blockify();
+        }
+
         // NOSPEC: By default Chrome and other browsers render disc/circle/square
         // list markers a bit larger than their font size would otherwise imply.
         if (pseudoElement == Dom::PseudoElement::MARKER and
