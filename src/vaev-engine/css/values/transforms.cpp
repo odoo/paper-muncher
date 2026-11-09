@@ -7,7 +7,7 @@ export module Vaev.Engine:css.values.transforms;
 import :css.lexer;
 import :css.parser;
 import :css.values.base;
-import :css.values.calc;
+import :css.values.numeric;
 import :css.values.keywords;
 import :css.values.primitives;
 
@@ -30,23 +30,15 @@ Res<Angle> _parseAngleOrZero(Cursor<Sst>& c) {
 // MARK: Transform Functions ---------------------------------------------------
 // https://drafts.csswg.org/css-transforms/#transform-functions
 
-export struct SpecifiedTransformTypes {
-    using LengthPercentageType = LengthPercentage;
-    using NumberType = Number;
-    using AngleType = Angle;
-};
-
 // https://www.w3.org/TR/css-transforms-1/#funcdef-transform-matrix
-export template <typename T>
-struct MatrixTransformT {
-    Array<typename T::NumberType, 6> values;
+export struct MatrixTransform {
+    Array<Number, 6> values;
 
     void repr(Io::Emit& e) const {
         e("matrix({}, {}, {}, {}, {}, {})", values[0], values[1], values[2], values[3], values[4], values[5]);
     }
 };
 
-export using MatrixTransform = MatrixTransformT<SpecifiedTransformTypes>;
 
 export template <>
 struct ValueParser<MatrixTransform> {
@@ -83,17 +75,15 @@ struct ValueParser<MatrixTransform> {
 };
 
 // https://www.w3.org/TR/css-transforms-1/#funcdef-transform-translate
-export template <typename T>
-struct TranslateTransformT {
-    typename T::LengthPercentageType x;
-    typename T::LengthPercentageType y;
+export struct TranslateTransform {
+    LengthPercentage x;
+    LengthPercentage y;
 
     void repr(Io::Emit& e) const {
         e("translate({}, {})", x, y);
     }
 };
 
-export using TranslateTransform = TranslateTransformT<SpecifiedTransformTypes>;
 
 export template <>
 struct ValueParser<TranslateTransform> {
@@ -150,17 +140,15 @@ struct ValueParser<TranslateTransform> {
 };
 
 // https://www.w3.org/TR/css-transforms-1/#funcdef-transform-scale
-export template <typename T>
-struct ScaleTransformT {
-    typename T::NumberType x;
-    typename T::NumberType y;
+export struct ScaleTransform {
+    Number x;
+    Number y;
 
     void repr(Io::Emit& e) const {
         e("scale({}, {})", x, y);
     }
 };
 
-export using ScaleTransform = ScaleTransformT<SpecifiedTransformTypes>;
 
 export template <>
 struct ValueParser<ScaleTransform> {
@@ -218,16 +206,14 @@ struct ValueParser<ScaleTransform> {
 };
 
 // https://www.w3.org/TR/css-transforms-1/#funcdef-transform-rotate
-export template <typename T>
-struct RotateTransformT {
-    typename T::AngleType value;
+export struct RotateTransform {
+    Angle value;
 
     void repr(Io::Emit& e) const {
         e("rotate({})", value);
     }
 };
 
-export using RotateTransform = RotateTransformT<SpecifiedTransformTypes>;
 
 export template <>
 struct ValueParser<RotateTransform> {
@@ -253,17 +239,15 @@ struct ValueParser<RotateTransform> {
 };
 
 // https://www.w3.org/TR/css-transforms-1/#funcdef-transform-skew
-export template <typename T>
-struct SkewTransformT {
-    typename T::AngleType x;
-    typename T::AngleType y;
+export struct SkewTransform {
+    Angle x;
+    Angle y;
 
     void repr(Io::Emit& e) const {
         e("skew({}, {})", x, y);
     }
 };
 
-export using SkewTransform = SkewTransformT<SpecifiedTransformTypes>;
 
 export template <>
 struct ValueParser<SkewTransform> {
@@ -298,16 +282,14 @@ struct ValueParser<SkewTransform> {
 };
 
 // https://www.w3.org/TR/css-transforms-1/#funcdef-transform-skewx
-export template <typename T>
-struct SkewXTransformT {
-    typename T::AngleType value;
+export struct SkewXTransform {
+    Angle value;
 
     void repr(Io::Emit& e) const {
         e("skewX({})", value);
     }
 };
 
-export using SkewXTransform = SkewXTransformT<SpecifiedTransformTypes>;
 
 export template <>
 struct ValueParser<SkewXTransform> {
@@ -333,16 +315,14 @@ struct ValueParser<SkewXTransform> {
 };
 
 // https://www.w3.org/TR/css-transforms-1/#funcdef-transform-skewy
-export template <typename T>
-struct SkewYTransformT {
-    typename T::AngleType value;
+export struct SkewYTransform {
+    Angle value;
 
     void repr(Io::Emit& e) const {
         e("skewY({})", value);
     }
 };
 
-export using SkewYTransform = SkewYTransformT<SpecifiedTransformTypes>;
 
 export template <>
 struct ValueParser<SkewYTransform> {
@@ -367,17 +347,14 @@ struct ValueParser<SkewYTransform> {
     }
 };
 
-export template <typename T>
-using TransformFunctionT = Union<
-    MatrixTransformT<T>,
-    TranslateTransformT<T>,
-    ScaleTransformT<T>,
-    RotateTransformT<T>,
-    SkewTransformT<T>,
-    SkewXTransformT<T>,
-    SkewYTransformT<T>>;
-
-export using TransformFunction = TransformFunctionT<SpecifiedTransformTypes>;
+export using TransformFunction = Union<
+    MatrixTransform,
+    TranslateTransform,
+    ScaleTransform,
+    RotateTransform,
+    SkewTransform,
+    SkewXTransform,
+    SkewYTransform>;
 
 // MARK: Transform -------------------------------------------------------------
 // https://drafts.csswg.org/css-transforms/#propdef-transform

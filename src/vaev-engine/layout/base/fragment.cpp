@@ -747,7 +747,7 @@ export struct BoxFragment : Fragment {
             outline.offset = metrics.outlineOffset.cast<f64>();
             auto const& outlineStyle = *style().outline;
 
-            if (outlineStyle.style.is<Keywords::Auto>()) {
+            if (outlineStyle.style.is<Style::Keywords::Auto>()) {
                 outline.style = Gfx::BorderStyle::SOLID;
             } else {
                 outline.style = outlineStyle.style.expect<Gfx::BorderStyle>();

@@ -9,6 +9,6 @@ export import :layout;
 export import :loader;
 export import :props;
 export import :style;
-export import :values;
+export import :style.values;
 export import :webview;
 export import :xml;

@@ -14,14 +14,14 @@ namespace PaperMuncher {
 
 // https://drafts.csswg.org/css-values/#absolute-lengths
 export struct AbsoluteLength : Vaev::Css::PureLength {
-    constexpr explicit AbsoluteLength(Vaev::UnitValue value)
+    constexpr explicit AbsoluteLength(Vaev::Css::UnitValue value)
         : Vaev::Css::PureLength(value) {
         if (not value.isAbsolute())
             panic("unit value is not an absolute <length>");
     }
 
     constexpr f64 toPx() const {
-        return unitValue().to(Vaev::UnitValue::Unit::PX);
+        return unitValue().to(Vaev::Css::UnitValue::Unit::PX);
     }
 };
 

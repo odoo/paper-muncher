@@ -1,15 +1,12 @@
-module;
-
-#include <karm/macros>
-
 export module Vaev.Engine:style.values.numeric;
 
 import Karm.Core;
 
 import :css.values.calc;
+import :css.values.numeric;
 import :css.values.unitValue;
-import :values.calc;
-import :values.unitValue;
+import :style.values.calc;
+import :style.values.unitValue;
 
 using namespace Karm;
 
@@ -73,7 +70,7 @@ export f64 toComputed(Css::Percentage const& value, f64 percentBasis) {
 export using Pixel = Distinct<f64, struct _PixelTag>;
 
 export Pixel toComputed(Css::PureLength const& value, LengthContext auto const& ctx) {
-    return Pixel{value.unitValue().canonical(ctx).value()};
+    return Pixel{toCanonical(value.unitValue(), ctx).value()};
 }
 
 export Pixel toComputed(Css::Length const& value, LengthContext auto const& ctx) {
@@ -166,7 +163,7 @@ export PixelPercentage toComputed(Css::LengthPercentage const& value, LengthCont
     }
 
     // NOTE: Children are sorted by simplification, so the percentage comes first.
-    if (auto sum = simplified.template is<SumNode>(); sum and sum->children.len() == 2) {
+    if (auto sum = simplified.template is<Css::SumNode>(); sum and sum->children.len() == 2) {
         auto maybePercent = sum->children[0].template is<UnitValue>();
         auto maybePx = sum->children[1].template is<UnitValue>();
         if (maybePercent and maybePx and maybePercent->unit() == UnitValue::Unit::PERCENT and maybePx->unit() == UnitValue::Unit::PX) {
@@ -188,7 +185,7 @@ export Css::LengthPercentage toSpecified(PixelPercentage const& value) {
         [](LinearPixelPercentage const& lin) -> Css::LengthPercentage {
             return Css::LengthPercentage{
                 UNCHECKED,
-                SumNode{
+                Css::SumNode{
                     .children = {
                         UnitValue{lin.percentage.value(), UnitValue::Unit::PERCENT},
                         UnitValue{lin.px.value(), UnitValue::Unit::PX},

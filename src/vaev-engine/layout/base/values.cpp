@@ -4,8 +4,6 @@ import Karm.Gfx;
 import Karm.Math;
 import Karm.Logger;
 
-import :values;
-import :css.values;
 import :style.values;
 import :layout.formating;
 
@@ -49,17 +47,17 @@ export Opt<Au> resolve(Style::PixelPercentage const& value, Opt<Au> relative) {
                 return Some(Au{lin.px.value() + r.cast<f64>() * (lin.percentage.value() / 100.)});
             return NONE;
         },
-        [&](Karm::Box<Calc> const& calc) -> Opt<Au> {
-            auto simplified = simplify(
+        [&](Karm::Box<Style::Calc> const& calc) -> Opt<Au> {
+            auto simplified = Style::simplify(
                 *calc,
                 NONE,
-                Some(NumericBaseType::LENGTH),
+                Some(Style::NumericBaseType::LENGTH),
                 relative.map([](Au r) {
                     return r.cast<f64>();
                 })
             );
 
-            if (auto n = simplified.is<UnitValue>(); n and n->unit() == UnitValue::Unit::PX)
+            if (auto n = simplified.is<Style::UnitValue>(); n and n->unit() == Style::UnitValue::Unit::PX)
                 return Some(Au{n->value()});
             return NONE;
         }
@@ -72,8 +70,8 @@ export Au resolve(Style::PixelPercentage const& value, Au relative) {
     panic("calc didn't simplify to a single value of expected unit");
 }
 
-export Au resolve(Union<Keywords::Auto, Style::PixelPercentage> const& value, Au relative) {
-    if (value.is<Keywords::Auto>())
+export Au resolve(Union<Style::Keywords::Auto, Style::PixelPercentage> const& value, Au relative) {
+    if (value.is<Style::Keywords::Auto>())
         return 0_au;
     return resolve(value.expect<Style::PixelPercentage>(), relative);
 }

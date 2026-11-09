@@ -16,7 +16,7 @@ static Media const TEST_MEDIA = {
     .width = 1920_px,
     .height = 1080_px,
     .aspectRatio = 16.0 / 9.0,
-    .orientation = Print::Orientation::LANDSCAPE,
+    .orientation = Style::Keywords::LANDSCAPE,
 
     .resolution = 1_dppx,
     .scan = Keywords::PROGRESSIVE,
@@ -49,7 +49,7 @@ static Media const TEST_MEDIA = {
 test$("logical-and") {
     auto query = MediaQuery::combineAnd(
         TypeFeature{Keywords::SCREEN},
-        WidthFeature::min(Css::PureLength{UnitValue{1920, UnitValue::Unit::PX}})
+        WidthFeature::min(Css::PureLength{Css::UnitValue{1920, Css::UnitValue::Unit::PX}})
     );
 
     assert$(query.match(TEST_MEDIA));
@@ -60,7 +60,7 @@ test$("logical-and") {
 test$("logical-or") {
     auto query = MediaQuery::combineOr(
         TypeFeature{Keywords::SCREEN},
-        WidthFeature::min(Css::PureLength{UnitValue{1920, UnitValue::Unit::PX}})
+        WidthFeature::min(Css::PureLength{Css::UnitValue{1920, Css::UnitValue::Unit::PX}})
     );
 
     assert$(query.match(TEST_MEDIA));

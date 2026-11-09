@@ -12,14 +12,16 @@ import :css.lexer;
 import :css.parser;
 import :css.serializer;
 import :css.values.base;
-import :values.primitives;
 
 using namespace Karm;
+using namespace Karm::Literals;
 
 namespace Vaev::Css {
 
 // MARK: Integer ---------------------------------------------------------------
 // https://drafts.csswg.org/css-values/#integers
+
+export using Integer = isize;
 
 export template <>
 struct ValueParser<Integer> {
@@ -120,6 +122,30 @@ struct ValueSerializer<String> {
 
 // MARK: Custom Ident ----------------------------------------------------------
 // https://www.w3.org/TR/css-values-4/#identifier-value
+
+export struct CustomIdent {
+    Symbol _symbol = ""_sym;
+
+    bool operator==(CustomIdent const& other) const = default;
+
+    auto operator<=>(CustomIdent const& other) const = default;
+
+    explicit operator bool() const {
+        return static_cast<bool>(_symbol);
+    }
+
+    Str str() const {
+        return _symbol.str();
+    }
+
+    void hash(Meta::Derive<Hasher> auto& h) const {
+        Karm::hash(h, _symbol);
+    }
+
+    void repr(Io::Emit& e) const {
+        e("(custom-ident '{}')", _symbol);
+    }
+};
 
 export template <>
 struct ValueParser<CustomIdent> {

@@ -1,24 +1,40 @@
-module;
-
-#include <karm/macros>
-
 export module Vaev.Engine:style.values.shapes;
 
 import Karm.Core;
+import Karm.Gfx;
+import Karm.Math;
 
+import :css.values.backgrounds;
 import :css.values.shapes;
 import :style.values.backgrounds;
 import :style.values.generic;
 import :style.values.numeric;
-import :values.unitValue;
 
 using namespace Karm;
 
 namespace Vaev::Style {
 
-export using ShapeRadius = Css::ShapeRadiusT<PixelPercentage>;
+// https://drafts.csswg.org/css-masking/#typedef-geometry-box
+export using ShapeBox = Css::ShapeBox;
+export using GeometryBox = Css::GeometryBox;
+export using FillRule = Css::FillRule;
 
-export using Circle = Css::CircleT<PixelPercentage, Position>;
+// https://drafts.csswg.org/css-shapes/#funcdef-basic-shape-path
+export using Path = Css::Path;
+
+export using ShapeRadius = Union<
+    PixelPercentage,
+    Keywords::ClosestSide,
+    Keywords::FarthestSide>;
+
+export struct Circle {
+    ShapeRadius radius = Keywords::CLOSEST_SIDE;
+    Position position = Position::center();
+
+    void repr(Io::Emit& e) const {
+        e("(circle {} {})", radius, position);
+    }
+};
 
 export Circle toComputed(Css::Circle const& value, LengthContext auto const& ctx) {
     return {toComputed(value.radius, ctx), toComputed(value.position, ctx)};
@@ -28,7 +44,15 @@ export Css::Circle toSpecified(Circle const& value) {
     return {toSpecified(value.radius), toSpecified(value.position)};
 }
 
-export using Ellipse = Css::EllipseT<PixelPercentage, Position>;
+export struct Ellipse {
+    ShapeRadius rx = Keywords::CLOSEST_SIDE;
+    ShapeRadius ry = Keywords::CLOSEST_SIDE;
+    Position position = Position::center();
+
+    void repr(Io::Emit& e) const {
+        e("(ellipse {} {} {})", rx, ry, position);
+    }
+};
 
 export Ellipse toComputed(Css::Ellipse const& value, LengthContext auto const& ctx) {
     return {toComputed(value.rx, ctx), toComputed(value.ry, ctx), toComputed(value.position, ctx)};
@@ -38,7 +62,16 @@ export Css::Ellipse toSpecified(Ellipse const& value) {
     return {toSpecified(value.rx), toSpecified(value.ry), toSpecified(value.position)};
 }
 
-export using Inset = Css::InsetT<PixelPercentage>;
+export struct Inset {
+    Math::Insets<PixelPercentage> insets;
+    Math::Radii<PixelPercentage> borderRadius;
+
+    void repr(Io::Emit& e) const {
+        e("(inset {} ", insets);
+        Css::reprRadii(e, borderRadius);
+        e(")");
+    }
+};
 
 export Inset toComputed(Css::Inset const& value, LengthContext auto const& ctx) {
     return {toComputed(value.insets, ctx), toComputed(value.borderRadius, ctx)};
@@ -48,7 +81,14 @@ export Css::Inset toSpecified(Inset const& value) {
     return {toSpecified(value.insets), toSpecified(value.borderRadius)};
 }
 
-export using Polygon = Css::PolygonT<PixelPercentage>;
+export struct Polygon {
+    Gfx::FillRule fillRule = Gfx::FillRule::NONZERO;
+    Vec<Pair<PixelPercentage>> points;
+
+    void repr(Io::Emit& e) const {
+        e("(polygon {} {})", fillRule, points);
+    }
+};
 
 export Polygon toComputed(Css::Polygon const& value, LengthContext auto const& ctx) {
     Polygon result{value.fillRule, {}};
@@ -64,7 +104,16 @@ export Css::Polygon toSpecified(Polygon const& value) {
     return result;
 }
 
-export using Rect = Css::RectT<PixelPercentage>;
+export struct Rect {
+    Math::Insets<PixelPercentage> insets;
+    Math::Radii<PixelPercentage> borderRadius;
+
+    void repr(Io::Emit& e) const {
+        e("(rect {} ", insets);
+        Css::reprRadii(e, borderRadius);
+        e(")");
+    }
+};
 
 export Rect toComputed(Css::Rect const& value, LengthContext auto const& ctx) {
     return {toComputed(value.insets, ctx), toComputed(value.borderRadius, ctx)};
@@ -74,7 +123,19 @@ export Css::Rect toSpecified(Rect const& value) {
     return {toSpecified(value.insets), toSpecified(value.borderRadius)};
 }
 
-export using Xywh = Css::XywhT<PixelPercentage>;
+export struct Xywh {
+    PixelPercentage x;
+    PixelPercentage y;
+    PixelPercentage width;
+    PixelPercentage height;
+    Math::Radii<PixelPercentage> borderRadius;
+
+    void repr(Io::Emit& e) const {
+        e("(xywh {} {} {} {} ", x, y, width, height);
+        Css::reprRadii(e, borderRadius);
+        e(")");
+    }
+};
 
 export Xywh toComputed(Css::Xywh const& value, LengthContext auto const& ctx) {
     return {
@@ -96,15 +157,23 @@ export Css::Xywh toSpecified(Xywh const& value) {
     };
 }
 
-export using BasicShapeFunction = Css::BasicShapeFunctionT<PixelPercentage, Position>;
+export using BasicShapeFunction = Union<
+    Circle, Ellipse, Inset, Path, Polygon, Rect, Xywh>;
 
-export using BasicShape = Css::BasicShapeT<PixelPercentage, Position>;
+export struct BasicShape {
+    Opt<BasicShapeFunction> shape;
+    GeometryBox referenceBox = Keywords::BORDER_BOX;
+
+    void repr(Io::Emit& e) const {
+        e("(basic-shape {} {})", shape, referenceBox);
+    }
+};
 
 export BasicShape toComputed(Css::BasicShape const& value, LengthContext auto const& ctx) {
     return {
         value.shape.map([&](Css::BasicShapeFunction const& shape) {
             return shape.visit(
-                [](Css::Path const& path) -> BasicShapeFunction {
+                [](Path const& path) -> BasicShapeFunction {
                     return path;
                 },
                 [&](auto const& s) -> BasicShapeFunction {
@@ -120,7 +189,7 @@ export Css::BasicShape toSpecified(BasicShape const& value) {
     return {
         value.shape.map([](BasicShapeFunction const& shape) {
             return shape.visit(
-                [](Css::Path const& path) -> Css::BasicShapeFunction {
+                [](Path const& path) -> Css::BasicShapeFunction {
                     return path;
                 },
                 [](auto const& s) -> Css::BasicShapeFunction {

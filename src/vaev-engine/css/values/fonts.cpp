@@ -4,7 +4,6 @@ module;
 
 export module Vaev.Engine:css.values.fonts;
 
-import Karm.Ref;
 import Karm.Gfx;
 
 import :css.lexer;
@@ -13,9 +12,7 @@ import :css.serializer;
 import :css.values.base;
 import :css.values.keywords;
 import :css.values.primitives;
-import :css.values.unitValue;
-import :values.fonts;
-import :values.primitives;
+import :css.values.numeric;
 
 namespace Vaev::Css {
 
@@ -218,31 +215,46 @@ struct ValueSerializer<Gfx::FontWeight> {
 
 // MARK: FontFamily ------------------------------------------------------------
 
-export template <>
-struct ValueParser<FontFamily> {
-    static Res<FontFamily> parse(Cursor<Sst>& c) {
-        if (c.ended())
-            return Error::invalidData("unexpected end of input");
+// https://drafts.csswg.org/css-fonts/#family-name-value
+export struct FontFamily {
+    Symbol name;
 
-        if (c.peek() == Token::STRING)
-            return Ok<FontFamily>(Symbol::from(try$(parseValue<String>(c))));
-
-        StringBuilder familyStrBuilder;
-        usize amountOfIdents = 0;
-
-        if (c.peek() == Token::IDENT) {
-            while (not c.ended() and c.peek() == Token::IDENT) {
-                if (++amountOfIdents > 1)
-                    familyStrBuilder.append(' ');
-                familyStrBuilder.append(c.next().token.data);
-                eatWhitespace(c);
-            }
-        } else {
-            return Error::invalidData("expected font family name");
-        }
-
-        return Ok<FontFamily>(Symbol::from(familyStrBuilder.take()));
+    FontFamily(Symbol name)
+        : name(name) {
     }
+
+    void repr(Io::Emit& e) const {
+        e("(FontFamily name:{})", name);
+    }
+
+    bool operator==(FontFamily const&) const = default;
+    auto operator<=>(FontFamily const&) const = default;
+
+    static Res<FontFamily> parse(Cursor<Sst>& c);
 };
+
+Res<FontFamily> FontFamily::parse(Cursor<Sst>& c) {
+    if (c.ended())
+        return Error::invalidData("unexpected end of input");
+
+    if (c.peek() == Token::STRING)
+        return Ok<FontFamily>(Symbol::from(try$(parseValue<String>(c))));
+
+    StringBuilder familyStrBuilder;
+    usize amountOfIdents = 0;
+
+    if (c.peek() == Token::IDENT) {
+        while (not c.ended() and c.peek() == Token::IDENT) {
+            if (++amountOfIdents > 1)
+                familyStrBuilder.append(' ');
+            familyStrBuilder.append(c.next().token.data);
+            eatWhitespace(c);
+        }
+    } else {
+        return Error::invalidData("expected font family name");
+    }
+
+    return Ok<FontFamily>(Symbol::from(familyStrBuilder.take()));
+}
 
 } // namespace Vaev::Css

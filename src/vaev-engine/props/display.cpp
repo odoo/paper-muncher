@@ -8,6 +8,7 @@ import Karm.Core;
 import :props.base;
 import :css.parser;
 import :style.computed;
+import :style.values.keywords;
 
 using namespace Karm;
 
@@ -27,7 +28,7 @@ export struct DisplayProperty : Property {
         }
 
         Res<Rc<Property>> parse(Cursor<Css::Sst>& c) const override {
-            return Ok(makeRc<DisplayProperty>(self(), try$(parseValue<Display>(c))));
+            return Ok(makeRc<DisplayProperty>(self(), try$(parseValue<Css::Display>(c))));
         }
     };
 
@@ -78,13 +79,13 @@ export struct ContentProperty : Property {
                     return Ok(String{"”"});
                 else if (c->prefix == Css::Token::function("element(")) {
                     Cursor<Css::Sst> cur = c->content;
-                    auto element = try$(parseValue<ElementFunc>(cur));
+                    auto element = try$(parseValue<Css::ElementFunc>(cur));
                     c.next();
                     return Ok(element);
                 } else if (c->prefix == Css::Token::function("counter(")) {
-                    return parseValue<CounterFunc>(c);
+                    return parseValue<Css::CounterFunc>(c);
                 } else if (c->prefix == Css::Token::function("counters(")) {
-                    return parseValue<CountersFunc>(c);
+                    return parseValue<Css::CountersFunc>(c);
                 } else if (c->type == Css::Sst::TOKEN and c->token.type == Css::Token::STRING) {
                     return Ok(try$(parseValue<String>(c)));
                 } else
@@ -122,7 +123,7 @@ export struct OrderProperty : Property {
         }
 
         Res<Rc<Property>> parse(Cursor<Css::Sst>& c) const override {
-            return Ok(makeRc<OrderProperty>(self(), try$(parseValue<Integer>(c))));
+            return Ok(makeRc<OrderProperty>(self(), try$(parseValue<Css::Integer>(c))));
         }
     };
 

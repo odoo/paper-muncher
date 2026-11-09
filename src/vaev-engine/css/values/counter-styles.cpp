@@ -4,17 +4,42 @@ module;
 
 export module Vaev.Engine:css.values.counterStyles;
 
+import Karm.Core;
+
 import :css.lexer;
 import :css.parser;
 import :css.values.base;
-import :css.values.calc;
 import :css.values.keywords;
 import :css.values.primitives;
-import :values.counterStyles;
-import :values.keywords;
-import :values.primitives;
+
+using namespace Karm;
 
 namespace Vaev::Css {
+
+export using CounterSymbolsType = Union<
+    Keywords::Cyclic,
+    Keywords::Numeric,
+    Keywords::Alphabetic,
+    Keywords::Fixed>;
+
+// https://drafts.csswg.org/css-counter-styles-3/#typedef-symbol
+// TODO: Add Image support to CounterSymbol
+export using CounterSymbol = Union<String, /* Image ,*/ CustomIdent>;
+
+// https://drafts.csswg.org/css-counter-styles-3/#symbols-function
+export struct CounterSymbolsFunc {
+    Opt<CounterSymbolsType> type;
+    Vec<CounterSymbol> symbols;
+
+    void repr(Io::Emit& e) const {
+        e("(counter-symbols {} {})", type, symbols);
+    }
+
+    static Res<CounterSymbolsFunc> parse(Cursor<Sst>& c);
+};
+
+// https://www.w3.org/TR/css-counter-styles-3/#typedef-counter-style
+export using CounterStyle = Union<CustomIdent, CounterSymbolsFunc>;
 
 // https://drafts.csswg.org/css-counter-styles-3/#descdef-counter-style-additive-symbols
 export struct AdditiveCounterSymbol {
@@ -23,26 +48,6 @@ export struct AdditiveCounterSymbol {
 
     void repr(Io::Emit& e) const {
         e("(additive-symbol {} {})", value, symbol);
-    }
-};
-
-export template <>
-struct ValueParser<CounterSymbolsFunc> {
-    static Res<CounterSymbolsFunc> parse(Cursor<Sst>& c) {
-        if (c.ended())
-            return Error::invalidData("unexpected end of input");
-
-        if (c.peek() != Token::function("symbols("))
-            return Error::invalidData("expected counter(");
-
-        Cursor<Sst> content = c->content;
-        auto type = parseValue<CounterSymbolsType>(content).ok();
-
-        auto symbols = try$(parseValue<Vec<CounterSymbol>>(content));
-        if (symbols.len() == 0)
-            return Error::invalidData("expected at least one symbol in symbols()");
-
-        return Ok(CounterSymbolsFunc{type, symbols});
     }
 };
 
@@ -95,44 +100,21 @@ export using CounterSpeakAs = Union<
     Keywords::SpellOut,
     CustomIdent>;
 
-export template <>
-struct ValueParser<CounterFunc> {
-    static Res<CounterFunc> parse(Cursor<Sst>& c) {
-        if (c.ended())
-            return Error::invalidData("unexpected end of input");
+Res<CounterSymbolsFunc> CounterSymbolsFunc::parse(Cursor<Sst>& c) {
+    if (c.ended())
+        return Error::invalidData("unexpected end of input");
 
-        if (c->prefix != Token::function("counter("))
-            return Error::invalidData("expected counter(");
+    if (c.peek() != Token::function("symbols("))
+        return Error::invalidData("expected counter(");
 
-        Cursor<Sst> content = c->content;
-        auto name = try$(parseValue<CustomIdent>(content));
-        content.skip(Token::COMMA);
-        auto maybeSymbols = parseValue<CounterStyle>(content).ok();
+    Cursor<Sst> content = c->content;
+    auto type = parseValue<CounterSymbolsType>(content).ok();
 
-        c.next();
-        return Ok(CounterFunc{name, maybeSymbols});
-    }
-};
+    auto symbols = try$(parseValue<Vec<CounterSymbol>>(content));
+    if (symbols.len() == 0)
+        return Error::invalidData("expected at least one symbol in symbols()");
 
-export template <>
-struct ValueParser<CountersFunc> {
-    static Res<CountersFunc> parse(Cursor<Sst>& c) {
-        if (c.ended())
-            return Error::invalidData("unexpected end of input");
-
-        if (c.peek() != Token::function("counters("))
-            return Error::invalidData("expected counter(");
-
-        Cursor<Sst> content = c->content;
-        auto name = try$(parseValue<CustomIdent>(content));
-        c.skip(Token::COMMA);
-        auto join = try$(parseValue<String>(content));
-        c.skip(Token::COMMA);
-        auto maybeSymbols = parseValue<CounterStyle>(content).ok();
-
-        c.next();
-        return Ok(CountersFunc{name, join, maybeSymbols});
-    }
-};
+    return Ok(CounterSymbolsFunc{type, symbols});
+}
 
 } // namespace Vaev::Css

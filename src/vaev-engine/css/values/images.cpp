@@ -9,7 +9,7 @@ import :css.values.base;
 import :css.values.color;
 import :css.values.keywords;
 import :css.values.primitives;
-import :css.values.unitValue;
+import :css.values.numeric;
 
 // https://www.w3.org/TR/css-images-4/
 

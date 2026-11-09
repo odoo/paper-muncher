@@ -8,6 +8,8 @@ import Karm.Core;
 import :props.base;
 import :css.parser;
 import :style.computed;
+import :style.values.keywords;
+import :style.values.primitives;
 
 using namespace Karm;
 
@@ -46,7 +48,7 @@ export struct PositionProperty : Property {
                     return Ok(Keywords::STICKY);
                 else if (c->type == Css::Sst::FUNC and c->prefix == Css::Token::function("running(")) {
                     Cursor<Css::Sst> cur = c->content;
-                    auto res = parseValue<CustomIdent>(cur);
+                    auto res = parseValue<Css::CustomIdent>(cur);
                     if (not res) {
                         return Error::invalidData("ill formed custom-ident in running position");
                     }

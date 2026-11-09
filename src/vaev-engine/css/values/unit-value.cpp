@@ -5,19 +5,184 @@ module;
 export module Vaev.Engine:css.values.unitValue;
 
 import Karm.Core;
-import Karm.Math;
 
 import :css.lexer;
 import :css.parser;
 import :css.serializer;
 import :css.values.base;
-import :css.values.keywords;
 import :css.values.primitives;
-import :values.unitValue;
 
 using namespace Karm;
 
 namespace Vaev::Css {
+
+// MARK: Numeric Base Type -----------------------------------------------------
+// https://drafts.css-houdini.org/css-typed-om-1/#enumdef-cssnumericbasetype
+
+export enum struct NumericBaseType : u8 {
+    LENGTH,
+    ANGLE,
+    TIME,
+    FREQUENCY,
+    RESOLUTION,
+    FLEX,
+    PERCENT,
+
+    _LEN,
+};
+
+// MARK: Unit Value ------------------------------------------------------------
+// https://drafts.css-houdini.org/css-typed-om-1/#cssunitvalue
+
+constexpr Opt<NumericBaseType> _baseType(None) {
+    return NONE;
+}
+
+constexpr Opt<NumericBaseType> _baseType(NumericBaseType type) {
+    return Some(type);
+}
+
+export struct UnitValue {
+    enum struct Unit : u8 {
+#define UNIT(NAME, ...) NAME,
+#include "defs/units.inc"
+#undef UNIT
+
+        _LEN,
+    };
+
+    f64 _value = 0;
+    Unit _unit = Unit::NONE;
+
+    static constexpr Opt<NumericBaseType> baseTypeOf(Unit unit) {
+        using enum NumericBaseType;
+        switch (unit) {
+#define UNIT(NAME, TYPE, ...) \
+    case Unit::NAME:          \
+        return _baseType(TYPE);
+#include "defs/units.inc"
+#undef UNIT
+
+        default:
+            unreachable();
+        }
+    }
+
+    static constexpr Str nameOf(Unit unit) {
+        switch (unit) {
+#define UNIT(NAME, TYPE, STR, ...) \
+    case Unit::NAME:               \
+        return STR;
+#include "defs/units.inc"
+#undef UNIT
+
+        default:
+            unreachable();
+        }
+    }
+
+    static constexpr f64 factorOf(Unit unit) {
+        switch (unit) {
+#define UNIT(NAME, TYPE, STR, FACTOR) \
+    case Unit::NAME:                  \
+        return FACTOR;
+#include "defs/units.inc"
+#undef UNIT
+
+        default:
+            unreachable();
+        }
+    }
+
+    // https://drafts.csswg.org/css-values/#canonical-unit
+    static constexpr Unit canonicalUnitOf(Opt<NumericBaseType> type) {
+        if (not type)
+            return Unit::NONE;
+
+        switch (*type) {
+        case NumericBaseType::LENGTH:
+            return Unit::PX;
+        case NumericBaseType::ANGLE:
+            return Unit::DEG;
+        case NumericBaseType::TIME:
+            return Unit::S;
+        case NumericBaseType::FREQUENCY:
+            return Unit::HZ;
+        case NumericBaseType::RESOLUTION:
+            return Unit::DPPX;
+        case NumericBaseType::FLEX:
+            return Unit::FR;
+        case NumericBaseType::PERCENT:
+            return Unit::PERCENT;
+        default:
+            unreachable();
+        }
+    }
+
+    static Res<Unit> unitFromName(Str name) {
+        for (usize i = 0; i < toUnderlyingType(Unit::_LEN); i++) {
+            auto unit = static_cast<Unit>(i);
+            if (eqCi(name, nameOf(unit)))
+                return Ok(unit);
+        }
+        return Error::invalidData("unknown unit");
+    }
+
+    constexpr UnitValue() = default;
+
+    constexpr UnitValue(f64 value, Unit unit)
+        : _value(value), _unit(unit) {}
+
+    constexpr f64 value() const {
+        return _value;
+    }
+
+    constexpr Unit unit() const {
+        return _unit;
+    }
+
+    constexpr Opt<NumericBaseType> baseType() const {
+        return baseTypeOf(_unit);
+    }
+
+    constexpr bool isAbsolute() const {
+        return factorOf(_unit) != 0;
+    }
+
+    constexpr bool isCanonical() const {
+        return canonicalUnitOf(baseType()) == _unit;
+    }
+
+    constexpr UnitValue canonical() const {
+        if (not isAbsolute())
+            panic("unit value depends on a context");
+        return {_value * factorOf(_unit), canonicalUnitOf(baseType())};
+    }
+
+    constexpr f64 to(Unit unit) const {
+        if (baseTypeOf(unit) != baseType())
+            panic("converting between unit values of different types");
+        return canonical().value() / factorOf(unit);
+    }
+
+    // https://drafts.css-houdini.org/css-typed-om-1/#equal-numeric-value
+    // If value1 and value2 are both CSSUnitValues, return true if they have equal unit and value internal slots, or false otherwise.
+    constexpr bool operator==(UnitValue const&) const = default;
+
+    constexpr std::partial_ordering operator<=>(UnitValue const& other) const {
+        if (_unit == other._unit)
+            return _value <=> other._value;
+        if (baseType() != other.baseType() or not isAbsolute() or not other.isAbsolute())
+            return std::partial_ordering::unordered;
+        return canonical().value() <=> other.canonical().value();
+    }
+
+    void repr(Io::Emit& e) const {
+        e("{}{}", _value, nameOf(_unit));
+    }
+};
+
+// MARK: Parsing ---------------------------------------------------------------
 
 export template <>
 struct ValueParser<UnitValue> {
@@ -76,134 +241,5 @@ export Res<UnitValue> parseUnitValue(Cursor<Sst>& c, Opt<NumericBaseType> type) 
     }
     return Ok(value);
 }
-
-// MARK: Typed Unit Value ------------------------------------------------------
-
-enum struct AcceptsPercent {
-    NO,
-    YES,
-    _LEN,
-};
-
-export template <Opt<NumericBaseType> TYPE, AcceptsPercent WITH_PERCENT = AcceptsPercent::NO>
-struct TypedUnitValue {
-    static constexpr Opt<NumericBaseType> BASE_TYPE = TYPE;
-    static constexpr AcceptsPercent ACCEPTS_PERCENTS = WITH_PERCENT;
-
-    UnitValue _value;
-
-    constexpr TypedUnitValue()
-        : _value(0, UnitValue::canonicalUnitOf(TYPE)) {}
-
-    constexpr explicit TypedUnitValue(UnitValue value)
-        : _value(value) {
-
-        if (not (value.baseType() == TYPE or (WITH_PERCENT == AcceptsPercent::YES and value.baseType() == NumericBaseType::PERCENT)))
-            panic("unit value has the wrong base type");
-    }
-
-    constexpr UnitValue unitValue() const {
-        return _value;
-    }
-
-    constexpr f64 value() const {
-        return _value.value();
-    }
-
-    constexpr UnitValue::Unit unit() const {
-        return _value.unit();
-    }
-
-    constexpr auto operator<=>(TypedUnitValue const&) const = default;
-
-    void repr(Io::Emit& e) const {
-        if constexpr (TYPE == NumericBaseType::RESOLUTION) {
-            if (_value.value() == Math::INF) {
-                e("infinite");
-                return;
-            }
-        }
-        _value.repr(e);
-    }
-
-    // MARK: <length> ----------------------------------------------------------
-    // https://drafts.csswg.org/css-values/#lengths
-
-    // MARK: <angle> -----------------------------------------------------------
-    // https://drafts.csswg.org/css-values/#angles
-
-    static constexpr TypedUnitValue fromDegree(f64 val)
-        requires(TYPE == NumericBaseType::ANGLE)
-    {
-        return TypedUnitValue{UnitValue{val, UnitValue::Unit::DEG}};
-    }
-
-    constexpr f64 toDegree() const
-        requires(TYPE == NumericBaseType::ANGLE)
-    {
-        return _value.to(UnitValue::Unit::DEG);
-    }
-
-    // MARK: <percentage> ------------------------------------------------------
-    // https://drafts.csswg.org/css-values/#percentages
-
-    constexpr explicit TypedUnitValue(f64 value)
-        requires(TYPE == NumericBaseType::PERCENT)
-        : _value(value, UnitValue::Unit::PERCENT) {}
-
-    // MARK: <resolution> ------------------------------------------------------
-    // https://drafts.csswg.org/css-values/#resolution
-
-    constexpr f64 toDppx() const
-        requires(TYPE == NumericBaseType::RESOLUTION)
-    {
-        return _value.to(UnitValue::Unit::DPPX);
-    }
-};
-
-// https://drafts.csswg.org/css-values/#lengths
-export using PureLength = TypedUnitValue<Some(NumericBaseType::LENGTH)>;
-
-// https://drafts.csswg.org/css-values/#angles
-export using PureAngle = TypedUnitValue<Some(NumericBaseType::ANGLE)>;
-
-// https://drafts.csswg.org/css-values/#percentages
-export using PurePercentage = TypedUnitValue<Some(NumericBaseType::PERCENT)>;
-
-// https://drafts.csswg.org/css-values/#time
-export using PureTime = TypedUnitValue<Some(NumericBaseType::TIME)>;
-
-// https://drafts.csswg.org/css-values/#frequency
-export using PureFrequency = TypedUnitValue<Some(NumericBaseType::FREQUENCY)>;
-
-// https://drafts.csswg.org/css-values/#resolution
-export using PureResolution = TypedUnitValue<Some(NumericBaseType::RESOLUTION)>;
-
-// https://drafts.csswg.org/css-grid/#typedef-flex
-export using PureFlex = TypedUnitValue<Some(NumericBaseType::FLEX)>;
-
-export template <typename T>
-    requires Meta::Derive<T, TypedUnitValue<T::BASE_TYPE, T::ACCEPTS_PERCENTS>>
-struct ValueParser<T> {
-    static Res<T> parse(Cursor<Sst>& c) {
-        auto maybeBase = parseUnitValue(c, T::BASE_TYPE);
-
-        if (maybeBase) {
-            return Ok(T{maybeBase.take()});
-        } else if (T::ACCEPTS_PERCENTS == AcceptsPercent::YES) {
-            return Ok(T{try$(parseUnitValue(c, Some(NumericBaseType::PERCENT)))});
-        } else {
-            return *maybeBase.error();
-        }
-    }
-};
-
-export template <typename T>
-    requires Meta::Derive<T, TypedUnitValue<T::BASE_TYPE>>
-struct ValueSerializer<T> {
-    static Res<> serialize(Io::TextWriter& w, T const& value) {
-        return serializeValue(w, value.unitValue());
-    }
-};
 
 } // namespace Vaev::Css

@@ -9,7 +9,7 @@ namespace Vaev::Layout {
 // MARK: AvailableSpace --------------------------------------------------------
 // https://www.w3.org/TR/css-sizing-3/#available
 
-using AvailableSpaceAxis = Union<Au, Keywords::MinContent, Keywords::MaxContent>;
+using AvailableSpaceAxis = Union<Au, Style::Keywords::MinContent, Style::Keywords::MaxContent>;
 
 struct AvailableSpace {
     AvailableSpaceAxis x;

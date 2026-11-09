@@ -14,9 +14,7 @@ import :css.serializer;
 import :css.values.base;
 import :css.values.keywords;
 import :css.values.primitives;
-import :css.values.unitValue;
-import :values.keywords;
-import :values.primitives;
+import :css.values.numeric;
 
 using namespace Karm;
 using namespace Karm::Literals;
@@ -24,8 +22,6 @@ using namespace Karm::Literals;
 // https://www.w3.org/TR/css-color-4
 
 namespace Vaev::Css {
-
-// MARK: Color Interpolation ---------------------------------------------------
 
 // https://www.w3.org/TR/css-color-4/#typedef-color-space
 export struct ColorSpace {
@@ -119,70 +115,6 @@ export struct ColorSpace {
 
         return ColorSpace();
     }
-
-    template <typename Polar>
-    void _preparePolar(Polar& a, Polar& b) const {
-        auto delta = b.hue - a.hue;
-        if (interpolation == SHORTER) {
-            if (delta > 180.f)
-                a.hue += 360.0f;
-            else if (delta < -180.f)
-                b.hue += 360.0f;
-        } else if (interpolation == LONGER) {
-            if (0.0f < delta and delta < 180.0f)
-                a.hue += 360.0f;
-            else if (-180.0f < delta and delta <= 0.0f)
-                b.hue += 360.0f;
-        } else if (interpolation == INCREASING) {
-            if (delta < 0.0f)
-                b.hue += 360.0f;
-        } else {
-            if (delta > 0.0f)
-                a.hue += 360.0f;
-        }
-    }
-
-    template <typename Polar>
-    Polar _interpolatePolar(Polar a, Polar b, f64 t) const {
-        _preparePolar(a, b);
-        return a.lerpWith(b, t);
-    }
-
-    // https://drafts.csswg.org/css-color-4/#interpolation
-    // Not compliant regarding missing or carried values
-    Gfx::Color interpolate(Gfx::Color a, Gfx::Color b, f64 t) const {
-        a = a.premultiply();
-        b = b.premultiply();
-
-        if (type == _Type::RECTANGULAR) {
-            switch (rectangular) {
-            case _Rectangular::SRGB:
-                return a.lerpWith(b, t).unpremultiply();
-
-            default:
-                logWarn("interpolation method is not supported: {}", rectangular);
-                return Gfx::FUCHSIA;
-            }
-        } else if (type == _Type::POLAR) {
-            switch (polar) {
-            case _Polar::HSL:
-                return Gfx::hslToRgb(
-                           _interpolatePolar<Gfx::Hsl>(
-                               Gfx::rgbToHsl(a),
-                               Gfx::rgbToHsl(b),
-                               t
-                           )
-                )
-                    .unpremultiply();
-
-            default:
-                logWarn("interpolation method is not supported: {}", polar);
-                return Gfx::FUCHSIA;
-            }
-        }
-
-        return Gfx::WHITE;
-    }
 };
 
 // MARK: Color -----------------------------------------------------------------
@@ -190,7 +122,7 @@ export struct ColorSpace {
 
 export enum struct SystemColor : u8 {
 #define COLOR(NAME, ...) NAME,
-#include "../../values/defs/system-colors.inc"
+#include "defs/system-colors.inc"
 
 #undef COLOR
 
@@ -228,26 +160,26 @@ export struct ColorMix {
 
 #define COLOR(NAME, _, VALUE) \
     export constexpr Gfx::Color NAME = Gfx::Color::fromHex(VALUE);
-#include "../../values/defs/colors.inc"
+#include "defs/colors.inc"
 #undef COLOR
 
-export Opt<Color> parseNamedColor(Str name) {
+Opt<Color> parseNamedColor(Str name) {
 
 #define COLOR(ID, NAME, ...)   \
     if (eqCi(name, #NAME ""s)) \
         return Some(ID);
-#include "../../values/defs/colors.inc"
+#include "defs/colors.inc"
 
 #undef COLOR
 
     return NONE;
 }
 
-export Opt<SystemColor> parseSystemColor(Str name) {
+Opt<SystemColor> parseSystemColor(Str name) {
 #define COLOR(ID, NAME, ...)   \
     if (eqCi(name, #NAME ""s)) \
         return Some(SystemColor::ID);
-#include "../../values/defs/system-colors.inc"
+#include "defs/system-colors.inc"
 
 #undef COLOR
 
@@ -255,7 +187,7 @@ export Opt<SystemColor> parseSystemColor(Str name) {
 #define ALIAS(NAME, ID)        \
     if (eqCi(name, #NAME ""s)) \
         return Some(SystemColor::ID);
-#include "../../values/defs/deprecated-system-colors.inc"
+#include "defs/deprecated-system-colors.inc"
 
 #undef ALIAS
 
@@ -722,13 +654,6 @@ struct ValueSerializer<Color> {
             }
         );
     }
-};
-
-export constexpr Array<Gfx::Color, static_cast<usize>(SystemColor::_LEN)> SYSTEM_COLOR = {
-#define COLOR(NAME, _, VALUE) Gfx::Color::fromHex(VALUE),
-#include "../../values/defs/system-colors.inc"
-
-#undef COLOR
 };
 
 } // namespace Vaev::Css

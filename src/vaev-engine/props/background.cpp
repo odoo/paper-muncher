@@ -9,10 +9,10 @@ import :props.base;
 import :css.parser;
 import :style.computed;
 import :css.values.base;
-import :values.primitives;
 import :css.values.primitives;
 import :css.values.backgrounds;
 import :style.values.backgrounds;
+import :style.values.keywords;
 
 using namespace Karm;
 
@@ -291,7 +291,7 @@ export struct ColorProperty : Property {
 
     void apply(ComputedValues const& parent, ComputedValues& c, [[maybe_unused]] ComputationContext const& cx) const override {
         // In the color property, the used value of currentcolor is the resolved inherited value.
-        c.color = resolve(_value, parent.color);
+        c.color = toUsed(_value, parent.color);
     }
 
     Res<> serialize(Io::TextWriter& w) const override {

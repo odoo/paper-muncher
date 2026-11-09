@@ -3,7 +3,8 @@ export module Vaev.Engine:style.values.generic;
 import Karm.Core;
 import Karm.Math;
 
-import :values.unitValue;
+import :style.values.unitValue;
+import :style.values.keywords;
 
 using namespace Karm;
 

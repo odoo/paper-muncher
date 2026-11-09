@@ -13,27 +13,27 @@ Layout::RectAu resolveTransformReference(Rc<Layout::Fragment>& fragment, Style::
     // conversely for elements with one, fill-box is content-box and both
     // stroke-box and view-box are border-box.
     return box.visit(
-        [&](Keywords::ContentBox const&) {
+        [&](Style::Keywords::ContentBox const&) {
             if (not fragment->hasCssLayoutBox())
                 return fragment->objectBoundingBox();
             return fragment->contentBox();
         },
-        [&](Keywords::BorderBox const&) {
+        [&](Style::Keywords::BorderBox const&) {
             if (not fragment->hasCssLayoutBox())
                 return fragment->strokeBoundingBox();
             return fragment->borderBox();
         },
-        [&](Keywords::FillBox const&) {
+        [&](Style::Keywords::FillBox const&) {
             if (fragment->hasCssLayoutBox())
                 return fragment->contentBox();
             return fragment->objectBoundingBox();
         },
-        [&](Keywords::StrokeBox const&) {
+        [&](Style::Keywords::StrokeBox const&) {
             if (fragment->hasCssLayoutBox())
                 return fragment->borderBox();
             return fragment->strokeBoundingBox();
         },
-        [&](Keywords::ViewBox const&) {
+        [&](Style::Keywords::ViewBox const&) {
             if (fragment->hasCssLayoutBox())
                 return fragment->borderBox();
             return viewBox;

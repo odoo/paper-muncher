@@ -9,8 +9,6 @@ import Karm.Image;
 import Karm.Gfx;
 import Karm.Math;
 import Karm.Logger;
-import :values;
-import :css.values;
 import :style.values;
 import :layout.block;
 import :layout.flex;
@@ -33,23 +31,23 @@ static Opt<Rc<FormatingContext>> _constructFormatingContext(Box& box) {
     } else if (box.content.is<Rc<Gfx::Prose>>()) {
         return Some(constructInlineFormatingContext(box));
     } else if (
-        display == Display::FLOW or
-        display == Display::FLOW_ROOT or
-        display == Display::TABLE_CELL or
-        display == Display::TABLE_CAPTION or
-        display == Display::TABLE
+        display == Style::Display::FLOW or
+        display == Style::Display::FLOW_ROOT or
+        display == Style::Display::TABLE_CELL or
+        display == Style::Display::TABLE_CAPTION or
+        display == Style::Display::TABLE
     ) {
         return Some(constructBlockFormatingContext(box));
-    } else if (display == Display::FLEX) {
+    } else if (display == Style::Display::FLEX) {
         return Some(constructFlexFormatingContext(box));
-    } else if (display == Display::GRID) {
+    } else if (display == Style::Display::GRID) {
         return Some(constructGridFormatingContext(box));
-    } else if (display == Display::TABLE_BOX) {
+    } else if (display == Style::Display::TABLE_BOX) {
         return Some(constructTableFormatingContext(box));
-    } else if (oneOf(display, Display::RUBY_BASE, Display::RUBY_TEXT, Display::RUBY_BASE_CONTAINER, Display::RUBY_TEXT_CONTAINER)) {
+    } else if (oneOf(display, Style::Display::RUBY_BASE, Style::Display::RUBY_TEXT, Style::Display::RUBY_BASE_CONTAINER, Style::Display::RUBY_TEXT_CONTAINER)) {
         // NOTE: no ruby FC yet, block it instead of skipping layout
         return Some(constructBlockFormatingContext(box));
-    } else if (display == Display::INTERNAL) {
+    } else if (display == Style::Display::INTERNAL) {
         return NONE;
     } else {
         return Some(constructBlockFormatingContext(box));
@@ -92,7 +90,7 @@ Au _snapLengthAsBorderWidth(Au v) {
 
 InsetsAu computeBorders(Box& box) {
     // NOTE: In borders collapse mode, we assume that the table box borders are 'transfered' to the cells
-    if (box.style->display == Display::TABLE_BOX and box.style->table->collapse == Keywords::COLLAPSE) {
+    if (box.style->display == Style::Display::TABLE_BOX and box.style->table->collapse == Style::Keywords::COLLAPSE) {
         return InsetsAu{};
     }
 
@@ -116,7 +114,7 @@ InsetsAu computeBorders(Box& box) {
 
 InsetsAu computePaddings(Box& box, Vec2Au containingBlock) {
     // In a table only table cell have padding
-    if (box.style->display.isTableInternal() and box.style->display != Display::TABLE_CELL)
+    if (box.style->display.isTableInternal() and box.style->display != Style::Display::TABLE_CELL)
         return {};
 
     InsetsAu res;
@@ -171,25 +169,25 @@ Vec2Au computeIntrinsicContentSize(Box& box, IntrinsicSize intrinsic, Opt<Au> ca
 Opt<Au> computeSpecifiedBorderBoxWidth(Box& box, Style::Size size, Vec2Au containingBlock, Au horizontalBorderBox, Opt<Au> capmin) {
     if (auto calc = size.is<Style::PixelPercentage>()) {
         auto specifiedWidth = Layout::resolve(*calc, containingBlock.x);
-        if (box.style->boxSizing == Keywords::CONTENT_BOX) {
+        if (box.style->boxSizing == Style::Keywords::CONTENT_BOX) {
             specifiedWidth += horizontalBorderBox;
         }
         return Some(specifiedWidth);
     }
 
-    if (size.is<Keywords::MinContent>()) {
+    if (size.is<Style::Keywords::MinContent>()) {
         auto intrinsicSize = computeIntrinsicContentSize(box, IntrinsicSize::MIN_CONTENT, capmin);
         return Some(intrinsicSize.x + horizontalBorderBox);
-    } else if (size.is<Keywords::MaxContent>()) {
+    } else if (size.is<Style::Keywords::MaxContent>()) {
         auto intrinsicSize = computeIntrinsicContentSize(box, IntrinsicSize::MAX_CONTENT, capmin);
         return Some(intrinsicSize.x + horizontalBorderBox);
-    } else if (size.is<Keywords::FitContent>()) {
+    } else if (size.is<Style::Keywords::FitContent>()) {
         auto minIntrinsicSize = computeIntrinsicContentSize(box, IntrinsicSize::MIN_CONTENT, capmin);
         auto maxIntrinsicSize = computeIntrinsicContentSize(box, IntrinsicSize::MAX_CONTENT, capmin);
         auto stretchIntrinsicSize = computeIntrinsicContentSize(box, IntrinsicSize::STRETCH_TO_FIT, capmin);
 
         return Some(clamp(stretchIntrinsicSize.x, minIntrinsicSize.x, maxIntrinsicSize.x) + horizontalBorderBox);
-    } else if (size.is<Keywords::Auto>()) {
+    } else if (size.is<Style::Keywords::Auto>()) {
         return NONE;
     } else {
         logWarn("unknown specified size: {}", size);
@@ -200,24 +198,24 @@ Opt<Au> computeSpecifiedBorderBoxWidth(Box& box, Style::Size size, Vec2Au contai
 Opt<Au> computeSpecifiedBorderBoxHeight(Box& box, Style::Size size, Vec2Au containingBlock, Au verticalBorderBox) {
     if (auto calc = size.is<Style::PixelPercentage>()) {
         auto specifiedHeight = Layout::resolve(*calc, containingBlock.y);
-        if (box.style->boxSizing == Keywords::CONTENT_BOX) {
+        if (box.style->boxSizing == Style::Keywords::CONTENT_BOX) {
             specifiedHeight += verticalBorderBox;
         }
         return Some(specifiedHeight);
     }
 
-    if (size.is<Keywords::MinContent>()) {
+    if (size.is<Style::Keywords::MinContent>()) {
         // https://drafts.csswg.org/css-sizing-3/#valdef-width-min-content
         // for a box’s block size, unless otherwise specified, this is equivalent to its automatic size.
         return NONE;
-    } else if (size.is<Keywords::MaxContent>()) {
+    } else if (size.is<Style::Keywords::MaxContent>()) {
         // https://drafts.csswg.org/css-sizing-3/#valdef-width-max-content
         // for a box’s block size, unless otherwise specified, this is equivalent to its automatic size.
         return NONE;
-    } else if (size.is<Keywords::FitContent>()) {
+    } else if (size.is<Style::Keywords::FitContent>()) {
         // Since this depends on min/max content size, this is also unknown.
         return NONE;
-    } else if (size.is<Keywords::Auto>()) {
+    } else if (size.is<Style::Keywords::Auto>()) {
         return NONE;
     } else {
         logWarn("unknown specified size: {}", size);
@@ -282,8 +280,8 @@ Output layoutContentBox(Box& box, Input input) {
         for (usize i = 0; i < pending.len(); ++i) {
             auto oofChild = pending[i];
 
-            bool handleAsAbsoluteCb = oofChild->style().position == Keywords::ABSOLUTE and isAbsolutePositioningContainingBlock(*box.style);
-            bool handleAsFixedCb = oofChild->style().position == Keywords::FIXED and isFixedPositioningContainingBlock(*box.style);
+            bool handleAsAbsoluteCb = oofChild->style().position == Style::Keywords::ABSOLUTE and isAbsolutePositioningContainingBlock(*box.style);
+            bool handleAsFixedCb = oofChild->style().position == Style::Keywords::FIXED and isFixedPositioningContainingBlock(*box.style);
 
             if (handleAsAbsoluteCb or handleAsFixedCb) {
                 auto containingBlock = RectAu{

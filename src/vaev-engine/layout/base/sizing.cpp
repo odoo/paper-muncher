@@ -23,17 +23,17 @@ export Vec2Au computeFitContentSize(Box& box, AvailableSpace availableSpace) {
     // (i.e. max(min-content size, min(max-content size, stretch-fit size))).
     // When sizing under a min-content constraint, equal to the min-content size.
     // Otherwise, equal to the max-content size in that axis.
-    if (availableSpace.x == Keywords::MIN_CONTENT) {
+    if (availableSpace.x == Style::Keywords::MIN_CONTENT) {
         size.x = minSize.width;
-    } else if (availableSpace.x == Keywords::MAX_CONTENT) {
+    } else if (availableSpace.x == Style::Keywords::MAX_CONTENT) {
         size.x = maxSize.width;
     } else if (availableSpace.x != INDEFINITE) {
         size.x = clamp(availableSpace.x.expect<Au>(), minSize.width, maxSize.width);
     }
 
-    if (availableSpace.y == Keywords::MIN_CONTENT) {
+    if (availableSpace.y == Style::Keywords::MIN_CONTENT) {
         size.y = minSize.height;
-    } else if (availableSpace.y == Keywords::MAX_CONTENT) {
+    } else if (availableSpace.y == Style::Keywords::MAX_CONTENT) {
         size.y = maxSize.height;
     } else if (availableSpace.y != INDEFINITE) {
         size.y = clamp(availableSpace.y.expect<Au>(), minSize.height, maxSize.height);

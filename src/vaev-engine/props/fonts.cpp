@@ -9,6 +9,7 @@ import :props.base;
 import :props.baseline;
 import :css.parser;
 import :style.computed;
+import :style.values.keywords;
 
 using namespace Karm;
 
@@ -63,7 +64,7 @@ export struct FontFamilyProperty : Property {
             Vec<FontFamily> value{};
             eatWhitespace(c);
             while (not c.ended()) {
-                value.pushBack(try$(parseValue<FontFamily>(c)));
+                value.pushBack(try$(parseValue<Css::FontFamily>(c)));
 
                 eatWhitespace(c);
                 c.skip(Css::Token::COMMA);
@@ -473,7 +474,7 @@ export struct FontProperty : Property {
             if (c.skip(Css::Token::delim("/")))
                 value.lineHeight = try$(parseValue<LineHeightProperty::Value>(c));
 
-            value.families = {try$(parseValue<FontFamily>(c))};
+            value.families = {try$(parseValue<Css::FontFamily>(c))};
 
             return Ok(makeRc<FontProperty>(self(), std::move(value)));
         }

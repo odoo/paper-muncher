@@ -18,6 +18,8 @@ import :style.layers;
 import :style.mpc;
 import :style.ruleIndex;
 import :style.stylesheet;
+import :style.values.keywords;
+import :style.values.primitives;
 
 namespace Vaev::Style {
 

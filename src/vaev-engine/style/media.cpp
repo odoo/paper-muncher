@@ -6,7 +6,6 @@ import Karm.Math;
 import Karm.Logger;
 import Karm.Debug;
 
-import :values;
 import :css.values;
 import :style.values;
 import :style.viewport;
@@ -34,6 +33,11 @@ export using MediaType = Union<
     Keywords::Embossed,
     Keywords::Speech,
     Keywords::Aural>;
+
+// https://drafts.csswg.org/mediaqueries/#orientation
+export using Orientation = Union<
+    Keywords::Portrait,
+    Keywords::Landscape>;
 
 // https://drafts.csswg.org/mediaqueries/#scan
 export using Scan = Union<
@@ -242,7 +246,7 @@ export struct Media {
 
     /// 4.4. Orientation: the orientation feature
     /// https://drafts.csswg.org/mediaqueries/#orientation
-    Print::Orientation orientation;
+    Orientation orientation;
 
     // 5. MARK: Display Quality Media Features
 
@@ -367,8 +371,8 @@ export struct Media {
             .height = viewport.height,
             .aspectRatio = ratio(viewport.width.value(), viewport.height.value()),
             .orientation = viewport.height >= viewport.width
-                               ? Print::Orientation::PORTRAIT
-                               : Print::Orientation::LANDSCAPE,
+                               ? Orientation{Keywords::PORTRAIT}
+                               : Orientation{Keywords::LANDSCAPE},
 
             .resolution = area.resolution,
             .scan = area.scan,
@@ -623,7 +627,7 @@ export using AspectRatioFeature = RangeFeature<"aspect-ratio", f64, &Media::aspe
 
 /// 4.4. Orientation: the orientation feature
 /// https://drafts.csswg.org/mediaqueries/#orientation
-export using OrientationFeature = DiscreteFeature<"orientation", Print::Orientation, &Media::orientation>;
+export using OrientationFeature = DiscreteFeature<"orientation", Orientation, &Media::orientation>;
 
 // 5. MARK: Display Quality Media Features
 
@@ -632,7 +636,12 @@ export using OrientationFeature = DiscreteFeature<"orientation", Print::Orientat
 export using ResolutionFeature = RangeFeature<"resolution", Css::PureResolution, &Media::resolution>;
 
 /// 5.2. Scan: the scan feature
-/// https://drafts.csswg.org/mediaqueries/#scan
+/// https://drafts.csswg.org/mediaqueries/#orientation
+export using Orientation = Union<
+    Keywords::Portrait,
+    Keywords::Landscape>;
+
+// https://drafts.csswg.org/mediaqueries/#scan
 export using ScanFeature = DiscreteFeature<"scan", Scan, &Media::scan>;
 
 /// 5.3. Grid: the grid feature

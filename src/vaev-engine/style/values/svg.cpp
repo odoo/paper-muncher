@@ -1,7 +1,3 @@
-module;
-
-#include <karm/macros>
-
 export module Vaev.Engine:style.values.svg;
 
 import Karm.Core;
@@ -15,6 +11,11 @@ using namespace Karm::Literals;
 using namespace Karm::Math::Literals;
 
 namespace Vaev::Style {
+
+// https://svgwg.org/svg2-draft/coords.html#PreserveAspectRatioAttribute
+export using SvgAlignAxis = Css::SvgAlignAxis;
+export using SvgAlign = Css::SvgAlign;
+export using SvgMeetOrSlice = Css::SvgMeetOrSlice;
 
 export using SvgPaint = Opt<Color>;
 

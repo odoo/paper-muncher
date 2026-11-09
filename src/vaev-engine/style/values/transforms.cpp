@@ -1,41 +1,83 @@
-module;
-
-#include <karm/macros>
-
 export module Vaev.Engine:style.values.transforms;
 
 import Karm.Core;
 
-import :css.values.calc;
+import :css.values.numeric;
 import :css.values.transforms;
 import :style.values.numeric;
-import :values.unitValue;
+import :style.values.keywords;
 
 using namespace Karm::Math::Literals;
 
 namespace Vaev::Style {
 
-export struct TransformTypes {
-    using LengthPercentageType = PixelPercentage;
-    using NumberType = f64;
-    using AngleType = Deg;
+export struct MatrixTransform {
+    Array<f64, 6> values;
+
+    void repr(Io::Emit& e) const {
+        e("matrix({}, {}, {}, {}, {}, {})", values[0], values[1], values[2], values[3], values[4], values[5]);
+    }
 };
 
-export using MatrixTransform = Css::MatrixTransformT<TransformTypes>;
+export struct TranslateTransform {
+    PixelPercentage x;
+    PixelPercentage y;
 
-export using TranslateTransform = Css::TranslateTransformT<TransformTypes>;
+    void repr(Io::Emit& e) const {
+        e("translate({}, {})", x, y);
+    }
+};
 
-export using ScaleTransform = Css::ScaleTransformT<TransformTypes>;
+export struct ScaleTransform {
+    f64 x;
+    f64 y;
 
-export using RotateTransform = Css::RotateTransformT<TransformTypes>;
+    void repr(Io::Emit& e) const {
+        e("scale({}, {})", x, y);
+    }
+};
 
-export using SkewTransform = Css::SkewTransformT<TransformTypes>;
+export struct RotateTransform {
+    Deg value;
 
-export using SkewXTransform = Css::SkewXTransformT<TransformTypes>;
+    void repr(Io::Emit& e) const {
+        e("rotate({})", value);
+    }
+};
 
-export using SkewYTransform = Css::SkewYTransformT<TransformTypes>;
+export struct SkewTransform {
+    Deg x;
+    Deg y;
 
-export using TransformFunction = Css::TransformFunctionT<TransformTypes>;
+    void repr(Io::Emit& e) const {
+        e("skew({}, {})", x, y);
+    }
+};
+
+export struct SkewXTransform {
+    Deg value;
+
+    void repr(Io::Emit& e) const {
+        e("skewX({})", value);
+    }
+};
+
+export struct SkewYTransform {
+    Deg value;
+
+    void repr(Io::Emit& e) const {
+        e("skewY({})", value);
+    }
+};
+
+export using TransformFunction = Union<
+    MatrixTransform,
+    TranslateTransform,
+    ScaleTransform,
+    RotateTransform,
+    SkewTransform,
+    SkewXTransform,
+    SkewYTransform>;
 
 export using TransformList = Vec<TransformFunction>;
 

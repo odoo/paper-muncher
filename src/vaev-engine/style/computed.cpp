@@ -5,7 +5,6 @@ import Karm.Gfx;
 import Karm.Math;
 
 import :css;
-import :values;
 import :css.values;
 import :style.values;
 
@@ -468,30 +467,6 @@ export struct Sizing {
     Size width = Keywords::AUTO, height = Keywords::AUTO;
     Size minWidth = Keywords::AUTO, minHeight = Keywords::AUTO;
     MaxSize maxWidth = Keywords::NONE, maxHeight = Keywords::NONE;
-
-    Size& size(Axis axis) {
-        return axis == Axis::HORIZONTAL ? width : height;
-    }
-
-    Size const& size(Axis axis) const {
-        return axis == Axis::HORIZONTAL ? width : height;
-    }
-
-    Size& minSize(Axis axis) {
-        return axis == Axis::HORIZONTAL ? minWidth : minHeight;
-    }
-
-    Size const& minSize(Axis axis) const {
-        return axis == Axis::HORIZONTAL ? minWidth : minHeight;
-    }
-
-    MaxSize& maxSize(Axis axis) {
-        return axis == Axis::HORIZONTAL ? maxWidth : maxHeight;
-    }
-
-    MaxSize const& maxSize(Axis axis) const {
-        return axis == Axis::HORIZONTAL ? maxWidth : maxHeight;
-    }
 };
 
 export struct Text {

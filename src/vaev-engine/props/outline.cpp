@@ -8,6 +8,7 @@ import Karm.Core;
 import :props.base;
 import :css.parser;
 import :style.computed;
+import :style.values.keywords;
 
 using namespace Karm;
 
@@ -126,11 +127,11 @@ export struct OutlineColorProperty : Property {
                 // When outline-style is auto, outline-color: auto computes to auto and represents the accent color.
                 // Otherwise, outline-color: auto computes to currentColor.
                 return c.outline->style == Keywords::AUTO
-                           ? resolve(Css::Color{Css::SystemColor::ACCENT_COLOR}, c.color)
+                           ? toUsed(Css::Color{Css::SystemColor::ACCENT_COLOR}, c.color)
                            : c.color;
             },
             [&](Css::Color color) {
-                return resolve(color, c.color);
+                return toUsed(color, c.color);
             }
         );
     }

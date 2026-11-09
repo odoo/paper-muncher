@@ -35,7 +35,7 @@ static Res<String> _serialize(T const& value) {
 
 test$("vaev-css-unit-value-units") {
     auto length = try$(_parse<Css::PureLength>("1in"));
-    assertEq$(length.unitValue().to(UnitValue::Unit::PX), 96.0);
+    assertEq$(length.unitValue().to(Css::UnitValue::Unit::PX), 96.0);
 
     auto angle = try$(_parse<Css::PureAngle>("1turn"));
     assertEq$(angle.toDegree(), 360.0);
@@ -44,38 +44,38 @@ test$("vaev-css-unit-value-units") {
     assertEq$(resolution.toDppx(), 2.0);
 
     auto time = try$(_parse<Css::PureTime>("1500ms"));
-    assertEq$(time.unitValue().to(UnitValue::Unit::S), 1.5);
+    assertEq$(time.unitValue().to(Css::UnitValue::Unit::S), 1.5);
 
     auto frequency = try$(_parse<Css::PureFrequency>("2kHz"));
-    assertEq$(frequency.unitValue().to(UnitValue::Unit::HZ), 2000.0);
+    assertEq$(frequency.unitValue().to(Css::UnitValue::Unit::HZ), 2000.0);
 
     auto percent = try$(_parse<Css::PurePercentage>("50%"));
     assertEq$(percent.value(), 50.0);
 
     auto flex = try$(_parse<Css::PureFlex>("2fr"));
-    assertEq$(flex.unitValue().to(UnitValue::Unit::FR), 2.0);
+    assertEq$(flex.unitValue().to(Css::UnitValue::Unit::FR), 2.0);
 
-    auto number = try$(_parse<UnitValue>("2"));
+    auto number = try$(_parse<Css::UnitValue>("2"));
     assertEq$(number.baseType(), NONE);
-    assertEq$(try$(_parse<UnitValue>("2%")).baseType(), NumericBaseType::PERCENT);
+    assertEq$(try$(_parse<Css::UnitValue>("2%")).baseType(), Css::NumericBaseType::PERCENT);
 
     return Ok();
 }
 
 test$("vaev-css-unit-value-parsing") {
-    assertEq$(try$(_parse<Css::PureLength>("2PX")).unitValue().to(UnitValue::Unit::PX), 2.0);
+    assertEq$(try$(_parse<Css::PureLength>("2PX")).unitValue().to(Css::UnitValue::Unit::PX), 2.0);
 
     assert$(_parse<Css::PureLength>("2em"));
 
-    assertEq$(try$(_parse<Css::PureLength>("0")), (Css::PureLength{UnitValue{0, UnitValue::Unit::PX}}));
+    assertEq$(try$(_parse<Css::PureLength>("0")), (Css::PureLength{Css::UnitValue{0, Css::UnitValue::Unit::PX}}));
 
     assert$(not _parse<Css::PureLength>("10deg"));
     assert$(not _parse<Css::PureAngle>("10px"));
     assert$(not _parse<Css::PureFlex>("10%"));
 
-    assertEq$(try$(_parse<Css::PureLength>("2em")), (Css::PureLength{UnitValue{2, UnitValue::Unit::EM}}));
+    assertEq$(try$(_parse<Css::PureLength>("2em")), (Css::PureLength{Css::UnitValue{2, Css::UnitValue::Unit::EM}}));
     assertNe$(try$(_parse<Css::PureLength>("1in")), try$(_parse<Css::PureLength>("96px")));
-    assertEq$(try$(_parse<Css::PureLength>("1in")).unitValue().to(UnitValue::Unit::PX), 96.0);
+    assertEq$(try$(_parse<Css::PureLength>("1in")).unitValue().to(Css::UnitValue::Unit::PX), 96.0);
     assertGt$(try$(_parse<Css::PureLength>("1in")), try$(_parse<Css::PureLength>("95px")));
     assertEq$(try$(_parse<Css::PureResolution>("96dpi")).toDppx(), 1.0);
 

@@ -12,11 +12,20 @@ namespace Vaev::Layout {
 export struct FormatingContext;
 export struct Box;
 
+// https://svgwg.org/svg2-draft/shapes.html#TermShapeElement
+export enum struct SvgShapeElement {
+    RECT,
+    CIRCLE,
+    PATH,
+
+    _LEN
+};
+
 export using Content = Union<
     None,
     Rc<Gfx::Prose>,
     Gfx::Snapshot,
-    Css::SvgShapeElement,
+    SvgShapeElement,
     Style::SvgViewBox>;
 
 struct Box : Meta::NoCopy {
@@ -123,14 +132,14 @@ struct Box : Meta::NoCopy {
         if (forceStaticPosition)
             return false;
 
-        return style->position == Keywords::ABSOLUTE or
-               style->position == Keywords::FIXED or
+        return style->position == Style::Keywords::ABSOLUTE or
+               style->position == Style::Keywords::FIXED or
                style->position.is<Style::RunningPosition>();
     }
 
     // https://drafts.csswg.org/css2/#floats
     bool isFloating() const {
-        return style->float_ != Keywords::NONE;
+        return style->float_ != Style::Keywords::NONE;
     }
 
     // https://www.w3.org/TR/CSS22/zindex.html
@@ -139,19 +148,19 @@ struct Box : Meta::NoCopy {
         return style->clip->has() or
                style->transform->has() or
                style->opacity != 1.0 or
-               style->overflows.block != Keywords::VISIBLE or
-               style->overflows.inline_ != Keywords::VISIBLE or
+               style->overflows.block != Style::Keywords::VISIBLE or
+               style->overflows.inline_ != Style::Keywords::VISIBLE or
                isSvgRootBox() or
                isSvgForeignObjectBox();
     }
 
     bool isPositioned() const {
-        return style->position != Keywords::STATIC;
+        return style->position != Style::Keywords::STATIC;
     }
 
     // https://drafts.csswg.org/css-tables-3/#table-wrapper-box
     bool isTableWrapperBox() const {
-        return style->display == Display::Inside::TABLE;
+        return style->display == Style::Display::Inside::TABLE;
     }
 
     bool isPseudoElement(Symbol type) const {

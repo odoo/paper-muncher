@@ -5,6 +5,8 @@ module;
 export module Vaev.Engine:props.list;
 
 import :props.base;
+import :style.values.keywords;
+import :style.values.primitives;
 
 namespace Vaev::Style {
 

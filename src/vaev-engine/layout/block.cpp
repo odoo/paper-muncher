@@ -7,8 +7,6 @@ export module Vaev.Engine:layout.block;
 import Karm.Math;
 import Karm.Core;
 
-import :values;
-import :css.values;
 import :style.values;
 import :layout.base;
 import :layout.layout;
@@ -57,9 +55,9 @@ Res<None, Output> processBreakpointsAfterChild(Fragmentainer const& fc, Fragment
     // BREAK CLASS A
     if (not isLastChild) {
         bool breakIsAvoided =
-            oneOf(parentBox.style->break_->inside, Keywords::AVOID, Keywords::AVOID_PAGE) or
-            oneOf(childBox.style->break_->after, Keywords::AVOID, Keywords::AVOID_PAGE) or
-            (not isLastChild and oneOf(parentBox.children()[childIndex + 1].style->break_->before, Keywords::AVOID, Keywords::AVOID_PAGE));
+            oneOf(parentBox.style->break_->inside, Style::Keywords::AVOID, Style::Keywords::AVOID_PAGE) or
+            oneOf(childBox.style->break_->after, Style::Keywords::AVOID, Style::Keywords::AVOID_PAGE) or
+            (not isLastChild and oneOf(parentBox.children()[childIndex + 1].style->break_->before, Style::Keywords::AVOID, Style::Keywords::AVOID_PAGE));
 
         currentBreakpoint.overrideIfBetter(
             Breakpoint::classB(
@@ -70,7 +68,7 @@ Res<None, Output> processBreakpointsAfterChild(Fragmentainer const& fc, Fragment
     }
 
     // FORCED BREAK
-    if (childBox.style->break_->after == Keywords::PAGE) {
+    if (childBox.style->break_->after == Style::Keywords::PAGE) {
         return Output{
             .fragment = fragBuilder.buildBoxFromInput(input, currentBoxSize),
             .size = currentBoxSize,
@@ -147,12 +145,12 @@ Output fragmentEmptyBox(Fragmentainer const& fc, FragmentBuilder& fragBuilder, I
 // fit-content instead of stretching like other block-level boxes.
 Opt<Au> _tableWrapperFitContentWidth(Box& wrapper, Au availableWidth) {
     for (auto& gridBox : wrapper.children()) {
-        if (gridBox.style->display != Display::Internal::TABLE_BOX)
+        if (gridBox.style->display != Style::Display::Internal::TABLE_BOX)
             continue;
 
         // TODO: Specified widths live on the table grid box and may be percentages,
         //       which we cannot resolve during intrinsic sizing; bail out for now.
-        if (not gridBox.style->sizing->width.is<Keywords::Auto>())
+        if (not gridBox.style->sizing->width.is<Style::Keywords::Auto>())
             return NONE;
 
         return Some(computeFitContentInlineSize(wrapper, availableWidth));
@@ -165,20 +163,20 @@ void _populateChildSpecifiedSizes(Box& child, Input& parentInput, Input& childIn
     // https://drafts.csswg.org/css-tables-3/#fixup-algorithm
     // Percentages which would depend on the width and height on the table-wrapper box’s size are relative to the table-wrapper
     // box’s containing block instead, not the table-wrapper box itself.
-    auto containingBlock = child.style->display == Display::TABLE_BOX ? parentInput.containingBlock : childInput.containingBlock;
+    auto containingBlock = child.style->display == Style::Display::TABLE_BOX ? parentInput.containingBlock : childInput.containingBlock;
 
-    if (childInput.intrinsic == IntrinsicSize::AUTO or child.style->display != Display::INLINE) {
-        if (child.style->sizing->width.is<Keywords::Auto>()) {
+    if (childInput.intrinsic == IntrinsicSize::AUTO or child.style->display != Style::Display::INLINE) {
+        if (child.style->sizing->width.is<Style::Keywords::Auto>()) {
             // https://www.w3.org/TR/css-tables-3/#layout-principles
             // Unlike other block-level boxes, tables do not fill their containing block by default.
             // When their width computes to auto, they behave as if they had fit-content specified instead.
             // This is different from most block-level boxes, which behave as if they had stretch instead.
-            if (child.style->display == Display::TABLE_BOX) {
+            if (child.style->display == Style::Display::TABLE_BOX) {
                 // Do nothing. 'fit-content' is kinda intrinsic size, when we don't populate knownSize.
             } else if (blockInlineSize) {
                 // When the inline size is not known, we cannot enforce it to the child. (?)
                 Au availableWidth = blockInlineSize.expect() - usedSpacings.margin.horizontal();
-                if (child.style->display == Display::TABLE) {
+                if (child.style->display == Style::Display::TABLE) {
                     childInput.knownSize.width = Some(_tableWrapperFitContentWidth(child, availableWidth)
                                                           .unwrapOr(availableWidth));
                 } else {
@@ -207,8 +205,8 @@ void _populateChildSpecifiedSizes(Box& child, Input& parentInput, Input& childIn
 // containing block inline size and the box inline size are known; otherwise 'auto'
 // margins resolve to zero.
 void _resolveAutoHorizontalMargins(Box& child, Input& childInput, UsedSpacings& usedSpacings, Opt<Au> blockInlineSize) {
-    bool startIsAuto = child.style->margin->start.is<Keywords::Auto>().has();
-    bool endIsAuto = child.style->margin->end.is<Keywords::Auto>().has();
+    bool startIsAuto = child.style->margin->start.is<Style::Keywords::Auto>().has();
+    bool endIsAuto = child.style->margin->end.is<Style::Keywords::Auto>().has();
 
     if (not(startIsAuto or endIsAuto))
         return;
@@ -239,7 +237,7 @@ struct BlockFormatingContext : FormatingContext {
     Au _computeCapmin(Box& box, Input input, Au inlineSize) {
         Au capmin{};
         for (auto& c : box.children()) {
-            if (c.style->display != Display::TABLE_BOX) {
+            if (c.style->display != Style::Display::TABLE_BOX) {
                 auto minContentContrib = computeIntrinsicContentSize(
                     c, IntrinsicSize::MIN_CONTENT
                 );
@@ -289,7 +287,7 @@ struct BlockFormatingContext : FormatingContext {
             if (c.isRunningPositionedBox())
                 continue;
 
-            if (oneOf(c.style->position, Keywords::ABSOLUTE, Keywords::FIXED)) {
+            if (oneOf(c.style->position, Style::Keywords::ABSOLUTE, Style::Keywords::FIXED)) {
                 if (input.generateFragment) {
                     // https://www.w3.org/TR/css-position-3/#staticpos-rect
                     RectAu staticPosRect = {
@@ -315,7 +313,7 @@ struct BlockFormatingContext : FormatingContext {
                     fragBuilder,
                     i,
                     Vec2Au{inlineSize, blockSize},
-                    c.style->break_->before == Keywords::PAGE,
+                    c.style->break_->before == Style::Keywords::PAGE,
                     startAt,
                     input
                 )
@@ -358,7 +356,7 @@ struct BlockFormatingContext : FormatingContext {
 
             // HACK: Table Box mostly behaves like a block box, let's compute its capmin
             //       and avoid duplicating the layout code
-            if (c.style->display == Display::Internal::TABLE_BOX)
+            if (c.style->display == Style::Display::Internal::TABLE_BOX)
                 childInput.capmin = Some(_computeCapmin(box, input, inlineSize));
 
             _populateChildSpecifiedSizes(c, input, childInput, usedSpacings, input.knownSize.width);
@@ -367,7 +365,7 @@ struct BlockFormatingContext : FormatingContext {
                 _resolveAutoHorizontalMargins(c, childInput, usedSpacings, input.knownSize.width);
 
             childInput.position = input.position + Vec2Au{usedSpacings.margin.start, blockSize};
-            if (box.style->text->align == Keywords::VAEV_BLOCK_CENTER)
+            if (box.style->text->align == Style::Keywords::VAEV_BLOCK_CENTER)
                 childInput.position.x += inlineSize / 2 - layoutBorderBox(c, childInput.withGenerateFragment(false)).width() / 2;
 
             if (c.isPseudoElement(Dom::PseudoElement::MARKER)) {
@@ -377,7 +375,7 @@ struct BlockFormatingContext : FormatingContext {
                 childInput.knownSize.width = Some(width);
             }
 
-            if (c.style->position == Keywords::RELATIVE) {
+            if (c.style->position == Style::Keywords::RELATIVE) {
                 childInput.position += relativePositionOffset(c, input.containingBlock);
             }
 
@@ -395,7 +393,7 @@ struct BlockFormatingContext : FormatingContext {
                 *input.fragmentainer,
                 currentBreakpoint,
                 i,
-                oneOf(box.style->break_->inside, Keywords::AVOID, Keywords::AVOID_PAGE),
+                oneOf(box.style->break_->inside, Style::Keywords::AVOID, Style::Keywords::AVOID_PAGE),
                 output.breakpoint
             );
 

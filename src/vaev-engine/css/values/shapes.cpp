@@ -12,17 +12,35 @@ import :css.lexer;
 import :css.parser;
 import :css.values.backgrounds;
 import :css.values.base;
-import :css.values.calc;
+import :css.values.numeric;
 import :css.values.keywords;
 import :css.values.primitives;
-import :values.keywords;
-import :values.shapes;
 
 using namespace Karm;
 
 namespace Vaev::Css {
 
-export Gfx::FillRule fillRuleToGfx(FillRule rule) {
+// https://drafts.csswg.org/css-masking/#typedef-geometry-box
+export using ShapeBox = Union<
+    Keywords::BorderBox,
+    Keywords::PaddingBox,
+    Keywords::ContentBox,
+    Keywords::MarginBox>;
+
+export using GeometryBox = Union<
+    Keywords::BorderBox,
+    Keywords::PaddingBox,
+    Keywords::ContentBox,
+    Keywords::MarginBox,
+    Keywords::FillBox,
+    Keywords::StrokeBox,
+    Keywords::ViewBox>;
+
+export using FillRule = Union<
+    Keywords::Nonzero,
+    Keywords::Evenodd>;
+
+Gfx::FillRule fillRuleToGfx(FillRule rule) {
     return rule.visit(
         [](Keywords::Nonzero&) {
             return Gfx::FillRule::NONZERO;
@@ -33,28 +51,23 @@ export Gfx::FillRule fillRuleToGfx(FillRule rule) {
     );
 }
 
-export template <typename L>
-using ShapeRadiusT = Union<
-    L,
+export using ShapeRadius = Union<
+    LengthPercentage,
     Keywords::ClosestSide,
     Keywords::FarthestSide>;
-
-export using ShapeRadius = ShapeRadiusT<LengthPercentage>;
 
 // MARK: Circle ----------------------------------------------------------------
 // https://www.w3.org/TR/css-shapes-1/#funcdef-basic-shape-circle
 
-export template <typename L, typename P>
-struct CircleT {
-    ShapeRadiusT<L> radius = Keywords::CLOSEST_SIDE;
-    P position = P::center();
+export struct Circle {
+    ShapeRadius radius = Keywords::CLOSEST_SIDE;
+    BackgroundPosition position = BackgroundPosition::center();
 
     void repr(Io::Emit& e) const {
         e("(circle {} {})", radius, position);
     }
 };
 
-export using Circle = CircleT<LengthPercentage, BackgroundPosition>;
 
 export template <>
 struct ValueParser<Circle> {
@@ -92,18 +105,16 @@ struct ValueParser<Circle> {
 // MARK: Ellipse ---------------------------------------------------------------
 // https://www.w3.org/TR/css-shapes-1/#funcdef-basic-shape-ellipse
 
-export template <typename L, typename P>
-struct EllipseT {
-    ShapeRadiusT<L> rx = Keywords::CLOSEST_SIDE;
-    ShapeRadiusT<L> ry = Keywords::CLOSEST_SIDE;
-    P position = P::center();
+export struct Ellipse {
+    ShapeRadius rx = Keywords::CLOSEST_SIDE;
+    ShapeRadius ry = Keywords::CLOSEST_SIDE;
+    BackgroundPosition position = BackgroundPosition::center();
 
     void repr(Io::Emit& e) const {
         e("(ellipse {} {} {})", rx, ry, position);
     }
 };
 
-export using Ellipse = EllipseT<LengthPercentage, BackgroundPosition>;
 
 export template <>
 struct ValueParser<Ellipse> {
@@ -143,10 +154,9 @@ struct ValueParser<Ellipse> {
 // MARK: Inset -----------------------------------------------------------------
 // https://www.w3.org/TR/css-shapes-1/#funcdef-basic-shape-inset
 
-export template <typename L>
-struct InsetT {
-    Math::Insets<L> insets;
-    Math::Radii<L> borderRadius;
+export struct Inset {
+    Math::Insets<LengthPercentage> insets;
+    Math::Radii<LengthPercentage> borderRadius;
 
     void repr(Io::Emit& e) const {
         e("(inset {} ", insets);
@@ -155,7 +165,6 @@ struct InsetT {
     }
 };
 
-export using Inset = InsetT<LengthPercentage>;
 
 export template <>
 struct ValueParser<Inset> {
@@ -243,17 +252,15 @@ struct ValueParser<Path> {
 // MARK: Polygon ---------------------------------------------------------------
 // https://www.w3.org/TR/css-shapes-1/#funcdef-basic-shape-polygon
 
-export template <typename L>
-struct PolygonT {
+export struct Polygon {
     Gfx::FillRule fillRule = Gfx::FillRule::NONZERO;
-    Vec<Pair<L>> points;
+    Vec<Pair<LengthPercentage>> points;
 
     void repr(Io::Emit& e) const {
         e("(polygon {} {})", fillRule, points);
     }
 };
 
-export using Polygon = PolygonT<LengthPercentage>;
 
 export template <>
 struct ValueParser<Polygon> {
@@ -295,10 +302,9 @@ struct ValueParser<Polygon> {
 // MARK: Rect ------------------------------------------------------------------
 // https://www.w3.org/TR/css-shapes-1/#funcdef-basic-shape-rect
 
-export template <typename L>
-struct RectT {
-    Math::Insets<L> insets;
-    Math::Radii<L> borderRadius;
+export struct Rect {
+    Math::Insets<LengthPercentage> insets;
+    Math::Radii<LengthPercentage> borderRadius;
 
     void repr(Io::Emit& e) const {
         e("(rect {} ", insets);
@@ -307,7 +313,6 @@ struct RectT {
     }
 };
 
-export using Rect = RectT<LengthPercentage>;
 
 export template <>
 struct ValueParser<Rect> {
@@ -360,13 +365,12 @@ struct ValueParser<Rect> {
 // MARK: Xywh ------------------------------------------------------------------
 // https://www.w3.org/TR/css-shapes-1/#funcdef-basic-shape-xywh
 
-export template <typename L>
-struct XywhT {
-    L x;
-    L y;
-    L width;
-    L height;
-    Math::Radii<L> borderRadius;
+export struct Xywh {
+    LengthPercentage x;
+    LengthPercentage y;
+    LengthPercentage width;
+    LengthPercentage height;
+    Math::Radii<LengthPercentage> borderRadius;
 
     void repr(Io::Emit& e) const {
         e("(xywh {} {} {} {} ", x, y, width, height);
@@ -375,7 +379,6 @@ struct XywhT {
     }
 };
 
-export using Xywh = XywhT<LengthPercentage>;
 
 export template <>
 struct ValueParser<Xywh> {
@@ -423,15 +426,11 @@ struct ValueParser<Xywh> {
 // https://drafts.csswg.org/css-masking/#the-clip-path
 //  [ <basic-shape> || <geometry-box> ]
 
-export template <typename L, typename P>
-using BasicShapeFunctionT = Union<
-    CircleT<L, P>, EllipseT<L, P>, InsetT<L>, Path, PolygonT<L>, RectT<L>, XywhT<L>>;
+export using BasicShapeFunction = Union<
+    Circle, Ellipse, Inset, Path, Polygon, Rect, Xywh>;
 
-export using BasicShapeFunction = BasicShapeFunctionT<LengthPercentage, BackgroundPosition>;
-
-export template <typename L, typename P>
-struct BasicShapeT {
-    Opt<BasicShapeFunctionT<L, P>> shape;
+export struct BasicShape {
+    Opt<BasicShapeFunction> shape;
     GeometryBox referenceBox = Keywords::BORDER_BOX;
 
     void repr(Io::Emit& e) const {
@@ -439,7 +438,6 @@ struct BasicShapeT {
     }
 };
 
-export using BasicShape = BasicShapeT<LengthPercentage, BackgroundPosition>;
 
 export template <>
 struct ValueParser<BasicShape> {

@@ -8,7 +8,6 @@ import Karm.Core;
 import Karm.Logger;
 
 import :css;
-import :values;
 import :css.values;
 import :style.values;
 import :dom.element;

@@ -44,15 +44,6 @@ export enum struct SvgMeetOrSlice {
 // https://svgwg.org/svg2-draft/painting.html#SpecifyingPaint
 export using SvgPaint = Opt<Color>;
 
-// https://svgwg.org/svg2-draft/shapes.html#TermShapeElement
-enum struct SvgShapeElement {
-    RECT,
-    CIRCLE,
-    PATH,
-
-    _LEN
-};
-
 // MARK: Paint
 // https://svgwg.org/svg2-draft/painting.html#SpecifyingPaint
 export template <>

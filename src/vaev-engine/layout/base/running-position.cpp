@@ -7,9 +7,8 @@ export module Vaev.Engine:layout.runningPosition;
 import Karm.Core;
 import Karm.Math;
 
-import :css.values.primitives;
+import :style.values;
 import :style.values.generic;
-import :css.values.content;
 import :layout.box;
 
 using namespace Karm;
@@ -34,7 +33,7 @@ export struct RunningPositionInfo {
 
 // Mapping the different Running positions to their respective names and their page.
 struct RunningPositionMap {
-    Map<CustomIdent, Vec<RunningPositionInfo>> content;
+    Map<Style::CustomIdent, Vec<RunningPositionInfo>> content;
 
     void add(usize pageNumber, Layout::Box& box) {
         auto& style = box.style;
@@ -50,15 +49,15 @@ struct RunningPositionMap {
     }
 
     // https://www.w3.org/TR/css-gcpm-3/#using-named-strings
-    Res<RunningPositionInfo> match(ElementFunc elt, usize pageNumber) {
+    Res<RunningPositionInfo> match(Style::ElementFunc elt, usize pageNumber) {
         auto id = elt.customIdent;
         auto const& list = try$(content.lookup(id).okOr(Error::notFound("element not found")));
 
         switch (elt.target) {
-        case ElementFunc::Target::UNDEFINED:
+        case Style::ElementFunc::Target::UNDEFINED:
             return Ok(list[0]);
 
-        case ElementFunc::Target::START:
+        case Style::ElementFunc::Target::START:
             for (usize i = 0; i < list.len(); i++) {
                 auto elt = list[i];
                 if (elt.pageNumber == pageNumber and i > 0) {
@@ -67,13 +66,13 @@ struct RunningPositionMap {
             }
             return Ok(list[0]);
 
-        case ElementFunc::Target::FIRST:
-        case ElementFunc::Target::FIRST_EXCEPT: {
+        case Style::ElementFunc::Target::FIRST:
+        case Style::ElementFunc::Target::FIRST_EXCEPT: {
             auto elements = _searchPage(list, pageNumber);
             return Ok(elements[0]);
         }
 
-        case ElementFunc::Target::LAST: {
+        case Style::ElementFunc::Target::LAST: {
             auto elements = _searchPage(list, pageNumber);
             return Ok(elements[elements.len() - 1]);
         }

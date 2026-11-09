@@ -7,8 +7,6 @@ import Karm.Math;
 import :dom.names;
 import :layout.base;
 import :style;
-import :values;
-import :css.values;
 import :style.values;
 
 using namespace Karm;
@@ -82,22 +80,22 @@ struct SvgFormatingContext : FormatingContext {
 
     static void _commitShape(Box& box, FragmentBuilder& fragBuilder, Vec2Au relativeTo) {
         Au resolvedStrokeWidth = Vaev::Layout::resolve(box.style->svgPaint->strokeWidth, normalizedDiagonal(relativeTo));
-        auto shape = box.content.expect<Css::SvgShapeElement>();
+        auto shape = box.content.expect<SvgShapeElement>();
 
         switch (shape) {
-        case Css::SvgShapeElement::RECT:
+        case SvgShapeElement::RECT:
             fragBuilder.addChildIfAny(
                 Some(makeRc<SvgShapeFragment>(box, _resolveRectangle(*box.style, relativeTo), resolvedStrokeWidth))
             );
             break;
 
-        case Css::SvgShapeElement::CIRCLE:
+        case SvgShapeElement::CIRCLE:
             fragBuilder.addChildIfAny(
                 Some(makeRc<SvgShapeFragment>(box, _resolveCircle(*box.style, relativeTo), resolvedStrokeWidth))
             );
             break;
 
-        case Css::SvgShapeElement::PATH:
+        case SvgShapeElement::PATH:
             fragBuilder.addChildIfAny(
                 Some(makeRc<SvgShapeFragment>(box, _resolveShape(*box.style), resolvedStrokeWidth))
             );
@@ -109,7 +107,7 @@ struct SvgFormatingContext : FormatingContext {
     }
 
     void _commitElement(Input const& input, Box& box, FragmentBuilder& fragBuilder, Vec2Au resolveTo) {
-        if (box.content.is<Css::SvgShapeElement>()) {
+        if (box.content.is<SvgShapeElement>()) {
             _commitShape(box, fragBuilder, resolveTo);
         } else if (box.isSvgRootBox()) {
             auto resolvedRect = _resolveRectangle(*box.style, resolveTo);
@@ -161,12 +159,12 @@ struct SvgFormatingContext : FormatingContext {
 
         // 3. Let align be the align value of preserveAspectRatio, or 'xMidYMid' if preserveAspectRatio is not defined.
         // FIXME: preserveAspectRatio still not implemented
-        Opt<Css::SvgAlignAxis> align = Some(Css::SvgAlignAxis{Css::SvgAlignAxis::MID, Css::SvgAlignAxis::MID});
+        Opt<Style::SvgAlignAxis> align = Some(Style::SvgAlignAxis{Style::SvgAlignAxis::MID, Style::SvgAlignAxis::MID});
 
         // 4. Let meetOrSlice be the meetOrSlice value of preserveAspectRatio, or 'meet' if preserveAspectRatio is not
         // defined or if meetOrSlice is missing from this value.
         // FIXME: preserveAspectRatio still not implemented
-        Css::SvgMeetOrSlice meetOrSlice{Css::SvgMeetOrSlice::MEET};
+        Style::SvgMeetOrSlice meetOrSlice{Style::SvgMeetOrSlice::MEET};
 
         // 5. Initialize scale-x to e-width/vb-width.
         f64 scaleX = (f64)size.x / vb.width;
@@ -177,9 +175,9 @@ struct SvgFormatingContext : FormatingContext {
         // 7. If align is not 'none' and meetOrSlice is 'meet', set the larger of scale-x and scale-y to the smaller.
         // 8. Otherwise, if align is not 'none' and meetOrSlice is 'slice', set the smaller of scale-x and scale-y to
         // the larger.
-        if (align != NONE and meetOrSlice == Css::SvgMeetOrSlice::MEET) {
+        if (align != NONE and meetOrSlice == Style::SvgMeetOrSlice::MEET) {
             scaleY = scaleX = min(scaleX, scaleY);
-        } else if (align != NONE and meetOrSlice == Css::SvgMeetOrSlice::SLICE) {
+        } else if (align != NONE and meetOrSlice == Style::SvgMeetOrSlice::SLICE) {
             scaleY = scaleX = max(scaleX, scaleY);
         }
 
@@ -191,22 +189,22 @@ struct SvgFormatingContext : FormatingContext {
 
         if (align) {
             // 11. If align contains 'xMid', add (e-width - vb-width * scale-x) / 2 to translate-x.
-            if (align->x == Css::SvgAlignAxis::MID) {
+            if (align->x == Style::SvgAlignAxis::MID) {
                 translateX += ((f64)size.x - vb.width * scaleX) / 2;
             }
 
             // 12. If align contains 'xMax', add (e-width - vb-width * scale-x) to translate-x.
-            if (align->x == Css::SvgAlignAxis::MAX) {
+            if (align->x == Style::SvgAlignAxis::MAX) {
                 translateX += ((f64)size.x - vb.width * scaleX);
             }
 
             // 13. If align contains 'yMid', add (e-height - vb-height * scale-y) / 2 to translate-y.
-            if (align->y == Css::SvgAlignAxis::MID) {
+            if (align->y == Style::SvgAlignAxis::MID) {
                 translateY += ((f64)size.y - vb.height * scaleY) / 2;
             }
 
             // 14. If align contains 'yMax', add (e-height - vb-height * scale-y) to translate-y.
-            if (align->y == Css::SvgAlignAxis::MAX) {
+            if (align->y == Style::SvgAlignAxis::MAX) {
                 translateY += ((f64)size.y - vb.height * scaleY);
             }
         }

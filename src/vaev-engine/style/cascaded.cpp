@@ -5,7 +5,6 @@ import Karm.Gfx;
 import Karm.Math;
 
 import :css;
-import :values;
 import :css.values;
 import :style.values;
 import :props;

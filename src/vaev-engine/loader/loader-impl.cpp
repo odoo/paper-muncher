@@ -116,9 +116,9 @@ Async::_Task<Rc<Font::Database>> _loadFontfacesAsync(Http::Client& client, Dom::
 
             for (auto const& src : ff.sources) {
                 if (not src.identifier.is<Ref::Url>()) {
-                    auto result = fontDatabase->queryExact(src.identifier.expect<FontFamily>().name);
+                    auto result = fontDatabase->queryExact(src.identifier.expect<Style::FontFamily>().name);
                     if (not result) {
-                        logWarn("Failed to assets font {}", src.identifier.expect<FontFamily>().name);
+                        logWarn("Failed to assets font {}", src.identifier.expect<Style::FontFamily>().name);
                         continue;
                     }
                     break;

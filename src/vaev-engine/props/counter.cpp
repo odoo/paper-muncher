@@ -6,6 +6,8 @@ export module Vaev.Engine:props.counter;
 
 import :props.base;
 import :style.counter;
+import :style.values.keywords;
+import :style.values.primitives;
 
 using namespace Karm;
 
@@ -22,14 +24,14 @@ static Res<CounterReset> _parseCounterReset(Cursor<Css::Sst>& c) {
 
     if (c.peek() == Css::Token::function("reversed(")) {
         Cursor<Css::Sst> content = c->content;
-        name = try$(parseValue<CustomIdent>(content));
+        name = try$(parseValue<Css::CustomIdent>(content));
         reversed = true;
         c.next();
     } else {
-        name = try$(parseValue<CustomIdent>(c));
+        name = try$(parseValue<Css::CustomIdent>(c));
     }
 
-    auto value = try$(parseValue<Integer>(c));
+    auto value = try$(parseValue<Css::Integer>(c));
     return Ok(CounterReset{name, reversed, Some(value)});
 }
 
@@ -38,8 +40,8 @@ static Res<CounterReset> _parseCounterReset(Cursor<Css::Sst>& c) {
 static Res<CounterIncrement> _parseCounterIncrement(Cursor<Css::Sst>& c) {
     if (c.ended())
         return Error::invalidData("unexpected end of input");
-    CustomIdent name = try$(parseValue<CustomIdent>(c));
-    auto value = try$(parseValue<Integer>(c));
+    CustomIdent name = try$(parseValue<Css::CustomIdent>(c));
+    auto value = try$(parseValue<Css::Integer>(c));
     return Ok(CounterIncrement{name, Some(value)});
 }
 

@@ -4,8 +4,6 @@ import Karm.Gfx;
 import Karm.Math;
 import Karm.Core;
 
-import :values;
-import :css.values;
 import :style.values;
 import :layout.base;
 import :layout.layout;
@@ -17,12 +15,12 @@ struct InlineFormatingContext : FormatingContext {
 
     // https://www.w3.org/TR/css-inline-3/#baseline-source
     BaselinePositionsSet getUsedBaselineFromBox(Box const& childBox, Output const& output) {
-        if (childBox.style->inline_->baselineSource == Keywords::FIRST)
+        if (childBox.style->inline_->baselineSource == Style::Keywords::FIRST)
             return output.firstBaselineSet;
-        if (childBox.style->inline_->baselineSource == Keywords::LAST)
+        if (childBox.style->inline_->baselineSource == Style::Keywords::LAST)
             return output.lastBaselineSet;
 
-        if (childBox.style->display == Display::INLINE and childBox.style->display == Display::FLOW_ROOT)
+        if (childBox.style->display == Style::Display::INLINE and childBox.style->display == Style::Display::FLOW_ROOT)
             return output.lastBaselineSet;
         return output.firstBaselineSet;
     }
@@ -118,7 +116,7 @@ struct InlineFormatingContext : FormatingContext {
                 auto boxStrutCell = strutCell->strut(*prose);
                 auto& atomicBox = box.children()[boxStrutCell->id];
 
-                if (oneOf(atomicBox.style->position, Keywords::ABSOLUTE, Keywords::FIXED)) {
+                if (oneOf(atomicBox.style->position, Style::Keywords::ABSOLUTE, Style::Keywords::FIXED)) {
                     if (input.generateFragment) {
                         // https://www.w3.org/TR/css-position-3/#staticpos-rect
 
@@ -178,7 +176,7 @@ struct InlineFormatingContext : FormatingContext {
                     );
                 }
 
-                if (atomicBox.style->position == Keywords::RELATIVE) {
+                if (atomicBox.style->position == Style::Keywords::RELATIVE) {
                     childInput.position += relativePositionOffset(atomicBox, input.containingBlock);
                 }
 

@@ -24,7 +24,7 @@ enum struct PaintingOrder {
 export struct StackingContext {
     struct Layer {
         PaintingOrder paintingOrder;
-        Integer zIndex;
+        Style::Integer zIndex;
         Union<Rc<Layout::Fragment>, Rc<StackingContext>> content;
 
         void paintStackingContext(Gfx::Canvas& g, Math::Rectf viewBox) {
@@ -34,13 +34,13 @@ export struct StackingContext {
 
         void paintBoxDecoration(Gfx::Canvas& g) {
             if (auto fragment = content.is<Rc<Layout::Fragment>>())
-                if ((*fragment)->style().visibility != Keywords::HIDDEN)
+                if ((*fragment)->style().visibility != Style::Keywords::HIDDEN)
                     (*fragment)->paintDecoration(g);
         }
 
         void paintBoxContent(Gfx::Canvas& g, Vec<Layout::OutOfBandOutline>& outOfBandOutlines) {
             if (auto fragment = content.is<Rc<Layout::Fragment>>())
-                if ((*fragment)->style().visibility != Keywords::HIDDEN)
+                if ((*fragment)->style().visibility != Style::Keywords::HIDDEN)
                     (*fragment)->paintContent(g, outOfBandOutlines);
         }
 
@@ -117,12 +117,12 @@ export struct StackingContext {
         return stackingContext;
     }
 
-    void addStackingLayer(PaintingOrder paintingOrder, Integer zIndex, Union<Rc<Layout::Fragment>, Rc<StackingContext>> content) {
+    void addStackingLayer(PaintingOrder paintingOrder, Style::Integer zIndex, Union<Rc<Layout::Fragment>, Rc<StackingContext>> content) {
         layers.emplaceBack(paintingOrder, zIndex, content);
     }
 
     // https://drafts.csswg.org/css-position-4/#paint-a-stacking-container
-    void addStackingContainer(PaintingOrder paintingOrder, Integer zIndex, Rc<Layout::Fragment> fragment) {
+    void addStackingContainer(PaintingOrder paintingOrder, Style::Integer zIndex, Rc<Layout::Fragment> fragment) {
         // Created a new stacking context, but any positioned descendants and
         // descendants which actually create a new stacking context should be
         // considered part of the parent stacking context
@@ -154,7 +154,7 @@ export struct StackingContext {
         // https://drafts.csswg.org/css2/#z-index
         // NOTE: 'z-index' only applies to positioned boxes, non-positioned ones
         //       always paint in tree order.
-        auto zIndexNumber = box.isPositioned() ? zIndex.unwrapOr<Integer>(0) : 0;
+        auto zIndexNumber = box.isPositioned() ? zIndex.unwrapOr<Style::Integer>(0) : 0;
         bool impliesStackingContext = box.impliesNewStackingContext();
 
         // 5. positioned descendants with negative (non-zero) z-index values
@@ -200,7 +200,7 @@ export struct StackingContext {
         // 9. positioned descendants with z-index: auto or z-index: 0
         else if (box.isPositioned() and zIndexNumber == 0) {
             // descendant has z-index: auto
-            if (zIndex == Keywords::AUTO and not impliesStackingContext) {
+            if (zIndex == Style::Keywords::AUTO and not impliesStackingContext) {
                 parentStackingContext.addStackingContainer(
                     PaintingOrder::POSITIONED_ZERO_Z,
                     zIndexNumber,
@@ -272,7 +272,7 @@ export struct StackingContext {
         Vec<Layout::OutOfBandOutline> outOfBandOutlines;
 
         // 4. If root is a block-level box, paint a block’s decorations given root and canvas.
-        if (fragment->style().visibility != Keywords::HIDDEN)
+        if (fragment->style().visibility != Style::Keywords::HIDDEN)
             fragment->paintDecoration(g);
 
         for (auto& e : layers) {
@@ -293,7 +293,7 @@ export struct StackingContext {
         //    non-positioned, block-level descendants. Descendants that
         //    established their own stacking context are painted atomically,
         //    in tree order.
-        if (fragment->style().visibility != Keywords::HIDDEN)
+        if (fragment->style().visibility != Style::Keywords::HIDDEN)
             fragment->paintContent(g, outOfBandOutlines);
 
         for (auto& e : layers) {

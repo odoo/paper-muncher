@@ -15,7 +15,7 @@ static Media const TEST_MEDIA = {
     .width = 1920_px,
     .height = 1080_px,
     .aspectRatio = 16.0 / 9.0,
-    .orientation = Print::Orientation::LANDSCAPE,
+    .orientation = Style::Keywords::LANDSCAPE,
 
     .resolution = 1_dppx,
     .scan = Keywords::PROGRESSIVE,
@@ -52,21 +52,21 @@ test$("feature-type") {
 }
 
 test$("feature-width") {
-    assert$(WidthFeature::min(Css::PureLength{UnitValue{1000, UnitValue::Unit::PX}}).match(TEST_MEDIA));
+    assert$(WidthFeature::min(Css::PureLength{Css::UnitValue{1000, Css::UnitValue::Unit::PX}}).match(TEST_MEDIA));
 
-    assert$(WidthFeature::max(Css::PureLength{UnitValue{2000, UnitValue::Unit::PX}}).match(TEST_MEDIA));
+    assert$(WidthFeature::max(Css::PureLength{Css::UnitValue{2000, Css::UnitValue::Unit::PX}}).match(TEST_MEDIA));
 
-    assert$(WidthFeature::exact(Css::PureLength{UnitValue{1920, UnitValue::Unit::PX}}).match(TEST_MEDIA));
+    assert$(WidthFeature::exact(Css::PureLength{Css::UnitValue{1920, Css::UnitValue::Unit::PX}}).match(TEST_MEDIA));
 
     return Ok();
 }
 
 test$("feature-height") {
-    assert$(HeightFeature::min(Css::PureLength{UnitValue{1000, UnitValue::Unit::PX}}).match(TEST_MEDIA));
+    assert$(HeightFeature::min(Css::PureLength{Css::UnitValue{1000, Css::UnitValue::Unit::PX}}).match(TEST_MEDIA));
 
-    assert$(HeightFeature::max(Css::PureLength{UnitValue{2000, UnitValue::Unit::PX}}).match(TEST_MEDIA));
+    assert$(HeightFeature::max(Css::PureLength{Css::UnitValue{2000, Css::UnitValue::Unit::PX}}).match(TEST_MEDIA));
 
-    assert$(HeightFeature::exact(Css::PureLength{UnitValue{1080, UnitValue::Unit::PX}}).match(TEST_MEDIA));
+    assert$(HeightFeature::exact(Css::PureLength{Css::UnitValue{1080, Css::UnitValue::Unit::PX}}).match(TEST_MEDIA));
 
     return Ok();
 }
@@ -82,17 +82,17 @@ test$("feature-aspect-ratio") {
 }
 
 test$("feature-orientation") {
-    assert$(OrientationFeature{Print::Orientation::LANDSCAPE}.match(TEST_MEDIA));
+    assert$(OrientationFeature{Style::Keywords::LANDSCAPE}.match(TEST_MEDIA));
 
     return Ok();
 }
 
 test$("feature-resolution") {
-    assert$(ResolutionFeature::min(Css::PureResolution{UnitValue{1, UnitValue::Unit::DPPX}}).match(TEST_MEDIA));
+    assert$(ResolutionFeature::min(Css::PureResolution{Css::UnitValue{1, Css::UnitValue::Unit::DPPX}}).match(TEST_MEDIA));
 
-    assert$(ResolutionFeature::max(Css::PureResolution{UnitValue{1, UnitValue::Unit::DPPX}}).match(TEST_MEDIA));
+    assert$(ResolutionFeature::max(Css::PureResolution{Css::UnitValue{1, Css::UnitValue::Unit::DPPX}}).match(TEST_MEDIA));
 
-    assert$(ResolutionFeature::exact(Css::PureResolution{UnitValue{1, UnitValue::Unit::DPPX}}).match(TEST_MEDIA));
+    assert$(ResolutionFeature::exact(Css::PureResolution{Css::UnitValue{1, Css::UnitValue::Unit::DPPX}}).match(TEST_MEDIA));
 
     return Ok();
 }
@@ -224,21 +224,21 @@ test$("feature-prefers-reduced-data") {
 }
 
 test$("feature-device-width") {
-    assert$(DeviceWidthFeature::min(Css::PureLength{UnitValue{1920, UnitValue::Unit::PX}}).match(TEST_MEDIA));
+    assert$(DeviceWidthFeature::min(Css::PureLength{Css::UnitValue{1920, Css::UnitValue::Unit::PX}}).match(TEST_MEDIA));
 
-    assert$(DeviceWidthFeature::max(Css::PureLength{UnitValue{1920, UnitValue::Unit::PX}}).match(TEST_MEDIA));
+    assert$(DeviceWidthFeature::max(Css::PureLength{Css::UnitValue{1920, Css::UnitValue::Unit::PX}}).match(TEST_MEDIA));
 
-    assert$(DeviceWidthFeature::exact(Css::PureLength{UnitValue{1920, UnitValue::Unit::PX}}).match(TEST_MEDIA));
+    assert$(DeviceWidthFeature::exact(Css::PureLength{Css::UnitValue{1920, Css::UnitValue::Unit::PX}}).match(TEST_MEDIA));
 
     return Ok();
 }
 
 test$("feature-device-height") {
-    assert$(DeviceHeightFeature::min(Css::PureLength{UnitValue{1080, UnitValue::Unit::PX}}).match(TEST_MEDIA));
+    assert$(DeviceHeightFeature::min(Css::PureLength{Css::UnitValue{1080, Css::UnitValue::Unit::PX}}).match(TEST_MEDIA));
 
-    assert$(DeviceHeightFeature::max(Css::PureLength{UnitValue{1080, UnitValue::Unit::PX}}).match(TEST_MEDIA));
+    assert$(DeviceHeightFeature::max(Css::PureLength{Css::UnitValue{1080, Css::UnitValue::Unit::PX}}).match(TEST_MEDIA));
 
-    assert$(DeviceHeightFeature::exact(Css::PureLength{UnitValue{1080, UnitValue::Unit::PX}}).match(TEST_MEDIA));
+    assert$(DeviceHeightFeature::exact(Css::PureLength{Css::UnitValue{1080, Css::UnitValue::Unit::PX}}).match(TEST_MEDIA));
 
     return Ok();
 }

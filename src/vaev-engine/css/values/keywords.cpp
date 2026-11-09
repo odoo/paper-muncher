@@ -7,11 +7,32 @@ import :css.parser;
 import :css.serializer;
 import :css.values.base;
 import :css.values.primitives;
-import :values.keywords;
 
 using namespace Karm;
 
 namespace Vaev::Css {
+
+export template <StrLit K>
+struct Keyword {
+    void repr(Io::Emit& e) const {
+        e("(keyword {})", K);
+    }
+
+    template <Karm::StrLit L>
+    constexpr bool operator==(Keyword<L> const&) const {
+        return K == L;
+    }
+};
+
+namespace Keywords {
+
+#define KEYWORD(TYPE, VALUE, NAME)      \
+    export using TYPE = Keyword<VALUE>; \
+    export constexpr inline TYPE NAME{};
+#include "defs/keywords.inc"
+#undef KEYWORD
+
+} // namespace Keywords
 
 export template <StrLit K>
 struct ValueParser<Keyword<K>> {

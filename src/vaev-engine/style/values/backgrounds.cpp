@@ -1,7 +1,3 @@
-module;
-
-#include <karm/macros>
-
 export module Vaev.Engine:style.values.backgrounds;
 
 import Karm.Core;
@@ -9,10 +5,11 @@ import Karm.Math;
 
 import :css.values.backgrounds;
 import :css.values.calc;
+import :css.values.numeric;
 import :css.values.images;
 import :style.values.numeric;
-import :values.calc;
-import :values.unitValue;
+import :css.values.unitValue;
+import :style.values.keywords;
 
 using namespace Vaev::Literals;
 using namespace Karm;
@@ -72,6 +69,10 @@ export struct Position {
     static Position center() {
         return {Percent{50}, Percent{50}};
     }
+
+    void repr(Io::Emit& e) const {
+        e("(position {} {})", x, y);
+    }
 };
 
 export Position toComputed(Css::BackgroundPosition const& value, LengthContext auto const& ctx) {
@@ -84,10 +85,10 @@ export Position toComputed(Css::BackgroundPosition const& value, LengthContext a
             return toComputed(
                 Css::LengthPercentage{
                     UNCHECKED,
-                    SumNode{
+                    Css::SumNode{
                         .children = {
                             UnitValue{100, UnitValue::Unit::PERCENT},
-                            NegateNode{makeBox<Calc>(length.calcTree())},
+                            Css::NegateNode{makeBox<Calc>(length.calcTree())},
                         },
                     },
                 },

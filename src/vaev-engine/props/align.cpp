@@ -8,6 +8,7 @@ import Karm.Core;
 import :props.base;
 import :css.parser;
 import :style.computed;
+import :style.values.keywords;
 
 using namespace Karm;
 
@@ -30,7 +31,7 @@ export struct AlignContentProperty : Property {
         }
 
         Res<Rc<Property>> parse(Cursor<Css::Sst>& c) const override {
-            return Ok(makeRc<AlignContentProperty>(self(), try$(parseValue<Align>(c))));
+            return Ok(makeRc<AlignContentProperty>(self(), try$(parseValue<Css::Align>(c))));
         }
     };
 
@@ -66,7 +67,7 @@ export struct JustifyContentProperty : Property {
         }
 
         Res<Rc<Property>> parse(Cursor<Css::Sst>& c) const override {
-            return Ok(makeRc<JustifyContentProperty>(self(), try$(parseValue<Align>(c))));
+            return Ok(makeRc<JustifyContentProperty>(self(), try$(parseValue<Css::Align>(c))));
         }
     };
 
@@ -102,7 +103,7 @@ export struct JustifySelfProperty : Property {
         }
 
         Res<Rc<Property>> parse(Cursor<Css::Sst>& c) const override {
-            return Ok(makeRc<JustifySelfProperty>(self(), try$(parseValue<Align>(c))));
+            return Ok(makeRc<JustifySelfProperty>(self(), try$(parseValue<Css::Align>(c))));
         }
     };
 
@@ -138,7 +139,7 @@ export struct AlignSelfProperty : Property {
         }
 
         Res<Rc<Property>> parse(Cursor<Css::Sst>& c) const override {
-            return Ok(makeRc<AlignSelfProperty>(self(), try$(parseValue<Align>(c))));
+            return Ok(makeRc<AlignSelfProperty>(self(), try$(parseValue<Css::Align>(c))));
         }
     };
 
@@ -174,7 +175,7 @@ export struct JustifyItemsProperty : Property {
         }
 
         Res<Rc<Property>> parse(Cursor<Css::Sst>& c) const override {
-            return Ok(makeRc<JustifyItemsProperty>(self(), try$(parseValue<Align>(c))));
+            return Ok(makeRc<JustifyItemsProperty>(self(), try$(parseValue<Css::Align>(c))));
         }
     };
 
@@ -210,7 +211,7 @@ export struct AlignItemsProperty : Property {
         }
 
         Res<Rc<Property>> parse(Cursor<Css::Sst>& c) const override {
-            return Ok(makeRc<AlignItemsProperty>(self(), try$(parseValue<Align>(c))));
+            return Ok(makeRc<AlignItemsProperty>(self(), try$(parseValue<Css::Align>(c))));
         }
     };
 

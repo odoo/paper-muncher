@@ -268,12 +268,12 @@ Ui::Child elementEndTag(Dom::Element const& el) {
     );
 }
 
-Str displayToBadge(Display d) {
-    if (d == Display::GRID)
+Str displayToBadge(Style::Display d) {
+    if (d == Style::Display::GRID)
         return "grid";
-    else if (d == Display::FLEX)
+    else if (d == Style::Display::FLEX)
         return "flex";
-    else if (d == Display::TABLE)
+    else if (d == Style::Display::TABLE)
         return "grid";
     else
         return "";
@@ -467,7 +467,7 @@ Ui::Child inspectStyleTabComputed(Rc<WebView> webview, InspectState const& s, Ui
                     auto maybeColor = parseValue<Css::Color>(c);
 
                     if (maybeColor) {
-                        auto resolved = Style::resolve(maybeColor.take(), Gfx::BLACK);
+                        auto resolved = Style::toUsed(maybeColor.take(), Gfx::BLACK);
                         prose->pushSpan(Ui::TextStyles::codeMedium().withColor(resolved));
                         prose->append("■"s);
                         prose->popSpan();
@@ -715,8 +715,8 @@ Ui::Child inspectTabMedia(InspectState const& s, Ui::Action<InspectAction> send)
                 "Color Scheme"s,
                 {
                     Kr::tabbarItem(s.colorScheme == NONE, rbind(send, InspectChangeColorScheme{NONE}), Kr::tabarItemLabel(NONE, "Auto"s)),
-                    Kr::tabbarItem(s.colorScheme == Keywords::LIGHT, rbind(send, InspectChangeColorScheme{Some(Style::ColorScheme{Keywords::LIGHT})}), Kr::tabarItemLabel(NONE, "Light"s)),
-                    Kr::tabbarItem(s.colorScheme == Keywords::DARK, rbind(send, InspectChangeColorScheme{Some(Style::ColorScheme{Keywords::DARK})}), Kr::tabarItemLabel(NONE, "Dark"s)),
+                    Kr::tabbarItem(s.colorScheme == Css::Keywords::LIGHT, rbind(send, InspectChangeColorScheme{Some(Style::ColorScheme{Css::Keywords::LIGHT})}), Kr::tabarItemLabel(NONE, "Light"s)),
+                    Kr::tabbarItem(s.colorScheme == Css::Keywords::DARK, rbind(send, InspectChangeColorScheme{Some(Style::ColorScheme{Css::Keywords::DARK})}), Kr::tabarItemLabel(NONE, "Dark"s)),
                 }
             ),
             Kr::numberRow(

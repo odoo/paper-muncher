@@ -8,12 +8,11 @@ import Karm.Core;
 import Karm.Ref;
 import Karm.Gfx;
 
-import :values;
 import :css.values;
 import :style.values;
 import :css;
 
-namespace Vaev::Css {
+namespace Vaev::Style {
 
 // MARK: Font descriptor values ----------------------------------------------
 
@@ -104,16 +103,13 @@ export struct FontSource {
     }
 };
 
-} // namespace Vaev::Css
-
-namespace Vaev::Style {
 
 // MARK: FontFace --------------------------------------------------------------
 
 export struct FontFace {
     Symbol family = ""_sym;
 
-    Vec<Css::FontSource> sources;
+    Vec<FontSource> sources;
 
     Union<None, Css::FontStyle, Range<Deg>> style = Css::FontStyle{Css::FontStyle::NORMAL};
 
@@ -122,15 +118,15 @@ export struct FontFace {
 
     Vec<Range<Rune>> unicodeRange;
 
-    Vec<Css::FontFeature> features;
-    Vec<Css::FontVariation> variations;
+    Vec<FontFeature> features;
+    Vec<FontVariation> variations;
 
     Opt<Percent> ascentOverride = NONE;
     Opt<Percent> descentOverride = NONE;
     Opt<Percent> lineGapOverride = NONE;
     Opt<Percent> sizeAdjust = NONE;
 
-    Css::FontDisplay display = Css::FontDisplay::AUTO;
+    FontDisplay display = FontDisplay::AUTO;
 
     bool valid() const {
         return any(family.str()) and any(sources);
@@ -200,12 +196,12 @@ export struct FontFamilyFontDescriptor {
 // MARK: src
 // https://www.w3.org/TR/css-fonts-4/#src-desc
 export struct SrcFontDescriptor {
-    Vec<Css::FontSource> value;
+    Vec<FontSource> value;
 
     static Str name() { return "src"; }
 
     static auto initial() {
-        return Vec<Css::FontSource>{};
+        return Vec<FontSource>{};
     }
 
     void apply(FontFace& f) {
@@ -213,7 +209,7 @@ export struct SrcFontDescriptor {
     }
 
     Res<> parse(Cursor<Css::Sst>& c) {
-        Vec<Css::FontSource> fontSrcs;
+        Vec<FontSource> fontSrcs;
         while (true) {
             eatWhitespace(c);
             if (c.ended())
@@ -398,11 +394,11 @@ export struct UnicodeRangeFontDescriptor {
 // MARK: font-feature-settings
 // https://www.w3.org/TR/css-fonts-4/#font-rend-desc
 export struct FontFeatureSettingsFontDescriptor {
-    Vec<Css::FontFeature> value;
+    Vec<FontFeature> value;
 
     static Str name() { return "font-feature-settings"; }
 
-    static Vec<Css::FontFeature> initial() { return {}; }
+    static Vec<FontFeature> initial() { return {}; }
 
     void apply(FontFace& f) const {
         f.features = value;
@@ -412,11 +408,11 @@ export struct FontFeatureSettingsFontDescriptor {
 // MARK: font-variation-settingsl
 // https://www.w3.org/TR/css-fonts-4/#font-rend-desc
 export struct FontVariationSettingsFontDescriptor {
-    Vec<Css::FontVariation> value;
+    Vec<FontVariation> value;
 
     static Str name() { return "font-variation-settings"; }
 
-    static Vec<Css::FontVariation> initial() { return {}; }
+    static Vec<FontVariation> initial() { return {}; }
 
     void apply(FontFace& f) const {
         f.variations = value;
@@ -450,11 +446,11 @@ export struct FontNamedInstanceFontDescriptor {
 // MARK: font-display
 // https://www.w3.org/TR/css-fonts-4/#font-display-desc
 export struct FontDisplayFontDescriptor {
-    Css::FontDisplay value = initial();
+    FontDisplay value = initial();
 
     static Str name() { return "font-display"; }
 
-    static Css::FontDisplay initial() { return Css::FontDisplay::AUTO; }
+    static FontDisplay initial() { return FontDisplay::AUTO; }
 
     void apply(FontFace& f) const {
         f.display = value;
@@ -462,15 +458,15 @@ export struct FontDisplayFontDescriptor {
 
     Res<> parse(Cursor<Css::Sst>& c) {
         if (c.skip(Css::Token::ident("auto"))) {
-            value = Css::FontDisplay::AUTO;
+            value = FontDisplay::AUTO;
         } else if (c.skip(Css::Token::ident("block"))) {
-            value = Css::FontDisplay::BLOCK;
+            value = FontDisplay::BLOCK;
         } else if (c.skip(Css::Token::ident("swap"))) {
-            value = Css::FontDisplay::SWAP;
+            value = FontDisplay::SWAP;
         } else if (c.skip(Css::Token::ident("fallback"))) {
-            value = Css::FontDisplay::FALLBACK;
+            value = FontDisplay::FALLBACK;
         } else if (c.skip(Css::Token::ident("optional"))) {
-            value = Css::FontDisplay::OPTIONAL;
+            value = FontDisplay::OPTIONAL;
         } else {
             return Error::invalidData("expected font-display value");
         }
