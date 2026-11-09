@@ -159,7 +159,7 @@ struct HeaderFooterDecorator : Vaev::Driver::PageDecorator {
             );
 
             auto footerHeightMemo = footerSize.visit(
-                [&](Vaev::Css::Keywords::Auto){
+                [&](Vaev::Style::Keywords::Auto){
                     if (auto& [w] = footerWebView) {
                         w->changeArea(area.withViewport(Vaev::Layout::toPixel(infos.pageDecoration.size())));
                         w->changePrefs(prefs);
@@ -183,8 +183,8 @@ struct HeaderFooterDecorator : Vaev::Driver::PageDecorator {
         auto [headerHeight, footerHeight] = _memo.lookup(infos.pageDecoration.size()).expect();
 
         Vaev::Style::CounterSet pageCounters;
-        pageCounters.instantiateCounter(nullptr, {Vaev::Css::CustomIdent{"page"_sym}, false}, static_cast<Vaev::Style::Integer>(infos.pageNumber));
-        pageCounters.instantiateCounter(nullptr, {Vaev::Css::CustomIdent{"pages"_sym}, false}, static_cast<Vaev::Style::Integer>(pageCount));
+        pageCounters.instantiateCounter(nullptr, {Vaev::Style::CustomIdent{"page"_sym}, false}, static_cast<i64>(infos.pageNumber));
+        pageCounters.instantiateCounter(nullptr, {Vaev::Style::CustomIdent{"pages"_sym}, false}, static_cast<i64>(pageCount));
 
         if (auto& [w] = headerWebView) {
             w->changeArea(area.withViewport(Vaev::Layout::toPixel(Vaev::Layout::Vec2Au{decorationWidth, headerHeight})));

@@ -11,6 +11,7 @@ import Karm.Core;
 import :css.lexer;
 import :css.parser;
 import :css.values.base;
+import :css.values.color;
 import :css.values.numeric;
 import :css.values.images;
 import :css.values.keywords;
@@ -65,6 +66,64 @@ struct ValueParser<Gfx::BorderStyle> {
 };
 
 // MARK: Border ----------------------------------------------------------------
+
+// Value of the border shorthands.
+// https://www.w3.org/TR/css-backgrounds-3/#border-shorthands
+export struct Border {
+    LineWidth width = Keywords::MEDIUM;
+    Gfx::BorderStyle style = Gfx::BorderStyle::NONE;
+    Color color = Keywords::CURRENT_COLOR;
+
+    void repr(Io::Emit& e) const {
+        e("(border {} {} {})", width, style, color);
+    }
+};
+
+export template <>
+struct ValueParser<Border> {
+    static Res<Border> parse(Cursor<Sst>& c) {
+        // https://drafts.csswg.org/css-backgrounds/#border-shorthands
+        // <line-width> || <line-style> || <color>, each at most once.
+        Border border;
+        bool widthSet = false;
+        bool styleSet = false;
+        bool colorSet = false;
+        while (not c.ended()) {
+            eatWhitespace(c);
+
+            auto width = parseValue<LineWidth>(c);
+            if (width) {
+                if (widthSet)
+                    return Error::invalidData("duplicated border width");
+                border.width = width.expect();
+                widthSet = true;
+                continue;
+            }
+
+            auto color = parseValue<Color>(c);
+            if (color) {
+                if (colorSet)
+                    return Error::invalidData("duplicated border color");
+                border.color = color.expect();
+                colorSet = true;
+                continue;
+            }
+
+            auto style = parseValue<Gfx::BorderStyle>(c);
+            if (style) {
+                if (styleSet)
+                    return Error::invalidData("duplicated border style");
+                border.style = style.expect();
+                styleSet = true;
+                continue;
+            }
+
+            break;
+        }
+
+        return Ok(border);
+    }
+};
 
 // NOTE: Math::Radii::repr() needs T to be constructible from 0, which PixelPercentage isn't.
 export template <typename T>

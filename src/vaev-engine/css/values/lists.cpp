@@ -26,8 +26,6 @@ export struct CounterFunc {
     void repr(Io::Emit& e) const {
         e("(counter {})", name);
     }
-
-    static Res<CounterFunc> parse(Cursor<Sst>& c);
 };
 
 // https://www.w3.org/TR/css-lists-3/#funcdef-counters
@@ -39,43 +37,47 @@ export struct CountersFunc {
     void repr(Io::Emit& e) const {
         e("(counters {} {} {})", name, join, style);
     }
-
-    static Res<CountersFunc> parse(Cursor<Sst>& c);
 };
 
-Res<CounterFunc> CounterFunc::parse(Cursor<Sst>& c) {
-    if (c.ended())
-        return Error::invalidData("unexpected end of input");
+export template <>
+struct ValueParser<CounterFunc> {
+    static Res<CounterFunc> parse(Cursor<Sst>& c) {
+        if (c.ended())
+            return Error::invalidData("unexpected end of input");
 
-    if (c->prefix != Token::function("counter("))
-        return Error::invalidData("expected counter(");
+        if (c->prefix != Token::function("counter("))
+            return Error::invalidData("expected counter(");
 
-    Cursor<Sst> content = c->content;
-    auto name = try$(parseValue<CustomIdent>(content));
-    content.skip(Token::COMMA);
-    auto maybeSymbols = parseValue<CounterStyle>(content).ok();
+        Cursor<Sst> content = c->content;
+        auto name = try$(parseValue<CustomIdent>(content));
+        content.skip(Token::COMMA);
+        auto maybeSymbols = parseValue<CounterStyle>(content).ok();
 
-    c.next();
-    return Ok(CounterFunc{name, maybeSymbols});
-}
+        c.next();
+        return Ok(CounterFunc{name, maybeSymbols});
+    }
+};
 
-Res<CountersFunc> CountersFunc::parse(Cursor<Sst>& c) {
-    if (c.ended())
-        return Error::invalidData("unexpected end of input");
+export template <>
+struct ValueParser<CountersFunc> {
+    static Res<CountersFunc> parse(Cursor<Sst>& c) {
+        if (c.ended())
+            return Error::invalidData("unexpected end of input");
 
-    if (c.peek() != Token::function("counters("))
-        return Error::invalidData("expected counter(");
+        if (c.peek() != Token::function("counters("))
+            return Error::invalidData("expected counter(");
 
-    Cursor<Sst> content = c->content;
-    auto name = try$(parseValue<CustomIdent>(content));
-    c.skip(Token::COMMA);
-    auto join = try$(parseValue<String>(content));
-    c.skip(Token::COMMA);
-    auto maybeSymbols = parseValue<CounterStyle>(content).ok();
+        Cursor<Sst> content = c->content;
+        auto name = try$(parseValue<CustomIdent>(content));
+        c.skip(Token::COMMA);
+        auto join = try$(parseValue<String>(content));
+        c.skip(Token::COMMA);
+        auto maybeSymbols = parseValue<CounterStyle>(content).ok();
 
-    c.next();
-    return Ok(CountersFunc{name, join, maybeSymbols});
-}
+        c.next();
+        return Ok(CountersFunc{name, join, maybeSymbols});
+    }
+};
 
 // https://www.w3.org/TR/css-lists-3/#image-markers
 export using ListImage = Union<Keywords::None, Image>;

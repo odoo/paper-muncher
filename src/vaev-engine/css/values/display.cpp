@@ -299,9 +299,6 @@ export struct Display {
             };
         }
     }
-
-    static Res<Display> parse(Cursor<Sst>& c);
-    static Res<> serialize(Io::TextWriter& w, Display const& value);
 };
 
 static Res<Display> _parseLegacyDisplay(Cursor<Sst>& c) {
@@ -405,97 +402,103 @@ static Res<Display> _parseBoxDisplay(Cursor<Sst>& c) {
     return Error::invalidData("expected box value");
 }
 
-Res<Display> Display::parse(Cursor<Sst>& c) {
-    if (c.ended())
-        return Error::invalidData("unexpected end of input");
+export template <>
+struct ValueParser<Display> {
+    static Res<Display> parse(Cursor<Sst>& c) {
+        if (c.ended())
+            return Error::invalidData("unexpected end of input");
 
-    if (auto legacy = _parseLegacyDisplay(c))
-        return legacy;
+        if (auto legacy = _parseLegacyDisplay(c))
+            return legacy;
 
-    if (auto box = _parseBoxDisplay(c))
-        return box;
+        if (auto box = _parseBoxDisplay(c))
+            return box;
 
-    if (auto internal = _parseInternalDisplay(c))
-        return internal;
+        if (auto internal = _parseInternalDisplay(c))
+            return internal;
 
-    auto inside = _parseInsideDisplay(c);
-    auto outside = _parseOutsideDisplay(c);
-    auto item = c.skip(Token::ident("list-item"))
-                    ? Display::Item::YES
-                    : Display::Item::NO;
+        auto inside = _parseInsideDisplay(c);
+        auto outside = _parseOutsideDisplay(c);
+        auto item = c.skip(Token::ident("list-item"))
+                        ? Display::Item::YES
+                        : Display::Item::NO;
 
-    if (not inside and not outside and not bool(item))
-        return Error::invalidData("expected display value");
+        if (not inside and not outside and not bool(item))
+            return Error::invalidData("expected display value");
 
-    return Ok(Display{
-        inside.unwrapOr(Display::FLOW),
-        outside.unwrapOr(Display::BLOCK),
-        item,
-    });
-}
-
-Res<> Display::serialize(Io::TextWriter& w, Display const& value) {
-    // https://www.w3.org/TR/css-display-3/#the-display-properties
-    // NOTE: Following the precedence rules of “most backwards-compatible, then shortest”,
-    // serialization of equivalent display values uses the “Short display” column. [CSSOM]
-
-    switch (value.type()) {
-    case Display::Type::DEFAULT:
-        if (value.item() == Display::Item::NO) {
-            if (value.outside() == Display::BLOCK and value.inside() == Display::FLOW)
-                return w.writeStr("block"s);
-
-            if (value.outside() == Display::BLOCK and value.inside() == Display::FLOW_ROOT)
-                return w.writeStr("flow-root"s);
-
-            if (value.outside() == Display::INLINE and value.inside() == Display::FLOW)
-                return w.writeStr("inline"s);
-
-            if (value.outside() == Display::INLINE and value.inside() == Display::FLOW_ROOT)
-                return w.writeStr("inline-block"s);
-
-            if (value.outside() == Display::RUN_IN and value.inside() == Display::FLOW)
-                return w.writeStr("run-in"s);
-
-            if (value.outside() == Display::BLOCK and value.inside() == Display::FLEX)
-                return w.writeStr("flex"s);
-
-            if (value.outside() == Display::INLINE and value.inside() == Display::FLEX)
-                return w.writeStr("inline-flex"s);
-
-            if (value.outside() == Display::BLOCK and value.inside() == Display::GRID)
-                return w.writeStr("grid"s);
-
-            if (value.outside() == Display::INLINE and value.inside() == Display::GRID)
-                return w.writeStr("inline-grid"s);
-
-            if (value.outside() == Display::INLINE and value.inside() == Display::RUBY)
-                return w.writeStr("ruby"s);
-
-            if (value.outside() == Display::BLOCK and value.inside() == Display::RUBY)
-                return w.writeStr("block ruby"s);
-
-            if (value.outside() == Display::BLOCK and value.inside() == Display::TABLE)
-                return w.writeStr("table"s);
-
-            if (value.outside() == Display::INLINE and value.inside() == Display::TABLE)
-                return w.writeStr("inline-table"s);
-        } else {
-            if (value.outside() == Display::BLOCK and value.inside() == Display::FLOW)
-                return w.writeStr("list-item"s);
-
-            if (value.outside() == Display::INLINE and value.inside() == Display::FLOW)
-                return w.writeStr("inline list-item"s);
-        }
-        return Error::invalidData();
-    case Display::Type::INTERNAL:
-        return serializeValue(w, value.internal());
-    case Display::Type::BOX:
-        return serializeValue(w, value.box());
-    default:
-        unreachable();
+        return Ok(Display{
+            inside.unwrapOr(Display::FLOW),
+            outside.unwrapOr(Display::BLOCK),
+            item,
+        });
     }
-}
+};
+
+export template <>
+struct ValueSerializer<Display> {
+    static Res<> serialize(Io::TextWriter& w, Display const& value) {
+        // https://www.w3.org/TR/css-display-3/#the-display-properties
+        // NOTE: Following the precedence rules of “most backwards-compatible, then shortest”,
+        // serialization of equivalent display values uses the “Short display” column. [CSSOM]
+
+        switch (value.type()) {
+        case Display::Type::DEFAULT:
+            if (value.item() == Display::Item::NO) {
+                if (value.outside() == Display::BLOCK and value.inside() == Display::FLOW)
+                    return w.writeStr("block"s);
+
+                if (value.outside() == Display::BLOCK and value.inside() == Display::FLOW_ROOT)
+                    return w.writeStr("flow-root"s);
+
+                if (value.outside() == Display::INLINE and value.inside() == Display::FLOW)
+                    return w.writeStr("inline"s);
+
+                if (value.outside() == Display::INLINE and value.inside() == Display::FLOW_ROOT)
+                    return w.writeStr("inline-block"s);
+
+                if (value.outside() == Display::RUN_IN and value.inside() == Display::FLOW)
+                    return w.writeStr("run-in"s);
+
+                if (value.outside() == Display::BLOCK and value.inside() == Display::FLEX)
+                    return w.writeStr("flex"s);
+
+                if (value.outside() == Display::INLINE and value.inside() == Display::FLEX)
+                    return w.writeStr("inline-flex"s);
+
+                if (value.outside() == Display::BLOCK and value.inside() == Display::GRID)
+                    return w.writeStr("grid"s);
+
+                if (value.outside() == Display::INLINE and value.inside() == Display::GRID)
+                    return w.writeStr("inline-grid"s);
+
+                if (value.outside() == Display::INLINE and value.inside() == Display::RUBY)
+                    return w.writeStr("ruby"s);
+
+                if (value.outside() == Display::BLOCK and value.inside() == Display::RUBY)
+                    return w.writeStr("block ruby"s);
+
+                if (value.outside() == Display::BLOCK and value.inside() == Display::TABLE)
+                    return w.writeStr("table"s);
+
+                if (value.outside() == Display::INLINE and value.inside() == Display::TABLE)
+                    return w.writeStr("inline-table"s);
+            } else {
+                if (value.outside() == Display::BLOCK and value.inside() == Display::FLOW)
+                    return w.writeStr("list-item"s);
+
+                if (value.outside() == Display::INLINE and value.inside() == Display::FLOW)
+                    return w.writeStr("inline list-item"s);
+            }
+            return Error::invalidData();
+        case Display::Type::INTERNAL:
+            return serializeValue(w, value.internal());
+        case Display::Type::BOX:
+            return serializeValue(w, value.box());
+        default:
+            unreachable();
+        }
+    }
+};
 
 export using Visibility = Union<
     Keywords::Visible,

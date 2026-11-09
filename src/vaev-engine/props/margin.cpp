@@ -288,30 +288,9 @@ export struct MarginInlineEndProperty : Property {
     }
 };
 
-// Value of the logical margin shorthands: <'margin-top'>{1,2}
-// The first value is the start side, the second (defaulting to the first) is the end side.
-// https://drafts.csswg.org/css-logical/#propdef-margin-block
-// https://drafts.csswg.org/css-logical/#propdef-margin-inline
-export struct LogicalMargins {
-    MarginTopProperty::Value start;
-    MarginTopProperty::Value end;
-
-    static Res<LogicalMargins> parse(Cursor<Css::Sst>& c) {
-        auto start = try$(parseValue<MarginTopProperty::Value>(c));
-        auto end = parseValue<MarginTopProperty::Value>(c);
-        if (not end)
-            return Ok(LogicalMargins{start, start});
-        return Ok(LogicalMargins{start, end.take()});
-    }
-
-    void repr(Io::Emit& e) const {
-        e("({} {})", start, end);
-    }
-};
-
 // https://drafts.csswg.org/css-logical/#propdef-margin-inline
 export struct MarginInlineProperty : Property {
-    using Value = LogicalMargins;
+    using Value = Css::LogicalMargins;
 
     struct Registration : Property::Registration {
         Registration() : Property::Registration(Properties::MARGIN_INLINE, LOGICAL) {}
@@ -325,7 +304,7 @@ export struct MarginInlineProperty : Property {
         }
 
         Res<Rc<Property>> parse(Cursor<Css::Sst>& c) const override {
-            return Ok(makeRc<MarginInlineProperty>(self(), try$(Value::parse(c))));
+            return Ok(makeRc<MarginInlineProperty>(self(), try$(parseValue<Value>(c))));
         }
     };
 
@@ -431,7 +410,7 @@ export struct MarginBlockEndProperty : Property {
 
 // https://drafts.csswg.org/css-logical/#propdef-margin-block
 export struct MarginBlockProperty : Property {
-    using Value = LogicalMargins;
+    using Value = Css::LogicalMargins;
 
     struct Registration : Property::Registration {
         Registration() : Property::Registration(Properties::MARGIN_BLOCK, LOGICAL) {}
@@ -445,7 +424,7 @@ export struct MarginBlockProperty : Property {
         }
 
         Res<Rc<Property>> parse(Cursor<Css::Sst>& c) const override {
-            return Ok(makeRc<MarginBlockProperty>(self(), try$(Value::parse(c))));
+            return Ok(makeRc<MarginBlockProperty>(self(), try$(parseValue<Value>(c))));
         }
     };
 

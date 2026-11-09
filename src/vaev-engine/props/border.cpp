@@ -752,65 +752,13 @@ export struct BorderRadiusProperty : Property {
     }
 };
 
+Css::Border toSpecified(Border const& value) {
+    return {toSpecified(value.width), value.style, toSpecified(value.color)};
+}
+
 // https://www.w3.org/TR/css-backgrounds-3/#border-shorthands
 export struct BorderTopProperty : Property {
-    // https://drafts.csswg.org/css-backgrounds/#border-shorthands
-    struct Value {
-        Css::LineWidth width = Keywords::MEDIUM;
-        Gfx::BorderStyle style = Gfx::BorderStyle::NONE;
-        Css::Color color = Keywords::CURRENT_COLOR;
-
-        static Value fromComputed(Border const& value) {
-            return {toSpecified(value.width), value.style, toSpecified(value.color)};
-        }
-
-        static Res<Value> parse(Cursor<Css::Sst>& c) {
-            // https://drafts.csswg.org/css-backgrounds/#border-shorthands
-            // <line-width> || <line-style> || <color>, each at most once.
-            Value border;
-            bool widthSet = false;
-            bool styleSet = false;
-            bool colorSet = false;
-            while (not c.ended()) {
-                Css::eatWhitespace(c);
-
-                auto width = parseValue<Css::LineWidth>(c);
-                if (width) {
-                    if (widthSet)
-                        return Error::invalidData("duplicated border width");
-                    border.width = width.expect();
-                    widthSet = true;
-                    continue;
-                }
-
-                auto color = parseValue<Css::Color>(c);
-                if (color) {
-                    if (colorSet)
-                        return Error::invalidData("duplicated border color");
-                    border.color = color.expect();
-                    colorSet = true;
-                    continue;
-                }
-
-                auto style = parseValue<Gfx::BorderStyle>(c);
-                if (style) {
-                    if (styleSet)
-                        return Error::invalidData("duplicated border style");
-                    border.style = style.expect();
-                    styleSet = true;
-                    continue;
-                }
-
-                break;
-            }
-
-            return Ok(border);
-        }
-
-        void repr(Io::Emit& e) const {
-            e("(border {} {} {})", width, style, color);
-        }
-    };
+    using Value = Css::Border;
 
     struct Registration : Property::Registration {
         Registration()
@@ -821,7 +769,7 @@ export struct BorderTopProperty : Property {
         }
 
         Rc<Property> load(ComputedValues const& c) const override {
-            return makeRc<BorderTopProperty>(self(), Value::fromComputed(c.borders->top));
+            return makeRc<BorderTopProperty>(self(), toSpecified(c.borders->top));
         }
 
         Res<Rc<Property>> parse(Cursor<Css::Sst>& c) const override {
@@ -860,7 +808,7 @@ export struct BorderRightProperty : Property {
         }
 
         Rc<Property> load(ComputedValues const& c) const override {
-            return makeRc<BorderRightProperty>(self(), Value::fromComputed(c.borders->end));
+            return makeRc<BorderRightProperty>(self(), toSpecified(c.borders->end));
         }
 
         Res<Rc<Property>> parse(Cursor<Css::Sst>& c) const override {
@@ -899,7 +847,7 @@ export struct BorderBottomProperty : Property {
         }
 
         Rc<Property> load(ComputedValues const& c) const override {
-            return makeRc<BorderBottomProperty>(self(), Value::fromComputed(c.borders->bottom));
+            return makeRc<BorderBottomProperty>(self(), toSpecified(c.borders->bottom));
         }
 
         Res<Rc<Property>> parse(Cursor<Css::Sst>& c) const override {
@@ -938,7 +886,7 @@ export struct BorderLeftProperty : Property {
         }
 
         Rc<Property> load(ComputedValues const& c) const override {
-            return makeRc<BorderLeftProperty>(self(), Value::fromComputed(c.borders->start));
+            return makeRc<BorderLeftProperty>(self(), toSpecified(c.borders->start));
         }
 
         Res<Rc<Property>> parse(Cursor<Css::Sst>& c) const override {
@@ -977,7 +925,7 @@ export struct BorderProperty : Property {
         }
 
         Rc<Property> load(ComputedValues const& c) const override {
-            return makeRc<BorderProperty>(self(), Value::fromComputed(c.borders->top));
+            return makeRc<BorderProperty>(self(), toSpecified(c.borders->top));
         }
 
         Res<Rc<Property>> parse(Cursor<Css::Sst>& c) const override {

@@ -75,26 +75,26 @@ export template <>
 struct ValueParser<FontWidth> {
     static Res<FontWidth> parse(Cursor<Sst>& c) {
         if (c.ended())
-            return Error::invalidData("unexpected end of input");
+        return Error::invalidData("unexpected end of input");
 
         if (c.skip(Token::ident("normal"))) {
-            return Ok(FontWidth::NORMAL);
+        return Ok(FontWidth::NORMAL);
         } else if (c.skip(Token::ident("condensed"))) {
-            return Ok(FontWidth::CONDENSED);
+        return Ok(FontWidth::CONDENSED);
         } else if (c.skip(Token::ident("expanded"))) {
-            return Ok(FontWidth::EXPANDED);
+        return Ok(FontWidth::EXPANDED);
         } else if (c.skip(Token::ident("ultra-condensed"))) {
-            return Ok(FontWidth::ULTRA_CONDENSED);
+        return Ok(FontWidth::ULTRA_CONDENSED);
         } else if (c.skip(Token::ident("extra-condensed"))) {
-            return Ok(FontWidth::EXTRA_CONDENSED);
+        return Ok(FontWidth::EXTRA_CONDENSED);
         } else if (c.skip(Token::ident("semi-condensed"))) {
-            return Ok(FontWidth::SEMI_CONDENSED);
+        return Ok(FontWidth::SEMI_CONDENSED);
         } else if (c.skip(Token::ident("semi-expanded"))) {
-            return Ok(FontWidth::SEMI_EXPANDED);
+        return Ok(FontWidth::SEMI_EXPANDED);
         } else if (c.skip(Token::ident("extra-expanded"))) {
-            return Ok(FontWidth::EXTRA_EXPANDED);
+        return Ok(FontWidth::EXTRA_EXPANDED);
         } else if (c.skip(Token::ident("ultra-expanded"))) {
-            return Ok(FontWidth::ULTRA_EXPANDED);
+        return Ok(FontWidth::ULTRA_EXPANDED);
         }
 
         return Ok(try$(parseValue<PurePercentage>(c)));
@@ -142,18 +142,18 @@ export template <>
 struct ValueParser<FontStyle> {
     static Res<FontStyle> parse(Cursor<Sst>& c) {
         if (c.ended())
-            return Error::invalidData("unexpected end of input");
+        return Error::invalidData("unexpected end of input");
 
         if (c.skip(Token::ident("normal"))) {
-            return Ok(FontStyle::NORMAL);
+        return Ok(FontStyle::NORMAL);
         } else if (c.skip(Token::ident("italic"))) {
-            return Ok(FontStyle::ITALIC);
+        return Ok(FontStyle::ITALIC);
         } else if (c.skip(Token::ident("oblique"))) {
-            auto angle = parseValue<PureAngle>(c);
-            if (angle)
-                return Ok(angle.expect());
+        auto angle = parseValue<PureAngle>(c);
+        if (angle)
+            return Ok(angle.expect());
 
-            return Ok(FontStyle::OBLIQUE);
+        return Ok(FontStyle::OBLIQUE);
         }
 
         return Error::invalidData("expected font style");
@@ -169,14 +169,14 @@ struct ValueSerializer<FontStyle> {
         // If component values can be omitted or replaced with a shorter representation
         // without changing the meaning of the value, omit/replace them.
         if (value.val == FontStyle::OBLIQUE and value.obliqueAngle.toDegree() == 0.0)
-            return w.writeStr("normal"s);
+        return w.writeStr("normal"s);
 
         // the keyword specified, plus angle in degrees if specified
         try$(serializeValue(w, value.val));
 
         // The lack of an <angle> represents 14deg.
         if (value.val != FontStyle::OBLIQUE or value.obliqueAngle.toDegree() == 14.0)
-            return Ok();
+        return Ok();
 
         try$(w.writeRune(' '));
         return serializeValue(w, PureAngle::fromDegree(value.obliqueAngle.toDegree()));
@@ -213,6 +213,50 @@ struct ValueSerializer<Gfx::FontWeight> {
     }
 };
 
+// https://www.w3.org/TR/css-fonts-4/#font-weight-prop
+// <font-weight-absolute> | bolder | lighter
+export enum struct RelativeFontWeight : u8 {
+    LIGHTER,
+    BOLDER,
+
+    _LEN
+};
+
+export struct FontWeight : Union<Gfx::FontWeight, RelativeFontWeight> {
+    using _Base = Union<Gfx::FontWeight, RelativeFontWeight>;
+    using _Base::_Base;
+
+    FontWeight()
+        : FontWeight(Gfx::FontWeight::REGULAR) {}
+
+    void repr(Io::Emit& e) const {
+        e("{}", static_cast<_Base const&>(*this));
+    }
+};
+
+export template <>
+struct ValueParser<FontWeight> {
+    static Res<FontWeight> parse(Cursor<Sst>& c) {
+        if (c.ended())
+            return Error::invalidData("unexpected end of input");
+
+        if (c.skip(Token::ident("bolder")))
+            return Ok(RelativeFontWeight::BOLDER);
+        if (c.skip(Token::ident("lighter")))
+            return Ok(RelativeFontWeight::LIGHTER);
+        return Ok(try$(parseValue<Gfx::FontWeight>(c)));
+    }
+};
+
+export template <>
+struct ValueSerializer<FontWeight> {
+    static Res<> serialize(Io::TextWriter& w, FontWeight const& value) {
+        return value.visit([&](auto const& v) {
+            return serializeValue(w, v);
+        });
+    }
+};
+
 // MARK: FontFamily ------------------------------------------------------------
 
 // https://drafts.csswg.org/css-fonts/#family-name-value
@@ -229,32 +273,33 @@ export struct FontFamily {
 
     bool operator==(FontFamily const&) const = default;
     auto operator<=>(FontFamily const&) const = default;
-
-    static Res<FontFamily> parse(Cursor<Sst>& c);
 };
 
-Res<FontFamily> FontFamily::parse(Cursor<Sst>& c) {
-    if (c.ended())
-        return Error::invalidData("unexpected end of input");
+export template <>
+struct ValueParser<FontFamily> {
+    static Res<FontFamily> parse(Cursor<Sst>& c) {
+        if (c.ended())
+            return Error::invalidData("unexpected end of input");
 
-    if (c.peek() == Token::STRING)
-        return Ok<FontFamily>(Symbol::from(try$(parseValue<String>(c))));
+        if (c.peek() == Token::STRING)
+            return Ok<FontFamily>(Symbol::from(try$(parseValue<String>(c))));
 
-    StringBuilder familyStrBuilder;
-    usize amountOfIdents = 0;
+        StringBuilder familyStrBuilder;
+        usize amountOfIdents = 0;
 
-    if (c.peek() == Token::IDENT) {
-        while (not c.ended() and c.peek() == Token::IDENT) {
-            if (++amountOfIdents > 1)
-                familyStrBuilder.append(' ');
-            familyStrBuilder.append(c.next().token.data);
-            eatWhitespace(c);
+        if (c.peek() == Token::IDENT) {
+            while (not c.ended() and c.peek() == Token::IDENT) {
+                if (++amountOfIdents > 1)
+                    familyStrBuilder.append(' ');
+                familyStrBuilder.append(c.next().token.data);
+                eatWhitespace(c);
+            }
+        } else {
+            return Error::invalidData("expected font family name");
         }
-    } else {
-        return Error::invalidData("expected font family name");
-    }
 
-    return Ok<FontFamily>(Symbol::from(familyStrBuilder.take()));
-}
+        return Ok<FontFamily>(Symbol::from(familyStrBuilder.take()));
+    }
+};
 
 } // namespace Vaev::Css

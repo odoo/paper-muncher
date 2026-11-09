@@ -13,6 +13,20 @@ namespace Vaev::Style {
 // https://drafts.csswg.org/css-fonts/#family-name-value
 export using FontFamily = Css::FontFamily;
 
+// https://www.w3.org/TR/css-fonts-4/#font-weight-prop
+// Computed value: a number, see below
+// https://www.w3.org/TR/css-fonts-4/#relative-weights
+export Gfx::FontWeight toComputed(Css::FontWeight const& value, Gfx::FontWeight parent) {
+    return value.visit(
+        [&](Css::RelativeFontWeight relative) {
+            return relative == Css::RelativeFontWeight::LIGHTER ? parent.lighter() : parent.bolder();
+        },
+        [](Gfx::FontWeight weight) {
+            return weight;
+        }
+    );
+}
+
 export struct FontSizeContextData {
     f64 userFontSize = 16;   /// Font size of the user agent
     f64 parentFontSize = 16; /// Font size of the parent box

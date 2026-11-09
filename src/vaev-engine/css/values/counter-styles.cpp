@@ -34,8 +34,6 @@ export struct CounterSymbolsFunc {
     void repr(Io::Emit& e) const {
         e("(counter-symbols {} {})", type, symbols);
     }
-
-    static Res<CounterSymbolsFunc> parse(Cursor<Sst>& c);
 };
 
 // https://www.w3.org/TR/css-counter-styles-3/#typedef-counter-style
@@ -100,21 +98,24 @@ export using CounterSpeakAs = Union<
     Keywords::SpellOut,
     CustomIdent>;
 
-Res<CounterSymbolsFunc> CounterSymbolsFunc::parse(Cursor<Sst>& c) {
-    if (c.ended())
-        return Error::invalidData("unexpected end of input");
+export template <>
+struct ValueParser<CounterSymbolsFunc> {
+    static Res<CounterSymbolsFunc> parse(Cursor<Sst>& c) {
+        if (c.ended())
+            return Error::invalidData("unexpected end of input");
 
-    if (c.peek() != Token::function("symbols("))
-        return Error::invalidData("expected counter(");
+        if (c.peek() != Token::function("symbols("))
+            return Error::invalidData("expected counter(");
 
-    Cursor<Sst> content = c->content;
-    auto type = parseValue<CounterSymbolsType>(content).ok();
+        Cursor<Sst> content = c->content;
+        auto type = parseValue<CounterSymbolsType>(content).ok();
 
-    auto symbols = try$(parseValue<Vec<CounterSymbol>>(content));
-    if (symbols.len() == 0)
-        return Error::invalidData("expected at least one symbol in symbols()");
+        auto symbols = try$(parseValue<Vec<CounterSymbol>>(content));
+        if (symbols.len() == 0)
+            return Error::invalidData("expected at least one symbol in symbols()");
 
-    return Ok(CounterSymbolsFunc{type, symbols});
-}
+        return Ok(CounterSymbolsFunc{type, symbols});
+    }
+};
 
 } // namespace Vaev::Css
