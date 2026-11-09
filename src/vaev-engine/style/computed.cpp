@@ -41,11 +41,11 @@ export struct Table {
 };
 
 export struct SvgGeometry {
-    PixelPercentage x = Pixel{0};
-    PixelPercentage y = Pixel{0};
-    PixelPercentage cx = Pixel{0};
-    PixelPercentage cy = Pixel{0};
-    PixelPercentage r = Pixel{0};
+    PixelPercentage x = 0_px;
+    PixelPercentage y = 0_px;
+    PixelPercentage cx = 0_px;
+    PixelPercentage cy = 0_px;
+    PixelPercentage r = 0_px;
 
     Union<String, None> d = NONE;
     Opt<SvgViewBox> viewBox = NONE;
@@ -53,7 +53,7 @@ export struct SvgGeometry {
 
 export struct SvgPainting {
     f64 fillOpacity = 1;
-    PixelPercentage strokeWidth = Pixel{1};
+    PixelPercentage strokeWidth = 1_px;
     f64 strokeOpacity = 1;
     SvgPaint fill = Some(Gfx::BLACK);
     SvgPaint stroke = NONE;
@@ -111,7 +111,7 @@ export struct Border {
 
 export struct Borders {
     Border top, start, bottom, end;
-    Math::Radii<PixelPercentage> radii = {Pixel{0}};
+    Math::Radii<PixelPercentage> radii = {0_px};
 
     Border const& get(BorderEdge edge) const {
         switch (edge) {
@@ -180,7 +180,7 @@ export struct Inline {
     BaselineSource baselineSource = Keywords::AUTO;
     AlignmentBaseline alignmentBaseline = Keywords::BASELINE;
     DominantBaseline dominantBaseline = Keywords::AUTO;
-    BaselineShift baselineShift = PixelPercentage{Pixel{}};
+    BaselineShift baselineShift = PixelPercentage{0_px};
     LineHeight lineHeight = Keywords::NORMAL;
 };
 
@@ -195,7 +195,7 @@ export using Margins = Math::Insets<Union<Keywords::Auto, PixelPercentage>>;
 
 export struct Outline {
     Pixel width = 3_px;
-    Pixel offset = Pixel{0};
+    Pixel offset = 0_px;
     Union<Keywords::Auto, Gfx::BorderStyle> style = Gfx::BorderStyle::NONE;
     Gfx::Color color = Gfx::BLUE500;
 };
@@ -240,7 +240,7 @@ export struct ComputedValues {
     Cow<Borders> borders;
     Cow<Margins> margin = Margins(Keywords::AUTO);
     Cow<Outline> outline;
-    Cow<Paddings> padding = Paddings(Pixel{});
+    Cow<Paddings> padding = Paddings(0_px);
     Cow<Sizing> sizing;
     Cow<Inline> inline_;
     Cow<BoxInsets> insets = BoxInsets(Keywords::AUTO);

@@ -6,6 +6,7 @@ import :css.values.tables;
 import :style.values.numeric;
 
 using namespace Karm;
+using namespace Vaev::Literals;
 
 // https://drafts.csswg.org/css-tables-3/
 
@@ -19,8 +20,8 @@ export using BorderCollapse = Css::BorderCollapse;
 
 // https://drafts.csswg.org/css-tables-3/#propdef-border-spacing
 export struct BorderSpacing {
-    Pixel horizontal = Pixel{0};
-    Pixel vertical = Pixel{0};
+    Pixel horizontal = 0_px;
+    Pixel vertical = 0_px;
 };
 
 } // namespace Vaev::Style
