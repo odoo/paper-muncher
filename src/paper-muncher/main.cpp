@@ -94,7 +94,7 @@ Async::Task<> entryPointAsync(Sys::Env& env, Async::CancellationToken ct) {
     auto outputArg = Cli::option<Str>(Some('o'), "output"s, "Output file (default: stdout)"s, "-"s);
     auto batchArg = Cli::option<PaperMuncher::Batch>(NONE, "batch"s, "How to handle multiple input documents (default: concat)"s, PaperMuncher::Batch::CONCAT);
     auto formatArg = Cli::option<Union<FormatInfer, Ref::Uti>>(Some('f'), "format"s, "Override the output format (default: inferred from the output file extension)"s, FormatInfer::INFER);
-    auto densityArg = Cli::option<Vaev::Css::PureResolution>(NONE, "density"s, "Pixel density of the output document, in CSS resolution units (e.g. 96dpi)"s, Vaev::Css::PureResolution::fromDppx(1));
+    auto densityArg = Cli::option<Vaev::Css::PureResolution>(NONE, "density"s, "Pixel density of the output document, in CSS resolution units (e.g. 96dpi)"s, Vaev::Css::PureResolution{Vaev::UnitValue{1, Vaev::UnitValue::Unit::DPPX}});
 
     Cli::Section inOutSection{
         .title = "Input/Output Options"s,
@@ -119,7 +119,7 @@ Async::Task<> entryPointAsync(Sys::Env& env, Async::CancellationToken ct) {
 
     auto widthArg = Cli::option<Opt<PaperMuncher::AbsoluteLength>>(NONE, "width"s, "Viewport width, in CSS units (e.g. 800px)"s, NONE);
     auto heightArg = Cli::option<Opt<PaperMuncher::AbsoluteLength>>(NONE, "height"s, "Viewport height, in CSS units (e.g. 600px)"s, NONE);
-    auto scaleArg = Cli::option<Vaev::Css::PureResolution>(NONE, "scale"s, "Scale factor applied to the input document (e.g. 1x)"s, Vaev::Css::PureResolution::fromDppx(1));
+    auto scaleArg = Cli::option<Vaev::Css::PureResolution>(NONE, "scale"s, "Scale factor applied to the input document (e.g. 1x)"s, Vaev::Css::PureResolution{Vaev::UnitValue{1, Vaev::UnitValue::Unit::DPPX}});
 
     Cli::Section viewportSection{
         .title = "Viewport Options"s,

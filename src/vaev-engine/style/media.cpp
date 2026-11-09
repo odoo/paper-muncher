@@ -9,6 +9,9 @@ import Karm.Debug;
 import :values;
 import :css.values;
 import :style.values;
+import :style.viewport;
+import :props.base;
+import :props.registry;
 import :css;
 
 using namespace Karm;
@@ -16,387 +19,91 @@ using namespace Vaev::Literals;
 
 namespace Vaev::Style {
 
-// MARK: Media feature values ------------------------------------------------
+// MARK: Media Values ----------------------------------------------------------
 
-// MARK: Media Types -----------------------------------------------------------
 // https://drafts.csswg.org/mediaqueries/#media-types
-export enum struct MediaType {
-    ALL,
-    PRINT,
-    SCREEN,
-    OTHER, // tty, tv, projection, handheld, braille, aural, embossed
+export using MediaType = Union<
+    Keywords::All,
+    Keywords::Print,
+    Keywords::Screen,
+    Keywords::Tty,
+    Keywords::Tv,
+    Keywords::Projection,
+    Keywords::Handheld,
+    Keywords::Braille,
+    Keywords::Embossed,
+    Keywords::Speech,
+    Keywords::Aural>;
 
-    _LEN,
-};
-
-// MARK: Scan ------------------------------------------------------------------
 // https://drafts.csswg.org/mediaqueries/#scan
-export enum struct Scan {
-    INTERLACE,
-    PROGRESSIVE,
+export using Scan = Union<
+    Keywords::Interlace,
+    Keywords::Progressive>;
 
-    _LEN,
-};
-
-// MARK: Update ----------------------------------------------------------------
 // https://drafts.csswg.org/mediaqueries/#update
-export enum struct Update {
-    NONE,
-    SLOW,
-    FAST,
+export using Update = Union<
+    Keywords::None,
+    Keywords::Slow,
+    Keywords::Fast>;
 
-    _LEN,
-};
-
-// MARK: OverflowBlock ---------------------------------------------------------
 // https://drafts.csswg.org/mediaqueries/#mf-overflow-block
-export enum struct OverflowBlock {
-    NONE,
-    SCROLL,
-    PAGED,
+export using OverflowBlock = Union<
+    Keywords::None,
+    Keywords::Scroll,
+    Keywords::Paged>;
 
-    _LEN,
-};
-
-// MARK: OverflowInline --------------------------------------------------------
 // https://drafts.csswg.org/mediaqueries/#mf-overflow-inline
-export enum struct OverflowInline {
-    NONE,
-    SCROLL,
+export using OverflowInline = Union<
+    Keywords::None,
+    Keywords::Scroll>;
 
-    _LEN,
-};
-
-// MARK: Color Gamut -----------------------------------------------------------
 // https://drafts.csswg.org/mediaqueries/#color-gamut
-export enum struct ColorGamut {
-    SRGB,
-    DISPLAY_P3,
-    REC2020,
+export using ColorGamut = Union<
+    Keywords::Srgb,
+    Keywords::DisplayP3,
+    Keywords::Rec2020>;
 
-    _LEN,
-};
-
-// MARK: Pointer ---------------------------------------------------------------
 // https://drafts.csswg.org/mediaqueries/#pointer
-export enum struct Pointer {
-    NONE,
-    COARSE,
-    FINE,
+export using Pointer = Union<
+    Keywords::None,
+    Keywords::Coarse,
+    Keywords::Fine>;
 
-    _LEN,
-};
-
-// MARK: Hover -----------------------------------------------------------------
 // https://drafts.csswg.org/mediaqueries/#hover
-export enum struct Hover {
-    NONE,
-    HOVER,
+export using Hover = Union<
+    Keywords::None,
+    Keywords::Hover>;
 
-    _LEN,
-};
-
-// MARK: Reduce Motion ---------------------------------------------------------
 // https://drafts.csswg.org/mediaqueries/#reduced-motion
-export enum struct ReducedMotion {
-    NO_PREFERENCE,
-    REDUCE,
+export using ReducedMotion = Union<
+    Keywords::NoPreference,
+    Keywords::Reduce>;
 
-    _LEN,
-};
-
-// MARK: ReducedTransparency ---------------------------------------------------
 // https://drafts.csswg.org/mediaqueries/#reduced-transparency
-export enum struct ReducedTransparency {
-    NO_PREFERENCE,
-    REDUCE,
+export using ReducedTransparency = Union<
+    Keywords::NoPreference,
+    Keywords::Reduce>;
 
-    _LEN,
-};
-
-// MARK: Contrast --------------------------------------------------------------
 // https://drafts.csswg.org/mediaqueries/#contrast
-export enum struct Contrast {
-    NO_PREFERENCE,
-    MORE,
-    LESS,
+export using Contrast = Union<
+    Keywords::NoPreference,
+    Keywords::More,
+    Keywords::Less>;
 
-    _LEN,
-};
-
-// MARK: Colors ----------------------------------------------------------------
 // https://drafts.csswg.org/mediaqueries/#forced-colors
-export enum struct Colors {
-    NONE,
-    ACTIVE,
+export using Colors = Union<
+    Keywords::None,
+    Keywords::Active>;
 
-    _LEN,
-};
-
-// MARK: Color Scheme ----------------------------------------------------------
 // https://drafts.csswg.org/mediaqueries/#color-scheme
-export enum struct ColorScheme {
-    LIGHT,
-    DARK,
+export using ColorScheme = Union<
+    Keywords::Light,
+    Keywords::Dark>;
 
-    _LEN,
-};
-
-// MARK: ReducedData
 // https://drafts.csswg.org/mediaqueries/#reduced-data
-export enum struct ReducedData {
-    NO_PREFERENCE,
-    REDUCE,
-
-    _LEN,
-};
-
-} // namespace Vaev::Style
-
-namespace Vaev::Css {
-
-export template <>
-struct ValueParser<Style::MediaType> {
-    static Res<Style::MediaType> parse(Cursor<Sst>& c) {
-        if (c.ended())
-            return Error::invalidData("unexpected end of input");
-
-        if (c.skip(Token::ident("all")))
-            return Ok(Style::MediaType::ALL);
-
-        if (c.skip(Token::ident("print")))
-            return Ok(Style::MediaType::PRINT);
-
-        if (c.skip(Token::ident("screen")))
-            return Ok(Style::MediaType::SCREEN);
-
-        // NOTE: The spec says that we should reconize the following media types
-        //       but they should not match anything
-        static constexpr Array OTHER = {
-            "tty",
-            "tv",
-            "projection",
-            "handheld",
-            "braille",
-            "embossed",
-            "speech",
-            "aural",
-        };
-
-        for (auto const& item : OTHER) {
-            if (c.skip(Token::ident(item)))
-                return Ok(Style::MediaType::OTHER);
-        }
-        return Error::invalidData("expected media type");
-    }
-};
-
-export template <>
-struct ValueParser<Style::Scan> {
-    static Res<Style::Scan> parse(Cursor<Sst>& c) {
-        if (c.ended())
-            return Error::invalidData("unexpected end of input");
-
-        if (c.skip(Token::ident("interlace")))
-            return Ok(Style::Scan::INTERLACE);
-        else if (c.skip(Token::ident("progressive")))
-            return Ok(Style::Scan::PROGRESSIVE);
-        else
-            return Error::invalidData("expected scan value");
-    }
-};
-
-export template <>
-struct ValueParser<Style::Update> {
-    static Res<Style::Update> parse(Cursor<Sst>& c) {
-        if (c.ended())
-            return Error::invalidData("unexpected end of input");
-
-        if (c.skip(Token::ident("none")))
-            return Ok(Style::Update::NONE);
-        else if (c.skip(Token::ident("slow")))
-            return Ok(Style::Update::SLOW);
-        else if (c.skip(Token::ident("fast")))
-            return Ok(Style::Update::FAST);
-        else
-            return Error::invalidData("expected update value");
-    }
-};
-
-export template <>
-struct ValueParser<Style::OverflowBlock> {
-    static Res<Style::OverflowBlock> parse(Cursor<Sst>& c) {
-        if (c.ended())
-            return Error::invalidData("unexpected end of input");
-
-        if (c.skip(Token::ident("none")))
-            return Ok(Style::OverflowBlock::NONE);
-        else if (c.skip(Token::ident("scroll")))
-            return Ok(Style::OverflowBlock::SCROLL);
-        else if (c.skip(Token::ident("paged")))
-            return Ok(Style::OverflowBlock::PAGED);
-        else
-            return Error::invalidData("expected overflow block value");
-    }
-};
-
-export template <>
-struct ValueParser<Style::OverflowInline> {
-    static Res<Style::OverflowInline> parse(Cursor<Sst>& c) {
-        if (c.ended())
-            return Error::invalidData("unexpected end of input");
-
-        if (c.skip(Token::ident("none")))
-            return Ok(Style::OverflowInline::NONE);
-        else if (c.skip(Token::ident("scroll")))
-            return Ok(Style::OverflowInline::SCROLL);
-        else
-            return Error::invalidData("expected overflow inline value");
-    }
-};
-
-export template <>
-struct ValueParser<Style::ColorGamut> {
-    static Res<Style::ColorGamut> parse(Cursor<Sst>& c) {
-        if (c.ended())
-            return Error::invalidData("unexpected end of input");
-
-        if (c.skip(Token::ident("srgb")))
-            return Ok(Style::ColorGamut::SRGB);
-        else if (c.skip(Token::ident("p3")))
-            return Ok(Style::ColorGamut::DISPLAY_P3);
-        else if (c.skip(Token::ident("rec2020")))
-            return Ok(Style::ColorGamut::REC2020);
-        else
-            return Error::invalidData("expected color gamut");
-    }
-};
-
-export template <>
-struct ValueParser<Style::Pointer> {
-    static Res<Style::Pointer> parse(Cursor<Sst>& c) {
-        if (c.ended())
-            return Error::invalidData("unexpected end of input");
-
-        if (c.skip(Token::ident("none")))
-            return Ok(Style::Pointer::NONE);
-        else if (c.skip(Token::ident("coarse")))
-            return Ok(Style::Pointer::COARSE);
-        else if (c.skip(Token::ident("fine")))
-            return Ok(Style::Pointer::FINE);
-        else
-            return Error::invalidData("expected pointer value");
-    }
-};
-
-export template <>
-struct ValueParser<Style::Hover> {
-    static Res<Style::Hover> parse(Cursor<Sst>& c) {
-        if (c.ended())
-            return Error::invalidData("unexpected end of input");
-
-        if (c.skip(Token::ident("none")))
-            return Ok(Style::Hover::NONE);
-        else if (c.skip(Token::ident("hover")))
-            return Ok(Style::Hover::HOVER);
-        else
-            return Error::invalidData("expected hover value");
-    }
-};
-
-export template <>
-struct ValueParser<Style::ReducedMotion> {
-    static Res<Style::ReducedMotion> parse(Cursor<Sst>& c) {
-        if (c.ended())
-            return Error::invalidData("unexpected end of input");
-
-        if (c.skip(Token::ident("no-preference")))
-            return Ok(Style::ReducedMotion::NO_PREFERENCE);
-        else if (c.skip(Token::ident("reduce")))
-            return Ok(Style::ReducedMotion::REDUCE);
-        else
-            return Error::invalidData("expected reduced motion value");
-    }
-};
-
-export template <>
-struct ValueParser<Style::ReducedTransparency> {
-    static Res<Style::ReducedTransparency> parse(Cursor<Sst>& c) {
-        if (c.ended())
-            return Error::invalidData("unexpected end of input");
-
-        if (c.skip(Token::ident("no-preference")))
-            return Ok(Style::ReducedTransparency::NO_PREFERENCE);
-        else if (c.skip(Token::ident("reduce")))
-            return Ok(Style::ReducedTransparency::REDUCE);
-        else
-            return Error::invalidData("expected reduced transparency value");
-    }
-};
-
-export template <>
-struct ValueParser<Style::Contrast> {
-    static Res<Style::Contrast> parse(Cursor<Sst>& c) {
-        if (c.ended())
-            return Error::invalidData("unexpected end of input");
-
-        if (c.skip(Token::ident("less")))
-            return Ok(Style::Contrast::LESS);
-        else if (c.skip(Token::ident("more")))
-            return Ok(Style::Contrast::MORE);
-        else
-            return Error::invalidData("expected contrast value");
-    }
-};
-
-export template <>
-struct ValueParser<Style::Colors> {
-    static Res<Style::Colors> parse(Cursor<Sst>& c) {
-        if (c.ended())
-            return Error::invalidData("unexpected end of input");
-
-        if (c.skip(Token::ident("none")))
-            return Ok(Style::Colors::NONE);
-        else if (c.skip(Token::ident("active")))
-            return Ok(Style::Colors::ACTIVE);
-        else
-            return Error::invalidData("expected colors value");
-    }
-};
-
-export template <>
-struct ValueParser<Style::ColorScheme> {
-    static Res<Style::ColorScheme> parse(Cursor<Sst>& c) {
-        if (c.ended())
-            return Error::invalidData("unexpected end of input");
-
-        if (c.skip(Token::ident("light")))
-            return Ok(Style::ColorScheme::LIGHT);
-        else if (c.skip(Token::ident("dark")))
-            return Ok(Style::ColorScheme::DARK);
-        else
-            return Error::invalidData("expected color scheme value");
-    }
-};
-
-export template <>
-struct ValueParser<Style::ReducedData> {
-    static Res<Style::ReducedData> parse(Cursor<Sst>& c) {
-        if (c.ended())
-            return Error::invalidData("unexpected end of input");
-
-        if (c.skip(Token::ident("no-preference")))
-            return Ok(Style::ReducedData::NO_PREFERENCE);
-        else if (c.skip(Token::ident("reduce")))
-            return Ok(Style::ReducedData::REDUCE);
-        else
-            return Error::invalidData("expected reduced data value");
-    }
-};
-
-} // namespace Vaev::Css
-
-namespace Vaev::Style {
+export using ReducedData = Union<
+    Keywords::NoPreference,
+    Keywords::Reduce>;
 
 // MARK: wkhtmltopdf Quirks ----------------------------------------------------
 
@@ -413,27 +120,27 @@ static auto quirksMediaScreen = Debug::Flag::feature(
 // MARK: Display Area ----------------------------------------------------------
 
 export struct DisplayArea {
-    MediaType type = MediaType::SCREEN;
+    MediaType type = Keywords::SCREEN;
 
     Math::Vec2<Pixel> viewport = {800_px, 600_px};
 
     Dppx resolution = 1_dppx;
 
-    Scan scan = Scan::PROGRESSIVE;
+    Scan scan = Keywords::PROGRESSIVE;
     bool grid = false;
-    Update update = Update::FAST;
-    OverflowBlock overflowBlock = OverflowBlock::SCROLL;
-    OverflowInline overflowInline = OverflowInline::SCROLL;
+    Update update = Keywords::FAST;
+    OverflowBlock overflowBlock = Keywords::SCROLL;
+    OverflowInline overflowInline = Keywords::SCROLL;
 
     Integer color = 8;
     Integer colorIndex = 0;
     Integer monochrome = 0;
-    ColorGamut colorGamut = ColorGamut::SRGB;
+    ColorGamut colorGamut = Keywords::SRGB;
 
-    Pointer pointer = Pointer::FINE;
-    Hover hover = Hover::HOVER;
-    Pointer anyPointer = Pointer::FINE;
-    Hover anyHover = Hover::HOVER;
+    Pointer pointer = Keywords::FINE;
+    Hover hover = Keywords::HOVER;
+    Pointer anyPointer = Keywords::FINE;
+    Hover anyHover = Keywords::HOVER;
 
     static Math::Vec2<Pixel> _toViewport(Math::Vec2f deviceSize, Dppx resolution) {
         return {
@@ -444,7 +151,7 @@ export struct DisplayArea {
 
     static DisplayArea forView(Math::Vec2f deviceSize, Dppx resolution = 1_dppx) {
         return {
-            .type = MediaType::SCREEN,
+            .type = Keywords::SCREEN,
             .viewport = _toViewport(deviceSize, resolution),
             .resolution = resolution,
         };
@@ -452,23 +159,23 @@ export struct DisplayArea {
 
     static DisplayArea forRender(Math::Vec2f deviceSize, Dppx resolution) {
         return {
-            .type = MediaType::SCREEN,
+            .type = Keywords::SCREEN,
             .viewport = _toViewport(deviceSize, resolution),
             .resolution = resolution,
-            .update = Update::NONE,
-            .overflowBlock = OverflowBlock::NONE,
-            .overflowInline = OverflowInline::NONE,
-            .pointer = Pointer::NONE,
-            .hover = Hover::NONE,
-            .anyPointer = Pointer::NONE,
-            .anyHover = Hover::NONE,
+            .update = Keywords::NONE,
+            .overflowBlock = Keywords::NONE,
+            .overflowInline = Keywords::NONE,
+            .pointer = Keywords::NONE,
+            .hover = Keywords::NONE,
+            .anyPointer = Keywords::NONE,
+            .anyHover = Keywords::NONE,
         };
     }
 
     static DisplayArea forPrint(Print::Settings const& settings) {
         auto pageSize = settings.pageSize();
         return {
-            .type = MediaType::PRINT,
+            .type = Keywords::PRINT,
             .viewport = {Pixel{static_cast<f64>(pageSize.width) / settings.scale}, Pixel{static_cast<f64>(pageSize.height) / settings.scale}},
             .resolution = Dppx{settings.scale},
         };
@@ -494,18 +201,18 @@ export struct DisplayArea {
 // MARK: Viewer Preferences ----------------------------------------------------
 
 export struct ViewerPrefs {
-    ReducedMotion reducedMotion = ReducedMotion::NO_PREFERENCE;
-    ReducedTransparency reducedTransparency = ReducedTransparency::NO_PREFERENCE;
-    Contrast contrast = Contrast::NO_PREFERENCE;
-    Colors forcedColors = Colors::NONE;
-    ColorScheme colorScheme = ColorScheme::LIGHT;
-    ReducedData reducedData = ReducedData::NO_PREFERENCE;
+    ReducedMotion reducedMotion = Keywords::NO_PREFERENCE;
+    ReducedTransparency reducedTransparency = Keywords::NO_PREFERENCE;
+    Contrast contrast = Keywords::NO_PREFERENCE;
+    Colors forcedColors = Keywords::NONE;
+    ColorScheme colorScheme = Keywords::LIGHT;
+    ReducedData reducedData = Keywords::NO_PREFERENCE;
 
     static ViewerPrefs forRender() {
         return {
-            .reducedMotion = ReducedMotion::REDUCE,
-            .reducedTransparency = ReducedTransparency::REDUCE,
-            .contrast = Contrast::MORE,
+            .reducedMotion = Keywords::REDUCE,
+            .reducedTransparency = Keywords::REDUCE,
+            .contrast = Keywords::MORE,
         };
     }
 
@@ -545,7 +252,7 @@ export struct Media {
 
     /// 5.2. Scan: the scan feature
     /// https://drafts.csswg.org/mediaqueries/#scan
-    Scan scan = Scan::PROGRESSIVE;
+    Scan scan = Keywords::PROGRESSIVE;
 
     /// 5.3. Grid: the grid feature
     /// https://drafts.csswg.org/mediaqueries/#grid
@@ -651,8 +358,8 @@ export struct Media {
         if (quirksMediaZeroViewport)
             viewport = {};
 
-        if (quirksMediaScreen and type == MediaType::PRINT)
-            type = MediaType::SCREEN;
+        if (quirksMediaScreen and type == Keywords::PRINT)
+            type = Keywords::SCREEN;
 
         return {
             .type = type,
@@ -696,18 +403,21 @@ export struct Media {
     bool operator==(Media const&) const = default;
 };
 
-// Media features are compared in their specified form.
-static Css::PureLength _featureValue(Pixel value) {
-    return Css::PureLength::fromPx(value.value());
-}
+// https://drafts.csswg.org/mediaqueries-4/#units
+// Relative length units in media queries are based on the initial value,
+// which means that units are never based on results of declarations.
+static ComputationContext const& _initialComputationContext(Media const& media) {
+    static auto memo = [&] {
+        auto initialStyle = defaultRegistry().initialComputedValues();
+        auto cx = ComputationContext{};
+        cx.populateUsingRootComputedValues(*initialStyle);
+        cx.populateUsingParentComputedValues(*initialStyle);
+        cx.populateUsingOwnComputedValues(*initialStyle);
+        cx.populateUsingViewport(Viewport{.small = {media.width, media.height}});
+        return cx;
+    }();
 
-static Css::PureResolution _featureValue(Dppx value) {
-    return Css::PureResolution::fromDppx(value.value());
-}
-
-template <typename T>
-static T const& _featureValue(T const& value) {
-    return value;
+    return memo;
 }
 
 // MARK: Media Features --------------------------------------------------------
@@ -757,30 +467,38 @@ struct RangeFeature {
         return NAME;
     }
 
-    bool match(T actual) const {
-        bool result = true;
+    using Actual = Meta::RemoveConstVolatileRef<decltype(Meta::declval<Media>().*F)>;
 
-        if (lower.type == Bound::INCLUSIVE) {
-            result &= actual >= lower.value;
-        } else if (lower.type == Bound::EXCLUSIVE) {
-            result &= actual > lower.value;
-        }
-
-        if (upper.type == Bound::INCLUSIVE) {
-            result &= actual <= upper.value;
-        } else if (upper.type == Bound::EXCLUSIVE) {
-            result &= actual < upper.value;
-        }
-
-        if (not lower.type and not upper.type) {
-            result = actual != T{};
-        }
-
-        return result;
+    static Actual _computed(T const& value, Media const& media) {
+        if constexpr (Meta::Same<T, Actual>)
+            return value;
+        else if constexpr (requires { toComputed(value, _initialComputationContext(media)); })
+            return toComputed(value, _initialComputationContext(media));
+        else
+            return toComputed(value);
     }
 
     bool match(Media const& media) const {
-        return match(_featureValue(media.*F));
+        Actual actual = media.*F;
+        bool result = true;
+
+        if (lower.type == Bound::INCLUSIVE) {
+            result &= actual >= _computed(lower.value, media);
+        } else if (lower.type == Bound::EXCLUSIVE) {
+            result &= actual > _computed(lower.value, media);
+        }
+
+        if (upper.type == Bound::INCLUSIVE) {
+            result &= actual <= _computed(upper.value, media);
+        } else if (upper.type == Bound::EXCLUSIVE) {
+            result &= actual < _computed(upper.value, media);
+        }
+
+        if (not lower.type and not upper.type) {
+            result = actual != Actual{};
+        }
+
+        return result;
     }
 
     static RangeFeature min(T value) {
@@ -831,33 +549,49 @@ export template <StrLit NAME, typename T, auto Media::* F>
 struct DiscreteFeature {
     using Inner = T;
 
-    enum Type : u8 {
-        NONE,
-        EQUAL,
+    Opt<T> value = NONE;
 
-        _LEN,
-    };
+    DiscreteFeature() = default;
 
-    T value{};
-    Type type = EQUAL;
+    DiscreteFeature(T value)
+        : value(Some(std::move(value))) {}
 
     static constexpr Str name() {
         return NAME;
     }
 
-    static DiscreteFeature make(RangePrefix prefix, T value = {}) {
-        if (prefix == RangePrefix::BOOL)
-            return {.type = NONE};
-        return {value};
+    static DiscreteFeature make(RangePrefix) {
+        return {};
     }
 
-    bool match(T actual) const {
-        if (type == Type::NONE)
-            return actual != T{};
+    static DiscreteFeature make(RangePrefix prefix, T value) {
+        if (prefix == RangePrefix::BOOL)
+            return {};
+        return {std::move(value)};
+    }
+
+    // https://drafts.csswg.org/mediaqueries-5/#mq-boolean-context
+    static bool _trueInBooleanContext(T const& actual) {
+        if constexpr (Meta::Same<T, bool>) {
+            return actual;
+        } else {
+            if constexpr (requires { actual == Keywords::NONE; })
+                if (actual == Keywords::NONE)
+                    return false;
+            if constexpr (requires { actual == Keywords::NO_PREFERENCE; })
+                if (actual == Keywords::NO_PREFERENCE)
+                    return false;
+            return true;
+        }
+    }
+
+    bool match(T const& actual) const {
+        if (not value)
+            return _trueInBooleanContext(actual);
         if constexpr (Meta::Same<T, MediaType>)
-            if (value == MediaType::ALL)
+            if (*value == Keywords::ALL)
                 return true;
-        return actual == value;
+        return actual == *value;
     }
 
     bool match(Media const& media) const {
@@ -865,7 +599,7 @@ struct DiscreteFeature {
     }
 
     void repr(Io::Emit& e) const {
-        e("({}: {} {})", NAME, type, value);
+        e("({}: {})", NAME, value);
     }
 };
 
@@ -1190,15 +924,15 @@ Pair<RangePrefix, Str> _explodeFeatureName(Io::SScan s) {
         return {RangePrefix::EXACT, s.remStr()};
 }
 
-Feature _parseMediaFeature(Cursor<Css::Sst>& c) {
+Opt<Feature> _parseMediaFeature(Cursor<Css::Sst>& c) {
     if (c.ended()) {
         logWarn("unexpected end of input");
-        return TypeFeature{MediaType::OTHER};
+        return NONE;
     }
 
     if (*c != Css::Token::IDENT) {
         logWarn("expected ident");
-        return TypeFeature{MediaType::OTHER};
+        return NONE;
     }
 
     auto unexplodedName = c.next().token.data;
@@ -1230,18 +964,25 @@ Feature _parseMediaFeature(Cursor<Css::Sst>& c) {
 
     if (not prop) {
         logWarn("cannot parse feature: {}", unexplodedName);
-        return TypeFeature{MediaType::OTHER};
+        return NONE;
     }
 
-    return prop.take();
+    return prop;
 }
 
 MediaQuery _parseMediaQueryInfix(Cursor<Css::Sst>& c);
 
+// https://drafts.csswg.org/mediaqueries-4/#error-handling
+// A media query that does not match the grammar in the previous section
+// must be replaced by not all during parsing.
+MediaQuery _matchNothing() {
+    return MediaQuery::negate(TypeFeature{Keywords::ALL});
+}
+
 MediaQuery _parseMediaQueryLeaf(Cursor<Css::Sst>& c) {
     if (c.ended()) {
         logWarn("unexpected end of input");
-        return TypeFeature{MediaType::OTHER};
+        return _matchNothing();
     }
 
     if (c.skip(Css::Token::ident("not"))) {
@@ -1253,8 +994,10 @@ MediaQuery _parseMediaQueryLeaf(Cursor<Css::Sst>& c) {
         return _parseMediaQueryInfix(content);
     } else if (auto type = parseValue<MediaType>(c)) {
         return TypeFeature{type.take()};
+    } else if (auto feature = _parseMediaFeature(c)) {
+        return feature.take();
     } else
-        return _parseMediaFeature(c);
+        return _matchNothing();
 }
 
 MediaQuery _parseMediaQueryInfix(Cursor<Css::Sst>& c) {

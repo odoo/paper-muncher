@@ -82,8 +82,8 @@ export Rc<Http::Client> defaultHttpClient(bool sandboxed) {
 }
 
 export struct Option {
-    Vaev::Css::PureResolution scale = Vaev::Css::PureResolution::fromDppx(1);
-    Vaev::Css::PureResolution density = Vaev::Css::PureResolution::fromDppx(1);
+    Vaev::Css::PureResolution scale = Vaev::Css::PureResolution{Vaev::UnitValue{1, Vaev::UnitValue::Unit::DPPX}};
+    Vaev::Css::PureResolution density = Vaev::Css::PureResolution{Vaev::UnitValue{1, Vaev::UnitValue::Unit::DPPX}};
     Opt<AbsoluteLength> width = NONE;
     Opt<AbsoluteLength> height = NONE;
     Opt<Vaev::Css::Color> background = NONE;

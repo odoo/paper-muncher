@@ -715,8 +715,8 @@ Ui::Child inspectTabMedia(InspectState const& s, Ui::Action<InspectAction> send)
                 "Color Scheme"s,
                 {
                     Kr::tabbarItem(s.colorScheme == NONE, rbind(send, InspectChangeColorScheme{NONE}), Kr::tabarItemLabel(NONE, "Auto"s)),
-                    Kr::tabbarItem(s.colorScheme == Style::ColorScheme::LIGHT, rbind(send, InspectChangeColorScheme{Some(Style::ColorScheme::LIGHT)}), Kr::tabarItemLabel(NONE, "Light"s)),
-                    Kr::tabbarItem(s.colorScheme == Style::ColorScheme::DARK, rbind(send, InspectChangeColorScheme{Some(Style::ColorScheme::DARK)}), Kr::tabarItemLabel(NONE, "Dark"s)),
+                    Kr::tabbarItem(s.colorScheme == Keywords::LIGHT, rbind(send, InspectChangeColorScheme{Some(Style::ColorScheme{Keywords::LIGHT})}), Kr::tabarItemLabel(NONE, "Light"s)),
+                    Kr::tabbarItem(s.colorScheme == Keywords::DARK, rbind(send, InspectChangeColorScheme{Some(Style::ColorScheme{Keywords::DARK})}), Kr::tabarItemLabel(NONE, "Dark"s)),
                 }
             ),
             Kr::numberRow(

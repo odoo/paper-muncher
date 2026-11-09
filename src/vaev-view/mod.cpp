@@ -85,7 +85,7 @@ struct Viewport : Ui::View<Viewport> {
         _listener.updateContainerBound(bound);
 
         auto prefs = Style::ViewerPrefs::forRender();
-        prefs.colorScheme = _props.prefersColorScheme.unwrapOr(Ui::darkMode ? Style::ColorScheme::DARK : Style::ColorScheme::LIGHT);
+        prefs.colorScheme = _props.prefersColorScheme.unwrapOr(Ui::darkMode ? Style::ColorScheme{Keywords::DARK} : Style::ColorScheme{Keywords::LIGHT});
         _webview->changeArea(Style::DisplayArea::forRender(bound.size().cast<f64>(), Style::Dppx{_props.scale}));
         _webview->changePrefs(prefs);
 

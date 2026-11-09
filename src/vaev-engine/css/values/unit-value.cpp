@@ -129,12 +129,6 @@ struct TypedUnitValue {
     // MARK: <length> ----------------------------------------------------------
     // https://drafts.csswg.org/css-values/#lengths
 
-    static constexpr TypedUnitValue fromPx(f64 val)
-        requires(TYPE == NumericBaseType::LENGTH)
-    {
-        return TypedUnitValue{UnitValue{val, UnitValue::Unit::PX}};
-    }
-
     // MARK: <angle> -----------------------------------------------------------
     // https://drafts.csswg.org/css-values/#angles
 
@@ -159,12 +153,6 @@ struct TypedUnitValue {
 
     // MARK: <resolution> ------------------------------------------------------
     // https://drafts.csswg.org/css-values/#resolution
-
-    static constexpr TypedUnitValue fromDppx(f64 val)
-        requires(TYPE == NumericBaseType::RESOLUTION)
-    {
-        return TypedUnitValue{UnitValue{val, UnitValue::Unit::DPPX}};
-    }
 
     constexpr f64 toDppx() const
         requires(TYPE == NumericBaseType::RESOLUTION)
