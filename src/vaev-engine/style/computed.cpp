@@ -44,6 +44,8 @@ export struct SvgProps {
     PercentOr<Length> cx = Length{0_au};
     PercentOr<Length> cy = Length{0_au};
     PercentOr<Length> r = Length{0_au};
+    Union<Keywords::Auto, PercentOr<Length>> rx = Keywords::AUTO;
+    Union<Keywords::Auto, PercentOr<Length>> ry = Keywords::AUTO;
 
     Union<String, None> d = NONE;
     Opt<SvgViewBox> viewBox = NONE;
