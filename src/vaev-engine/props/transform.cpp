@@ -47,8 +47,8 @@ export struct TransformOriginProperty : Property {
             return makeRc<TransformOriginProperty>(
                 self(),
                 Value{
-                    .xOffset = Css::LengthPercentage::fromPercentage(50),
-                    .yOffset = Css::LengthPercentage::fromPercentage(50),
+                    .xOffset = Css::LengthPercentage{Css::percent(50)},
+                    .yOffset = Css::LengthPercentage{Css::percent(50)},
                 }
             );
         }
@@ -253,20 +253,6 @@ export struct TransformProperty : Property {
         );
     }
 
-    static Value _toSpecified(Style::Transform const& value) {
-        return value.visit(
-            [](Keywords::None) -> Value {
-                return Keywords::NONE;
-            },
-            [](Style::TransformList const& list) -> Value {
-                Css::TransformList result;
-                for (auto const& function : list)
-                    result.pushBack(toSpecified(function));
-                return result;
-            }
-        );
-    }
-
     struct Registration : Property::Registration {
         Registration()
             : Property::Registration(Properties::TRANSFORM, PRESENTATION_ATTRIBUTE) {}
@@ -281,7 +267,7 @@ export struct TransformProperty : Property {
         }
 
         Rc<Property> load(ComputedValues const& c) const override {
-            return makeRc<TransformProperty>(self(), _toSpecified(c.transform->transform));
+            return makeRc<TransformProperty>(self(), toSpecified(c.transform->transform));
         }
 
         // https://www.w3.org/TR/SVG11/coords.html#TransformAttribute

@@ -28,6 +28,10 @@ export f64 toComputed(Css::Number const& value) {
     }
 }
 
+export Css::Number toSpecified(f64 value) {
+    return Css::number(value);
+}
+
 // MARK: Percentage ------------------------------------------------------------
 // https://drafts.csswg.org/css-values/#percentages
 
@@ -46,6 +50,10 @@ export Percent toComputed(Css::Percentage const& value) {
     } else {
         panic("calc didn't simplify to a single value of expected unit");
     }
+}
+
+export Css::Percentage toSpecified(Percent const& value) {
+    return Css::percent(value.value());
 }
 
 export f64 toComputed(Css::Percentage const& value, f64 percentBasis) {

@@ -50,6 +50,14 @@ auto toComputed(Math::Insets<T> const& value, LengthContext auto const& ctx) -> 
 }
 
 export template <typename T>
+auto toSpecified(Vec<T> const& value) -> Vec<decltype(toSpecified(value[0]))> {
+    Vec<decltype(toSpecified(value[0]))> result{value.len()};
+    for (auto const& v : value)
+        result.pushBack(toSpecified(v));
+    return result;
+}
+
+export template <typename T>
 auto toSpecified(Math::Insets<T> const& value) -> Math::Insets<decltype(toSpecified(value.top))> {
     return {toSpecified(value.top), toSpecified(value.end), toSpecified(value.bottom), toSpecified(value.start)};
 }

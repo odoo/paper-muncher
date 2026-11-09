@@ -67,9 +67,7 @@ export struct Inset {
     Math::Radii<PxPercent> borderRadius;
 
     void repr(Io::Emit& e) const {
-        e("(inset {} ", insets);
-        Css::reprRadii(e, borderRadius);
-        e(")");
+        e("(inset {} {})", insets, borderRadius);
     }
 };
 
@@ -109,9 +107,7 @@ export struct Rect {
     Math::Radii<PxPercent> borderRadius;
 
     void repr(Io::Emit& e) const {
-        e("(rect {} ", insets);
-        Css::reprRadii(e, borderRadius);
-        e(")");
+        e("(rect {} {})", insets, borderRadius);
     }
 };
 
@@ -131,9 +127,7 @@ export struct Xywh {
     Math::Radii<PxPercent> borderRadius;
 
     void repr(Io::Emit& e) const {
-        e("(xywh {} {} {} {} ", x, y, width, height);
-        Css::reprRadii(e, borderRadius);
-        e(")");
+        e("(xywh {} {} {} {} {})", x, y, width, height, borderRadius);
     }
 };
 

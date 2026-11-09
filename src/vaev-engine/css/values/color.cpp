@@ -538,7 +538,7 @@ struct ValueParser<Color> {
         Color color = try$(parseValue<Color>(s));
         eatWhitespace(s);
         if (not s.ended() and s.peek() == Token::Type::PERCENTAGE)
-            percent = Some(try$(parseValue<PurePercentage>(s)).value());
+            percent = Some(try$(parseValue<PurePercentage>(s)));
 
         return Ok(ColorMix::Side{
             std::move(color),

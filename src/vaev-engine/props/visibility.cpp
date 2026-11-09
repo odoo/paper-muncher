@@ -58,11 +58,11 @@ export struct OpacityProperty : Property {
         Registration() : Property::Registration(Properties::OPACITY) {}
 
         Rc<Property> initial() const override {
-            return makeRc<OpacityProperty>(self(), Css::Number::fromCanonical(1));
+            return makeRc<OpacityProperty>(self(), Css::Number{Css::number(1)});
         }
 
         Rc<Property> load(ComputedValues const& c) const override {
-            return makeRc<OpacityProperty>(self(), Css::Number::fromCanonical(c.opacity));
+            return makeRc<OpacityProperty>(self(), toSpecified(c.opacity));
         }
 
         Res<Rc<Property>> parse(Cursor<Css::Sst>& c) const override {
@@ -70,7 +70,7 @@ export struct OpacityProperty : Property {
             //       only math functions keep their percentages.
             if (not c.ended() and c.peek() == Css::Token::PERCENTAGE) {
                 auto percentage = try$(parseValue<Css::Percentage>(c));
-                return Ok(makeRc<OpacityProperty>(self(), Css::Number::fromCanonical(toComputed(percentage).value() / 100.)));
+                return Ok(makeRc<OpacityProperty>(self(), Css::Number{Css::number(toComputed(percentage).value() / 100.)}));
             }
 
             return Ok(makeRc<OpacityProperty>(self(), try$(parseValue<Value>(c))));

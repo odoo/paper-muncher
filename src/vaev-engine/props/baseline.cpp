@@ -38,7 +38,7 @@ export struct LineHeightProperty : Property {
                         return normal;
                     },
                     [](f64 const& number) -> Value {
-                        return Css::Number::fromCanonical(number);
+                        return toSpecified(number);
                     },
                     [](Px const& px) -> Value {
                         return toSpecified(PxPercent{px});
@@ -204,7 +204,7 @@ export struct BaselineShiftProperty : Property {
         Registration() : Property::Registration(Properties::BASELINE_SHIFT) {}
 
         Rc<Property> initial() const override {
-            return makeRc<BaselineShiftProperty>(self(), Css::LengthPercentage::fromCanonical(0));
+            return makeRc<BaselineShiftProperty>(self(), Css::LengthPercentage{Css::px(0)});
         }
 
         Rc<Property> load(ComputedValues const& c) const override {

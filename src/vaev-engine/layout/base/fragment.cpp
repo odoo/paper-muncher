@@ -753,7 +753,7 @@ export struct BoxFragment : Fragment {
                 outline.style = outlineStyle.style.expect<Gfx::BorderStyle>();
             }
 
-            outline.fill = outlineStyle.color;
+            outline.fill = Style::resolve(outlineStyle.color, style().color);
 
             outOfBandOutlines.pushBack(OutOfBandOutline{
                 .outline = outline,

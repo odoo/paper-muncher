@@ -159,9 +159,7 @@ export struct Inset {
     Math::Radii<LengthPercentage> borderRadius;
 
     void repr(Io::Emit& e) const {
-        e("(inset {} ", insets);
-        reprRadii(e, borderRadius);
-        e(")");
+        e("(inset {} {})", insets, borderRadius);
     }
 };
 
@@ -179,7 +177,7 @@ struct ValueParser<Inset> {
             if (not insets)
                 return Error::invalidData("expected insets");
 
-            Inset result{insets.take(), {LengthPercentage::fromPercentage(0)}};
+            Inset result{insets.take(), {percent(0)}};
 
             eatWhitespace(scan);
             if (scan.skip(Token::ident("round"))) {
@@ -307,9 +305,7 @@ export struct Rect {
     Math::Radii<LengthPercentage> borderRadius;
 
     void repr(Io::Emit& e) const {
-        e("(rect {} ", insets);
-        reprRadii(e, borderRadius);
-        e(")");
+        e("(rect {} {})", insets, borderRadius);
     }
 };
 
@@ -323,8 +319,8 @@ struct ValueParser<Rect> {
         if (c->prefix == Token::function("rect(")) {
             // NOTE: An auto value makes the edge of the box coincide with the corresponding edge of the reference box.
             Rect result{
-                {LengthPercentage::fromPercentage(0), LengthPercentage::fromPercentage(100), LengthPercentage::fromPercentage(100), LengthPercentage::fromPercentage(0)},
-                {LengthPercentage::fromPercentage(0)},
+                {percent(0), percent(100), percent(100), percent(0)},
+                {percent(0)},
             };
             Cursor<Sst> scan = c->content;
 
@@ -373,9 +369,7 @@ export struct Xywh {
     Math::Radii<LengthPercentage> borderRadius;
 
     void repr(Io::Emit& e) const {
-        e("(xywh {} {} {} {} ", x, y, width, height);
-        reprRadii(e, borderRadius);
-        e(")");
+        e("(xywh {} {} {} {} {})", x, y, width, height, borderRadius);
     }
 };
 
@@ -401,7 +395,7 @@ struct ValueParser<Xywh> {
             eatWhitespace(scan);
             auto height = try$(parseValue<LengthPercentage>(scan));
 
-            Xywh result{x, y, width, height, {LengthPercentage::fromPercentage(0)}};
+            Xywh result{x, y, width, height, {percent(0)}};
 
             eatWhitespace(scan);
             if (scan.skip(Token::ident("round"))) {

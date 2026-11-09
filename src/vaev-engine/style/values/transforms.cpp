@@ -123,7 +123,7 @@ export TransformFunction toComputed(Css::TransformFunction const& value, LengthC
 
 export Css::TransformFunction toSpecified(TransformFunction const& value) {
     auto number = [](f64 n) {
-        return Css::Number::fromCanonical(n);
+        return Css::number(n);
     };
 
     return value.visit(

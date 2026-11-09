@@ -48,4 +48,27 @@ export struct FontStyle {
     }
 };
 
+// https://drafts.csswg.org/css-fonts-4/#font-style-prop
+// Computed value: the keyword specified, plus angle in degrees if specified
+export FontStyle toComputed(Css::FontStyle const& value) {
+    if (not value.obliqueAngle)
+        return {value.val};
+    // <angle [-90deg,90deg]>: math functions are clamped to the range.
+    auto angle = clamp(toComputed(*value.obliqueAngle).value(), -90.0, 90.0);
+    return {value.val, Deg{angle}};
+}
+
+export Css::FontStyle toSpecified(FontStyle const& value) {
+    // NOTE: 14deg is what an omitted angle represents, so it isn't written back.
+    if (value.val == Gfx::FontStyle::OBLIQUE and value.obliqueAngle != Deg{14})
+        return Css::FontStyle{toSpecified(value.obliqueAngle)};
+    return Css::FontStyle{value.val};
+}
+
+// https://drafts.csswg.org/css-fonts-4/#font-width-prop
+// Computed value: a percentage
+export Percent toComputed(Css::FontWidth const& value) {
+    return toComputed(value.val());
+}
+
 } // namespace Vaev::Style

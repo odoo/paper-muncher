@@ -22,7 +22,7 @@ export struct PaddingTopProperty : Property {
         Registration() : Property::Registration(Properties::PADDING_TOP) {}
 
         Rc<Property> initial() const override {
-            return makeRc<PaddingTopProperty>(self(), Css::LengthPercentage::fromCanonical(0));
+            return makeRc<PaddingTopProperty>(self(), Css::px(0));
         }
 
         Rc<Property> load(ComputedValues const& c) const override {
@@ -57,7 +57,7 @@ export struct PaddingRightProperty : Property {
         Registration() : Property::Registration(Properties::PADDING_RIGHT) {}
 
         Rc<Property> initial() const override {
-            return makeRc<PaddingRightProperty>(self(), Css::LengthPercentage::fromCanonical(0));
+            return makeRc<PaddingRightProperty>(self(), Css::px(0));
         }
 
         Rc<Property> load(ComputedValues const& c) const override {
@@ -92,7 +92,7 @@ export struct PaddingBottomProperty : Property {
         Registration() : Property::Registration(Properties::PADDING_BOTTOM) {}
 
         Rc<Property> initial() const override {
-            return makeRc<PaddingBottomProperty>(self(), Css::LengthPercentage::fromCanonical(0));
+            return makeRc<PaddingBottomProperty>(self(), Css::px(0));
         }
 
         Rc<Property> load(ComputedValues const& c) const override {
@@ -127,7 +127,7 @@ export struct PaddingLeftProperty : Property {
         Registration() : Property::Registration(Properties::PADDING_LEFT) {}
 
         Rc<Property> initial() const override {
-            return makeRc<PaddingLeftProperty>(self(), Css::LengthPercentage::fromCanonical(0));
+            return makeRc<PaddingLeftProperty>(self(), Css::px(0));
         }
 
         Rc<Property> load(ComputedValues const& c) const override {
@@ -162,7 +162,7 @@ export struct PaddingInlineStartProperty : Property {
         Registration() : Property::Registration(Properties::PADDING_INLINE_START, LOGICAL) {}
 
         Rc<Property> initial() const override {
-            return makeRc<PaddingInlineStartProperty>(self(), Css::LengthPercentage::fromCanonical(0));
+            return makeRc<PaddingInlineStartProperty>(self(), Css::px(0));
         }
 
         Rc<Property> load(ComputedValues const& c) const override {
@@ -200,7 +200,7 @@ export struct PaddingInlineEndProperty : Property {
         Registration() : Property::Registration(Properties::PADDING_INLINE_END, LOGICAL) {}
 
         Rc<Property> initial() const override {
-            return makeRc<PaddingInlineEndProperty>(self(), Css::LengthPercentage::fromCanonical(0));
+            return makeRc<PaddingInlineEndProperty>(self(), Css::px(0));
         }
 
         Rc<Property> load(ComputedValues const& c) const override {
@@ -241,7 +241,7 @@ export struct PaddingProperty : Property {
             : Property::Registration(Properties::PADDING, SHORTHAND) {}
 
         Rc<Property> initial() const override {
-            return makeRc<PaddingProperty>(self(), Value{Css::LengthPercentage::fromCanonical(0)});
+            return makeRc<PaddingProperty>(self(), Value{Css::px(0)});
         }
 
         Rc<Property> load(ComputedValues const& c) const override {

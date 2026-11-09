@@ -3991,13 +3991,13 @@ test$("vaev-style-wpt-css-css-fonts-parsing-font-style-valid") {
     try$(_expectSerialized(_driver, "font-style", "oblique -14deg", "oblique -14deg"));
     try$(_expectSerialized(_driver, "font-style", "oblique -90deg", "oblique -90deg"));
     try$(_expectSerialized(_driver, "font-style", "oblique 90deg", "oblique 90deg"));
+    try$(_expectSerialized(_driver, "font-style", "oblique 14deg", "oblique 14deg"));
+    try$(_expectSerialized(_driver, "font-style", "oblique 10grad", "oblique 10grad"));
     return Ok();
 }
 
 test$("vaev-style-wpt-css-css-fonts-parsing-font-style-valid-xfail", XFAIL) {
     try$(_expectSerialized(_driver, "font-style", "oblique calc(10deg - 10deg)", "oblique calc(0deg)"));
-    try$(_expectSerialized(_driver, "font-style", "oblique 14deg", "oblique 14deg"));
-    try$(_expectSerialized(_driver, "font-style", "oblique 10grad", "oblique 10grad"));
     try$(_expectSerialized(_driver, "font-style", "oblique calc(90deg)", "oblique calc(90deg)"));
     try$(_expectSerialized(_driver, "font-style", "oblique calc(100deg)", "oblique calc(100deg)"));
     try$(_expectSerialized(_driver, "font-style", "oblique calc(-100deg)", "oblique calc(-100deg)"));

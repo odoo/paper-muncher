@@ -546,7 +546,7 @@ export struct BorderTopRightRadiusProperty : Property {
         Registration() : Property::Registration(Properties::BORDER_TOP_RIGHT_RADIUS) {}
 
         Rc<Property> initial() const override {
-            return makeRc<BorderTopRightRadiusProperty>(self(), makeArray<Css::LengthPercentage, 2>(Css::LengthPercentage::fromCanonical(0)));
+            return makeRc<BorderTopRightRadiusProperty>(self(), makeArray<Css::LengthPercentage, 2>(Css::px(0)));
         }
 
         Rc<Property> load(ComputedValues const& c) const override {
@@ -587,7 +587,7 @@ export struct BorderTopLeftRadiusProperty : Property {
         Registration() : Property::Registration(Properties::BORDER_TOP_LEFT_RADIUS) {}
 
         Rc<Property> initial() const override {
-            return makeRc<BorderTopLeftRadiusProperty>(self(), makeArray<Css::LengthPercentage, 2>(Css::LengthPercentage::fromCanonical(0)));
+            return makeRc<BorderTopLeftRadiusProperty>(self(), makeArray<Css::LengthPercentage, 2>(Css::px(0)));
         }
 
         Rc<Property> load(ComputedValues const& c) const override {
@@ -631,7 +631,7 @@ export struct BorderBottomRightRadiusProperty : Property {
         Registration() : Property::Registration(Properties::BORDER_BOTTOM_RIGHT_RADIUS) {}
 
         Rc<Property> initial() const override {
-            return makeRc<BorderBottomRightRadiusProperty>(self(), makeArray<Css::LengthPercentage, 2>(Css::LengthPercentage::fromCanonical(0)));
+            return makeRc<BorderBottomRightRadiusProperty>(self(), makeArray<Css::LengthPercentage, 2>(Css::px(0)));
         }
 
         Rc<Property> load(ComputedValues const& c) const override {
@@ -672,7 +672,7 @@ export struct BorderBottomLeftRadiusProperty : Property {
         Registration() : Property::Registration(Properties::BORDER_BOTTOM_LEFT_RADIUS) {}
 
         Rc<Property> initial() const override {
-            return makeRc<BorderBottomLeftRadiusProperty>(self(), makeArray<Css::LengthPercentage, 2>(Css::LengthPercentage::fromCanonical(0)));
+            return makeRc<BorderBottomLeftRadiusProperty>(self(), makeArray<Css::LengthPercentage, 2>(Css::px(0)));
         }
 
         Rc<Property> load(ComputedValues const& c) const override {
@@ -716,7 +716,7 @@ export struct BorderRadiusProperty : Property {
         Registration() : Property::Registration(Properties::BORDER_RADIUS, SHORTHAND) {}
 
         Rc<Property> initial() const override {
-            return makeRc<BorderRadiusProperty>(self(), Math::Radii<Css::LengthPercentage>{Css::LengthPercentage::fromCanonical(0)});
+            return makeRc<BorderRadiusProperty>(self(), Math::Radii<Css::LengthPercentage>{Css::px(0)});
         }
 
         Rc<Property> load(ComputedValues const& c) const override {
@@ -1064,7 +1064,7 @@ export struct BorderSpacingProperty : Property {
             : Property::Registration(Properties::BORDER_SPACING, {INHERITED, BULK_INHERITED}) {}
 
         Rc<Property> initial() const override {
-            return makeRc<BorderSpacingProperty>(self(), Value{Css::Length::fromCanonical(0), Css::Length::fromCanonical(0)});
+            return makeRc<BorderSpacingProperty>(self(), Value{Css::px(0), Css::px(0)});
         }
 
         Rc<Property> load(ComputedValues const& c) const override {

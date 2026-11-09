@@ -197,7 +197,7 @@ export struct Outline {
     Px width = 3_px;
     Px offset = 0_px;
     Union<Keywords::Auto, Gfx::BorderStyle> style = Gfx::BorderStyle::NONE;
-    Gfx::Color color = Gfx::BLUE500;
+    Color color = Keywords::CURRENT_COLOR;
 };
 
 export using Paddings = Math::Insets<PxPercent>;

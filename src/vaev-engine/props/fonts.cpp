@@ -15,27 +15,6 @@ using namespace Karm;
 
 namespace Vaev::Style {
 
-// https://drafts.csswg.org/css-fonts-4/#font-width-prop
-// Computed value: a percentage
-export Percent toComputed(Css::FontWidth const& value) {
-    return Percent{value.val().value()};
-}
-
-static Css::FontWidth _toSpecifiedFontWidth(Percent width) {
-    return Css::FontWidth{Css::PurePercentage{width.value()}};
-}
-
-// https://drafts.csswg.org/css-fonts-4/#font-style-prop
-export FontStyle toComputed(Css::FontStyle const& value) {
-    return {value.val, toComputed(value.obliqueAngle)};
-}
-
-export Css::FontStyle toSpecified(FontStyle const& value) {
-    if (value.val == Gfx::FontStyle::OBLIQUE)
-        return Css::FontStyle{Css::PureAngle::fromDegree(value.obliqueAngle.value())};
-    return Css::FontStyle{value.val};
-}
-
 // MARK: Fonts -----------------------------------------------------------------
 
 // https://www.w3.org/TR/css-fonts-4/#font-family-prop
@@ -175,7 +154,7 @@ export struct FontWidthProperty : Property {
         }
 
         Rc<Property> load(ComputedValues const& c) const override {
-            return makeRc<FontWidthProperty>(self(), _toSpecifiedFontWidth(c.font->width));
+            return makeRc<FontWidthProperty>(self(), Css::FontWidth{toSpecified(c.font->width)});
         }
 
         Res<Rc<Property>> parse(Cursor<Css::Sst>& c) const override {
@@ -277,7 +256,7 @@ export struct FontSizeProperty : Property {
         }
 
         Rc<Property> load(ComputedValues const& c) const override {
-            return makeRc<FontSizeProperty>(self(), Css::LengthPercentage::fromCanonical(c.font->size.value()));
+            return makeRc<FontSizeProperty>(self(), toSpecified(PxPercent{c.font->size}));
         }
 
         Res<Rc<Property>> parse(Cursor<Css::Sst>& c) const override {
@@ -373,9 +352,9 @@ export struct FontProperty : Property {
                 Value{
                     font.families,
                     Some(font.weight),
-                    _toSpecifiedFontWidth(font.width),
+                    Css::FontWidth{toSpecified(font.width)},
                     toSpecified(font.style),
-                    Css::LengthPercentage::fromCanonical(font.size.value()),
+                    toSpecified(PxPercent{font.size}),
                 }
             );
         }

@@ -52,21 +52,21 @@ test$("feature-type") {
 }
 
 test$("feature-width") {
-    assert$(WidthFeature::min(Css::PureLength{Css::UnitValue{1000, Css::UnitValue::Unit::PX}}).match(TEST_MEDIA));
+    assert$(WidthFeature::min(Css::px(1000)).match(TEST_MEDIA));
 
-    assert$(WidthFeature::max(Css::PureLength{Css::UnitValue{2000, Css::UnitValue::Unit::PX}}).match(TEST_MEDIA));
+    assert$(WidthFeature::max(Css::px(2000)).match(TEST_MEDIA));
 
-    assert$(WidthFeature::exact(Css::PureLength{Css::UnitValue{1920, Css::UnitValue::Unit::PX}}).match(TEST_MEDIA));
+    assert$(WidthFeature::exact(Css::px(1920)).match(TEST_MEDIA));
 
     return Ok();
 }
 
 test$("feature-height") {
-    assert$(HeightFeature::min(Css::PureLength{Css::UnitValue{1000, Css::UnitValue::Unit::PX}}).match(TEST_MEDIA));
+    assert$(HeightFeature::min(Css::px(1000)).match(TEST_MEDIA));
 
-    assert$(HeightFeature::max(Css::PureLength{Css::UnitValue{2000, Css::UnitValue::Unit::PX}}).match(TEST_MEDIA));
+    assert$(HeightFeature::max(Css::px(2000)).match(TEST_MEDIA));
 
-    assert$(HeightFeature::exact(Css::PureLength{Css::UnitValue{1080, Css::UnitValue::Unit::PX}}).match(TEST_MEDIA));
+    assert$(HeightFeature::exact(Css::px(1080)).match(TEST_MEDIA));
 
     return Ok();
 }
@@ -88,11 +88,11 @@ test$("feature-orientation") {
 }
 
 test$("feature-resolution") {
-    assert$(ResolutionFeature::min(Css::PureResolution{Css::UnitValue{1, Css::UnitValue::Unit::DPPX}}).match(TEST_MEDIA));
+    assert$(ResolutionFeature::min(Css::dppx(1)).match(TEST_MEDIA));
 
-    assert$(ResolutionFeature::max(Css::PureResolution{Css::UnitValue{1, Css::UnitValue::Unit::DPPX}}).match(TEST_MEDIA));
+    assert$(ResolutionFeature::max(Css::dppx(1)).match(TEST_MEDIA));
 
-    assert$(ResolutionFeature::exact(Css::PureResolution{Css::UnitValue{1, Css::UnitValue::Unit::DPPX}}).match(TEST_MEDIA));
+    assert$(ResolutionFeature::exact(Css::dppx(1)).match(TEST_MEDIA));
 
     return Ok();
 }
@@ -224,21 +224,21 @@ test$("feature-prefers-reduced-data") {
 }
 
 test$("feature-device-width") {
-    assert$(DeviceWidthFeature::min(Css::PureLength{Css::UnitValue{1920, Css::UnitValue::Unit::PX}}).match(TEST_MEDIA));
+    assert$(DeviceWidthFeature::min(Css::px(1920)).match(TEST_MEDIA));
 
-    assert$(DeviceWidthFeature::max(Css::PureLength{Css::UnitValue{1920, Css::UnitValue::Unit::PX}}).match(TEST_MEDIA));
+    assert$(DeviceWidthFeature::max(Css::px(1920)).match(TEST_MEDIA));
 
-    assert$(DeviceWidthFeature::exact(Css::PureLength{Css::UnitValue{1920, Css::UnitValue::Unit::PX}}).match(TEST_MEDIA));
+    assert$(DeviceWidthFeature::exact(Css::px(1920)).match(TEST_MEDIA));
 
     return Ok();
 }
 
 test$("feature-device-height") {
-    assert$(DeviceHeightFeature::min(Css::PureLength{Css::UnitValue{1080, Css::UnitValue::Unit::PX}}).match(TEST_MEDIA));
+    assert$(DeviceHeightFeature::min(Css::px(1080)).match(TEST_MEDIA));
 
-    assert$(DeviceHeightFeature::max(Css::PureLength{Css::UnitValue{1080, Css::UnitValue::Unit::PX}}).match(TEST_MEDIA));
+    assert$(DeviceHeightFeature::max(Css::px(1080)).match(TEST_MEDIA));
 
-    assert$(DeviceHeightFeature::exact(Css::PureLength{Css::UnitValue{1080, Css::UnitValue::Unit::PX}}).match(TEST_MEDIA));
+    assert$(DeviceHeightFeature::exact(Css::px(1080)).match(TEST_MEDIA));
 
     return Ok();
 }

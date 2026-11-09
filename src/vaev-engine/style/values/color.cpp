@@ -147,12 +147,12 @@ Gfx::Color _mix(Css::ColorMix const& cm, Gfx::Color currentColor) {
     Gfx::Color lhsColor = toUsed(cm.lhs.color, currentColor);
     f64 lhsPerc = cm.lhs.perc
                       ? cm.lhs.perc->value()
-                      : 100 - cm.rhs.perc.unwrapOr(Css::PurePercentage{50}).value();
+                      : 100 - cm.rhs.perc.unwrapOr(Css::percent(50)).value();
 
     Gfx::Color rhsColor = toUsed(cm.rhs.color, currentColor);
     f64 rhsPerc = cm.rhs.perc
                       ? cm.rhs.perc->value()
-                      : 100 - cm.lhs.perc.unwrapOr(Css::PurePercentage{50}).value();
+                      : 100 - cm.lhs.perc.unwrapOr(Css::percent(50)).value();
 
     if (lhsPerc == rhsPerc and lhsPerc == 0) {
         logWarn("cannot mix colors when both have zero percentages");

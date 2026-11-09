@@ -72,6 +72,10 @@ test$("vaev-css-build-display") {
 }
 
 test$("vaev-css-build-margin") {
+    auto px = [](f64 v) {
+        return Css::LengthPercentage{Css::px(v)};
+    };
+
     auto testCase = [&](Str input, MarginProperty::Value expected) -> Res<> {
         auto registry = defaultRegistry();
         auto res = registry.parseValue(Properties::MARGIN, input, {});
@@ -86,41 +90,41 @@ test$("vaev-css-build-margin") {
 
     try$(testCase(
         "30px;",
-        MarginProperty::Value{Css::LengthPercentage::fromCanonical(30)}
+        MarginProperty::Value{px(30)}
     ));
 
     try$(testCase(
         "1px 2px;",
         MarginProperty::Value{
-            Css::LengthPercentage::fromCanonical(1),
-            Css::LengthPercentage::fromCanonical(2),
+            px(1),
+            px(2),
         }
     ));
 
     try$(testCase(
         "1px /* x */ 2px;",
         MarginProperty::Value{
-            Css::LengthPercentage::fromCanonical(1),
-            Css::LengthPercentage::fromCanonical(2),
+            px(1),
+            px(2),
         }
     ));
 
     try$(testCase(
         "1px 2px 3px;",
         MarginProperty::Value{
-            Css::LengthPercentage::fromCanonical(1),
-            Css::LengthPercentage::fromCanonical(2),
-            Css::LengthPercentage::fromCanonical(3),
+            px(1),
+            px(2),
+            px(3),
         }
     ));
 
     try$(testCase(
         "1px 2px 3px 4px;",
         MarginProperty::Value{
-            Css::LengthPercentage::fromCanonical(1),
-            Css::LengthPercentage::fromCanonical(2),
-            Css::LengthPercentage::fromCanonical(3),
-            Css::LengthPercentage::fromCanonical(4),
+            px(1),
+            px(2),
+            px(3),
+            px(4),
         }
     ));
 
@@ -141,7 +145,7 @@ test$("vaev-css-build-logical-margin") {
     };
 
     auto px = [](f64 v) {
-        return Css::LengthPercentage::fromCanonical(v);
+        return Css::LengthPercentage{Css::px(v)};
     };
 
     try$(testCase.operator()<MarginInlineProperty>(Properties::MARGIN_INLINE, "1px;", {px(1), px(1)}));

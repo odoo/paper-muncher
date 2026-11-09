@@ -107,7 +107,7 @@ export struct OutlineColorProperty : Property {
         }
 
         Rc<Property> load(ComputedValues const& c) const override {
-            return makeRc<OutlineColorProperty>(self(), Css::Color{c.outline->color});
+            return makeRc<OutlineColorProperty>(self(), toSpecified(c.outline->color));
         }
 
         Res<Rc<Property>> parse(Cursor<Css::Sst>& c) const override {
@@ -123,15 +123,16 @@ export struct OutlineColorProperty : Property {
     void apply([[maybe_unused]] ComputedValues const& parent, ComputedValues& c, [[maybe_unused]] ComputationContext const& cx) const override {
         c.outline.cow().color = _value.visit(
             // https://drafts.csswg.org/css-ui/#valdef-outline-color-auto
-            [&](Keywords::Auto) {
+            [&](Keywords::Auto) -> Color {
                 // When outline-style is auto, outline-color: auto computes to auto and represents the accent color.
                 // Otherwise, outline-color: auto computes to currentColor.
-                return c.outline->style == Keywords::AUTO
-                           ? toUsed(Css::Color{Css::SystemColor::ACCENT_COLOR}, c.color)
-                           : c.color;
+                // NOSPEC: auto is stored as the accent color it represents.
+                if (c.outline->style == Keywords::AUTO)
+                    return toComputed(Css::Color{Css::SystemColor::ACCENT_COLOR}, c.color);
+                return Keywords::CURRENT_COLOR;
             },
-            [&](Css::Color color) {
-                return toUsed(color, c.color);
+            [&](Css::Color const& color) {
+                return toComputed(color, c.color);
             }
         );
     }
@@ -151,7 +152,7 @@ export struct OutlineOffsetProperty : Property {
         Registration() : Property::Registration(Properties::OUTLINE_OFFSET) {}
 
         Rc<Property> initial() const override {
-            return makeRc<OutlineOffsetProperty>(self(), Css::Length::fromCanonical(0));
+            return makeRc<OutlineOffsetProperty>(self(), Css::px(0));
         }
 
         Rc<Property> load(ComputedValues const& c) const override {
@@ -186,7 +187,7 @@ export struct OutlineProperty : Property {
     // [ <'outline-width'> || <'outline-style'> || <'outline-color'> ]
     struct Value {
         Css::LineWidth width = Keywords::MEDIUM;
-        Css::Length offset = Css::Length::fromCanonical(0);
+        Css::Length offset = Css::px(0);
         Union<Keywords::Auto, Gfx::BorderStyle> style = Gfx::BorderStyle::NONE;
         Union<Keywords::Auto, Css::Color> color = Keywords::AUTO;
 
@@ -210,7 +211,7 @@ export struct OutlineProperty : Property {
                     toSpecified(c.outline->width),
                     toSpecified(c.outline->offset),
                     c.outline->style,
-                    Css::Color{c.outline->color},
+                    toSpecified(c.outline->color),
                 }
             );
         }

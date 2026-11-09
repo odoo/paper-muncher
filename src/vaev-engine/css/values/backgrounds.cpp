@@ -28,10 +28,6 @@ export using LineWidth = Union<
     Keywords::Thick,
     Length>;
 
-} // namespace Vaev::Css
-
-namespace Vaev::Css {
-
 // MARK: Border Style ----------------------------------------------------------
 // https://www.w3.org/TR/CSS22/box.html#border-style-properties
 
@@ -125,12 +121,6 @@ struct ValueParser<Border> {
     }
 };
 
-// NOTE: Math::Radii::repr() needs T to be constructible from 0, which PixelPercentage isn't.
-export template <typename T>
-void reprRadii(Io::Emit& e, Math::Radii<T> const& radii) {
-    e("(radii {} {} {} {} {} {} {} {})", radii.a, radii.b, radii.c, radii.d, radii.e, radii.f, radii.g, radii.h);
-}
-
 export template <typename T>
 struct ValueParser<Math::Radii<T>> {
     static Res<Math::Radii<T>> parse(Cursor<Sst>& c) {
@@ -173,7 +163,7 @@ struct ValueParser<Math::Radii<T>> {
         if (c.ended() or c.peek().token.data != "/"s)
             return maybeRadii.okOr(Error::invalidData("expected border radius"));
 
-        auto radii = maybeRadii.unwrapOr(Math::Radii<T>{T::fromCanonical(0)});
+        auto radii = maybeRadii.unwrapOr(Math::Radii<T>{T{px(0)}});
         c.next();
         eatWhitespace(c);
         auto value1 = parseValue<T>(c);
@@ -257,9 +247,9 @@ export struct BackgroundPosition {
 
     BackgroundPosition()
         : horizontalAnchor(Keywords::LEFT),
-          horizontal(LengthPercentage::fromPercentage(0)),
+          horizontal(percent(0)),
           verticalAnchor(Keywords::TOP),
-          vertical(LengthPercentage::fromPercentage(0)) {
+          vertical(percent(0)) {
     }
 
     BackgroundPosition(LengthPercentage horizontal, LengthPercentage vertical)
@@ -271,7 +261,7 @@ export struct BackgroundPosition {
     }
 
     static BackgroundPosition center() {
-        return {Keywords::CENTER, LengthPercentage::fromPercentage(0), Keywords::CENTER, LengthPercentage::fromPercentage(0)};
+        return {Keywords::CENTER, percent(0), Keywords::CENTER, percent(0)};
     }
 
     void repr(Io::Emit& e) const {
@@ -322,9 +312,9 @@ struct ValueParser<BackgroundPosition> {
                 items.pushBack(items.popFront());
 
             BackgroundPosition::HorizontalAnchor hAnchor = Keywords::LEFT;
-            LengthPercentage hValue = LengthPercentage::fromPercentage(0);
+            LengthPercentage hValue = percent(0);
             BackgroundPosition::VerticalAnchor vAnchor = Keywords::TOP;
-            LengthPercentage vValue = LengthPercentage::fromPercentage(0);
+            LengthPercentage vValue = percent(0);
 
             try$(
                 items[0].visit(
@@ -363,11 +353,11 @@ struct ValueParser<BackgroundPosition> {
 
         // case 3
         BackgroundPosition::HorizontalAnchor hAnchor = Keywords::LEFT;
-        LengthPercentage hValue = LengthPercentage::fromPercentage(0);
+        LengthPercentage hValue = percent(0);
         bool hSet = false;
 
         BackgroundPosition::VerticalAnchor vAnchor = Keywords::TOP;
-        LengthPercentage vValue = LengthPercentage::fromPercentage(0);
+        LengthPercentage vValue = percent(0);
 
         usize secondPairIndex = 2;
 

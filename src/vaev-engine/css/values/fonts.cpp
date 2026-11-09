@@ -34,40 +34,32 @@ export struct FontWidth {
         _LEN,
     };
 
-    static PurePercentage toPercent(_Named stretch) {
-        return PurePercentage{static_cast<int>(stretch) / 10.0};
+    static Percentage toPercent(_Named stretch) {
+        return percent(static_cast<int>(stretch) / 10.0);
     }
 
     using enum _Named;
 
-    PurePercentage _val;
+    Percentage _val;
 
-    constexpr FontWidth()
+    FontWidth()
         : FontWidth(NORMAL) {
     }
 
-    constexpr FontWidth(_Named named)
+    FontWidth(_Named named)
         : _val(toPercent(named)) {
     }
 
-    constexpr FontWidth(PurePercentage value)
-        : _val(value) {
+    FontWidth(Percentage value)
+        : _val(std::move(value)) {
     }
 
-    constexpr auto val() const {
+    Percentage const& val() const {
         return _val;
     }
 
     void repr(Io::Emit& e) const {
         e("{}", _val);
-    }
-
-    bool operator==(FontWidth const& other) const {
-        return _val == other._val;
-    }
-
-    auto operator<=>(FontWidth const& other) const {
-        return _val <=> other._val;
     }
 };
 
@@ -75,29 +67,29 @@ export template <>
 struct ValueParser<FontWidth> {
     static Res<FontWidth> parse(Cursor<Sst>& c) {
         if (c.ended())
-        return Error::invalidData("unexpected end of input");
+            return Error::invalidData("unexpected end of input");
 
         if (c.skip(Token::ident("normal"))) {
-        return Ok(FontWidth::NORMAL);
+            return Ok(FontWidth::NORMAL);
         } else if (c.skip(Token::ident("condensed"))) {
-        return Ok(FontWidth::CONDENSED);
+            return Ok(FontWidth::CONDENSED);
         } else if (c.skip(Token::ident("expanded"))) {
-        return Ok(FontWidth::EXPANDED);
+            return Ok(FontWidth::EXPANDED);
         } else if (c.skip(Token::ident("ultra-condensed"))) {
-        return Ok(FontWidth::ULTRA_CONDENSED);
+            return Ok(FontWidth::ULTRA_CONDENSED);
         } else if (c.skip(Token::ident("extra-condensed"))) {
-        return Ok(FontWidth::EXTRA_CONDENSED);
+            return Ok(FontWidth::EXTRA_CONDENSED);
         } else if (c.skip(Token::ident("semi-condensed"))) {
-        return Ok(FontWidth::SEMI_CONDENSED);
+            return Ok(FontWidth::SEMI_CONDENSED);
         } else if (c.skip(Token::ident("semi-expanded"))) {
-        return Ok(FontWidth::SEMI_EXPANDED);
+            return Ok(FontWidth::SEMI_EXPANDED);
         } else if (c.skip(Token::ident("extra-expanded"))) {
-        return Ok(FontWidth::EXTRA_EXPANDED);
+            return Ok(FontWidth::EXTRA_EXPANDED);
         } else if (c.skip(Token::ident("ultra-expanded"))) {
-        return Ok(FontWidth::ULTRA_EXPANDED);
+            return Ok(FontWidth::ULTRA_EXPANDED);
         }
 
-        return Ok(try$(parseValue<PurePercentage>(c)));
+        return Ok(try$(parseValue<Percentage>(c)));
     }
 };
 
@@ -112,29 +104,25 @@ struct ValueSerializer<FontWidth> {
 // MARK: FontStyle -------------------------------------------------------------
 // https://drafts.csswg.org/css-fonts-4/#propdef-font-style
 
+// normal | italic | oblique <angle [-90deg,90deg]>?
 export struct FontStyle {
     using enum Gfx::FontStyle;
     Gfx::FontStyle val;
 
-    // The lack of an <angle> represents 14deg.
-    PureAngle obliqueAngle = PureAngle::fromDegree(14.0);
+    // The angle of oblique, if specified. The lack of an <angle> represents 14deg.
+    Opt<Angle> obliqueAngle = NONE;
 
-    constexpr FontStyle(Gfx::FontStyle named = NORMAL)
+    FontStyle(Gfx::FontStyle named = NORMAL)
         : val(named) {
     }
 
-    constexpr FontStyle(PureAngle angle)
-        : val(OBLIQUE), obliqueAngle(angle) {}
+    FontStyle(Angle angle)
+        : val(OBLIQUE), obliqueAngle(Some(std::move(angle))) {}
 
     void repr(Io::Emit& e) const {
         e("{}", val);
-        if (val == OBLIQUE)
+        if (obliqueAngle)
             e(" {}", obliqueAngle);
-    }
-
-    bool operator==(FontStyle const& other) const {
-        return val == other.val and
-               (val != OBLIQUE or obliqueAngle == other.obliqueAngle);
     }
 };
 
@@ -142,18 +130,19 @@ export template <>
 struct ValueParser<FontStyle> {
     static Res<FontStyle> parse(Cursor<Sst>& c) {
         if (c.ended())
-        return Error::invalidData("unexpected end of input");
+            return Error::invalidData("unexpected end of input");
 
         if (c.skip(Token::ident("normal"))) {
-        return Ok(FontStyle::NORMAL);
+            return Ok(FontStyle::NORMAL);
         } else if (c.skip(Token::ident("italic"))) {
-        return Ok(FontStyle::ITALIC);
+            return Ok(FontStyle::ITALIC);
         } else if (c.skip(Token::ident("oblique"))) {
-        auto angle = parseValue<PureAngle>(c);
-        if (angle)
-            return Ok(angle.expect());
+            eatWhitespace(c);
+            auto angle = parseValue<Angle>(c);
+            if (angle)
+                return Ok(angle.take());
 
-        return Ok(FontStyle::OBLIQUE);
+            return Ok(FontStyle::OBLIQUE);
         }
 
         return Error::invalidData("expected font style");
@@ -168,18 +157,19 @@ struct ValueSerializer<FontStyle> {
         // https://drafts.csswg.org/cssom/#serialize-a-css-value
         // If component values can be omitted or replaced with a shorter representation
         // without changing the meaning of the value, omit/replace them.
-        if (value.val == FontStyle::OBLIQUE and value.obliqueAngle.toDegree() == 0.0)
-        return w.writeStr("normal"s);
+        if (value.obliqueAngle) {
+            auto plain = value.obliqueAngle->calcTree().is<UnitValue>();
+            if (plain and plain->to(UnitValue::Unit::DEG) == 0.0)
+                return w.writeStr("normal"s);
+        }
 
-        // the keyword specified, plus angle in degrees if specified
         try$(serializeValue(w, value.val));
 
-        // The lack of an <angle> represents 14deg.
-        if (value.val != FontStyle::OBLIQUE or value.obliqueAngle.toDegree() == 14.0)
-        return Ok();
+        if (not value.obliqueAngle)
+            return Ok();
 
         try$(w.writeRune(' '));
-        return serializeValue(w, PureAngle::fromDegree(value.obliqueAngle.toDegree()));
+        return serializeValue(w, *value.obliqueAngle);
     }
 };
 

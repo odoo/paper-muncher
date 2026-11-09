@@ -42,7 +42,7 @@ struct TypedUnitValue {
     constexpr explicit TypedUnitValue(UnitValue value)
         : _value(value) {
 
-        if (not (value.baseType() == TYPE or (WITH_PERCENT == AcceptsPercent::YES and value.baseType() == NumericBaseType::PERCENT)))
+        if (not(value.baseType() == TYPE or (WITH_PERCENT == AcceptsPercent::YES and value.baseType() == NumericBaseType::PERCENT)))
             panic("unit value has the wrong base type");
     }
 
@@ -76,24 +76,11 @@ struct TypedUnitValue {
     // MARK: <angle> -----------------------------------------------------------
     // https://drafts.csswg.org/css-values/#angles
 
-    static constexpr TypedUnitValue fromDegree(f64 val)
-        requires(TYPE == NumericBaseType::ANGLE)
-    {
-        return TypedUnitValue{UnitValue{val, UnitValue::Unit::DEG}};
-    }
-
     constexpr f64 toDegree() const
         requires(TYPE == NumericBaseType::ANGLE)
     {
         return _value.to(UnitValue::Unit::DEG);
     }
-
-    // MARK: <percentage> ------------------------------------------------------
-    // https://drafts.csswg.org/css-values/#percentages
-
-    constexpr explicit TypedUnitValue(f64 value)
-        requires(TYPE == NumericBaseType::PERCENT)
-        : _value(value, UnitValue::Unit::PERCENT) {}
 
     // MARK: <resolution> ------------------------------------------------------
     // https://drafts.csswg.org/css-values/#resolution
@@ -104,6 +91,9 @@ struct TypedUnitValue {
         return _value.to(UnitValue::Unit::DPPX);
     }
 };
+
+// https://drafts.csswg.org/css-values/#numbers
+export using PureNumber = TypedUnitValue<NONE>;
 
 // https://drafts.csswg.org/css-values/#lengths
 export using PureLength = TypedUnitValue<Some(NumericBaseType::LENGTH)>;
@@ -125,6 +115,30 @@ export using PureResolution = TypedUnitValue<Some(NumericBaseType::RESOLUTION)>;
 
 // https://drafts.csswg.org/css-grid/#typedef-flex
 export using PureFlex = TypedUnitValue<Some(NumericBaseType::FLEX)>;
+
+// MARK: Literal values --------------------------------------------------------
+// A value in a given unit, e.g. `Css::px(0)`, `Css::percent(50)`.
+// They widen to the calc-capable types that accept them (see TypedCalc).
+
+export constexpr PureNumber number(f64 value) {
+    return PureNumber{UnitValue{value, UnitValue::Unit::NONE}};
+}
+
+export constexpr PurePercentage percent(f64 value) {
+    return PurePercentage{UnitValue{value, UnitValue::Unit::PERCENT}};
+}
+
+export constexpr PureLength px(f64 value) {
+    return PureLength{UnitValue{value, UnitValue::Unit::PX}};
+}
+
+export constexpr PureAngle deg(f64 value) {
+    return PureAngle{UnitValue{value, UnitValue::Unit::DEG}};
+}
+
+export constexpr PureResolution dppx(f64 value) {
+    return PureResolution{UnitValue{value, UnitValue::Unit::DPPX}};
+}
 
 export template <typename T>
     requires Meta::Derive<T, TypedUnitValue<T::BASE_TYPE, T::ACCEPTS_PERCENTS>>
@@ -160,15 +174,10 @@ struct TypedCalc {
 
     TypedCalc(Unchecked, Calc calc) : _calc(std::move(calc)) {}
 
-    static TypedCalc fromCanonical(f64 value) {
-        return {UNCHECKED, UnitValue{value, UnitValue::canonicalUnitOf(TYPE)}};
-    }
-
-    static TypedCalc fromPercentage(f64 value)
-        requires(WITH_PERCENT == AcceptsPercent::YES)
-    {
-        return {UNCHECKED, UnitValue{value, UnitValue::Unit::PERCENT}};
-    }
+    // A plain value of a type this accepts, e.g. `LengthPercentage start = Css::px(0);`
+    template <Opt<NumericBaseType> T>
+        requires(T == TYPE or (T == NumericBaseType::PERCENT and WITH_PERCENT == AcceptsPercent::YES))
+    TypedCalc(TypedUnitValue<T> value) : _calc(value.unitValue()) {}
 
     Calc const& calcTree() const {
         return _calc;

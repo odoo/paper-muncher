@@ -23,7 +23,7 @@ namespace Vaev::Css {
 // rotate(), skew(), skewX() and skewY() accept <angle> | <zero>.
 Res<Angle> _parseAngleOrZero(Cursor<Sst>& c) {
     if (c.skip(Token::number("0")))
-        return Ok(Angle::fromCanonical(0));
+        return Ok(deg(0));
     return parseValue<Angle>(c);
 }
 
@@ -100,7 +100,7 @@ struct ValueParser<TranslateTransform> {
                 return Error::invalidData("unexpected content after translateX function");
             }
             c.next(); // consume the function token
-            return Ok(TranslateTransform{std::move(tx), LengthPercentage::fromCanonical(0)});
+            return Ok(TranslateTransform{std::move(tx), px(0)});
         }
 
         if (c->prefix == Token::function("translateY(")) {
@@ -111,7 +111,7 @@ struct ValueParser<TranslateTransform> {
             if (not content.ended())
                 return Error::invalidData("unexpected content after translateY function");
             c.next(); // consume the function token
-            return Ok(TranslateTransform{LengthPercentage::fromCanonical(0), std::move(ty)});
+            return Ok(TranslateTransform{px(0), std::move(ty)});
         }
 
         if (c->prefix != Token::function("translate("))
@@ -126,7 +126,7 @@ struct ValueParser<TranslateTransform> {
         if (content.ended()) {
             // f <ty> is not provided, ty has zero as a value.
             c.next(); // consume the function token
-            return Ok(TranslateTransform{std::move(tx), LengthPercentage::fromCanonical(0)});
+            return Ok(TranslateTransform{std::move(tx), px(0)});
         }
 
         auto ty = try$(parseValue<LengthPercentage>(content));
@@ -165,7 +165,7 @@ struct ValueParser<ScaleTransform> {
                 return Error::invalidData("unexpected content after scaleX function");
             }
             c.next(); // consume the function token
-            return Ok(ScaleTransform{std::move(sx), Number::fromCanonical(1)});
+            return Ok(ScaleTransform{std::move(sx), number(1)});
         }
 
         if (c->prefix == Token::function("scaleY(")) {
@@ -176,7 +176,7 @@ struct ValueParser<ScaleTransform> {
             if (not content.ended())
                 return Error::invalidData("unexpected content after scaleY function");
             c.next(); // consume the function token
-            return Ok(ScaleTransform{Number::fromCanonical(1), std::move(sy)});
+            return Ok(ScaleTransform{number(1), std::move(sy)});
         }
 
         if (c->prefix != Token::function("scale("))
@@ -267,7 +267,7 @@ struct ValueParser<SkewTransform> {
         // If the second parameter is not provided, it has a zero value.
         if (content.ended()) {
             c.next(); // consume the function token
-            return Ok(SkewTransform{std::move(x), Angle::fromCanonical(0)});
+            return Ok(SkewTransform{std::move(x), deg(0)});
         }
 
         auto y = try$(_parseAngleOrZero(content));

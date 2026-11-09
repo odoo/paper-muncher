@@ -49,7 +49,7 @@ static Media const TEST_MEDIA = {
 test$("logical-and") {
     auto query = MediaQuery::combineAnd(
         TypeFeature{Keywords::SCREEN},
-        WidthFeature::min(Css::PureLength{Css::UnitValue{1920, Css::UnitValue::Unit::PX}})
+        WidthFeature::min(Css::px(1920))
     );
 
     assert$(query.match(TEST_MEDIA));
@@ -60,7 +60,7 @@ test$("logical-and") {
 test$("logical-or") {
     auto query = MediaQuery::combineOr(
         TypeFeature{Keywords::SCREEN},
-        WidthFeature::min(Css::PureLength{Css::UnitValue{1920, Css::UnitValue::Unit::PX}})
+        WidthFeature::min(Css::px(1920))
     );
 
     assert$(query.match(TEST_MEDIA));

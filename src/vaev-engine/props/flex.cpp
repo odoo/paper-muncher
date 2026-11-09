@@ -299,7 +299,7 @@ export struct FlexProperty : Property {
 
             // default values if these parameters are omitted
             value.flexGrow = value.flexShrink = 1;
-            value.flexBasis = Css::LengthPercentage::fromCanonical(0);
+            value.flexBasis = Css::LengthPercentage{Css::px(0)};
 
             auto parseGrowShrink = [](Cursor<Css::Sst>& c, Value& value) -> Res<> {
                 auto grow = parseValue<f64>(c);

@@ -114,7 +114,7 @@ export struct FontFace {
     Union<None, Css::FontStyle, Range<Deg>> style = Css::FontStyle{Css::FontStyle::NORMAL};
 
     Opt<Range<Gfx::FontWeight>> weight = Some(Range<Gfx::FontWeight>::emptyAt(Gfx::FontWeight::REGULAR));
-    Opt<Range<Percent>> width = Some(Range<Percent>::emptyAt(Percent{Css::FontWidth{Css::FontWidth::NORMAL}.val().value()}));
+    Opt<Range<Percent>> width = Some(Range<Percent>::emptyAt(toComputed(Css::FontWidth{Css::FontWidth::NORMAL})));
 
     Vec<Range<Rune>> unicodeRange;
 
@@ -293,18 +293,19 @@ export struct FontStyleFontDescriptor {
         }
 
         auto style = try$(parseValue<Css::FontStyle>(c));
-        if (style != Css::FontStyle::OBLIQUE) {
+        if (not style.obliqueAngle) {
             value = style;
             return Ok();
         }
 
-        auto val = parseValue<Css::PureAngle>(c);
+        eatWhitespace(c);
+        auto val = parseValue<Css::Angle>(c);
         if (not val) {
             value = style;
             return Ok();
         }
 
-        value = Range<Deg>::fromStartEnd(toComputed(style.obliqueAngle), toComputed(val.expect()));
+        value = Range<Deg>::fromStartEnd(toComputed(*style.obliqueAngle), toComputed(val.expect()));
         return Ok();
     }
 };
@@ -365,11 +366,11 @@ export struct FontWidthFontDescriptor {
 
         auto val = parseValue<Css::FontWidth>(c);
         if (not val) {
-            value = Some(Range<Percent>::emptyAt(Percent{width.val().value()}));
+            value = Some(Range<Percent>::emptyAt(toComputed(width)));
             return Ok();
         }
 
-        value = Some(Range<Percent>::fromStartEnd(Percent{width.val().value()}, Percent{val.expect().val().value()}));
+        value = Some(Range<Percent>::fromStartEnd(toComputed(width), toComputed(val.expect())));
 
         return Ok();
     }
@@ -556,7 +557,7 @@ export struct SizeAdjustFontDescriptor {
 
     static Str name() { return "size-adjust"; }
 
-    static Css::PurePercentage initial() { return Css::PurePercentage{100}; }
+    static Css::PurePercentage initial() { return Css::percent(100); }
 
     void apply(FontFace& f) const {
         f.sizeAdjust = Some(Percent{value.value()});

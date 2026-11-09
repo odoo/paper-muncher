@@ -22,7 +22,7 @@ export struct SvgXProperty : Property {
             : Property::Registration(Properties::X, PRESENTATION_ATTRIBUTE) {}
 
         Rc<Property> initial() const override {
-            return makeRc<SvgXProperty>(self(), Css::LengthPercentage::fromCanonical(0));
+            return makeRc<SvgXProperty>(self(), Css::px(0));
         }
 
         Rc<Property> load(ComputedValues const& c) const override {
@@ -63,7 +63,7 @@ export struct SvgYProperty : Property {
             : Property::Registration(Properties::Y, PRESENTATION_ATTRIBUTE) {}
 
         Rc<Property> initial() const override {
-            return makeRc<SvgYProperty>(self(), Css::LengthPercentage::fromCanonical(0));
+            return makeRc<SvgYProperty>(self(), Css::px(0));
         }
 
         Rc<Property> load(ComputedValues const& c) const override {
@@ -104,7 +104,7 @@ export struct SvgCXProperty : Property {
             : Property::Registration(Properties::CX, PRESENTATION_ATTRIBUTE) {}
 
         Rc<Property> initial() const override {
-            return makeRc<SvgCXProperty>(self(), Css::LengthPercentage::fromCanonical(0));
+            return makeRc<SvgCXProperty>(self(), Css::px(0));
         }
 
         Rc<Property> load(ComputedValues const& c) const override {
@@ -145,7 +145,7 @@ export struct SvgCYProperty : Property {
             : Property::Registration(Properties::CY, PRESENTATION_ATTRIBUTE) {}
 
         Rc<Property> initial() const override {
-            return makeRc<SvgCYProperty>(self(), Css::LengthPercentage::fromCanonical(0));
+            return makeRc<SvgCYProperty>(self(), Css::px(0));
         }
 
         Rc<Property> load(ComputedValues const& c) const override {
@@ -186,7 +186,7 @@ export struct SvgRProperty : Property {
             : Property::Registration(Properties::R, PRESENTATION_ATTRIBUTE) {}
 
         Rc<Property> initial() const override {
-            return makeRc<SvgRProperty>(self(), Css::LengthPercentage::fromCanonical(0));
+            return makeRc<SvgRProperty>(self(), Css::px(0));
         }
 
         Rc<Property> load(ComputedValues const& c) const override {
@@ -524,7 +524,7 @@ export struct StrokeWidthProperty : Property {
             : Property::Registration(Properties::STROKE_WIDTH, {PRESENTATION_ATTRIBUTE, INHERITED, BULK_INHERITED}) {}
 
         Rc<Property> initial() const override {
-            return makeRc<StrokeWidthProperty>(self(), Css::LengthPercentage::fromCanonical(1));
+            return makeRc<StrokeWidthProperty>(self(), Css::px(1));
         }
 
         Rc<Property> load(ComputedValues const& c) const override {
@@ -534,7 +534,7 @@ export struct StrokeWidthProperty : Property {
         // https://svgwg.org/svg2-draft/painting.html#StrokeWidth
         Res<Rc<Property>> parse(Cursor<Css::Sst>& c) const override {
             if (auto number = parseValue<f64>(c))
-                return Ok(makeRc<StrokeWidthProperty>(self(), Css::LengthPercentage::fromCanonical(number.take())));
+                return Ok(makeRc<StrokeWidthProperty>(self(), Css::px(number.take())));
             return Ok(makeRc<StrokeWidthProperty>(self(), try$(parseValue<Css::LengthPercentage>(c))));
         }
     };
