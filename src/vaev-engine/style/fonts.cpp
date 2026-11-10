@@ -165,9 +165,6 @@ export struct FontFace {
 
 // MARK: Props -----------------------------------------------------------------
 
-// https://www.w3.org/TR/css-fonts-4
-
-// MARK: font-family
 // https://www.w3.org/TR/css-fonts-4/#font-family-desc
 export struct FontFamilyFontDescriptor {
     Symbol value = initial();
@@ -193,7 +190,6 @@ export struct FontFamilyFontDescriptor {
     }
 };
 
-// MARK: src
 // https://www.w3.org/TR/css-fonts-4/#src-desc
 export struct SrcFontDescriptor {
     Vec<FontSource> value;
@@ -273,8 +269,7 @@ export struct SrcFontDescriptor {
     }
 };
 
-// MARK: font-style
-// https://www.w3.org/TR/css-fonts-4/#font-style-desc
+// https://drafts.csswg.org/css-fonts-4/#descdef-font-face-font-style
 export struct FontStyleFontDescriptor {
     Union<None, Css::FontStyle, Range<Deg>> value;
 
@@ -310,8 +305,7 @@ export struct FontStyleFontDescriptor {
     }
 };
 
-// MARK: font-weight
-// https://www.w3.org/TR/css-fonts-4/#font-weight-desc
+// https://drafts.csswg.org/css-fonts-4/#descdef-font-face-font-weight
 export struct FontWeightFontDescriptor {
     Opt<Range<Gfx::FontWeight>> value;
 
@@ -329,22 +323,23 @@ export struct FontWeightFontDescriptor {
             return Ok();
         }
 
-        auto weight = try$(parseValue<Gfx::FontWeight>(c));
+        auto first = try$(parseValue<Css::FontWeightAbsolute>(c));
+        auto start = Gfx::FontWeight{static_cast<u16>(toComputed(first))};
 
-        auto val = parseValue<Gfx::FontWeight>(c);
-        if (not val) {
-            value = Some(Range<Gfx::FontWeight>::emptyAt(weight));
+        auto second = parseValue<Css::FontWeightAbsolute>(c);
+        if (not second) {
+            value = Some(Range<Gfx::FontWeight>::emptyAt(start));
             return Ok();
         }
 
-        value = Some(Range<Gfx::FontWeight>::fromStartEnd(weight, val.expect()));
+        auto end = Gfx::FontWeight{static_cast<u16>(toComputed(second.take()))};
+        value = Some(Range<Gfx::FontWeight>::fromStartEnd(start, end));
 
         return Ok();
     }
 };
 
-// MARK: font-width
-// https://www.w3.org/TR/css-fonts-4/#font-width-prop
+// https://drafts.csswg.org/css-fonts-4/#descdef-font-face-font-width
 export struct FontWidthFontDescriptor {
     Opt<Range<Percent>> value = initial();
 
@@ -376,7 +371,6 @@ export struct FontWidthFontDescriptor {
     }
 };
 
-// MARK: unicode-range
 // https://www.w3.org/TR/css-fonts-4/#unicode-range-desc
 export struct UnicodeRangeFontDescriptor {
     Vec<Range<Rune>> value;
@@ -392,7 +386,6 @@ export struct UnicodeRangeFontDescriptor {
     }
 };
 
-// MARK: font-feature-settings
 // https://www.w3.org/TR/css-fonts-4/#font-rend-desc
 export struct FontFeatureSettingsFontDescriptor {
     Vec<FontFeature> value;
@@ -406,7 +399,6 @@ export struct FontFeatureSettingsFontDescriptor {
     }
 };
 
-// MARK: font-variation-settingsl
 // https://www.w3.org/TR/css-fonts-4/#font-rend-desc
 export struct FontVariationSettingsFontDescriptor {
     Vec<FontVariation> value;
@@ -420,7 +412,6 @@ export struct FontVariationSettingsFontDescriptor {
     }
 };
 
-// MARK: font-named-instance
 // https://www.w3.org/TR/css-fonts-4/#font-named-instance
 export struct FontNamedInstanceFontDescriptor {
     Opt<String> value = initial();
@@ -444,7 +435,6 @@ export struct FontNamedInstanceFontDescriptor {
     }
 };
 
-// MARK: font-display
 // https://www.w3.org/TR/css-fonts-4/#font-display-desc
 export struct FontDisplayFontDescriptor {
     FontDisplay value = initial();
@@ -501,7 +491,6 @@ export struct AscentOverrideFontDescriptor {
     }
 };
 
-// MARK: descent-override
 // https://www.w3.org/TR/css-fonts-4/#font-metrics-override-desc
 export struct DescentOverrideStyleProp {
     Opt<Css::PurePercentage> value = initial();
@@ -526,7 +515,6 @@ export struct DescentOverrideStyleProp {
     }
 };
 
-// MARK: line-gap-override
 // https://www.w3.org/TR/css-fonts-4/#font-metrics-override-desc
 export struct LineGapOverrideFontDescriptor {
     Opt<Css::PurePercentage> value = initial();
@@ -550,7 +538,6 @@ export struct LineGapOverrideFontDescriptor {
     }
 };
 
-// MARK: size-adjust
 // https://www.w3.org/TR/css-fonts-5/#size-adjust-desc
 export struct SizeAdjustFontDescriptor {
     Css::PurePercentage value = initial();

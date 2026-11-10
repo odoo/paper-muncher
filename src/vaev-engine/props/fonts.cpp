@@ -87,7 +87,8 @@ export struct FontFamilyProperty : Property {
 
 // https://www.w3.org/TR/css-fonts-4/#font-weight-prop
 export struct FontWeightProperty : Property {
-    using Value = Css::FontWeight;
+    // <font-weight-absolute> | bolder | lighter
+    using Value = Union<Css::FontWeightAbsolute, Css::Keywords::Lighter, Css::Keywords::Bolder>;
 
     struct Registration : Property::Registration {
         Registration()
@@ -106,7 +107,7 @@ export struct FontWeightProperty : Property {
         }
 
         Rc<Property> load(ComputedValues const& c) const override {
-            return makeRc<FontWeightProperty>(self(), c.font->weight);
+            return makeRc<FontWeightProperty>(self(), Value{Css::FontWeightAbsolute{toSpecified(c.font->weight)}});
         }
 
         Res<Rc<Property>> parse(Cursor<Css::Sst>& c) const override {
@@ -120,7 +121,32 @@ export struct FontWeightProperty : Property {
         : Property(registration), _value(value) {}
 
     void apply(ComputedValues const& parent, ComputedValues& c, [[maybe_unused]] ComputationContext const& cx) const override {
-        c.font.cow().weight = toComputed(_value, parent.font->weight);
+        c.font.cow().weight = _value.visit(
+            [](Css::FontWeightAbsolute const& weight) -> f64 {
+                return toComputed(weight);
+            },
+            // https://www.w3.org/TR/css-fonts-4/#relative-weights
+            [&](Css::Keywords::Lighter) -> f64 {
+                auto w = parent.font->weight;
+                if (w < 100)
+                    return w;
+                if (w < 550)
+                    return 100;
+                if (w < 750)
+                    return 400;
+                return 700;
+            },
+            [&](Css::Keywords::Bolder) -> f64 {
+                auto w = parent.font->weight;
+                if (w < 350)
+                    return 400;
+                if (w < 550)
+                    return 700;
+                if (w < 900)
+                    return 900;
+                return w;
+            }
+        );
     }
 
     Res<> serialize(Io::TextWriter& w) const override {
@@ -322,7 +348,7 @@ export struct FontSizeProperty : Property {
 export struct FontProperty : Property {
     struct Value {
         Vec<Css::FontFamily> families = {"sans-serif"_sym};
-        Opt<Css::FontWeight> weight;
+        Opt<FontWeightProperty::Value> weight;
         Css::FontWidth width = Css::FontWidth::NORMAL;
         Css::FontStyle style = Css::FontStyle::NORMAL;
         FontSizeProperty::Value size = Keywords::MEDIUM;
@@ -353,7 +379,7 @@ export struct FontProperty : Property {
                 self(),
                 Value{
                     font.families,
-                    Some(font.weight),
+                    Some(FontWeightProperty::Value{Css::FontWeightAbsolute{toSpecified(font.weight)}}),
                     Css::FontWidth{toSpecified(font.width)},
                     toSpecified(font.style),
                     toSpecified(PxPercent{font.size}),
@@ -372,7 +398,7 @@ export struct FontProperty : Property {
                     continue;
                 }
 
-                auto fontWeight = parseValue<Css::FontWeight>(c);
+                auto fontWeight = parseValue<FontWeightProperty::Value>(c);
                 if (fontWeight) {
                     value.weight = Some(fontWeight.expect());
                     continue;

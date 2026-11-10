@@ -28,9 +28,7 @@ export using LineWidth = Union<
     Keywords::Thick,
     Length>;
 
-// MARK: Border Style ----------------------------------------------------------
-// https://www.w3.org/TR/CSS22/box.html#border-style-properties
-
+// https://drafts.csswg.org/css-backgrounds/#border-style
 export template <>
 struct ValueParser<Gfx::BorderStyle> {
     static Res<Gfx::BorderStyle> parse(Cursor<Sst>& c) {
@@ -61,10 +59,7 @@ struct ValueParser<Gfx::BorderStyle> {
     }
 };
 
-// MARK: Border ----------------------------------------------------------------
-
-// Value of the border shorthands.
-// https://www.w3.org/TR/css-backgrounds-3/#border-shorthands
+// https://drafts.csswg.org/css-backgrounds/#border-shorthands
 export struct Border {
     LineWidth width = Keywords::MEDIUM;
     Gfx::BorderStyle style = Gfx::BorderStyle::NONE;
@@ -78,8 +73,6 @@ export struct Border {
 export template <>
 struct ValueParser<Border> {
     static Res<Border> parse(Cursor<Sst>& c) {
-        // https://drafts.csswg.org/css-backgrounds/#border-shorthands
-        // <line-width> || <line-style> || <color>, each at most once.
         Border border;
         bool widthSet = false;
         bool styleSet = false;
@@ -211,31 +204,22 @@ struct ValueParser<Math::Radii<T>> {
     }
 };
 
-} // namespace Vaev::Css
-
-namespace Vaev::Css {
-
 // https://drafts.csswg.org/css-backgrounds/#background-attachment
 using BackgroundAttachment = Union<
     Keywords::Scroll,
     Keywords::Fixed,
     Keywords::Local>;
 
-// MARK: Background Position ---------------------------------------------------
-// https://www.w3.org/TR/css-backgrounds-3/#typedef-bg-position
-// [
-//   case 1 :
+// https://drafts.csswg.org/css-backgrounds/#background-position
+// <bg-position> = [
 //   [ left | center | right | top | bottom | <length-percentage> ]
 // |
-//   case 2 :
 //   [ left | center | right | <length-percentage> ]
 //   [ top | center | bottom | <length-percentage> ]
 // |
-//   case 3 :
 //   [ center | [ left | right ] <length-percentage>? ] &&
 //   [ center | [ top | bottom ] <length-percentage>? ]
 // ]
-
 export struct BackgroundPosition {
     using HorizontalAnchor = Union<Keywords::Left, Keywords::Center, Keywords::Right>;
     using VerticalAnchor = Union<Keywords::Top, Keywords::Center, Keywords::Bottom>;
@@ -447,6 +431,7 @@ struct ValueParser<BackgroundPosition> {
     }
 };
 
+// https://drafts.csswg.org/css-backgrounds/#background-repeat
 export struct BackgroundRepeat {
     enum _Val : u8 {
         NO = 0,
@@ -475,6 +460,7 @@ export struct BackgroundRepeat {
     }
 };
 
+// https://drafts.csswg.org/css-backgrounds/#typedef-bg-layer
 export struct BackgroundLayer {
     Opt<Image> image;
     BackgroundAttachment attachment = Keywords::FIXED;

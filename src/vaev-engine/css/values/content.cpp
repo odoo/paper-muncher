@@ -9,10 +9,9 @@ import :css.values.primitives;
 
 using namespace Karm;
 
-// https://drafts.csswg.org/css-content-3/
-
 namespace Vaev::Css {
 
+// https://drafts.csswg.org/css-content-3/#content-property
 export using ContentValue = Union<
     Keywords::Normal,
     Keywords::None,

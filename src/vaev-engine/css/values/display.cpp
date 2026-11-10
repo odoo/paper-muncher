@@ -17,7 +17,7 @@ using namespace Karm;
 
 namespace Vaev::Css {
 
-// https://www.w3.org/TR/css-display-3/#the-display-properties
+// https://drafts.csswg.org/css-display/#the-display-properties
 export struct Display {
     enum struct Box : u8 {
         CONTENTS,
@@ -301,107 +301,6 @@ export struct Display {
     }
 };
 
-static Res<Display> _parseLegacyDisplay(Cursor<Sst>& c) {
-    if (c.ended())
-        return Error::invalidData("unexpected end of input");
-
-    if (c.skip(Token::ident("inline-block"))) {
-        return Ok(Display{Display::FLOW_ROOT, Display::INLINE});
-    } else if (c.skip(Token::ident("inline-table"))) {
-        return Ok(Display{Display::TABLE, Display::INLINE});
-    } else if (c.skip(Token::ident("inline-flex"))) {
-        return Ok(Display{Display::FLEX, Display::INLINE});
-    } else if (c.skip(Token::ident("inline-grid"))) {
-        return Ok(Display{Display::GRID, Display::INLINE});
-    }
-
-    return Error::invalidData("expected legacy display value");
-}
-
-static Res<Display::Outside> _parseOutsideDisplay(Cursor<Sst>& c) {
-    if (c.ended())
-        return Error::invalidData("unexpected end of input");
-
-    if (c.skip(Token::ident("block"))) {
-        return Ok(Display::BLOCK);
-    } else if (c.skip(Token::ident("inline"))) {
-        return Ok(Display::INLINE);
-    } else if (c.skip(Token::ident("run-in"))) {
-        return Ok(Display::RUN_IN);
-    }
-
-    return Error::invalidData("expected outside value");
-}
-
-static Res<Display::Inside> _parseInsideDisplay(Cursor<Sst>& c) {
-    if (c.ended())
-        return Error::invalidData("unexpected end of input");
-
-    if (c.skip(Token::ident("flow"))) {
-        return Ok(Display::FLOW);
-    } else if (c.skip(Token::ident("flow-root"))) {
-        return Ok(Display::FLOW_ROOT);
-    } else if (c.skip(Token::ident("flex"))) {
-        return Ok(Display::FLEX);
-    } else if (c.skip(Token::ident("grid"))) {
-        return Ok(Display::GRID);
-    } else if (c.skip(Token::ident("ruby"))) {
-        return Ok(Display::RUBY);
-    } else if (c.skip(Token::ident("table"))) {
-        return Ok(Display::TABLE);
-    } else if (c.skip(Token::ident("math"))) {
-        return Ok(Display::MATH);
-    }
-
-    return Error::invalidData("expected inside value");
-}
-
-static Res<Display> _parseInternalDisplay(Cursor<Sst>& c) {
-    if (c.ended())
-        return Error::invalidData("unexpected end of input");
-
-    if (c.skip(Token::ident("table-row-group"))) {
-        return Ok(Display::TABLE_ROW_GROUP);
-    } else if (c.skip(Token::ident("table-header-group"))) {
-        return Ok(Display::TABLE_HEADER_GROUP);
-    } else if (c.skip(Token::ident("table-footer-group"))) {
-        return Ok(Display::TABLE_FOOTER_GROUP);
-    } else if (c.skip(Token::ident("table-row"))) {
-        return Ok(Display::TABLE_ROW);
-    } else if (c.skip(Token::ident("table-cell"))) {
-        return Ok(Display::TABLE_CELL);
-    } else if (c.skip(Token::ident("table-column-group"))) {
-        return Ok(Display::TABLE_COLUMN_GROUP);
-    } else if (c.skip(Token::ident("table-column"))) {
-        return Ok(Display::TABLE_COLUMN);
-    } else if (c.skip(Token::ident("table-caption"))) {
-        return Ok(Display::TABLE_CAPTION);
-    } else if (c.skip(Token::ident("ruby-base"))) {
-        return Ok(Display::RUBY_BASE);
-    } else if (c.skip(Token::ident("ruby-text"))) {
-        return Ok(Display::RUBY_TEXT);
-    } else if (c.skip(Token::ident("ruby-base-container"))) {
-        return Ok(Display::RUBY_BASE_CONTAINER);
-    } else if (c.skip(Token::ident("ruby-text-container"))) {
-        return Ok(Display::RUBY_TEXT_CONTAINER);
-    }
-
-    return Error::invalidData("expected internal value");
-}
-
-static Res<Display> _parseBoxDisplay(Cursor<Sst>& c) {
-    if (c.ended())
-        return Error::invalidData("unexpected end of input");
-
-    if (c.skip(Token::ident("contents"))) {
-        return Ok(Display::CONTENTS);
-    } else if (c.skip(Token::ident("none"))) {
-        return Ok(Display::NONE);
-    }
-
-    return Error::invalidData("expected box value");
-}
-
 export template <>
 struct ValueParser<Display> {
     static Res<Display> parse(Cursor<Sst>& c) {
@@ -431,6 +330,107 @@ struct ValueParser<Display> {
             outside.unwrapOr(Display::BLOCK),
             item,
         });
+    }
+
+    static Res<Display> _parseLegacyDisplay(Cursor<Sst>& c) {
+        if (c.ended())
+            return Error::invalidData("unexpected end of input");
+
+        if (c.skip(Token::ident("inline-block"))) {
+            return Ok(Display{Display::FLOW_ROOT, Display::INLINE});
+        } else if (c.skip(Token::ident("inline-table"))) {
+            return Ok(Display{Display::TABLE, Display::INLINE});
+        } else if (c.skip(Token::ident("inline-flex"))) {
+            return Ok(Display{Display::FLEX, Display::INLINE});
+        } else if (c.skip(Token::ident("inline-grid"))) {
+            return Ok(Display{Display::GRID, Display::INLINE});
+        }
+
+        return Error::invalidData("expected legacy display value");
+    }
+
+    static Res<Display::Outside> _parseOutsideDisplay(Cursor<Sst>& c) {
+        if (c.ended())
+            return Error::invalidData("unexpected end of input");
+
+        if (c.skip(Token::ident("block"))) {
+            return Ok(Display::BLOCK);
+        } else if (c.skip(Token::ident("inline"))) {
+            return Ok(Display::INLINE);
+        } else if (c.skip(Token::ident("run-in"))) {
+            return Ok(Display::RUN_IN);
+        }
+
+        return Error::invalidData("expected outside value");
+    }
+
+    static Res<Display::Inside> _parseInsideDisplay(Cursor<Sst>& c) {
+        if (c.ended())
+            return Error::invalidData("unexpected end of input");
+
+        if (c.skip(Token::ident("flow"))) {
+            return Ok(Display::FLOW);
+        } else if (c.skip(Token::ident("flow-root"))) {
+            return Ok(Display::FLOW_ROOT);
+        } else if (c.skip(Token::ident("flex"))) {
+            return Ok(Display::FLEX);
+        } else if (c.skip(Token::ident("grid"))) {
+            return Ok(Display::GRID);
+        } else if (c.skip(Token::ident("ruby"))) {
+            return Ok(Display::RUBY);
+        } else if (c.skip(Token::ident("table"))) {
+            return Ok(Display::TABLE);
+        } else if (c.skip(Token::ident("math"))) {
+            return Ok(Display::MATH);
+        }
+
+        return Error::invalidData("expected inside value");
+    }
+
+    static Res<Display> _parseInternalDisplay(Cursor<Sst>& c) {
+        if (c.ended())
+            return Error::invalidData("unexpected end of input");
+
+        if (c.skip(Token::ident("table-row-group"))) {
+            return Ok(Display::TABLE_ROW_GROUP);
+        } else if (c.skip(Token::ident("table-header-group"))) {
+            return Ok(Display::TABLE_HEADER_GROUP);
+        } else if (c.skip(Token::ident("table-footer-group"))) {
+            return Ok(Display::TABLE_FOOTER_GROUP);
+        } else if (c.skip(Token::ident("table-row"))) {
+            return Ok(Display::TABLE_ROW);
+        } else if (c.skip(Token::ident("table-cell"))) {
+            return Ok(Display::TABLE_CELL);
+        } else if (c.skip(Token::ident("table-column-group"))) {
+            return Ok(Display::TABLE_COLUMN_GROUP);
+        } else if (c.skip(Token::ident("table-column"))) {
+            return Ok(Display::TABLE_COLUMN);
+        } else if (c.skip(Token::ident("table-caption"))) {
+            return Ok(Display::TABLE_CAPTION);
+        } else if (c.skip(Token::ident("ruby-base"))) {
+            return Ok(Display::RUBY_BASE);
+        } else if (c.skip(Token::ident("ruby-text"))) {
+            return Ok(Display::RUBY_TEXT);
+        } else if (c.skip(Token::ident("ruby-base-container"))) {
+            return Ok(Display::RUBY_BASE_CONTAINER);
+        } else if (c.skip(Token::ident("ruby-text-container"))) {
+            return Ok(Display::RUBY_TEXT_CONTAINER);
+        }
+
+        return Error::invalidData("expected internal value");
+    }
+
+    static Res<Display> _parseBoxDisplay(Cursor<Sst>& c) {
+        if (c.ended())
+            return Error::invalidData("unexpected end of input");
+
+        if (c.skip(Token::ident("contents"))) {
+            return Ok(Display::CONTENTS);
+        } else if (c.skip(Token::ident("none"))) {
+            return Ok(Display::NONE);
+        }
+
+        return Error::invalidData("expected box value");
     }
 };
 
@@ -500,6 +500,7 @@ struct ValueSerializer<Display> {
     }
 };
 
+// https://drafts.csswg.org/css-display/#visibility
 export using Visibility = Union<
     Keywords::Visible,
     Keywords::Hidden,

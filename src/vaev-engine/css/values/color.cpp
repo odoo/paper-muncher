@@ -19,11 +19,9 @@ import :css.values.numeric;
 using namespace Karm;
 using namespace Karm::Literals;
 
-// https://www.w3.org/TR/css-color-4
-
 namespace Vaev::Css {
 
-// https://www.w3.org/TR/css-color-4/#typedef-color-space
+// https://drafts.csswg.org/css-color-4/#typedef-color-space
 export struct ColorSpace {
     enum struct _Type {
         POLAR,
@@ -34,7 +32,7 @@ export struct ColorSpace {
 
     using enum _Type;
 
-    // https://www.w3.org/TR/css-color-4/#typedef-rectangular-color-space
+    // https://drafts.csswg.org/css-color-4/#typedef-rectangular-color-space
     enum struct _Rectangular {
         SRGB,
         SRGB_LINEAR,
@@ -54,7 +52,7 @@ export struct ColorSpace {
 
     using enum _Rectangular;
 
-    // https://www.w3.org/TR/css-color-4/#typedef-hue-interpolation-method
+    // https://drafts.csswg.org/css-color-4/#typedef-hue-interpolation-method
     enum struct _Interpolation {
         SHORTER,
         LONGER,
@@ -66,7 +64,7 @@ export struct ColorSpace {
 
     using enum _Interpolation;
 
-    // https://www.w3.org/TR/css-color-4/#typedef-polar-color-space
+    // https://drafts.csswg.org/css-color-4/#typedef-polar-color-space
     enum struct _Polar {
         HSL,
         HWB,
@@ -117,9 +115,7 @@ export struct ColorSpace {
     }
 };
 
-// MARK: Color -----------------------------------------------------------------
-// https://drafts.csswg.org/css-color
-
+// https://drafts.csswg.org/css-color-4/#typedef-system-color
 export enum struct SystemColor : u8 {
 #define COLOR(NAME, ...) NAME,
 #include "defs/system-colors.inc"
@@ -131,15 +127,18 @@ export enum struct SystemColor : u8 {
 
 export struct ColorMix;
 
+// https://drafts.csswg.org/css-color-4/#typedef-color
 export using Color = Union<
     Gfx::Color,
     Keywords::CurrentColor,
     SystemColor,
     Box<ColorMix>>;
 
+// https://drafts.csswg.org/css-color-5/#funcdef-color-mix
 export struct ColorMix {
     struct Side {
         Color color;
+        // FIXME: Allow calc.
         Opt<PurePercentage> perc;
 
         void repr(Io::Emit& e) const {
@@ -158,6 +157,7 @@ export struct ColorMix {
     }
 };
 
+// https://drafts.csswg.org/css-color-4/#typedef-named-color
 #define COLOR(NAME, _, VALUE) \
     export constexpr Gfx::Color NAME = Gfx::Color::fromHex(VALUE);
 #include "defs/colors.inc"
@@ -196,7 +196,6 @@ Opt<SystemColor> parseSystemColor(Str name) {
 
 export template <>
 struct ValueParser<Color> {
-
     static Res<Gfx::Color> _parseHexColor(Io::SScan& s) {
         if (s.next() != '#')
             panic("expected '#'");
@@ -240,6 +239,7 @@ struct ValueParser<Color> {
         if (scan.ended())
             return Error::invalidData("unexpected end of input");
 
+        // FIXME: Allow calc.
         if (scan.peek() == Token::Type::PERCENTAGE) {
             auto perc = try$(parseValue<PurePercentage>(scan)).value();
             return Ok(Math::round((perc * 255) / 100));
@@ -266,6 +266,7 @@ struct ValueParser<Color> {
         if (scan.ended())
             return Error::invalidData("unexpected end of input");
 
+        // FIXME: Allow calc.
         if (scan.skip(Token::ident("none"))) {
             return Ok(noneValue);
         } else if (scan.peek() == Token::Type::PERCENTAGE) {
@@ -325,6 +326,7 @@ struct ValueParser<Color> {
             if (scan.ended())
                 return Error::invalidData("unexpected end of input");
 
+            // FIXME: Allow calc.
             if (usingPercentages) {
                 auto perc = try$(parseValue<PurePercentage>(scan));
                 channels[i] = Math::round((perc.value() * 255) / 100.0f);
@@ -354,7 +356,7 @@ struct ValueParser<Color> {
         return Ok(Gfx::Color::fromRgba(r, g, b, try$(_parseAlphaValue(scan))));
     }
 
-    // https://drafts.csswg.org/css-color/#funcdef-hsl
+    // https://drafts.csswg.org/css-color-4/#typedef-modern-hsl-syntax
     static Res<Gfx::Color> _parseHSLModernFuncColor(Sst const& s) {
         Cursor<Sst> scan = s.content;
         eatWhitespace(scan);
@@ -362,6 +364,7 @@ struct ValueParser<Color> {
         if (scan.ended())
             return Error::invalidData("unexpected end of input");
 
+        // FIXME: Allow calc.
         f64 hue;
         if (scan.skip(Token::ident("none")))
             hue = 0;
@@ -389,6 +392,7 @@ struct ValueParser<Color> {
         return Ok(color.withAlpha(alpha));
     }
 
+    // https://drafts.csswg.org/css-color-4/#typedef-legacy-hsl-syntax
     static Res<Gfx::Color> _parseHSLLegacyFuncColor(Sst const& s) {
         Cursor<Sst> scan = s.content;
         eatWhitespace(scan);
@@ -396,6 +400,7 @@ struct ValueParser<Color> {
         if (scan.ended())
             return Error::invalidData("unexpected end of input");
 
+        // FIXME: Allow calc.
         f64 hue;
         if (scan.skip(Token::ident("none")))
             hue = 0;
@@ -412,6 +417,7 @@ struct ValueParser<Color> {
             return Error::invalidData("comma is expected separating hsl components");
         eatWhitespace(scan);
 
+        // FIXME: Allow calc.
         auto sat = try$(parseValue<PurePercentage>(scan)).value() / 100.0f;
         eatWhitespace(scan);
 
@@ -419,6 +425,7 @@ struct ValueParser<Color> {
             return Error::invalidData("comma is expected separating hsl components");
         eatWhitespace(scan);
 
+        // FIXME: Allow calc.
         auto l = try$(parseValue<PurePercentage>(scan)).value() / 100.0f;
         eatWhitespace(scan);
 
@@ -500,6 +507,7 @@ struct ValueParser<Color> {
         }
     }
 
+    // https://drafts.csswg.org/css-color-4/#funcdef-color
     static Res<Gfx::Color> _parseFuncColor(Sst const& s) {
         if (s.prefix == Token::function("color(")) {
             return _parseColorFuncColor(s);
@@ -521,6 +529,7 @@ struct ValueParser<Color> {
     }
 
     static Res<ColorMix::Side> _parseColorMixSide(Cursor<Sst>& s) {
+        // FIXME: Allow calc.
         Opt<PurePercentage> percent;
 
         if (s.ended())
@@ -546,6 +555,7 @@ struct ValueParser<Color> {
         });
     }
 
+    // https://drafts.csswg.org/css-color-5/#funcdef-color-mix
     static Res<Color> _parseColorMixFunc(Sst const& s) {
         Cursor<Sst> scan = s.content;
 

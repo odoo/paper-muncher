@@ -6,10 +6,9 @@ import :css.values.keywords;
 
 using namespace Karm;
 
-// https://drafts.csswg.org/css-break-3/
-
 namespace Vaev::Css {
 
+// https://drafts.csswg.org/css-break/#break-between
 export using BreakBetween = Union<
     Keywords::Auto,
     Keywords::Avoid,
@@ -24,6 +23,7 @@ export using BreakBetween = Union<
     Keywords::AvoidRegion,
     Keywords::Region>;
 
+// https://drafts.csswg.org/css-break/#break-within
 export using BreakInside = Union<
     Keywords::Auto,
     Keywords::Avoid,

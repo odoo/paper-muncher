@@ -190,7 +190,7 @@ export struct Computer {
 
     Rc<Gfx::Fontface> _lookupFontface(ComputedValues const& style) {
         Font::Query fq{
-            .weight = style.font->weight,
+            .weight = Gfx::FontWeight{static_cast<u16>(Math::roundi(style.font->weight))},
             .stretch = Gfx::FontStretch{static_cast<u16>(Math::roundi(style.font->width.value() * 10.0))},
             .style = style.font->style.val,
         };

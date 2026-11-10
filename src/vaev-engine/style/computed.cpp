@@ -12,13 +12,11 @@ using namespace Karm;
 
 namespace Vaev::Style {
 
-// https://www.w3.org/TR/css-cascade/#computed
 // MARK: Groupings -----------------------------------------------------------
-// Bundles of computed longhands sharing storage in ComputedValues.
 
 struct Fonts {
     Vec<FontFamily> families = {"sans-serif"_sym};
-    Gfx::FontWeight weight = Gfx::FontWeight::REGULAR;
+    f64 weight = 0;
     Percent width = Percent{100};
     FontStyle style;
     Px size;

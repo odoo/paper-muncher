@@ -16,9 +16,7 @@ import :css.values.numeric;
 
 namespace Vaev::Css {
 
-// MARK: FontWidth -------------------------------------------------------------
 // https://www.w3.org/TR/css-fonts-4/#propdef-font-width
-
 export struct FontWidth {
     enum struct _Named {
         ULTRA_CONDENSED = 500,
@@ -101,10 +99,7 @@ struct ValueSerializer<FontWidth> {
     }
 };
 
-// MARK: FontStyle -------------------------------------------------------------
 // https://drafts.csswg.org/css-fonts-4/#propdef-font-style
-
-// normal | italic | oblique <angle [-90deg,90deg]>?
 export struct FontStyle {
     using enum Gfx::FontStyle;
     Gfx::FontStyle val;
@@ -173,81 +168,8 @@ struct ValueSerializer<FontStyle> {
     }
 };
 
-// MARK: FontWeight
 // https://www.w3.org/TR/css-fonts-4/#font-weight-absolute-values
-
-export template <>
-struct ValueParser<Gfx::FontWeight> {
-    static Res<Gfx::FontWeight> parse(Cursor<Sst>& c) {
-        if (c.ended())
-            return Error::invalidData("unexpected end of input");
-
-        if (c.skip(Token::ident("normal"))) {
-            return Ok(Gfx::FontWeight::REGULAR);
-        } else if (c.skip(Token::ident("bold"))) {
-            return Ok(Gfx::FontWeight::BOLD);
-        } else {
-            auto weight = try$(parseValue<Integer>(c));
-            if (weight < 0 or weight > 1000)
-                return Error::invalidData("font weight should be between 0 and 1000");
-            return Ok(Gfx::FontWeight{static_cast<u16>(weight)});
-        }
-    }
-};
-
-export template <>
-struct ValueSerializer<Gfx::FontWeight> {
-    // https://drafts.csswg.org/css-fonts-4/#font-weight-prop
-    static Res<> serialize(Io::TextWriter& w, Gfx::FontWeight const& value) {
-        return serializeValue(w, static_cast<Integer>(value.value()));
-    }
-};
-
-// https://www.w3.org/TR/css-fonts-4/#font-weight-prop
-// <font-weight-absolute> | bolder | lighter
-export enum struct RelativeFontWeight : u8 {
-    LIGHTER,
-    BOLDER,
-
-    _LEN
-};
-
-export struct FontWeight : Union<Gfx::FontWeight, RelativeFontWeight> {
-    using _Base = Union<Gfx::FontWeight, RelativeFontWeight>;
-    using _Base::_Base;
-
-    FontWeight()
-        : FontWeight(Gfx::FontWeight::REGULAR) {}
-
-    void repr(Io::Emit& e) const {
-        e("{}", static_cast<_Base const&>(*this));
-    }
-};
-
-export template <>
-struct ValueParser<FontWeight> {
-    static Res<FontWeight> parse(Cursor<Sst>& c) {
-        if (c.ended())
-            return Error::invalidData("unexpected end of input");
-
-        if (c.skip(Token::ident("bolder")))
-            return Ok(RelativeFontWeight::BOLDER);
-        if (c.skip(Token::ident("lighter")))
-            return Ok(RelativeFontWeight::LIGHTER);
-        return Ok(try$(parseValue<Gfx::FontWeight>(c)));
-    }
-};
-
-export template <>
-struct ValueSerializer<FontWeight> {
-    static Res<> serialize(Io::TextWriter& w, FontWeight const& value) {
-        return value.visit([&](auto const& v) {
-            return serializeValue(w, v);
-        });
-    }
-};
-
-// MARK: FontFamily ------------------------------------------------------------
+export using FontWeightAbsolute = Union<Keywords::Normal, Keywords::Bold, Number>;
 
 // https://drafts.csswg.org/css-fonts/#family-name-value
 export struct FontFamily {

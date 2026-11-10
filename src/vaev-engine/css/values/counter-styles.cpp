@@ -16,6 +16,7 @@ using namespace Karm;
 
 namespace Vaev::Css {
 
+// https://drafts.csswg.org/css-counter-styles-3/#counter-style-system
 export using CounterSymbolsType = Union<
     Keywords::Cyclic,
     Keywords::Numeric,
@@ -58,6 +59,7 @@ export struct FixedCounterSystem {
     }
 };
 
+// https://drafts.csswg.org/css-counter-styles-3/#extends-system
 export struct ExtendsCounterSystem {
     CustomIdent name;
 

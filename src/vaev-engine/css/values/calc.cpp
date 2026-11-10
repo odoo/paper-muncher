@@ -726,7 +726,6 @@ Opt<NumericType> determineType(Calc const& calc, Opt<NumericBaseType> mainType) 
 
 // MARK: Parsing ---------------------------------------------------------------
 // https://drafts.csswg.org/css-values-4/#calc-syntax
-// NOTE: Vaev doesn't simplify parsed values, see Style::simplify().
 
 Res<Calc> parseCalcSum(Cursor<Sst>& c);
 Res<Calc> parseCalcProduct(Cursor<Sst>& c);

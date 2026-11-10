@@ -13,24 +13,25 @@ namespace Vaev::Style {
 // https://drafts.csswg.org/css-fonts/#family-name-value
 export using FontFamily = Css::FontFamily;
 
-// https://www.w3.org/TR/css-fonts-4/#font-weight-prop
-// Computed value: a number, see below
-// https://www.w3.org/TR/css-fonts-4/#relative-weights
-export Gfx::FontWeight toComputed(Css::FontWeight const& value, Gfx::FontWeight parent) {
-    return value.visit(
-        [&](Css::RelativeFontWeight relative) {
-            return relative == Css::RelativeFontWeight::LIGHTER ? parent.lighter() : parent.bolder();
-        },
-        [](Gfx::FontWeight weight) {
-            return weight;
-        }
-    );
-}
-
 export struct FontSizeContextData {
     f64 userFontSize = 16;   /// Font size of the user agent
     f64 parentFontSize = 16; /// Font size of the parent box
 };
+
+// https://drafts.csswg.org/css-fonts-4/#font-weight-absolute-values
+export f64 toComputed(Css::FontWeightAbsolute const& weight) {
+    return weight.visit(
+        [](Css::Keywords::Normal) -> f64 {
+            return 400;
+        },
+        [](Css::Keywords::Bold) -> f64 {
+            return 700;
+        },
+        [&](Css::Number const& number) {
+            return toComputed(number);
+        }
+    );
+}
 
 // https://drafts.csswg.org/css-fonts-4/#font-style-prop
 // Computed value: the keyword specified, plus angle in degrees if specified
