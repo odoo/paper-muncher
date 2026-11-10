@@ -166,9 +166,8 @@ export struct BorderColorProperty : Property {
         Registration()
             : Property::Registration(Properties::BORDER_COLOR, SHORTHAND) {}
 
-        // NOSPEC: The initial value is currentcolor.
         InitialValue initial() const override {
-            return "black"s;
+            return "currentColor"s;
         }
 
         Rc<Property> load(ComputedValues const& c) const override {
