@@ -18,6 +18,8 @@ import :style.layers;
 import :style.mpc;
 import :style.ruleIndex;
 import :style.stylesheet;
+import :style.values.keywords;
+import :style.values.primitives;
 
 namespace Vaev::Style {
 
@@ -66,7 +68,7 @@ export struct Computer {
         for (auto el : _iterElementInScope(element)) {
             auto maybeCounterIncrement =
                 iter(el.computedValues()->counters->increment) |
-                FindFirst([&](CounterProps::Increment const& increment) {
+                FindFirst([&](CounterIncrement const& increment) {
                     return increment.name == counter;
                 });
 
@@ -84,7 +86,7 @@ export struct Computer {
             // 3. If el sets this counter with counter-set, then add that integer value to num and break this loop.
             auto maybeCounterSet =
                 iter(el.computedValues()->counters->set) |
-                FindFirst([&](CounterProps::Set const& set) {
+                FindFirst([&](Style::CounterIncrement const& set) {
                     return set.name == counter;
                 });
 
@@ -189,7 +191,7 @@ export struct Computer {
     Rc<Gfx::Fontface> _lookupFontface(ComputedValues const& style) {
         Font::Query fq{
             .weight = style.font->weight,
-            .stretch = Gfx::FontStretch{static_cast<u16>(Math::roundi(style.font->width.val().value() * 10.0))},
+            .stretch = Gfx::FontStretch{static_cast<u16>(Math::roundi(style.font->width.value() * 10.0))},
             .style = style.font->style.val,
         };
 
@@ -279,13 +281,13 @@ export struct Computer {
         // https://html.spec.whatwg.org/multipage/obsolete.html#attr-table-align
         if (auto const& [align] = el->getAttribute(Html::ALIGN_ATTR)) {
             if (align == "left") {
-                values.cow().text.cow().align = TextAlign::LEFT;
+                values.cow().text.cow().align = Keywords::LEFT;
             } else if (align == "right") {
-                values.cow().text.cow().align = TextAlign::RIGHT;
+                values.cow().text.cow().align = Keywords::RIGHT;
             } else if (align == "center") {
-                values.cow().text.cow().align = TextAlign::BLOCK_CENTER;
+                values.cow().text.cow().align = Keywords::VAEV_BLOCK_CENTER;
             } else if (align == "justify") {
-                values.cow().text.cow().align = TextAlign::JUSTIFY;
+                values.cow().text.cow().align = Keywords::JUSTIFY;
             }
         }
     }
@@ -408,9 +410,9 @@ export struct Computer {
         bool positionedOutOfFlow =
             oneOf(values->position, Keywords::ABSOLUTE, Keywords::FIXED) or
             values->position.is<RunningPosition>();
-        if (values->float_ != Float::NONE) {
+        if (values->float_ != Keywords::NONE) {
             if (positionedOutOfFlow)
-                values.cow().float_ = Float::NONE;
+                values.cow().float_ = Keywords::NONE;
             else
                 values.cow().display = values->display.blockify();
         }
@@ -423,7 +425,7 @@ export struct Computer {
             if (listStyleType == CustomIdent{"disc"_sym} or
                 listStyleType == CustomIdent{"circle"_sym} or
                 listStyleType == CustomIdent{"square"_sym}) {
-                values.cow().transform.cow().transform = TransformList{ScaleTransform{1.25, 1.25}};
+                values.cow().transform.cow().transform = Style::TransformList{Style::ScaleTransform{1.25, 1.25}};
             }
         }
 
@@ -499,7 +501,7 @@ export struct Computer {
 
         // If the computed value of background-image on the
         // root element is none and its background-color is transparent
-        if (rootBackground->color == TRANSPARENT and rootBackground->imageIsNone()) {
+        if (rootBackground->color == Gfx::ALPHA and rootBackground->imageIsNone()) {
             // User agents must instead propagate the computed values of the
             // background properties from that element’s first HTML BODY
             // or XHTML body child element.

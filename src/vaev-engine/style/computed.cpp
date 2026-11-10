@@ -5,108 +5,280 @@ import Karm.Gfx;
 import Karm.Math;
 
 import :css;
-import :values;
+import :css.values;
+import :style.values;
 
 using namespace Karm;
 
 namespace Vaev::Style {
 
-struct FontProps {
+// https://www.w3.org/TR/css-cascade/#computed
+// MARK: Groupings -----------------------------------------------------------
+// Bundles of computed longhands sharing storage in ComputedValues.
+
+struct Fonts {
     Vec<FontFamily> families = {"sans-serif"_sym};
     Gfx::FontWeight weight = Gfx::FontWeight::REGULAR;
-    FontWidth width = FontWidth::NORMAL;
-    FontStyle style = FontStyle::NORMAL;
-    Au size;
+    Percent width = Percent{100};
+    FontStyle style;
+    Px size;
 };
 
-struct TransformProps {
+struct Transforms {
     Transform transform = Keywords::NONE;
-    TransformOrigin origin = {
-        .xOffset = Calc<PercentOr<Length>>{Percent{0}},
-        .yOffset = Calc<PercentOr<Length>>{Percent{0}},
-    };
+    Position origin = {Percent{0}, Percent{0}};
     TransformBox box = Keywords::BORDER_BOX;
 
     bool has() const {
-        return transform != Keywords::NONE;
+        return not transform.is<Keywords::None>();
     }
 };
 
-export struct TableProps {
-    CaptionSide captionSide = CaptionSide::TOP;
-    BorderSpacing spacing = {0_au, 0_au};
-    BorderCollapse collapse = BorderCollapse::SEPARATE;
+export struct Table {
+    CaptionSide captionSide = Keywords::TOP;
+    BorderSpacing spacing;
+    BorderCollapse collapse = Keywords::SEPARATE;
 };
 
-export struct SvgProps {
-    PercentOr<Length> x = Length{0_au};
-    PercentOr<Length> y = Length{0_au};
-    PercentOr<Length> cx = Length{0_au};
-    PercentOr<Length> cy = Length{0_au};
-    PercentOr<Length> r = Length{0_au};
+export struct SvgGeometry {
+    PxPercent x = 0_px;
+    PxPercent y = 0_px;
+    PxPercent cx = 0_px;
+    PxPercent cy = 0_px;
+    PxPercent r = 0_px;
 
     Union<String, None> d = NONE;
     Opt<SvgViewBox> viewBox = NONE;
 };
 
-export struct SvgPaintProps {
-    Number fillOpacity = 1;
-    PercentOr<Length> strokeWidth = Length{1_au};
-    Number strokeOpacity = 1;
+export struct SvgPainting {
+    f64 fillOpacity = 1;
+    PxPercent strokeWidth = 1_px;
+    f64 strokeOpacity = 1;
     SvgPaint fill = Some(Gfx::BLACK);
     SvgPaint stroke = NONE;
 };
 
-using ClipProps = Opt<BasicShape>;
+using Clip = Opt<BasicShape>;
 
 export struct Inherited {};
 
-// https://www.w3.org/TR/css-cascade/#computed
+export struct Aligns {
+    // https://drafts.csswg.org/css-align-3/#propdef-align-content
+    Align alignContent;
+
+    // https://drafts.csswg.org/css-align-3/#propdef-justify-content
+    Align justifyContent;
+
+    // https://drafts.csswg.org/css-align-3/#propdef-justify-self
+    Align justifySelf;
+
+    // https://drafts.csswg.org/css-align-3/#propdef-align-self
+    Align alignSelf;
+
+    // https://drafts.csswg.org/css-align-3/#propdef-justify-items
+    Align justifyItems;
+
+    // https://drafts.csswg.org/css-align-3/#propdef-align-items
+    Align alignItems;
+};
+
+export struct Backgrounds {
+    Color color = Gfx::ALPHA;
+    Vec<BackgroundLayer> layers = {};
+
+    bool imageIsNone() const {
+        return iter(layers) |
+               All([](auto const& l) {
+                   return l.image == NONE;
+               });
+    }
+};
+
+// FIXME: cant we have this for karm/insets?
+export enum struct BorderEdge {
+    TOP,
+    START,
+    BOTTOM,
+    END,
+};
+
+export struct Border {
+    Px width = 3_px;
+    Gfx::BorderStyle style = Gfx::BorderStyle::NONE;
+    Color color = Gfx::BLACK;
+};
+
+export struct Borders {
+    Border top, start, bottom, end;
+    Math::Radii<PxPercent> radii = {0_px};
+
+    Border const& get(BorderEdge edge) const {
+        switch (edge) {
+        case BorderEdge::TOP:
+            return top;
+        case BorderEdge::START:
+            return start;
+        case BorderEdge::BOTTOM:
+            return bottom;
+        case BorderEdge::END:
+            return end;
+        }
+    }
+};
+
+export struct Breaks {
+    BreakBetween before = Keywords::AUTO;
+    BreakBetween after = Keywords::AUTO;
+    BreakInside inside = Keywords::AUTO;
+
+    // Breaks Between Lines: orphans, widows
+    // https://www.w3.org/TR/css-break-3/#widows-orphans
+    Integer orphans = 2;
+    Integer widows = 2;
+};
+
+export struct Columns {
+    Union<Keywords::Auto, Px> width = Keywords::AUTO;
+    Union<Keywords::Auto, Px> height = Keywords::AUTO;
+    ColumnCount count = Keywords::AUTO;
+};
+
+export struct Counters {
+    Vec<CounterReset> reset;
+    Vec<CounterIncrement> increment;
+    Vec<CounterIncrement> set;
+};
+
+export struct Flex {
+    // FlexContainer
+    FlexDirection direction = Keywords::ROW;
+    FlexWrap wrap = Keywords::NOWRAP;
+
+    // FlexItem
+    FlexBasis basis = Keywords::AUTO;
+    f64 grow = 0;
+    f64 shrink = 1;
+
+    bool isRowOriented() const {
+        return direction == Keywords::ROW or
+               direction == Keywords::ROW_REVERSE;
+    }
+
+    bool isReverse() const {
+        return direction == Keywords::ROW_REVERSE or
+               direction == Keywords::COLUMN_REVERSE;
+    }
+};
+
+export struct Gaps {
+    Gap row = Keywords::NORMAL;
+    Gap col = Keywords::NORMAL;
+};
+
+export struct Inline {
+    BaselineSource baselineSource = Keywords::AUTO;
+    AlignmentBaseline alignmentBaseline = Keywords::BASELINE;
+    DominantBaseline dominantBaseline = Keywords::AUTO;
+    BaselineShift baselineShift = PxPercent{0_px};
+    LineHeight lineHeight = Keywords::NORMAL;
+};
+
+export struct List {
+    ListImage image = Keywords::NONE;
+    ListType type = CustomIdent{"disc"_sym};
+    ListPosition position = Keywords::OUTSIDE;
+    MarkerSide markerSide = Keywords::MATCH_SELF;
+};
+
+export using Margins = Math::Insets<Union<Keywords::Auto, PxPercent>>;
+
+export struct Outline {
+    Px width = 3_px;
+    Px offset = 0_px;
+    Union<Keywords::Auto, Gfx::BorderStyle> style = Gfx::BorderStyle::NONE;
+    Color color = Keywords::CURRENT_COLOR;
+};
+
+export using Paddings = Math::Insets<PxPercent>;
+
+export using BoxInsets = Math::Insets<Union<Keywords::Auto, PxPercent>>;
+
+export struct Sizing {
+    Size width = Keywords::AUTO, height = Keywords::AUTO;
+    Size minWidth = Keywords::AUTO, minHeight = Keywords::AUTO;
+    MaxSize maxWidth = Keywords::NONE, maxHeight = Keywords::NONE;
+};
+
+export struct Text {
+    TextAlign align = Keywords::START;
+    TextTransform transform = Keywords::NONE;
+    WhiteSpace whiteSpace = Keywords::NORMAL;
+};
+
+export struct Overflows {
+    Overflow x = Keywords::VISIBLE;
+    Overflow y = Keywords::VISIBLE;
+    Overflow block = Keywords::VISIBLE;
+    Overflow inline_ = Keywords::VISIBLE;
+
+    void repr(Io::Emit& e) const {
+        e("(overflows");
+        e(" x={}", x);
+        e(" y={}", y);
+        e(" block={}", block);
+        e(" inline={}", inline_);
+        e(")");
+    }
+};
+
+// MARK: Computed Values -------------------------------------------------------
+
 export struct ComputedValues {
     Cow<Gaps> gaps;
-    Cow<BackgroundProps> backgrounds;
-    Cow<BorderProps> borders;
-    Cow<Margin> margin = Margin(Calc<PercentOr<Length>>(Length())); // FIXME
-    Cow<OutlineProps> outline;
-    Cow<Padding> padding = Padding(Length{}); // FIXME
-    Cow<SizingProps> sizing;
-    Cow<InlineProps> inline_;
-    Cow<BoxInsets> insets = BoxInsets(Keywords::AUTO); // FIXME
-    Cow<ClipProps> clip;
-    Cow<TransformProps> transform;
-    Cow<TableProps> table;
-    Cow<FontProps> font;
-    Cow<TextProps> text;
-    Cow<FlexProps> flex;
-    Cow<BreakProps> break_;
-    Cow<SvgProps> svg;
-    Cow<SvgPaintProps> svgPaint;
-    Cow<CounterProps> counters;
-    Cow<ListProps> list;
-    Cow<ColumnProps> column;
+    Cow<Backgrounds> backgrounds;
+    Cow<Borders> borders;
+    Cow<Margins> margin = Margins(Keywords::AUTO);
+    Cow<Outline> outline;
+    Cow<Paddings> padding = Paddings(0_px);
+    Cow<Sizing> sizing;
+    Cow<Inline> inline_;
+    Cow<BoxInsets> insets = BoxInsets(Keywords::AUTO);
+    Cow<Clip> clip;
+    Cow<Transforms> transform;
+    Cow<Table> table;
+    Cow<Fonts> font;
+    Cow<Text> text;
+    Cow<Flex> flex;
+    Cow<Breaks> break_;
+    Cow<SvgGeometry> svg;
+    Cow<SvgPainting> svgPaint;
+    Cow<Counters> counters;
+    Cow<List> list;
+    Cow<Columns> column;
 
     Cow<Map<Symbol, Css::Content>> customProps;
     Rc<Gfx::Fontface> fontFace;
 
     // Inlined fields
     ZIndex zIndex = Keywords::AUTO;
-    Overflows overflows;
+    Style::Overflows overflows;
     Gfx::Color color;
-    Content content = Keywords::NORMAL;
+    ContentValue content = Keywords::NORMAL;
     Integer order;
-    AlignProps aligns;
+    Aligns aligns;
     Display display;
     f32 opacity;
 
     // Small Field
-    Float float_ = Float::NONE;
-    Clear clear = Clear::NONE;
-    Visibility visibility;
+    Float float_ = Keywords::NONE;
+    Clear clear = Keywords::NONE;
+    Visibility visibility = Keywords::VISIBLE;
     WritingMode writingMode = Keywords::HORIZONTAL_TB;
     Direction direction = Keywords::LTR;
-    Position position = Keywords::STATIC;
+    Style::PositionScheme position = Keywords::STATIC;
     BoxSizing boxSizing = Keywords::CONTENT_BOX;
-    TableLayout tableLayout = TableLayout::AUTO;
+    TableLayout tableLayout = Keywords::AUTO;
 
     ComputedValues() : fontFace(Gfx::Fontface::fallback()) {}
 

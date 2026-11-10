@@ -1608,10 +1608,6 @@ test$("vaev-style-wpt-css-css-anchor-position-anchor-parse-invalid") {
     try$(_expectInvalid(_driver, "top", "calc(anchor(foo top) + 10px + 10%)"));
     try$(_expectInvalid(_driver, "top", "min(anchor(--foo top), anchor(--bar bottom), anchor-size(baz height))"));
     try$(_expectInvalid(_driver, "top", "calc(anchor(--foo top, 1) + 1px)"));
-    return Ok();
-}
-
-test$("vaev-style-wpt-css-css-anchor-position-anchor-parse-invalid-xfail", XFAIL) {
     try$(_expectInvalid(_driver, "top", "calc(10px + 100 * anchor(--foo top, anchor(bar bottom)))"));
     return Ok();
 }
@@ -1639,10 +1635,6 @@ test$("vaev-style-wpt-css-css-anchor-position-anchor-size-parse-invalid") {
     try$(_expectInvalid(_driver, "width", "calc(anchor-size(foo width) + 10px + 10%)"));
     try$(_expectInvalid(_driver, "width", "min(anchor-size(--foo width), anchor-size(--bar height), anchor(--baz top))"));
     try$(_expectInvalid(_driver, "top", "calc(anchor-size(--foo width, 1) + 1px)"));
-    return Ok();
-}
-
-test$("vaev-style-wpt-css-css-anchor-position-anchor-size-parse-invalid-xfail", XFAIL) {
     try$(_expectInvalid(_driver, "width", "calc(10px + 100 * anchor-size(--foo width, anchor-size(bar bottom)))"));
     return Ok();
 }
@@ -1739,11 +1731,11 @@ test$("vaev-style-wpt-css-css-backgrounds-parsing-border-color-invalid") {
 // https://github.com/web-platform-tests/wpt/blob/ba6d9f67/css/css-backgrounds/parsing/border-invalid.html
 test$("vaev-style-wpt-css-css-backgrounds-parsing-border-invalid") {
     try$(_expectInvalid(_driver, "border", "auto"));
+    try$(_expectInvalid(_driver, "border", "thin double green 1px"));
     return Ok();
 }
 
 test$("vaev-style-wpt-css-css-backgrounds-parsing-border-invalid-xfail", XFAIL) {
-    try$(_expectInvalid(_driver, "border", "thin double green 1px"));
     try$(_expectInvalid(_driver, "border", "-2em"));
     return Ok();
 }
@@ -1848,13 +1840,13 @@ test$("vaev-style-wpt-css-css-backgrounds-parsing-border-width-valid") {
     try$(_expectSerialized(_driver, "border-top-width", "0px", "0px"));
     try$(_expectSerialized(_driver, "border-right-width", "thin", "thin"));
     try$(_expectSerialized(_driver, "border-left-width", "thick", "thick"));
+    try$(_expectSerialized(_driver, "border-bottom-width", "medium", "medium"));
     return Ok();
 }
 
 test$("vaev-style-wpt-css-css-backgrounds-parsing-border-width-valid-xfail", XFAIL) {
     try$(_expectSerialized(_driver, "border-width", "1em", "1em"));
     try$(_expectSerialized(_driver, "border-width", "2px thin medium thick", "2px thin medium thick"));
-    try$(_expectSerialized(_driver, "border-bottom-width", "medium", "medium"));
     return Ok();
 }
 
@@ -3814,10 +3806,6 @@ test$("vaev-style-wpt-css-css-flexbox-parsing-flex-invalid") {
     try$(_expectInvalid(_driver, "flex", "2 3 4"));
     try$(_expectInvalid(_driver, "flex", "5px 7%"));
     try$(_expectInvalid(_driver, "flex", "9 none"));
-    return Ok();
-}
-
-test$("vaev-style-wpt-css-css-flexbox-parsing-flex-invalid-xfail", XFAIL) {
     try$(_expectInvalid(_driver, "flex", "1 2 calc(0)"));
     try$(_expectInvalid(_driver, "flex", "1 2 calc(3 - 3)"));
     return Ok();
@@ -3976,12 +3964,12 @@ test$("vaev-style-wpt-css-css-fonts-parsing-font-size-valid") {
     try$(_expectSerialized(_driver, "font-size", "smaller", "smaller"));
     try$(_expectSerialized(_driver, "font-size", "10px", "10px"));
     try$(_expectSerialized(_driver, "font-size", "20%", "20%"));
+    try$(_expectSerialized(_driver, "font-size", "calc(30% - 40px)", "calc(30% - 40px)"));
     return Ok();
 }
 
 test$("vaev-style-wpt-css-css-fonts-parsing-font-size-valid-xfail", XFAIL) {
     try$(_expectSerialized(_driver, "font-size", "xxx-large", "xxx-large"));
-    try$(_expectSerialized(_driver, "font-size", "calc(30% - 40px)", "calc(30% - 40px)"));
     return Ok();
 }
 
@@ -4003,13 +3991,13 @@ test$("vaev-style-wpt-css-css-fonts-parsing-font-style-valid") {
     try$(_expectSerialized(_driver, "font-style", "oblique -14deg", "oblique -14deg"));
     try$(_expectSerialized(_driver, "font-style", "oblique -90deg", "oblique -90deg"));
     try$(_expectSerialized(_driver, "font-style", "oblique 90deg", "oblique 90deg"));
+    try$(_expectSerialized(_driver, "font-style", "oblique 14deg", "oblique 14deg"));
+    try$(_expectSerialized(_driver, "font-style", "oblique 10grad", "oblique 10grad"));
     return Ok();
 }
 
 test$("vaev-style-wpt-css-css-fonts-parsing-font-style-valid-xfail", XFAIL) {
     try$(_expectSerialized(_driver, "font-style", "oblique calc(10deg - 10deg)", "oblique calc(0deg)"));
-    try$(_expectSerialized(_driver, "font-style", "oblique 14deg", "oblique 14deg"));
-    try$(_expectSerialized(_driver, "font-style", "oblique 10grad", "oblique 10grad"));
     try$(_expectSerialized(_driver, "font-style", "oblique calc(90deg)", "oblique calc(90deg)"));
     try$(_expectSerialized(_driver, "font-style", "oblique calc(100deg)", "oblique calc(100deg)"));
     try$(_expectSerialized(_driver, "font-style", "oblique calc(-100deg)", "oblique calc(-100deg)"));
@@ -4891,10 +4879,6 @@ test$("vaev-style-wpt-css-css-logical-parsing-margin-block-inline-invalid") {
     try$(_expectInvalid(_driver, "margin-inline-end", "10px, auto"));
     try$(_expectInvalid(_driver, "margin-block", "none"));
     try$(_expectInvalid(_driver, "margin-block", "20%, calc(10px - 0.5em)"));
-    return Ok();
-}
-
-test$("vaev-style-wpt-css-css-logical-parsing-margin-block-inline-invalid-xfail", XFAIL) {
     try$(_expectInvalid(_driver, "margin-inline", "10px auto 20px"));
     return Ok();
 }
@@ -5771,10 +5755,6 @@ test$("vaev-style-wpt-css-css-text-parsing-text-align-valid") {
     try$(_expectSerialized(_driver, "text-align", "right", "right"));
     try$(_expectSerialized(_driver, "text-align", "center", "center"));
     try$(_expectSerialized(_driver, "text-align", "justify", "justify"));
-    return Ok();
-}
-
-test$("vaev-style-wpt-css-css-text-parsing-text-align-valid-xfail", XFAIL) {
     try$(_expectSerialized(_driver, "text-align", "match-parent", "match-parent"));
     try$(_expectSerialized(_driver, "text-align", "justify-all", "justify-all"));
     return Ok();
@@ -5951,10 +5931,6 @@ test$("vaev-style-wpt-css-css-transforms-parsing-transform-origin-valid") {
     try$(_expectSerializedOneOf(_driver, "transform-origin", "left center", {"left center 0px", "left center"}));
     try$(_expectSerializedOneOf(_driver, "transform-origin", "center top", {"center top 0px", "center top"}));
     try$(_expectSerializedOneOf(_driver, "transform-origin", "right -4%", {"right -4% 0px", "right -4%"}));
-    return Ok();
-}
-
-test$("vaev-style-wpt-css-css-transforms-parsing-transform-origin-valid-xfail", XFAIL) {
     try$(_expectSerializedOneOf(_driver, "transform-origin", "left", {"left center 0px", "left 50% 0px", "left center"}));
     try$(_expectSerializedOneOf(_driver, "transform-origin", "center", {"center center 0px", "center 50% 0px", "center center"}));
     try$(_expectSerializedOneOf(_driver, "transform-origin", "right", {"right center 0px", "right 50% 0px", "right center"}));
@@ -5963,6 +5939,10 @@ test$("vaev-style-wpt-css-css-transforms-parsing-transform-origin-valid-xfail", 
     try$(_expectSerializedOneOf(_driver, "transform-origin", "-1px", {"-1px center 0px", "-1px 50% 0px", "-1px center"}));
     try$(_expectSerializedOneOf(_driver, "transform-origin", "calc(2em + 3ex)", {"calc(2em + 3ex) center 0px", "calc(2em + 3ex) 50% 0px", "calc(2em + 3ex) center"}));
     try$(_expectSerializedOneOf(_driver, "transform-origin", "-4%", {"-4% center 0px", "-4% 50% 0px", "-4% center"}));
+    return Ok();
+}
+
+test$("vaev-style-wpt-css-css-transforms-parsing-transform-origin-valid-xfail", XFAIL) {
     try$(_expectSerialized(_driver, "transform-origin", "-1px bottom 5px", "-1px bottom 5px"));
     try$(_expectSerialized(_driver, "transform-origin", "center left 6px", "left center 6px"));
     try$(_expectSerializedOneOf(_driver, "transform-origin", "top center", {"center top 0px", "center top"}));
@@ -7228,10 +7208,6 @@ test$("vaev-style-wpt-svg-geometry-parsing-cx-valid") {
     try$(_expectSerialized(_driver, "cx", "-1px", "-1px"));
     try$(_expectSerialized(_driver, "cx", "4%", "4%"));
     try$(_expectSerialized(_driver, "cx", "5ch", "5ch"));
-    return Ok();
-}
-
-test$("vaev-style-wpt-svg-geometry-parsing-cx-valid-xfail", XFAIL) {
     try$(_expectSerialized(_driver, "cx", "calc(2em + 3ex)", "calc(2em + 3ex)"));
     return Ok();
 }
@@ -7250,10 +7226,6 @@ test$("vaev-style-wpt-svg-geometry-parsing-cy-valid") {
     try$(_expectSerialized(_driver, "cy", "-1px", "-1px"));
     try$(_expectSerialized(_driver, "cy", "4%", "4%"));
     try$(_expectSerialized(_driver, "cy", "5rem", "5rem"));
-    return Ok();
-}
-
-test$("vaev-style-wpt-svg-geometry-parsing-cy-valid-xfail", XFAIL) {
     try$(_expectSerialized(_driver, "cy", "calc(2em + 3ex)", "calc(2em + 3ex)"));
     return Ok();
 }
@@ -7278,10 +7250,6 @@ test$("vaev-style-wpt-svg-geometry-parsing-r-valid") {
     try$(_expectSerialized(_driver, "r", "1px", "1px"));
     try$(_expectSerialized(_driver, "r", "4%", "4%"));
     try$(_expectSerialized(_driver, "r", "5vmin", "5vmin"));
-    return Ok();
-}
-
-test$("vaev-style-wpt-svg-geometry-parsing-r-valid-xfail", XFAIL) {
     try$(_expectSerialized(_driver, "r", "calc(2em + 3ex)", "calc(2em + 3ex)"));
     return Ok();
 }
@@ -7300,10 +7268,6 @@ test$("vaev-style-wpt-svg-geometry-parsing-x-valid") {
     try$(_expectSerialized(_driver, "x", "-1px", "-1px"));
     try$(_expectSerialized(_driver, "x", "4%", "4%"));
     try$(_expectSerialized(_driver, "x", "5cm", "5cm"));
-    return Ok();
-}
-
-test$("vaev-style-wpt-svg-geometry-parsing-x-valid-xfail", XFAIL) {
     try$(_expectSerialized(_driver, "x", "calc(2em + 3ex)", "calc(2em + 3ex)"));
     return Ok();
 }
@@ -7322,10 +7286,6 @@ test$("vaev-style-wpt-svg-geometry-parsing-y-valid") {
     try$(_expectSerialized(_driver, "y", "-1px", "-1px"));
     try$(_expectSerialized(_driver, "y", "4%", "4%"));
     try$(_expectSerialized(_driver, "y", "5mm", "5mm"));
-    return Ok();
-}
-
-test$("vaev-style-wpt-svg-geometry-parsing-y-valid-xfail", XFAIL) {
     try$(_expectSerialized(_driver, "y", "calc(2em + 3ex)", "calc(2em + 3ex)"));
     return Ok();
 }
@@ -7439,14 +7399,14 @@ test$("vaev-style-wpt-svg-painting-parsing-stroke-width-valid") {
     try$(_expectSerialized(_driver, "stroke-width", "1px", "1px"));
     try$(_expectSerialized(_driver, "stroke-width", "4%", "4%"));
     try$(_expectSerialized(_driver, "stroke-width", "5vmin", "5vmin"));
+    try$(_expectSerialized(_driver, "stroke-width", "calc(2em + 3ex)", "calc(2em + 3ex)"));
+    try$(_expectSerialized(_driver, "stroke-width", "calc(50% + 60px)", "calc(50% + 60px)"));
     return Ok();
 }
 
 test$("vaev-style-wpt-svg-painting-parsing-stroke-width-valid-xfail", XFAIL) {
     try$(_expectSerialized(_driver, "stroke-width", "0", "0"));
     try$(_expectSerialized(_driver, "stroke-width", "10", "10"));
-    try$(_expectSerialized(_driver, "stroke-width", "calc(2em + 3ex)", "calc(2em + 3ex)"));
-    try$(_expectSerialized(_driver, "stroke-width", "calc(50% + 60px)", "calc(50% + 60px)"));
     try$(_expectSerialized(_driver, "stroke-width", "calc(3)", "calc(3)"));
     try$(_expectSerialized(_driver, "stroke-width", "calc(2 + 1)", "calc(3)"));
     try$(_expectSerialized(_driver, "stroke-width", "calc(2 + (7 - 5))", "calc(4)"));

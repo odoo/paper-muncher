@@ -3,7 +3,9 @@ export module Vaev.Engine:layout.floats;
 import Karm.Core;
 import Karm.Math;
 
-import :values;
+import :layout.length;
+import :style.computed;
+import :style.values;
 
 using namespace Karm;
 
@@ -16,19 +18,23 @@ export enum struct FloatSide : u8 {
 
 // https://drafts.csswg.org/css-logical-1/#float-clear
 // The mapping on these properties uses the writing mode of the element’s containing block.
-export FloatSide resolveFloatSide(Float float_, Direction direction) {
-    bool rtl = direction == Keywords::RTL;
+export FloatSide resolveFloatSide(Style::Float const& float_, Style::Direction const& direction) {
+    bool rtl = direction == Style::Keywords::RTL;
 
-    switch (float_) {
-    case Float::RIGHT:
-        return FloatSide::RIGHT;
-    case Float::INLINE_START:
-        return rtl ? FloatSide::RIGHT : FloatSide::LEFT;
-    case Float::INLINE_END:
-        return rtl ? FloatSide::LEFT : FloatSide::RIGHT;
-    default:
-        return FloatSide::LEFT;
-    }
+    return float_.visit(
+        [](Style::Keywords::Right) {
+            return FloatSide::RIGHT;
+        },
+        [&](Style::Keywords::InlineStart) {
+            return rtl ? FloatSide::RIGHT : FloatSide::LEFT;
+        },
+        [&](Style::Keywords::InlineEnd) {
+            return rtl ? FloatSide::LEFT : FloatSide::RIGHT;
+        },
+        [](auto const&) {
+            return FloatSide::LEFT;
+        }
+    );
 }
 
 // https://www.w3.org/TR/CSS22/visuren.html#float-position
@@ -90,12 +96,14 @@ export struct Floats {
     // This property indicates which sides of an element's box(es) may not be adjacent to an earlier floating box.
     // https://drafts.csswg.org/css-logical-1/#float-clear
     // The mapping on these properties uses the writing mode of the element’s containing block.
-    Opt<Au> clearance(Clear clear, Direction direction) const {
-        bool rtl = direction == Keywords::RTL;
-        bool clearsLeft = oneOf(clear, Clear::LEFT, Clear::BOTH) or
-                          clear == (rtl ? Clear::INLINE_END : Clear::INLINE_START);
-        bool clearsRight = oneOf(clear, Clear::RIGHT, Clear::BOTH) or
-                           clear == (rtl ? Clear::INLINE_START : Clear::INLINE_END);
+    Opt<Au> clearance(Style::Clear const& clear, Style::Direction const& direction) const {
+        bool rtl = direction == Style::Keywords::RTL;
+        bool clearsInlineStart = clear == Style::Keywords::INLINE_START;
+        bool clearsInlineEnd = clear == Style::Keywords::INLINE_END;
+        bool clearsLeft = oneOf(clear, Style::Keywords::LEFT, Style::Keywords::BOTH) or
+                          (rtl ? clearsInlineEnd : clearsInlineStart);
+        bool clearsRight = oneOf(clear, Style::Keywords::RIGHT, Style::Keywords::BOTH) or
+                           (rtl ? clearsInlineStart : clearsInlineEnd);
 
         Opt<Au> result = NONE;
         for (auto const& placed : _items) {

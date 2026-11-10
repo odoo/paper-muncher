@@ -1,18 +1,20 @@
 export module Vaev.Engine:style.viewport;
 
-import :values.length;
-import :values.resolution;
+import Karm.Math;
+
+import :style.values.numeric;
+
+using namespace Karm;
 
 namespace Vaev::Style {
 
 export struct Viewport {
-    Resolution dpi = Resolution::fromDpi(96);
     // https://drafts.csswg.org/css-values/#small-viewport-size
-    RectAu small;
+    Math::Vec2<Px> small;
     // https://drafts.csswg.org/css-values/#large-viewport-size
-    RectAu large = small;
+    Math::Vec2<Px> large = small;
     // https://drafts.csswg.org/css-values/#dynamic-viewport-size
-    RectAu dynamic = small;
+    Math::Vec2<Px> dynamic = small;
 };
 
 } // namespace Vaev::Style

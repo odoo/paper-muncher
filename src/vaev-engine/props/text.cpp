@@ -8,8 +8,10 @@ import Karm.Core;
 import :props.base;
 import :css.parser;
 import :style.computed;
+import :style.values.keywords;
 
 using namespace Karm;
+using namespace Karm::Literals;
 
 namespace Vaev::Style {
 
@@ -23,8 +25,9 @@ export struct TextAlignProperty : Property {
         Registration()
             : Property::Registration(Properties::TEXT_ALIGN, {INHERITED, BULK_INHERITED}) {}
 
-        Rc<Property> initial() const override {
-            return makeRc<TextAlignProperty>(self(), TextAlign::LEFT);
+        // NOSPEC: The initial value is start.
+        InitialValue initial() const override {
+            return "left"s;
         }
 
         void inherit(ComputedValues const& parent, ComputedValues& child) const override {
@@ -36,35 +39,17 @@ export struct TextAlignProperty : Property {
         }
 
         Res<Rc<Property>> parse(Cursor<Css::Sst>& c) const override {
-            TextAlign value;
-            if (c.skip(Css::Token::ident("left"))) {
-                value = TextAlign::LEFT;
-            } else if (c.skip(Css::Token::ident("right"))) {
-                value = TextAlign::RIGHT;
-            } else if (c.skip(Css::Token::ident("center"))) {
-                value = TextAlign::CENTER;
-            } else if (c.skip(Css::Token::ident("justify"))) {
-                value = TextAlign::JUSTIFY;
-            } else if (c.skip(Css::Token::ident("start"))) {
-                value = TextAlign::START;
-            } else if (c.skip(Css::Token::ident("end"))) {
-                value = TextAlign::END;
-            } else if (
-                c.skip(Css::Token::ident("-vaev-block-center")) or
-                c.skip(Css::Token::ident("-webkit-center")) or
-                c.skip(Css::Token::ident("-moz-center"))
-            ) {
-                value = TextAlign::BLOCK_CENTER;
-            } else {
-                return Error::invalidData("expected text-align");
-            }
-            return Ok(makeRc<TextAlignProperty>(self(), value));
+            // NOSPEC: Legacy aliases of -vaev-block-center.
+            if (c.skip(Css::Token::ident("-webkit-center")) or c.skip(Css::Token::ident("-moz-center")))
+                return Ok(makeRc<TextAlignProperty>(self(), Keywords::VAEV_BLOCK_CENTER));
+
+            return Ok(makeRc<TextAlignProperty>(self(), try$(parseValue<Css::TextAlign>(c))));
         }
     };
 
-    TextAlign _value;
+    Css::TextAlign _value;
 
-    TextAlignProperty(Rc<Property::Registration> registration, TextAlign value)
+    TextAlignProperty(Rc<Property::Registration> registration, Css::TextAlign value)
         : Property(registration), _value(value) {}
 
     void apply([[maybe_unused]] ComputedValues const& parent, ComputedValues& c, [[maybe_unused]] ComputationContext const& cx) const override {
@@ -73,9 +58,9 @@ export struct TextAlignProperty : Property {
 
     Res<> serialize(Io::TextWriter& w) const override {
         // NOSPEC: Non-standard value, written with the name res/html.css uses.
-        if (_value == TextAlign::BLOCK_CENTER)
+        if (_value == Keywords::VAEV_BLOCK_CENTER)
             return w.writeStr("-vaev-block-center"s);
-        return serializeValue(w, _value);
+        return Css::serializeValue(w, _value);
     }
 
     void repr(Io::Emit& e) const override {
@@ -90,8 +75,8 @@ export struct TextTransformProperty : Property {
         Registration()
             : Property::Registration(Properties::TEXT_TRANSFORM, {INHERITED, BULK_INHERITED}) {}
 
-        Rc<Property> initial() const override {
-            return makeRc<TextTransformProperty>(self(), TextTransform::NONE);
+        InitialValue initial() const override {
+            return "none"s;
         }
 
         void inherit(ComputedValues const& parent, ComputedValues& child) const override {
@@ -106,24 +91,13 @@ export struct TextTransformProperty : Property {
             if (c.ended())
                 return Error::invalidData("unexpected end of input");
 
-            TextTransform value;
-            if (c.skip(Css::Token::ident("none"))) {
-                value = TextTransform::NONE;
-            } else if (c.skip(Css::Token::ident("uppercase"))) {
-                value = TextTransform::UPPERCASE;
-            } else if (c.skip(Css::Token::ident("lowercase"))) {
-                value = TextTransform::LOWERCASE;
-            } else {
-                return Error::invalidData("expected text-transform");
-            }
-
-            return Ok(makeRc<TextTransformProperty>(self(), value));
+            return Ok(makeRc<TextTransformProperty>(self(), try$(parseValue<Css::TextTransform>(c))));
         }
     };
 
-    TextTransform _value;
+    Css::TextTransform _value;
 
-    TextTransformProperty(Rc<Property::Registration> registration, TextTransform value)
+    TextTransformProperty(Rc<Property::Registration> registration, Css::TextTransform value)
         : Property(registration), _value(value) {}
 
     void apply([[maybe_unused]] ComputedValues const& parent, ComputedValues& c, [[maybe_unused]] ComputationContext const& cx) const override {
@@ -131,7 +105,7 @@ export struct TextTransformProperty : Property {
     }
 
     Res<> serialize(Io::TextWriter& w) const override {
-        return serializeValue(w, _value);
+        return Css::serializeValue(w, _value);
     }
 
     void repr(Io::Emit& e) const override {
@@ -146,8 +120,8 @@ export struct WhiteSpaceProperty : Property {
         Registration()
             : Property::Registration(Properties::WHITE_SPACE, {INHERITED, BULK_INHERITED}) {}
 
-        Rc<Property> initial() const override {
-            return makeRc<WhiteSpaceProperty>(self(), WhiteSpace::NORMAL);
+        InitialValue initial() const override {
+            return "normal"s;
         }
 
         void inherit(ComputedValues const& parent, ComputedValues& child) const override {
@@ -159,30 +133,13 @@ export struct WhiteSpaceProperty : Property {
         }
 
         Res<Rc<Property>> parse(Cursor<Css::Sst>& c) const override {
-            WhiteSpace value;
-            if (c.skip(Css::Token::ident("normal"))) {
-                value = WhiteSpace::NORMAL;
-            } else if (c.skip(Css::Token::ident("nowrap"))) {
-                value = WhiteSpace::NOWRAP;
-            } else if (c.skip(Css::Token::ident("pre"))) {
-                value = WhiteSpace::PRE;
-            } else if (c.skip(Css::Token::ident("pre-wrap"))) {
-                value = WhiteSpace::PRE_WRAP;
-            } else if (c.skip(Css::Token::ident("pre-line"))) {
-                value = WhiteSpace::PRE_LINE;
-            } else if (c.skip(Css::Token::ident("break-spaces"))) {
-                value = WhiteSpace::BREAK_SPACES;
-            } else {
-                return Error::invalidData("expected white-space");
-            }
-
-            return Ok(makeRc<WhiteSpaceProperty>(self(), value));
+            return Ok(makeRc<WhiteSpaceProperty>(self(), try$(parseValue<Css::WhiteSpace>(c))));
         }
     };
 
-    WhiteSpace _value;
+    Css::WhiteSpace _value;
 
-    WhiteSpaceProperty(Rc<Property::Registration> registration, WhiteSpace value)
+    WhiteSpaceProperty(Rc<Property::Registration> registration, Css::WhiteSpace value)
         : Property(registration), _value(value) {}
 
     void apply([[maybe_unused]] ComputedValues const& parent, ComputedValues& c, [[maybe_unused]] ComputationContext const& cx) const override {
@@ -190,7 +147,7 @@ export struct WhiteSpaceProperty : Property {
     }
 
     Res<> serialize(Io::TextWriter& w) const override {
-        return serializeValue(w, _value);
+        return Css::serializeValue(w, _value);
     }
 
     void repr(Io::Emit& e) const override {

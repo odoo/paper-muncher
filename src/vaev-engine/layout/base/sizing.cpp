@@ -7,13 +7,15 @@ import :layout.values;
 
 namespace Vaev::Layout {
 
+export constexpr Au INDEFINITE = Limits<Au>::MAX;
+
 // MARK: Fit content size ------------------------------------------------------
 // https://www.w3.org/TR/css-sizing-3/#fit-content-size
 // NOTE: This is called the “shrink-to-fit” width in CSS2
 
-export Vec2Au computeFitContentSize(Tree& tree, Box& box, AvailableSpace availableSpace) {
-    auto minSize = computeIntrinsicContentSize(tree, box, IntrinsicSize::MIN_CONTENT);
-    auto maxSize = computeIntrinsicContentSize(tree, box, IntrinsicSize::MAX_CONTENT);
+export Vec2Au computeFitContentSize(Box& box, AvailableSpace availableSpace) {
+    auto minSize = computeIntrinsicContentSize(box, IntrinsicSize::MIN_CONTENT);
+    auto maxSize = computeIntrinsicContentSize(box, IntrinsicSize::MAX_CONTENT);
     Vec2Au size = {INDEFINITE, INDEFINITE};
 
     // If the available space in a given axis is definite,
@@ -21,17 +23,17 @@ export Vec2Au computeFitContentSize(Tree& tree, Box& box, AvailableSpace availab
     // (i.e. max(min-content size, min(max-content size, stretch-fit size))).
     // When sizing under a min-content constraint, equal to the min-content size.
     // Otherwise, equal to the max-content size in that axis.
-    if (availableSpace.x == Keywords::MIN_CONTENT) {
+    if (availableSpace.x == Style::Keywords::MIN_CONTENT) {
         size.x = minSize.width;
-    } else if (availableSpace.x == Keywords::MAX_CONTENT) {
+    } else if (availableSpace.x == Style::Keywords::MAX_CONTENT) {
         size.x = maxSize.width;
     } else if (availableSpace.x != INDEFINITE) {
         size.x = clamp(availableSpace.x.expect<Au>(), minSize.width, maxSize.width);
     }
 
-    if (availableSpace.y == Keywords::MIN_CONTENT) {
+    if (availableSpace.y == Style::Keywords::MIN_CONTENT) {
         size.y = minSize.height;
-    } else if (availableSpace.y == Keywords::MAX_CONTENT) {
+    } else if (availableSpace.y == Style::Keywords::MAX_CONTENT) {
         size.y = maxSize.height;
     } else if (availableSpace.y != INDEFINITE) {
         size.y = clamp(availableSpace.y.expect<Au>(), minSize.height, maxSize.height);
@@ -40,28 +42,26 @@ export Vec2Au computeFitContentSize(Tree& tree, Box& box, AvailableSpace availab
     return size;
 }
 
-export Au computeFitContentInlineSize(Tree& tree, Box& box, AvailableSpaceAxis availableSpace) {
-    return computeFitContentSize(tree, box, {availableSpace, INDEFINITE}).x;
+export Au computeFitContentInlineSize(Box& box, AvailableSpaceAxis availableSpace) {
+    return computeFitContentSize(box, {availableSpace, INDEFINITE}).x;
 }
 
-export Au computeFitContentBlockSize(Tree& tree, Box& box, AvailableSpaceAxis availableSpace) {
-    return computeFitContentSize(tree, box, {INDEFINITE, availableSpace}).y;
+export Au computeFitContentBlockSize(Box& box, AvailableSpaceAxis availableSpace) {
+    return computeFitContentSize(box, {INDEFINITE, availableSpace}).y;
 }
 
 // https://www.w3.org/TR/css-sizing-3/#preferred-size-properties
 // FIXME: Move this to a more generic width/height computation function.
-export Math::Vec2<Opt<Au>> resolvePreferredSize(Tree const& tree, Box const& box, Vec2Au containingBlock) {
-    auto const& style = *box.style;
-
+export Math::Vec2<Opt<Au>> resolvePreferredSize(Style::ComputedValues const& style, Vec2Au containingBlock) {
     Opt<Au> width = NONE;
     Opt<Au> height = NONE;
 
-    if (auto calc = style.sizing->width.is<Calc<PercentOr<Length>>>()) {
-        width = Some(resolve(tree, box, *calc, containingBlock.width));
+    if (auto calc = style.sizing->width.is<Style::PxPercent>()) {
+        width = Some(Layout::resolve(*calc, containingBlock.width));
     }
 
-    if (auto calc = style.sizing->height.is<Calc<PercentOr<Length>>>()) {
-        height = Some(resolve(tree, box, *calc, containingBlock.height));
+    if (auto calc = style.sizing->height.is<Style::PxPercent>()) {
+        height = Some(Layout::resolve(*calc, containingBlock.height));
     }
 
     return {width, height};
@@ -69,23 +69,21 @@ export Math::Vec2<Opt<Au>> resolvePreferredSize(Tree const& tree, Box const& box
 
 // https://www.w3.org/TR/CSS22/visudet.html#min-max-widths
 // FIXME: Values other than <length-percentage> are currently treated as 'auto'.
-export Vec2Au applyReplacedMinMaxSizeConstraints(Tree const& tree, Box const& box, Vec2Au tentative, Vec2Au containingBlock, Math::Vec2<Opt<Au>> specifiedSize) {
-    auto const& style = *box.style;
-
+export Vec2Au applyReplacedMinMaxSizeConstraints(Style::ComputedValues const& style, Vec2Au tentative, Vec2Au containingBlock, Math::Vec2<Opt<Au>> specifiedSize) {
     Au minWidth = 0_au;
     Au minHeight = 0_au;
 
     Au maxWidth = Limits<Au>::MAX;
     Au maxHeight = Limits<Au>::MAX;
 
-    if (auto calc = style.sizing->minWidth.is<Calc<PercentOr<Length>>>())
-        minWidth = resolve(tree, box, *calc, containingBlock.width);
-    if (auto calc = style.sizing->maxWidth.is<Calc<PercentOr<Length>>>())
-        maxWidth = resolve(tree, box, *calc, containingBlock.width);
-    if (auto calc = style.sizing->minHeight.is<Calc<PercentOr<Length>>>())
-        minHeight = resolve(tree, box, *calc, containingBlock.height);
-    if (auto calc = style.sizing->maxHeight.is<Calc<PercentOr<Length>>>())
-        maxHeight = resolve(tree, box, *calc, containingBlock.height);
+    if (auto calc = style.sizing->minWidth.is<Style::PxPercent>())
+        minWidth = Layout::resolve(*calc, containingBlock.width);
+    if (auto calc = style.sizing->maxWidth.is<Style::PxPercent>())
+        maxWidth = Layout::resolve(*calc, containingBlock.width);
+    if (auto calc = style.sizing->minHeight.is<Style::PxPercent>())
+        minHeight = Layout::resolve(*calc, containingBlock.height);
+    if (auto calc = style.sizing->maxHeight.is<Style::PxPercent>())
+        maxHeight = Layout::resolve(*calc, containingBlock.height);
 
     maxWidth = max(maxWidth, minWidth);
     maxHeight = max(maxHeight, minHeight);

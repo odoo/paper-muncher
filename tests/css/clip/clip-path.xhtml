@@ -49,4 +49,376 @@
 
 </test>
 
+<test name="clip-path-circle-position">
+    <container>
+        <html lang="en" xmlns="http://www.w3.org/1999/xhtml">
+
+        <head>
+            <style>
+                * {
+                    margin: 0;
+                }
+
+                body {
+                    font-size: 10px;
+                }
+
+                div {
+                    width: 100px;
+                    height: 100px;
+                    background-color: green;
+                }
+            </style>
+        </head>
+        <body>
+        <section>
+            <slot/>
+        </section>
+        </body>
+
+        </html>
+    </container>
+
+    <rendering>
+        <div style="clip-path: circle(25px at 75px 75px)"></div>
+    </rendering>
+
+    <rendering>
+        <div style="clip-path: circle(25px at right 25px bottom 25px)"></div>
+    </rendering>
+
+    <rendering>
+        <div style="clip-path: circle(25px at 75% 75%)"></div>
+    </rendering>
+
+    <error>
+        <div style="clip-path: circle(25px at 25px 25px)"></div>
+    </error>
+
+</test>
+
+<test name="clip-path-circle-font-relative">
+    <container>
+        <html lang="en" xmlns="http://www.w3.org/1999/xhtml">
+
+        <head>
+            <style>
+                * {
+                    margin: 0;
+                }
+
+                body {
+                    font-size: 10px;
+                }
+
+                div {
+                    width: 100px;
+                    height: 100px;
+                    background-color: green;
+                }
+            </style>
+        </head>
+        <body>
+        <section>
+            <slot/>
+        </section>
+        </body>
+
+        </html>
+    </container>
+
+    <rendering>
+        <div style="clip-path: circle(25px)"></div>
+    </rendering>
+
+    <rendering>
+        <div style="clip-path: circle(2.5em)"></div>
+    </rendering>
+
+    <rendering>
+        <div style="clip-path: circle(2.5em at center)"></div>
+    </rendering>
+
+    <rendering>
+        <div style="clip-path: circle(calc(2em + 5px) at 50% 50%)"></div>
+    </rendering>
+
+    <error>
+        <div style="clip-path: circle(10px)"></div>
+    </error>
+
+</test>
+
+<test name="clip-path-ellipse">
+    <container>
+        <html lang="en" xmlns="http://www.w3.org/1999/xhtml">
+
+        <head>
+            <style>
+                * {
+                    margin: 0;
+                }
+
+                body {
+                    font-size: 10px;
+                }
+
+                div {
+                    width: 100px;
+                    height: 100px;
+                    background-color: green;
+                }
+            </style>
+        </head>
+        <body>
+        <section>
+            <slot/>
+        </section>
+        </body>
+
+        </html>
+    </container>
+
+    <rendering>
+        <div style="clip-path: ellipse(50px 20px)"></div>
+    </rendering>
+
+    <rendering>
+        <div style="clip-path: ellipse(50% 20% at center)"></div>
+    </rendering>
+
+    <rendering>
+        <div style="clip-path: ellipse(5em 2em at 50px 50px)"></div>
+    </rendering>
+
+</test>
+
+<test name="clip-path-inset">
+    <container>
+        <html lang="en" xmlns="http://www.w3.org/1999/xhtml">
+
+        <head>
+            <style>
+                * {
+                    margin: 0;
+                }
+
+                body {
+                    font-size: 10px;
+                }
+
+                div {
+                    width: 100px;
+                    height: 100px;
+                    background-color: green;
+                }
+            </style>
+        </head>
+        <body>
+        <section>
+            <slot/>
+        </section>
+        </body>
+
+        </html>
+    </container>
+
+    <rendering>
+        <div style="clip-path: inset(10px 20px 10px 20px)"></div>
+    </rendering>
+
+    <rendering>
+        <div style="clip-path: inset(10px 20px)"></div>
+    </rendering>
+
+    <rendering>
+        <div style="clip-path: inset(1em 2em)"></div>
+    </rendering>
+
+    <rendering>
+        <div style="clip-path: inset(calc(5% + 5px) 20%)"></div>
+    </rendering>
+
+    <error>
+        <div style="clip-path: inset(10px)"></div>
+    </error>
+
+</test>
+
+<test name="clip-path-inset-round">
+    <container>
+        <html lang="en" xmlns="http://www.w3.org/1999/xhtml">
+
+        <head>
+            <style>
+                * {
+                    margin: 0;
+                }
+
+                body {
+                    font-size: 10px;
+                }
+
+                div {
+                    width: 100px;
+                    height: 100px;
+                    background-color: green;
+                }
+            </style>
+        </head>
+        <body>
+        <section>
+            <slot/>
+        </section>
+        </body>
+
+        </html>
+    </container>
+
+    <rendering>
+        <div style="clip-path: inset(10px round 5px 40px 5px 40px)"></div>
+    </rendering>
+
+    <rendering>
+        <div style="clip-path: inset(10px round 5px 40px)"></div>
+    </rendering>
+
+    <rendering>
+        <div style="clip-path: inset(1em round 0.5em 4em)"></div>
+    </rendering>
+
+    <error>
+        <div style="clip-path: inset(10px round 40px 5px)"></div>
+    </error>
+
+</test>
+
+<test name="clip-path-polygon">
+    <container>
+        <html lang="en" xmlns="http://www.w3.org/1999/xhtml">
+
+        <head>
+            <style>
+                * {
+                    margin: 0;
+                }
+
+                body {
+                    font-size: 10px;
+                }
+
+                div {
+                    width: 100px;
+                    height: 100px;
+                    background-color: green;
+                }
+            </style>
+        </head>
+        <body>
+        <section>
+            <slot/>
+        </section>
+        </body>
+
+        </html>
+    </container>
+
+    <rendering>
+        <div style="clip-path: polygon(50px 0, 100px 100px, 0 100px)"></div>
+    </rendering>
+
+    <rendering>
+        <div style="clip-path: polygon(50% 0, 100% 100%, 0 100%)"></div>
+    </rendering>
+
+    <rendering>
+        <div style="clip-path: polygon(5em 0, calc(50% + 5em) 100%, 0 10em)"></div>
+    </rendering>
+
+</test>
+
+<test name="clip-path-rect">
+    <container>
+        <html lang="en" xmlns="http://www.w3.org/1999/xhtml">
+
+        <head>
+            <style>
+                * {
+                    margin: 0;
+                }
+
+                body {
+                    font-size: 10px;
+                }
+
+                div {
+                    width: 100px;
+                    height: 100px;
+                    background-color: green;
+                }
+            </style>
+        </head>
+        <body>
+        <section>
+            <slot/>
+        </section>
+        </body>
+
+        </html>
+    </container>
+
+    <rendering>
+        <div style="clip-path: rect(10px 100px 90px 30px)"></div>
+    </rendering>
+
+    <rendering>
+        <div style="clip-path: rect(10px auto calc(100% - 10px) 3em)"></div>
+    </rendering>
+
+    <rendering>
+        <div style="clip-path: rect(1em auto 90% 30%)"></div>
+    </rendering>
+
+</test>
+
+<test name="clip-path-xywh">
+    <container>
+        <html lang="en" xmlns="http://www.w3.org/1999/xhtml">
+
+        <head>
+            <style>
+                * {
+                    margin: 0;
+                }
+
+                body {
+                    font-size: 10px;
+                }
+
+                div {
+                    width: 100px;
+                    height: 100px;
+                    background-color: green;
+                }
+            </style>
+        </head>
+        <body>
+        <section>
+            <slot/>
+        </section>
+        </body>
+
+        </html>
+    </container>
+
+    <rendering>
+        <div style="clip-path: xywh(20px 20px 50px 50px round 10px)"></div>
+    </rendering>
+
+    <rendering>
+        <div style="clip-path: xywh(calc(10% + 1em) 2em 50% 5em round 1em)"></div>
+    </rendering>
+
+</test>
+
 </tests>

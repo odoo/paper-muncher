@@ -8,10 +8,101 @@ import Karm.Core;
 import Karm.Ref;
 import Karm.Gfx;
 
-import :values;
+import :css.values;
+import :style.values;
 import :css;
 
 namespace Vaev::Style {
+
+// MARK: Font descriptor values ----------------------------------------------
+
+export enum struct FontDisplay {
+    AUTO,
+    BLOCK,
+    SWAP,
+    FALLBACK,
+    OPTIONAL,
+
+    _LEN,
+};
+
+// MARK: FontFeature -----------------------------------------------------------
+
+export using FontTag = Array<char, 4>;
+
+export FontTag makeTag(Str tag) {
+    if (tag.len() != 4)
+        return {' ', ' ', ' ', ' '};
+    return {tag[0], tag[1], tag[2], tag[3]};
+}
+
+export struct FontFeature {
+    enum struct _Value {
+        OFF,
+        ON,
+    };
+
+    FontTag tag;
+    isize val;
+
+    FontFeature(Str tag, isize val)
+        : tag(makeTag(tag)), val(val) {
+    }
+
+    FontFeature(Str tag, _Value val)
+        : tag(makeTag(tag)), val(static_cast<isize>(val)) {
+    }
+
+    void repr(Io::Emit& e) const {
+        e("(font-feature {} {})", tag, val);
+    }
+
+    bool operator==(FontFeature const& other) const {
+        return tag == other.tag and val == other.val;
+    }
+
+    bool operator==(FontTag const& other) const {
+        return tag == other;
+    }
+
+    bool operator==(_Value const& other) const {
+        return val == static_cast<isize>(other);
+    }
+};
+
+export struct FontVariation {
+    FontTag tag;
+    f64 val;
+
+    FontVariation(Str tag, f64 val)
+        : tag(makeTag(tag)), val(val) {
+    }
+
+    void repr(Io::Emit& e) const {
+        e("(font-variation {} {})", tag, val);
+    }
+
+    bool operator==(FontTag const& other) const {
+        return tag == other;
+    }
+};
+
+export struct FontSource {
+    Union<Ref::Url, FontFamily> identifier;
+    Opt<String> format;
+
+    FontSource(Ref::Url url) : identifier(url) {}
+
+    FontSource(FontFamily family) : identifier(family) {}
+
+    void repr(Io::Emit& e) const {
+        e("(font-source {}", identifier);
+        if (format)
+            e(" format({})", *format);
+        e(")");
+    }
+};
+
 
 // MARK: FontFace --------------------------------------------------------------
 
@@ -20,10 +111,10 @@ export struct FontFace {
 
     Vec<FontSource> sources;
 
-    Union<None, FontStyle, Range<Angle>> style = FontStyle{FontStyle::NORMAL};
+    Union<None, Css::FontStyle, Range<Deg>> style = Css::FontStyle{Css::FontStyle::NORMAL};
 
     Opt<Range<Gfx::FontWeight>> weight = Some(Range<Gfx::FontWeight>::emptyAt(Gfx::FontWeight::REGULAR));
-    Opt<Range<FontWidth>> width = Some(Range<FontWidth>::emptyAt(FontWidth::NORMAL));
+    Opt<Range<Percent>> width = Some(Range<Percent>::emptyAt(toComputed(Css::FontWidth{Css::FontWidth::NORMAL})));
 
     Vec<Range<Rune>> unicodeRange;
 
@@ -48,11 +139,11 @@ export struct FontFace {
 
         Gfx::FontStretch resolvedStretch = Gfx::FontStretch::NORMAL;
         if (width)
-            resolvedStretch = Gfx::FontStretch::fromPercent(width.expect().start.val().value());
+            resolvedStretch = Gfx::FontStretch::fromPercent(width.expect().start.value());
 
         Gfx::FontStyle resolvedStyle = Gfx::FontStyle::NORMAL;
-        if (style.is<FontStyle>())
-            resolvedStyle = style.expect<FontStyle>().val;
+        if (style.is<Css::FontStyle>())
+            resolvedStyle = style.expect<Css::FontStyle>().val;
 
         return {
             .family = family,
@@ -185,11 +276,11 @@ export struct SrcFontDescriptor {
 // MARK: font-style
 // https://www.w3.org/TR/css-fonts-4/#font-style-desc
 export struct FontStyleFontDescriptor {
-    Union<None, FontStyle, Range<Angle>> value;
+    Union<None, Css::FontStyle, Range<Deg>> value;
 
     static Str name() { return "font-style"; }
 
-    static auto initial() { return FontStyle::NORMAL; }
+    static auto initial() { return Css::FontStyle::NORMAL; }
 
     void apply(FontFace& f) const {
         f.style = value;
@@ -201,19 +292,20 @@ export struct FontStyleFontDescriptor {
             return Ok();
         }
 
-        auto style = try$(parseValue<FontStyle>(c));
-        if (style != FontStyle::OBLIQUE) {
+        auto style = try$(parseValue<Css::FontStyle>(c));
+        if (not style.obliqueAngle) {
             value = style;
             return Ok();
         }
 
-        auto val = parseValue<Angle>(c);
+        eatWhitespace(c);
+        auto val = parseValue<Css::Angle>(c);
         if (not val) {
             value = style;
             return Ok();
         }
 
-        value = Range<Angle>::fromStartEnd(style.obliqueAngle, val.expect());
+        value = Range<Deg>::fromStartEnd(toComputed(*style.obliqueAngle), toComputed(val.expect()));
         return Ok();
     }
 };
@@ -254,11 +346,11 @@ export struct FontWeightFontDescriptor {
 // MARK: font-width
 // https://www.w3.org/TR/css-fonts-4/#font-width-prop
 export struct FontWidthFontDescriptor {
-    Opt<Range<FontWidth>> value = initial();
+    Opt<Range<Percent>> value = initial();
 
     static Str name() { return "font-width"; }
 
-    static Opt<Range<FontWidth>> initial() { return NONE; }
+    static Opt<Range<Percent>> initial() { return NONE; }
 
     void apply(FontFace& f) const {
         f.width = value;
@@ -270,15 +362,15 @@ export struct FontWidthFontDescriptor {
             return Ok();
         }
 
-        auto width = try$(parseValue<FontWidth>(c));
+        auto width = try$(parseValue<Css::FontWidth>(c));
 
-        auto val = parseValue<FontWidth>(c);
+        auto val = parseValue<Css::FontWidth>(c);
         if (not val) {
-            value = Some(Range<FontWidth>::emptyAt(width));
+            value = Some(Range<Percent>::emptyAt(toComputed(width)));
             return Ok();
         }
 
-        value = Some(Range<FontWidth>::fromStartEnd(width, val.expect()));
+        value = Some(Range<Percent>::fromStartEnd(toComputed(width), toComputed(val.expect())));
 
         return Ok();
     }
@@ -387,22 +479,22 @@ export struct FontDisplayFontDescriptor {
 // MARK: ascent-override
 // https://www.w3.org/TR/css-fonts-4/#font-metrics-override-desc
 export struct AscentOverrideFontDescriptor {
-    Opt<Percent> value = initial();
+    Opt<Css::PurePercentage> value = initial();
 
     static Str name() { return "ascent-override"; }
 
     // NOTE: normal is NONE
-    static Opt<Percent> initial() { return NONE; }
+    static Opt<Css::PurePercentage> initial() { return NONE; }
 
     void apply(FontFace& f) const {
-        f.ascentOverride = value;
+        f.ascentOverride = value.map([](auto v) { return Percent{v.value()}; });
     }
 
     Res<> parse(Cursor<Css::Sst>& c) {
         if (c.skip(Css::Token::ident("normal"))) {
             value = NONE;
         } else {
-            value = Some(try$(parseValue<Percent>(c)));
+            value = Some(try$(parseValue<Css::PurePercentage>(c)));
         }
 
         return Ok();
@@ -412,22 +504,22 @@ export struct AscentOverrideFontDescriptor {
 // MARK: descent-override
 // https://www.w3.org/TR/css-fonts-4/#font-metrics-override-desc
 export struct DescentOverrideStyleProp {
-    Opt<Percent> value = initial();
+    Opt<Css::PurePercentage> value = initial();
 
     static Str name() { return "descent-override"; }
 
     // NOTE: normal is NONE
-    static Opt<Percent> initial() { return NONE; }
+    static Opt<Css::PurePercentage> initial() { return NONE; }
 
     void apply(FontFace& f) const {
-        f.descentOverride = value;
+        f.descentOverride = value.map([](auto v) { return Percent{v.value()}; });
     }
 
     Res<> parse(Cursor<Css::Sst>& c) {
         if (c.skip(Css::Token::ident("normal"))) {
             value = NONE;
         } else {
-            value = Some(try$(parseValue<Percent>(c)));
+            value = Some(try$(parseValue<Css::PurePercentage>(c)));
         }
 
         return Ok();
@@ -437,21 +529,21 @@ export struct DescentOverrideStyleProp {
 // MARK: line-gap-override
 // https://www.w3.org/TR/css-fonts-4/#font-metrics-override-desc
 export struct LineGapOverrideFontDescriptor {
-    Opt<Percent> value = initial();
+    Opt<Css::PurePercentage> value = initial();
 
     static Str name() { return "line-gap-override"; }
 
-    static Opt<Percent> initial() { return NONE; }
+    static Opt<Css::PurePercentage> initial() { return NONE; }
 
     void apply(FontFace& f) const {
-        f.lineGapOverride = value;
+        f.lineGapOverride = value.map([](auto v) { return Percent{v.value()}; });
     }
 
     Res<> parse(Cursor<Css::Sst>& c) {
         if (c.skip(Css::Token::ident("normal"))) {
             value = NONE;
         } else {
-            value = Some(try$(parseValue<Percent>(c)));
+            value = Some(try$(parseValue<Css::PurePercentage>(c)));
         }
 
         return Ok();
@@ -461,18 +553,18 @@ export struct LineGapOverrideFontDescriptor {
 // MARK: size-adjust
 // https://www.w3.org/TR/css-fonts-5/#size-adjust-desc
 export struct SizeAdjustFontDescriptor {
-    Percent value = initial();
+    Css::PurePercentage value = initial();
 
     static Str name() { return "size-adjust"; }
 
-    static Percent initial() { return Percent{100}; }
+    static Css::PurePercentage initial() { return Css::percent(100); }
 
     void apply(FontFace& f) const {
-        f.sizeAdjust = Some(value);
+        f.sizeAdjust = Some(Percent{value.value()});
     }
 
     Res<> parse(Cursor<Css::Sst>& c) {
-        value = try$(parseValue<Percent>(c));
+        value = try$(parseValue<Css::PurePercentage>(c));
         return Ok();
     }
 };
