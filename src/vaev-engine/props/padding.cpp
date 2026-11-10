@@ -10,6 +10,7 @@ import :css.parser;
 import :style.computed;
 
 using namespace Karm;
+using namespace Karm::Literals;
 
 namespace Vaev::Style {
 
@@ -21,8 +22,8 @@ export struct PaddingTopProperty : Property {
     struct Registration : Property::Registration {
         Registration() : Property::Registration(Properties::PADDING_TOP) {}
 
-        Rc<Property> initial() const override {
-            return makeRc<PaddingTopProperty>(self(), Css::px(0));
+        InitialValue initial() const override {
+            return "0"s;
         }
 
         Rc<Property> load(ComputedValues const& c) const override {
@@ -56,8 +57,8 @@ export struct PaddingRightProperty : Property {
     struct Registration : Property::Registration {
         Registration() : Property::Registration(Properties::PADDING_RIGHT) {}
 
-        Rc<Property> initial() const override {
-            return makeRc<PaddingRightProperty>(self(), Css::px(0));
+        InitialValue initial() const override {
+            return "0"s;
         }
 
         Rc<Property> load(ComputedValues const& c) const override {
@@ -91,8 +92,8 @@ export struct PaddingBottomProperty : Property {
     struct Registration : Property::Registration {
         Registration() : Property::Registration(Properties::PADDING_BOTTOM) {}
 
-        Rc<Property> initial() const override {
-            return makeRc<PaddingBottomProperty>(self(), Css::px(0));
+        InitialValue initial() const override {
+            return "0"s;
         }
 
         Rc<Property> load(ComputedValues const& c) const override {
@@ -126,8 +127,8 @@ export struct PaddingLeftProperty : Property {
     struct Registration : Property::Registration {
         Registration() : Property::Registration(Properties::PADDING_LEFT) {}
 
-        Rc<Property> initial() const override {
-            return makeRc<PaddingLeftProperty>(self(), Css::px(0));
+        InitialValue initial() const override {
+            return "0"s;
         }
 
         Rc<Property> load(ComputedValues const& c) const override {
@@ -161,8 +162,8 @@ export struct PaddingInlineStartProperty : Property {
     struct Registration : Property::Registration {
         Registration() : Property::Registration(Properties::PADDING_INLINE_START, LOGICAL) {}
 
-        Rc<Property> initial() const override {
-            return makeRc<PaddingInlineStartProperty>(self(), Css::px(0));
+        InitialValue initial() const override {
+            return "0"s;
         }
 
         Rc<Property> load(ComputedValues const& c) const override {
@@ -199,8 +200,8 @@ export struct PaddingInlineEndProperty : Property {
     struct Registration : Property::Registration {
         Registration() : Property::Registration(Properties::PADDING_INLINE_END, LOGICAL) {}
 
-        Rc<Property> initial() const override {
-            return makeRc<PaddingInlineEndProperty>(self(), Css::px(0));
+        InitialValue initial() const override {
+            return "0"s;
         }
 
         Rc<Property> load(ComputedValues const& c) const override {
@@ -240,8 +241,8 @@ export struct PaddingProperty : Property {
         Registration()
             : Property::Registration(Properties::PADDING, SHORTHAND) {}
 
-        Rc<Property> initial() const override {
-            return makeRc<PaddingProperty>(self(), Value{Css::px(0)});
+        InitialValue initial() const override {
+            return "0"s;
         }
 
         Rc<Property> load(ComputedValues const& c) const override {

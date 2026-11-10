@@ -11,6 +11,7 @@ import :style.computed;
 import :style.values.keywords;
 
 using namespace Karm;
+using namespace Karm::Literals;
 
 namespace Vaev::Style {
 
@@ -21,8 +22,8 @@ export struct BreakAfterProperty : Property {
     struct Registration : Property::Registration {
         Registration() : Property::Registration(Properties::BREAK_AFTER) {}
 
-        Rc<Property> initial() const override {
-            return makeRc<BreakAfterProperty>(self(), Keywords::AUTO);
+        InitialValue initial() const override {
+            return "auto"s;
         }
 
         Rc<Property> load(ComputedValues const& c) const override {
@@ -57,8 +58,8 @@ export struct BreakBeforeProperty : Property {
     struct Registration : Property::Registration {
         Registration() : Property::Registration(Properties::BREAK_BEFORE) {}
 
-        Rc<Property> initial() const override {
-            return makeRc<BreakBeforeProperty>(self(), Keywords::AUTO);
+        InitialValue initial() const override {
+            return "auto"s;
         }
 
         Rc<Property> load(ComputedValues const& c) const override {
@@ -93,8 +94,8 @@ export struct BreakInsideProperty : Property {
     struct Registration : Property::Registration {
         Registration() : Property::Registration(Properties::BREAK_INSIDE) {}
 
-        Rc<Property> initial() const override {
-            return makeRc<BreakInsideProperty>(self(), Keywords::AUTO);
+        InitialValue initial() const override {
+            return "auto"s;
         }
 
         Rc<Property> load(ComputedValues const& c) const override {
@@ -153,8 +154,8 @@ export struct PageBreakAfterProperty : Property {
     struct Registration : Property::Registration {
         Registration() : Property::Registration(Properties::PAGE_BREAK_AFTER, SHORTHAND) {}
 
-        Rc<Property> initial() const override {
-            return makeRc<PageBreakAfterProperty>(self(), Keywords::AUTO);
+        InitialValue initial() const override {
+            return "auto"s;
         }
 
         Rc<Property> load(ComputedValues const& c) const override {
@@ -187,8 +188,8 @@ export struct PageBreakBeforeProperty : Property {
     struct Registration : Property::Registration {
         Registration() : Property::Registration(Properties::PAGE_BREAK_BEFORE, SHORTHAND) {}
 
-        Rc<Property> initial() const override {
-            return makeRc<PageBreakBeforeProperty>(self(), Keywords::AUTO);
+        InitialValue initial() const override {
+            return "auto"s;
         }
 
         Rc<Property> load(ComputedValues const& c) const override {
@@ -221,8 +222,8 @@ export struct PageBreakInsideProperty : Property {
     struct Registration : Property::Registration {
         Registration() : Property::Registration(Properties::PAGE_BREAK_INSIDE, SHORTHAND) {}
 
-        Rc<Property> initial() const override {
-            return makeRc<PageBreakInsideProperty>(self(), Keywords::AUTO);
+        InitialValue initial() const override {
+            return "auto"s;
         }
 
         Rc<Property> load(ComputedValues const& c) const override {

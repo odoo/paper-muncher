@@ -15,6 +15,7 @@ import :style.values.backgrounds;
 import :style.values.keywords;
 
 using namespace Karm;
+using namespace Karm::Literals;
 
 namespace Vaev::Style {
 
@@ -25,8 +26,8 @@ export struct BackgroundColorProperty : Property {
     struct Registration : Property::Registration {
         Registration() : Property::Registration(Properties::BACKGROUND_COLOR) {}
 
-        Rc<Property> initial() const override {
-            return makeRc<BackgroundColorProperty>(self(), Gfx::ALPHA);
+        InitialValue initial() const override {
+            return "transparent"s;
         }
 
         Rc<Property> load(ComputedValues const& c) const override {
@@ -63,8 +64,8 @@ export struct BackgroundAttachmentProperty : Property {
     struct Registration : Property::Registration {
         Registration() : Property::Registration(Properties::BACKGROUND_ATTACHMENT) {}
 
-        Rc<Property> initial() const override {
-            return makeRc<BackgroundAttachmentProperty>(self(), Vec<Css::BackgroundAttachment>{Keywords::SCROLL});
+        InitialValue initial() const override {
+            return "scroll"s;
         }
 
         Rc<Property> load(ComputedValues const& c) const override {
@@ -108,7 +109,12 @@ export struct BackgroundImageProperty : Property {
     struct Registration : Property::Registration {
         Registration() : Property::Registration(Properties::BACKGROUND_IMAGE) {}
 
-        Rc<Property> initial() const override {
+        InitialValue initial() const override {
+            return "none"s;
+        }
+
+        // NOTE: The parser isn't implemented yet, so it can't read initial().
+        Rc<Property> initialProperty() const override {
             return makeRc<BackgroundImageProperty>(self(), Vec<Css::Image>{});
         }
 
@@ -141,7 +147,12 @@ export struct BackgroundPositionProperty : Property {
     struct Registration : Property::Registration {
         Registration() : Property::Registration(Properties::BACKGROUND_POSITION) {}
 
-        Rc<Property> initial() const override {
+        InitialValue initial() const override {
+            return "0% 0%"s;
+        }
+
+        // NOTE: The parser isn't implemented yet, so it can't read initial().
+        Rc<Property> initialProperty() const override {
             return makeRc<BackgroundPositionProperty>(self(), Vec<Css::BackgroundPosition>{});
         }
 
@@ -174,7 +185,12 @@ export struct BackgroundRepeatProperty : Property {
     struct Registration : Property::Registration {
         Registration() : Property::Registration(Properties::BACKGROUND_REPEAT) {}
 
-        Rc<Property> initial() const override {
+        InitialValue initial() const override {
+            return "repeat"s;
+        }
+
+        // NOTE: The parser isn't implemented yet, so it can't read initial().
+        Rc<Property> initialProperty() const override {
             return makeRc<BackgroundRepeatProperty>(self(), Vec<Css::BackgroundRepeat>{Css::BackgroundRepeat::REPEAT});
         }
 
@@ -204,7 +220,7 @@ export struct BackgroundRepeatProperty : Property {
     }
 };
 
-// https://www.w3.org/TR/CSS22/colors.html#x10
+// https://drafts.csswg.org/css-backgrounds/#background
 export struct BackgroundProperty : Property {
     struct Value {
         Css::Color color = Gfx::ALPHA;
@@ -222,8 +238,8 @@ export struct BackgroundProperty : Property {
         Registration()
             : Property::Registration(Properties::BACKGROUND, SHORTHAND) {}
 
-        Rc<Property> initial() const override {
-            return makeRc<BackgroundProperty>(self(), Value{Gfx::ALPHA});
+        InitialValue initial() const override {
+            return "transparent"s;
         }
 
         Rc<Property> load(ComputedValues const& c) const override {
@@ -261,14 +277,14 @@ export struct BackgroundProperty : Property {
     }
 };
 
-// https://www.w3.org/TR/CSS22/colors.html#propdef-color
+// https://drafts.csswg.org/css-color/#the-color-property
 export struct ColorProperty : Property {
     struct Registration : Property::Registration {
         Registration()
             : Property::Registration(Properties::COLOR, INHERITED) {}
 
-        Rc<Property> initial() const override {
-            return makeRc<ColorProperty>(self(), Css::BLACK);
+        InitialValue initial() const override {
+            return "CanvasText"s;
         }
 
         void inherit(ComputedValues const& parent, ComputedValues& child) const override {

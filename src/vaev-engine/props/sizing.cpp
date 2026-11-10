@@ -11,6 +11,7 @@ import :style.computed;
 import :style.values.keywords;
 
 using namespace Karm;
+using namespace Karm::Literals;
 
 namespace Vaev::Style {
 
@@ -22,8 +23,8 @@ export struct BoxSizingProperty : Property {
     struct Registration : Property::Registration {
         Registration() : Property::Registration(Properties::BOX_SIZING) {}
 
-        Rc<Property> initial() const override {
-            return makeRc<BoxSizingProperty>(self(), Keywords::CONTENT_BOX);
+        InitialValue initial() const override {
+            return "content-box"s;
         }
 
         Rc<Property> load(ComputedValues const& c) const override {
@@ -61,8 +62,8 @@ export struct WidthProperty : Property {
         Registration()
             : Property::Registration(Properties::WIDTH, PRESENTATION_ATTRIBUTE) {}
 
-        Rc<Property> initial() const override {
-            return makeRc<WidthProperty>(self(), Value{Keywords::AUTO});
+        InitialValue initial() const override {
+            return "auto"s;
         }
 
         Rc<Property> load(ComputedValues const& c) const override {
@@ -107,8 +108,8 @@ export struct HeightProperty : Property {
         Registration()
             : Property::Registration(Properties::HEIGHT, PRESENTATION_ATTRIBUTE) {}
 
-        Rc<Property> initial() const override {
-            return makeRc<HeightProperty>(self(), Value{Keywords::AUTO});
+        InitialValue initial() const override {
+            return "auto"s;
         }
 
         Rc<Property> load(ComputedValues const& c) const override {
@@ -151,8 +152,8 @@ export struct MinWidthProperty : Property {
     struct Registration : Property::Registration {
         Registration() : Property::Registration(Properties::MIN_WIDTH) {}
 
-        Rc<Property> initial() const override {
-            return makeRc<MinWidthProperty>(self(), Value{Keywords::AUTO});
+        InitialValue initial() const override {
+            return "auto"s;
         }
 
         Rc<Property> load(ComputedValues const& c) const override {
@@ -189,8 +190,8 @@ export struct MinHeightProperty : Property {
     struct Registration : Property::Registration {
         Registration() : Property::Registration(Properties::MIN_HEIGHT) {}
 
-        Rc<Property> initial() const override {
-            return makeRc<MinHeightProperty>(self(), Value{Keywords::AUTO});
+        InitialValue initial() const override {
+            return "auto"s;
         }
 
         Rc<Property> load(ComputedValues const& c) const override {
@@ -228,8 +229,8 @@ export struct MaxWidthProperty : Property {
     struct Registration : Property::Registration {
         Registration() : Property::Registration(Properties::MAX_WIDTH) {}
 
-        Rc<Property> initial() const override {
-            return makeRc<MaxWidthProperty>(self(), Value{Keywords::NONE});
+        InitialValue initial() const override {
+            return "none"s;
         }
 
         Rc<Property> load(ComputedValues const& c) const override {
@@ -266,8 +267,8 @@ export struct MaxHeightProperty : Property {
     struct Registration : Property::Registration {
         Registration() : Property::Registration(Properties::MAX_HEIGHT) {}
 
-        Rc<Property> initial() const override {
-            return makeRc<MaxHeightProperty>(self(), Value{Keywords::NONE});
+        InitialValue initial() const override {
+            return "none"s;
         }
 
         Rc<Property> load(ComputedValues const& c) const override {

@@ -8,6 +8,8 @@ import :props.base;
 import :style.values.keywords;
 import :style.values.primitives;
 
+using namespace Karm::Literals;
+
 namespace Vaev::Style {
 
 // https://www.w3.org/TR/css-lists-3/#propdef-list-style-image
@@ -16,8 +18,8 @@ struct ListStyleImageProperty : Property {
         Registration()
             : Property::Registration(Properties::LIST_STYLE_IMAGE, {INHERITED, BULK_INHERITED}) {}
 
-        Rc<Property> initial() const override {
-            return makeRc<ListStyleImageProperty>(self(), Keywords::NONE);
+        InitialValue initial() const override {
+            return "none"s;
         }
 
         void inherit(ComputedValues const& parent, ComputedValues& child) const override {
@@ -54,8 +56,8 @@ struct ListStyleTypeProperty : Property {
         Registration()
             : Property::Registration(Properties::LIST_STYLE_TYPE, {INHERITED, BULK_INHERITED}) {}
 
-        Rc<Property> initial() const override {
-            return makeRc<ListStyleTypeProperty>(self(), Css::CustomIdent{"disc"_sym});
+        InitialValue initial() const override {
+            return "disc"s;
         }
 
         void inherit(ComputedValues const& parent, ComputedValues& child) const override {
@@ -92,8 +94,8 @@ struct ListStylePositionProperty : Property {
         Registration()
             : Property::Registration(Properties::LIST_STYLE_POSITION, {INHERITED, BULK_INHERITED}) {}
 
-        Rc<Property> initial() const override {
-            return makeRc<ListStylePositionProperty>(self(), Keywords::OUTSIDE);
+        InitialValue initial() const override {
+            return "outside"s;
         }
 
         void inherit(ComputedValues const& parent, ComputedValues& child) const override {
@@ -144,8 +146,8 @@ struct ListStyleProperty : Property {
         Registration()
             : Property::Registration(Properties::LIST_STYLE, SHORTHAND) {}
 
-        Rc<Property> initial() const override {
-            return makeRc<ListStyleProperty>(self(), Value{});
+        InitialValue initial() const override {
+            return "outside none disc"s;
         }
 
         Rc<Property> load(ComputedValues const& c) const override {
@@ -216,12 +218,12 @@ struct MarkerSideProperty : Property {
         Registration()
             : Property::Registration(Properties::MARKER_SIDE, {INHERITED, BULK_INHERITED}) {}
 
-        void inherit(ComputedValues const& parent, ComputedValues& child) const override {
-            child.list.cow().markerSide = parent.list->markerSide;
+        InitialValue initial() const override {
+            return "match-self"s;
         }
 
-        Rc<Property> initial() const override {
-            return makeRc<MarkerSideProperty>(self(), Keywords::MATCH_SELF);
+        void inherit(ComputedValues const& parent, ComputedValues& child) const override {
+            child.list.cow().markerSide = parent.list->markerSide;
         }
 
         Rc<Property> load(ComputedValues const& c) const override {

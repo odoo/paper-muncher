@@ -11,6 +11,7 @@ import :style.computed;
 import :style.values.keywords;
 
 using namespace Karm;
+using namespace Karm::Literals;
 
 namespace Vaev::Style {
 
@@ -24,8 +25,9 @@ export struct TextAlignProperty : Property {
         Registration()
             : Property::Registration(Properties::TEXT_ALIGN, {INHERITED, BULK_INHERITED}) {}
 
-        Rc<Property> initial() const override {
-            return makeRc<TextAlignProperty>(self(), Keywords::LEFT);
+        // NOSPEC: The initial value is start.
+        InitialValue initial() const override {
+            return "left"s;
         }
 
         void inherit(ComputedValues const& parent, ComputedValues& child) const override {
@@ -73,8 +75,8 @@ export struct TextTransformProperty : Property {
         Registration()
             : Property::Registration(Properties::TEXT_TRANSFORM, {INHERITED, BULK_INHERITED}) {}
 
-        Rc<Property> initial() const override {
-            return makeRc<TextTransformProperty>(self(), Keywords::NONE);
+        InitialValue initial() const override {
+            return "none"s;
         }
 
         void inherit(ComputedValues const& parent, ComputedValues& child) const override {
@@ -118,8 +120,8 @@ export struct WhiteSpaceProperty : Property {
         Registration()
             : Property::Registration(Properties::WHITE_SPACE, {INHERITED, BULK_INHERITED}) {}
 
-        Rc<Property> initial() const override {
-            return makeRc<WhiteSpaceProperty>(self(), Keywords::NORMAL);
+        InitialValue initial() const override {
+            return "normal"s;
         }
 
         void inherit(ComputedValues const& parent, ComputedValues& child) const override {

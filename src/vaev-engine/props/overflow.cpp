@@ -11,6 +11,7 @@ import :style.computed;
 import :style.values.keywords;
 
 using namespace Karm;
+using namespace Karm::Literals;
 
 namespace Vaev::Style {
 
@@ -21,8 +22,8 @@ export struct OverflowXProperty : Property {
     struct Registration : Property::Registration {
         Registration() : Property::Registration(Properties::OVERFLOW_X) {}
 
-        Rc<Property> initial() const override {
-            return makeRc<OverflowXProperty>(self(), Keywords::VISIBLE);
+        InitialValue initial() const override {
+            return "visible"s;
         }
 
         Rc<Property> load(ComputedValues const& c) const override {
@@ -57,8 +58,8 @@ export struct OverflowYProperty : Property {
     struct Registration : Property::Registration {
         Registration() : Property::Registration(Properties::OVERFLOW_Y) {}
 
-        Rc<Property> initial() const override {
-            return makeRc<OverflowYProperty>(self(), Keywords::VISIBLE);
+        InitialValue initial() const override {
+            return "visible"s;
         }
 
         Rc<Property> load(ComputedValues const& c) const override {
@@ -93,8 +94,8 @@ export struct OverflowBlockProperty : Property {
     struct Registration : Property::Registration {
         Registration() : Property::Registration(Properties::OVERFLOW_BLOCK) {}
 
-        Rc<Property> initial() const override {
-            return makeRc<OverflowBlockProperty>(self(), Keywords::VISIBLE);
+        InitialValue initial() const override {
+            return "visible"s;
         }
 
         Rc<Property> load(ComputedValues const& c) const override {
@@ -129,8 +130,8 @@ export struct OverflowInlineProperty : Property {
     struct Registration : Property::Registration {
         Registration() : Property::Registration(Properties::OVERFLOW_INLINE) {}
 
-        Rc<Property> initial() const override {
-            return makeRc<OverflowInlineProperty>(self(), Keywords::VISIBLE);
+        InitialValue initial() const override {
+            return "visible"s;
         }
 
         Rc<Property> load(ComputedValues const& c) const override {
@@ -166,8 +167,8 @@ export struct OverflowProperty : Property {
         Registration()
             : Property::Registration(Properties::OVERFLOW, SHORTHAND) {}
 
-        Rc<Property> initial() const override {
-            return makeRc<OverflowProperty>(self(), Pair<Css::Overflow>{Keywords::VISIBLE, Keywords::VISIBLE});
+        InitialValue initial() const override {
+            return "visible"s;
         }
 
         Rc<Property> load(ComputedValues const& c) const override {

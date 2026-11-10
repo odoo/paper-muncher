@@ -11,6 +11,7 @@ import :style.computed;
 import :style.values.keywords;
 
 using namespace Karm;
+using namespace Karm::Literals;
 
 namespace Vaev::Style {
 
@@ -21,8 +22,8 @@ export struct OutlineWidthProperty : Property {
     struct Registration : Property::Registration {
         Registration() : Property::Registration(Properties::OUTLINE_WIDTH) {}
 
-        Rc<Property> initial() const override {
-            return makeRc<OutlineWidthProperty>(self(), Css::LineWidth{Keywords::MEDIUM});
+        InitialValue initial() const override {
+            return "medium"s;
         }
 
         Rc<Property> load(ComputedValues const& c) const override {
@@ -59,8 +60,8 @@ export struct OutlineStyleProperty : Property {
     struct Registration : Property::Registration {
         Registration() : Property::Registration(Properties::OUTLINE_STYLE) {}
 
-        Rc<Property> initial() const override {
-            return makeRc<OutlineStyleProperty>(self(), Value{Gfx::BorderStyle::NONE});
+        InitialValue initial() const override {
+            return "none"s;
         }
 
         Rc<Property> load(ComputedValues const& c) const override {
@@ -97,13 +98,13 @@ export struct OutlineColorProperty : Property {
     struct Registration : Property::Registration {
         Registration() : Property::Registration(Properties::OUTLINE_COLOR) {}
 
+        InitialValue initial() const override {
+            return "auto"s;
+        }
+
         ComputationPhase computationPhase() const override {
             // Must be applied after 'outline-style'.
             return ComputationPhase::LATE;
-        }
-
-        Rc<Property> initial() const override {
-            return makeRc<OutlineColorProperty>(self(), Value{Keywords::AUTO});
         }
 
         Rc<Property> load(ComputedValues const& c) const override {
@@ -151,8 +152,8 @@ export struct OutlineOffsetProperty : Property {
     struct Registration : Property::Registration {
         Registration() : Property::Registration(Properties::OUTLINE_OFFSET) {}
 
-        Rc<Property> initial() const override {
-            return makeRc<OutlineOffsetProperty>(self(), Css::px(0));
+        InitialValue initial() const override {
+            return "0"s;
         }
 
         Rc<Property> load(ComputedValues const& c) const override {
@@ -200,8 +201,8 @@ export struct OutlineProperty : Property {
         Registration()
             : Property::Registration(Properties::OUTLINE, SHORTHAND) {}
 
-        Rc<Property> initial() const override {
-            return makeRc<OutlineProperty>(self(), Value{});
+        InitialValue initial() const override {
+            return "medium none auto"s;
         }
 
         Rc<Property> load(ComputedValues const& c) const override {

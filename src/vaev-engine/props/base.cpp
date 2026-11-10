@@ -71,6 +71,12 @@ export struct ComputationContext :
     }
 };
 
+export enum struct GuaranteedInvalid { GUARANTEED_INVALID };
+export using enum GuaranteedInvalid;
+
+// https://drafts.csswg.org/css-cascade/#initial-value
+export using InitialValue = Union<GuaranteedInvalid, Str>;
+
 export struct Property;
 
 export using Longhands = SmallVec<Rc<Property>, 12>;
@@ -168,7 +174,30 @@ export struct Property : Meta::NoCopy {
         }
 
         // https://drafts.csswg.org/css-cascade/#initial-value
-        virtual Rc<Property> initial() const = 0;
+        virtual InitialValue initial() const = 0;
+
+        virtual Rc<Property> initialProperty() const {
+            auto content = initial().visit(
+                [](GuaranteedInvalid) {
+                    // The guaranteed-invalid value has no text, it's represented by its own token.
+                    return Css::Content{Css::Sst::guaranteedInvalid()};
+                },
+                [](Str text) {
+                    Css::Lexer lex{text};
+                    auto diags = Diag::Collector::ignore();
+                    auto [content, _] = Css::consumeDeclarationValue(lex, diags);
+                    return content;
+                }
+            );
+
+            Cursor<Css::Sst> c = content;
+            Css::eatWhitespace(c);
+            auto property = parse(c);
+            Css::eatWhitespace(c);
+            if (not property or not c.ended())
+                logFatal("invalid initial value {} for property {:#}", initial(), name);
+            return property.take();
+        }
 
         virtual Rc<Property> load(ComputedValues const& c) const = 0;
 
@@ -251,7 +280,7 @@ export struct Property : Meta::NoCopy {
     }
 
     bool isInitial() const {
-        return *registration->initial() == *this;
+        return *registration->initialProperty() == *this;
     }
 
     /// Determines whether this property instance represents a parsing failure or an unrecognized CSS declaration.
@@ -280,10 +309,9 @@ struct CustomProperty : Property {
             return ComputationPhase::CUSTOM_PROPERTY;
         }
 
-        Rc<Property> initial() const override {
-            return makeRc<CustomProperty>(
-                self(), Css::Content{Css::Sst::guaranteedInvalid()}
-            );
+        // https://drafts.csswg.org/css-variables/#guaranteed-invalid
+        InitialValue initial() const override {
+            return GUARANTEED_INVALID;
         }
 
         void inherit(ComputedValues const& parent, ComputedValues& child) const override {
@@ -525,7 +553,7 @@ struct DefaultedProperty : Property {
             // The initial CSS-wide keyword represents the value
             // defined as the property’s initial value.
             // https://drafts.csswg.org/css-cascade/#initial
-            return registration->initial()->expand(registry, parent, child);
+            return registration->initialProperty()->expand(registry, parent, child);
         } else if (_value == Default::INHERIT) {
             // The inherit CSS-wide keyword represents the property’s
             // computed value on the parent element.
@@ -538,7 +566,7 @@ struct DefaultedProperty : Property {
             if (registration->flags.has(INHERITED))
                 return registration->load(parent)->expand(registry, parent, child);
 
-            return registration->initial()->expand(registry, parent, child);
+            return registration->initialProperty()->expand(registry, parent, child);
         } else if (_value == Default::REVERT) {
             // TODO: Implement revert()
             return {};
@@ -552,7 +580,7 @@ struct DefaultedProperty : Property {
             // The initial CSS-wide keyword represents the value
             // defined as the property’s initial value.
             // https://drafts.csswg.org/css-cascade/#initial
-            registration->initial()->apply(parent, c, cx);
+            registration->initialProperty()->apply(parent, c, cx);
         } else if (_value == Default::INHERIT) {
             // The inherit CSS-wide keyword represents the property’s
             // computed value on the parent element.
@@ -565,7 +593,7 @@ struct DefaultedProperty : Property {
             if (registration->flags.has(INHERITED))
                 registration->load(parent)->apply(parent, c, cx);
             else
-                registration->initial()->apply(parent, c, cx);
+                registration->initialProperty()->apply(parent, c, cx);
 
         } else if (_value == Default::REVERT) {
             // TODO: Implement revert()
@@ -595,7 +623,7 @@ struct BogusProperty : Property {
         Registration(Symbol const name)
             : Property::Registration(name, BOGUS_REGISTRATION) {}
 
-        Rc<Property> initial() const override {
+        InitialValue initial() const override {
             unreachable();
         }
 
@@ -723,7 +751,7 @@ export struct RegisteredPropertySet {
             auto initial = makeRc<ComputedValues>();
             for (auto& [_, registration] : registrations().iterItems())
                 if (not registration->flags.has(Property::SHORTHAND))
-                    registration->initial()->apply(*initial, *initial, cx);
+                    registration->initialProperty()->apply(*initial, *initial, cx);
             _memoInitialComputedValues = Some(initial);
         }
         return makeRc<ComputedValues>(**_memoInitialComputedValues);

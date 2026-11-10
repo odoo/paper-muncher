@@ -11,6 +11,7 @@ import :style.computed;
 import :style.values.keywords;
 
 using namespace Karm;
+using namespace Karm::Literals;
 
 namespace Vaev::Style {
 
@@ -19,8 +20,8 @@ export struct DisplayProperty : Property {
     struct Registration : Property::Registration {
         Registration() : Property::Registration(Properties::DISPLAY) {}
 
-        Rc<Property> initial() const override {
-            return makeRc<DisplayProperty>(self(), Css::Display{Css::Display::FLOW, Css::Display::INLINE});
+        InitialValue initial() const override {
+            return "inline"s;
         }
 
         Rc<Property> load(ComputedValues const& s) const override {
@@ -56,8 +57,8 @@ export struct ContentProperty : Property {
     struct Registration : Property::Registration {
         Registration() : Property::Registration(Properties::CONTENT) {}
 
-        Rc<Property> initial() const override {
-            return makeRc<ContentProperty>(self(), Keywords::NORMAL);
+        InitialValue initial() const override {
+            return "normal"s;
         }
 
         Rc<Property> load(ComputedValues const& c) const override {
@@ -114,8 +115,8 @@ export struct OrderProperty : Property {
     struct Registration : Property::Registration {
         Registration() : Property::Registration(Properties::ORDER) {}
 
-        Rc<Property> initial() const override {
-            return makeRc<OrderProperty>(self(), Integer{0});
+        InitialValue initial() const override {
+            return "0"s;
         }
 
         Rc<Property> load(ComputedValues const& c) const override {

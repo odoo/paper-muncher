@@ -11,6 +11,7 @@ import :style.computed;
 import :style.values.keywords;
 
 using namespace Karm;
+using namespace Karm::Literals;
 
 namespace Vaev::Style {
 
@@ -19,8 +20,8 @@ export struct VisibilityProperty : Property {
     struct Registration : Property::Registration {
         Registration() : Property::Registration(Properties::VISIBILITY) {}
 
-        Rc<Property> initial() const override {
-            return makeRc<VisibilityProperty>(self(), Keywords::VISIBLE);
+        InitialValue initial() const override {
+            return "visible"s;
         }
 
         Rc<Property> load(ComputedValues const& c) const override {
@@ -57,8 +58,8 @@ export struct OpacityProperty : Property {
     struct Registration : Property::Registration {
         Registration() : Property::Registration(Properties::OPACITY) {}
 
-        Rc<Property> initial() const override {
-            return makeRc<OpacityProperty>(self(), Css::Number{Css::number(1)});
+        InitialValue initial() const override {
+            return "1"s;
         }
 
         Rc<Property> load(ComputedValues const& c) const override {
@@ -113,8 +114,8 @@ export struct ClipPathProperty : Property {
     struct Registration : Property::Registration {
         Registration() : Property::Registration(Properties::CLIP_PATH) {}
 
-        Rc<Property> initial() const override {
-            return makeRc<ClipPathProperty>(self(), Keywords::NONE);
+        InitialValue initial() const override {
+            return "none"s;
         }
 
         Rc<Property> load(ComputedValues const& c) const override {

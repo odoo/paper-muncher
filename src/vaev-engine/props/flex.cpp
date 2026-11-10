@@ -11,6 +11,7 @@ import :style.computed;
 import :style.values.keywords;
 
 using namespace Karm;
+using namespace Karm::Literals;
 
 namespace Vaev::Style {
 
@@ -29,8 +30,8 @@ export struct FlexBasisProperty : Property {
     struct Registration : Property::Registration {
         Registration() : Property::Registration(Properties::FLEX_BASIS) {}
 
-        Rc<Property> initial() const override {
-            return makeRc<FlexBasisProperty>(self(), Keywords::AUTO);
+        InitialValue initial() const override {
+            return "auto"s;
         }
 
         Rc<Property> load(ComputedValues const& c) const override {
@@ -65,8 +66,8 @@ export struct FlexDirectionProperty : Property {
     struct Registration : Property::Registration {
         Registration() : Property::Registration(Properties::FLEX_DIRECTION) {}
 
-        Rc<Property> initial() const override {
-            return makeRc<FlexDirectionProperty>(self(), Keywords::ROW);
+        InitialValue initial() const override {
+            return "row"s;
         }
 
         Rc<Property> load(ComputedValues const& c) const override {
@@ -101,8 +102,8 @@ export struct FlexGrowProperty : Property {
     struct Registration : Property::Registration {
         Registration() : Property::Registration(Properties::FLEX_GROW) {}
 
-        Rc<Property> initial() const override {
-            return makeRc<FlexGrowProperty>(self(), f64{0});
+        InitialValue initial() const override {
+            return "0"s;
         }
 
         Rc<Property> load(ComputedValues const& c) const override {
@@ -137,8 +138,8 @@ export struct FlexShrinkProperty : Property {
     struct Registration : Property::Registration {
         Registration() : Property::Registration(Properties::FLEX_SHRINK) {}
 
-        Rc<Property> initial() const override {
-            return makeRc<FlexShrinkProperty>(self(), f64{1});
+        InitialValue initial() const override {
+            return "1"s;
         }
 
         Rc<Property> load(ComputedValues const& c) const override {
@@ -173,8 +174,8 @@ export struct FlexWrapProperty : Property {
     struct Registration : Property::Registration {
         Registration() : Property::Registration(Properties::FLEX_WRAP) {}
 
-        Rc<Property> initial() const override {
-            return makeRc<FlexWrapProperty>(self(), Keywords::NOWRAP);
+        InitialValue initial() const override {
+            return "nowrap"s;
         }
 
         Rc<Property> load(ComputedValues const& c) const override {
@@ -210,8 +211,8 @@ export struct FlexFlowProperty : Property {
         Registration()
             : Property::Registration(Properties::FLEX_FLOW, SHORTHAND) {}
 
-        Rc<Property> initial() const override {
-            return makeRc<FlexFlowProperty>(self(), Tuple<Css::FlexDirection, Css::FlexWrap>{Keywords::ROW, Keywords::NOWRAP});
+        InitialValue initial() const override {
+            return "row nowrap"s;
         }
 
         Rc<Property> load(ComputedValues const& c) const override {
@@ -275,8 +276,8 @@ export struct FlexProperty : Property {
         Registration()
             : Property::Registration(Properties::FLEX, SHORTHAND) {}
 
-        Rc<Property> initial() const override {
-            return makeRc<FlexProperty>(self(), Value{Keywords::AUTO, 0, 1});
+        InitialValue initial() const override {
+            return "0 1 auto"s;
         }
 
         Rc<Property> load(ComputedValues const& c) const override {

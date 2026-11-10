@@ -11,6 +11,7 @@ import :style.computed;
 import :style.values.keywords;
 
 using namespace Karm;
+using namespace Karm::Literals;
 
 namespace Vaev::Style {
 
@@ -38,19 +39,13 @@ export struct TransformOriginProperty : Property {
         Registration()
             : Property::Registration(Properties::TRANSFORM_ORIGIN, PRESENTATION_ATTRIBUTE) {}
 
+        InitialValue initial() const override {
+            return "50% 50%"s;
+        }
+
         // https://compat.spec.whatwg.org/#css-simple-aliases
         SmallVec<Symbol, 1> legacyNameAlias() const override {
             return {"-webkit-transform-origin"_sym};
-        }
-
-        Rc<Property> initial() const override {
-            return makeRc<TransformOriginProperty>(
-                self(),
-                Value{
-                    .xOffset = Css::LengthPercentage{Css::percent(50)},
-                    .yOffset = Css::LengthPercentage{Css::percent(50)},
-                }
-            );
         }
 
         Rc<Property> load(ComputedValues const& c) const override {
@@ -203,8 +198,8 @@ export struct TransformBoxProperty : Property {
     struct Registration : Property::Registration {
         Registration() : Property::Registration(Properties::TRANSFORM_BOX) {}
 
-        Rc<Property> initial() const override {
-            return makeRc<TransformBoxProperty>(self(), Css::TransformBox{Keywords::VIEW_BOX});
+        InitialValue initial() const override {
+            return "view-box"s;
         }
 
         Rc<Property> load(ComputedValues const& c) const override {
@@ -257,13 +252,13 @@ export struct TransformProperty : Property {
         Registration()
             : Property::Registration(Properties::TRANSFORM, PRESENTATION_ATTRIBUTE) {}
 
+        InitialValue initial() const override {
+            return "none"s;
+        }
+
         // https://compat.spec.whatwg.org/#css-simple-aliases
         SmallVec<Symbol, 1> legacyNameAlias() const override {
             return {"-webkit-transform"_sym};
-        }
-
-        Rc<Property> initial() const override {
-            return makeRc<TransformProperty>(self(), Value{Keywords::NONE});
         }
 
         Rc<Property> load(ComputedValues const& c) const override {

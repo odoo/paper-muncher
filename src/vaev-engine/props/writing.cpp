@@ -11,6 +11,7 @@ import :style.computed;
 import :style.values.keywords;
 
 using namespace Karm;
+using namespace Karm::Literals;
 
 namespace Vaev::Style {
 
@@ -20,8 +21,8 @@ export struct WritingModeProperty : Property {
         Registration()
             : Property::Registration(Properties::WRITING_MODE, INHERITED) {}
 
-        Rc<Property> initial() const override {
-            return makeRc<WritingModeProperty>(self(), Keywords::HORIZONTAL_TB);
+        InitialValue initial() const override {
+            return "horizontal-tb"s;
         }
 
         void inherit(ComputedValues const& parent, ComputedValues& child) const override {
@@ -61,8 +62,8 @@ export struct DirectionProperty : Property {
         Registration()
             : Property::Registration(Properties::DIRECTION, {INHERITED, ALL_EXCLUDED}) {}
 
-        Rc<Property> initial() const override {
-            return makeRc<DirectionProperty>(self(), Keywords::LTR);
+        InitialValue initial() const override {
+            return "ltr"s;
         }
 
         void inherit(ComputedValues const& parent, ComputedValues& child) const override {

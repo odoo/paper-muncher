@@ -11,6 +11,7 @@ import :style.computed;
 import :style.values.keywords;
 
 using namespace Karm;
+using namespace Karm::Literals;
 
 namespace Vaev::Style {
 
@@ -21,8 +22,8 @@ export struct MarginTopProperty : Property {
     struct Registration : Property::Registration {
         Registration() : Property::Registration(Properties::MARGIN_TOP) {}
 
-        Rc<Property> initial() const override {
-            return makeRc<MarginTopProperty>(self(), Css::LengthPercentage{Css::px(0)});
+        InitialValue initial() const override {
+            return "0"s;
         }
 
         Rc<Property> load(ComputedValues const& c) const override {
@@ -59,8 +60,8 @@ export struct MarginRightProperty : Property {
     struct Registration : Property::Registration {
         Registration() : Property::Registration(Properties::MARGIN_RIGHT) {}
 
-        Rc<Property> initial() const override {
-            return makeRc<MarginRightProperty>(self(), Css::LengthPercentage{Css::px(0)});
+        InitialValue initial() const override {
+            return "0"s;
         }
 
         Rc<Property> load(ComputedValues const& c) const override {
@@ -97,8 +98,8 @@ export struct MarginBottomProperty : Property {
     struct Registration : Property::Registration {
         Registration() : Property::Registration(Properties::MARGIN_BOTTOM) {}
 
-        Rc<Property> initial() const override {
-            return makeRc<MarginBottomProperty>(self(), Css::LengthPercentage{Css::px(0)});
+        InitialValue initial() const override {
+            return "0"s;
         }
 
         Rc<Property> load(ComputedValues const& c) const override {
@@ -135,8 +136,8 @@ export struct MarginLeftProperty : Property {
     struct Registration : Property::Registration {
         Registration() : Property::Registration(Properties::MARGIN_LEFT) {}
 
-        Rc<Property> initial() const override {
-            return makeRc<MarginLeftProperty>(self(), Css::LengthPercentage{Css::px(0)});
+        InitialValue initial() const override {
+            return "0"s;
         }
 
         Rc<Property> load(ComputedValues const& c) const override {
@@ -174,8 +175,8 @@ export struct MarginProperty : Property {
         Registration()
             : Property::Registration(Properties::MARGIN, SHORTHAND) {}
 
-        Rc<Property> initial() const override {
-            return makeRc<MarginProperty>(self(), Value{Css::LengthPercentage{Css::px(0)}});
+        InitialValue initial() const override {
+            return "0"s;
         }
 
         Rc<Property> load(ComputedValues const& c) const override {
@@ -213,8 +214,8 @@ export struct MarginInlineStartProperty : Property {
     struct Registration : Property::Registration {
         Registration() : Property::Registration(Properties::MARGIN_INLINE_START, LOGICAL) {}
 
-        Rc<Property> initial() const override {
-            return makeRc<MarginInlineStartProperty>(self(), Css::LengthPercentage{Css::px(0)});
+        InitialValue initial() const override {
+            return "0"s;
         }
 
         Rc<Property> load(ComputedValues const& c) const override {
@@ -254,8 +255,8 @@ export struct MarginInlineEndProperty : Property {
     struct Registration : Property::Registration {
         Registration() : Property::Registration(Properties::MARGIN_INLINE_END, LOGICAL) {}
 
-        Rc<Property> initial() const override {
-            return makeRc<MarginInlineEndProperty>(self(), Css::LengthPercentage{Css::px(0)});
+        InitialValue initial() const override {
+            return "0"s;
         }
 
         Rc<Property> load(ComputedValues const& c) const override {
@@ -295,8 +296,8 @@ export struct MarginInlineProperty : Property {
     struct Registration : Property::Registration {
         Registration() : Property::Registration(Properties::MARGIN_INLINE, LOGICAL) {}
 
-        Rc<Property> initial() const override {
-            return makeRc<MarginInlineProperty>(self(), Value{Css::LengthPercentage{Css::px(0)}, Css::LengthPercentage{Css::px(0)}});
+        InitialValue initial() const override {
+            return "0"s;
         }
 
         Rc<Property> load(ComputedValues const& c) const override {
@@ -333,8 +334,8 @@ export struct MarginBlockStartProperty : Property {
     struct Registration : Property::Registration {
         Registration() : Property::Registration(Properties::MARGIN_BLOCK_START, LOGICAL) {}
 
-        Rc<Property> initial() const override {
-            return makeRc<MarginBlockStartProperty>(self(), Css::LengthPercentage{Css::px(0)});
+        InitialValue initial() const override {
+            return "0"s;
         }
 
         Rc<Property> load(ComputedValues const& c) const override {
@@ -374,8 +375,8 @@ export struct MarginBlockEndProperty : Property {
     struct Registration : Property::Registration {
         Registration() : Property::Registration(Properties::MARGIN_BLOCK_END, LOGICAL) {}
 
-        Rc<Property> initial() const override {
-            return makeRc<MarginBlockEndProperty>(self(), Css::LengthPercentage{Css::px(0)});
+        InitialValue initial() const override {
+            return "0"s;
         }
 
         Rc<Property> load(ComputedValues const& c) const override {
@@ -415,8 +416,8 @@ export struct MarginBlockProperty : Property {
     struct Registration : Property::Registration {
         Registration() : Property::Registration(Properties::MARGIN_BLOCK, LOGICAL) {}
 
-        Rc<Property> initial() const override {
-            return makeRc<MarginBlockProperty>(self(), Value{Css::LengthPercentage{Css::px(0)}, Css::LengthPercentage{Css::px(0)}});
+        InitialValue initial() const override {
+            return "0"s;
         }
 
         Rc<Property> load(ComputedValues const& c) const override {

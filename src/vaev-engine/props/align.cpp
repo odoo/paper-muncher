@@ -11,6 +11,7 @@ import :style.computed;
 import :style.values.keywords;
 
 using namespace Karm;
+using namespace Karm::Literals;
 
 namespace Vaev::Style {
 
@@ -22,8 +23,8 @@ export struct AlignContentProperty : Property {
     struct Registration : Property::Registration {
         Registration() : Property::Registration(Properties::ALIGN_CONTENT) {}
 
-        Rc<Property> initial() const override {
-            return makeRc<AlignContentProperty>(self(), Css::Align::Keywords::STRETCH);
+        InitialValue initial() const override {
+            return "normal"s;
         }
 
         Rc<Property> load(ComputedValues const& c) const override {
@@ -58,8 +59,8 @@ export struct JustifyContentProperty : Property {
     struct Registration : Property::Registration {
         Registration() : Property::Registration(Properties::JUSTIFY_CONTENT) {}
 
-        Rc<Property> initial() const override {
-            return makeRc<JustifyContentProperty>(self(), Css::Align::Keywords::FLEX_START);
+        InitialValue initial() const override {
+            return "normal"s;
         }
 
         Rc<Property> load(ComputedValues const& c) const override {
@@ -94,8 +95,8 @@ export struct JustifySelfProperty : Property {
     struct Registration : Property::Registration {
         Registration() : Property::Registration(Properties::JUSTIFY_SELF) {}
 
-        Rc<Property> initial() const override {
-            return makeRc<JustifySelfProperty>(self(), Css::Align::Keywords::AUTO);
+        InitialValue initial() const override {
+            return "auto"s;
         }
 
         Rc<Property> load(ComputedValues const& c) const override {
@@ -130,8 +131,8 @@ export struct AlignSelfProperty : Property {
     struct Registration : Property::Registration {
         Registration() : Property::Registration(Properties::ALIGN_SELF) {}
 
-        Rc<Property> initial() const override {
-            return makeRc<AlignSelfProperty>(self(), Css::Align::Keywords::AUTO);
+        InitialValue initial() const override {
+            return "auto"s;
         }
 
         Rc<Property> load(ComputedValues const& c) const override {
@@ -166,8 +167,8 @@ export struct JustifyItemsProperty : Property {
     struct Registration : Property::Registration {
         Registration() : Property::Registration(Properties::JUSTIFY_ITEMS) {}
 
-        Rc<Property> initial() const override {
-            return makeRc<JustifyItemsProperty>(self(), Css::Align::LEGACY);
+        InitialValue initial() const override {
+            return "legacy"s;
         }
 
         Rc<Property> load(ComputedValues const& c) const override {
@@ -202,8 +203,8 @@ export struct AlignItemsProperty : Property {
     struct Registration : Property::Registration {
         Registration() : Property::Registration(Properties::ALIGN_ITEMS) {}
 
-        Rc<Property> initial() const override {
-            return makeRc<AlignItemsProperty>(self(), Css::Align::Keywords::STRETCH);
+        InitialValue initial() const override {
+            return "normal"s;
         }
 
         Rc<Property> load(ComputedValues const& c) const override {
@@ -242,13 +243,13 @@ export struct RowGapProperty : Property {
     struct Registration : Property::Registration {
         Registration() : Property::Registration(Properties::ROW_GAP) {}
 
+        InitialValue initial() const override {
+            return "normal"s;
+        }
+
         // https://drafts.csswg.org/css-align-3/#gap-legacy
         SmallVec<Symbol, 1> legacyNameAlias() const override {
             return {"grid-row-gap"_sym};
-        }
-
-        Rc<Property> initial() const override {
-            return makeRc<RowGapProperty>(self(), Keywords::NORMAL);
         }
 
         Rc<Property> load(ComputedValues const& c) const override {
@@ -285,13 +286,13 @@ export struct ColumnGapProperty : Property {
     struct Registration : Property::Registration {
         Registration() : Property::Registration(Properties::COLUMN_GAP) {}
 
+        InitialValue initial() const override {
+            return "normal"s;
+        }
+
         // https://drafts.csswg.org/css-align-3/#gap-legacy
         SmallVec<Symbol, 1> legacyNameAlias() const override {
             return {"grid-column-gap"_sym};
-        }
-
-        Rc<Property> initial() const override {
-            return makeRc<ColumnGapProperty>(self(), Keywords::NORMAL);
         }
 
         Rc<Property> load(ComputedValues const& c) const override {
@@ -335,19 +336,13 @@ export struct GapProperty : Property {
     struct Registration : Property::Registration {
         Registration() : Property::Registration(Properties::GAP) {}
 
+        InitialValue initial() const override {
+            return "normal"s;
+        }
+
         // https://drafts.csswg.org/css-align-3/#gap-legacy
         SmallVec<Symbol, 1> legacyNameAlias() const override {
             return {"grid-gap"_sym};
-        }
-
-        Rc<Property> initial() const override {
-            return makeRc<GapProperty>(
-                self(),
-                Value{
-                    Keywords::NORMAL,
-                    Keywords::NORMAL,
-                }
-            );
         }
 
         Rc<Property> load(ComputedValues const& c) const override {

@@ -10,6 +10,7 @@ import :css.parser;
 import :style.computed;
 
 using namespace Karm;
+using namespace Karm::Literals;
 
 namespace Vaev::Style {
 
@@ -21,8 +22,8 @@ export struct SvgXProperty : Property {
         Registration()
             : Property::Registration(Properties::X, PRESENTATION_ATTRIBUTE) {}
 
-        Rc<Property> initial() const override {
-            return makeRc<SvgXProperty>(self(), Css::px(0));
+        InitialValue initial() const override {
+            return "0"s;
         }
 
         Rc<Property> load(ComputedValues const& c) const override {
@@ -62,8 +63,8 @@ export struct SvgYProperty : Property {
         Registration()
             : Property::Registration(Properties::Y, PRESENTATION_ATTRIBUTE) {}
 
-        Rc<Property> initial() const override {
-            return makeRc<SvgYProperty>(self(), Css::px(0));
+        InitialValue initial() const override {
+            return "0"s;
         }
 
         Rc<Property> load(ComputedValues const& c) const override {
@@ -103,8 +104,8 @@ export struct SvgCXProperty : Property {
         Registration()
             : Property::Registration(Properties::CX, PRESENTATION_ATTRIBUTE) {}
 
-        Rc<Property> initial() const override {
-            return makeRc<SvgCXProperty>(self(), Css::px(0));
+        InitialValue initial() const override {
+            return "0"s;
         }
 
         Rc<Property> load(ComputedValues const& c) const override {
@@ -144,8 +145,8 @@ export struct SvgCYProperty : Property {
         Registration()
             : Property::Registration(Properties::CY, PRESENTATION_ATTRIBUTE) {}
 
-        Rc<Property> initial() const override {
-            return makeRc<SvgCYProperty>(self(), Css::px(0));
+        InitialValue initial() const override {
+            return "0"s;
         }
 
         Rc<Property> load(ComputedValues const& c) const override {
@@ -185,8 +186,8 @@ export struct SvgRProperty : Property {
         Registration()
             : Property::Registration(Properties::R, PRESENTATION_ATTRIBUTE) {}
 
-        Rc<Property> initial() const override {
-            return makeRc<SvgRProperty>(self(), Css::px(0));
+        InitialValue initial() const override {
+            return "0"s;
         }
 
         Rc<Property> load(ComputedValues const& c) const override {
@@ -226,8 +227,8 @@ export struct SvgFillProperty : Property {
         Registration()
             : Property::Registration(Properties::FILL, {PRESENTATION_ATTRIBUTE, INHERITED, BULK_INHERITED}) {}
 
-        Rc<Property> initial() const override {
-            return makeRc<SvgFillProperty>(self(), Css::SvgPaint{Some(Css::Color{Gfx::BLACK})});
+        InitialValue initial() const override {
+            return "black"s;
         }
 
         Rc<Property> load(ComputedValues const& c) const override {
@@ -263,8 +264,8 @@ export struct SvgDProperty : Property {
         Registration()
             : Property::Registration(Properties::D, PRESENTATION_ATTRIBUTE) {}
 
-        Rc<Property> initial() const override {
-            return makeRc<SvgDProperty>(self(), Union<String, None>{NONE});
+        InitialValue initial() const override {
+            return "none"s;
         }
 
         Rc<Property> load(ComputedValues const& c) const override {
@@ -292,8 +293,12 @@ export struct SvgDProperty : Property {
             return parse(content);
         }
 
+        // none | <string>, as path("…")
         Res<Rc<Property>> parse(Cursor<Css::Sst>& c) const override {
             eatWhitespace(c);
+            if (c.skip(Css::Token::ident("none")))
+                return Ok(makeRc<SvgDProperty>(self(), Union<String, None>{NONE}));
+
             if (c.peek() != Css::Sst::FUNC or c.peek().prefix != Css::Token::function("path(")) {
                 return Error::invalidData("expected path function");
             }
@@ -339,8 +344,8 @@ export struct SvgViewBoxProperty : Property {
         Registration()
             : Property::Registration(Properties::VIEWBOX, PRESENTATION_ATTRIBUTE) {}
 
-        Rc<Property> initial() const override {
-            return makeRc<SvgViewBoxProperty>(self(), Opt<Css::SvgViewBox>{NONE});
+        InitialValue initial() const override {
+            return "none"s;
         }
 
         Rc<Property> load(ComputedValues const& c) const override {
@@ -348,6 +353,9 @@ export struct SvgViewBoxProperty : Property {
         }
 
         Res<Rc<Property>> parse(Cursor<Css::Sst>& c) const override {
+            if (c.skip(Css::Token::ident("none")))
+                return Ok(makeRc<SvgViewBoxProperty>(self(), Opt<Css::SvgViewBox>{NONE}));
+
             Css::SvgViewBox viewBox;
 
             viewBox.minX = try$(parseValue<f64>(c));
@@ -402,8 +410,8 @@ export struct SvgStrokeProperty : Property {
         Registration()
             : Property::Registration(Properties::STROKE, {PRESENTATION_ATTRIBUTE, INHERITED, BULK_INHERITED}) {}
 
-        Rc<Property> initial() const override {
-            return makeRc<SvgStrokeProperty>(self(), Css::SvgPaint{NONE});
+        InitialValue initial() const override {
+            return "none"s;
         }
 
         Rc<Property> load(ComputedValues const& c) const override {
@@ -439,8 +447,8 @@ export struct SvgStrokeOpacityProperty : Property {
         Registration()
             : Property::Registration(Properties::STROKE_OPACITY, {INHERITED, BULK_INHERITED}) {}
 
-        Rc<Property> initial() const override {
-            return makeRc<SvgStrokeOpacityProperty>(self(), f64{1});
+        InitialValue initial() const override {
+            return "1"s;
         }
 
         Rc<Property> load(ComputedValues const& c) const override {
@@ -481,8 +489,8 @@ export struct FillOpacityProperty : Property {
         Registration()
             : Property::Registration(Properties::FILL_OPACITY, {PRESENTATION_ATTRIBUTE, INHERITED, BULK_INHERITED}) {}
 
-        Rc<Property> initial() const override {
-            return makeRc<FillOpacityProperty>(self(), f64{1});
+        InitialValue initial() const override {
+            return "1"s;
         }
 
         Rc<Property> load(ComputedValues const& c) const override {
@@ -523,8 +531,8 @@ export struct StrokeWidthProperty : Property {
         Registration()
             : Property::Registration(Properties::STROKE_WIDTH, {PRESENTATION_ATTRIBUTE, INHERITED, BULK_INHERITED}) {}
 
-        Rc<Property> initial() const override {
-            return makeRc<StrokeWidthProperty>(self(), Css::px(1));
+        InitialValue initial() const override {
+            return "1px"s;
         }
 
         Rc<Property> load(ComputedValues const& c) const override {

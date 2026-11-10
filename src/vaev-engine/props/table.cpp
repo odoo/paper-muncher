@@ -11,6 +11,7 @@ import :style.computed;
 import :style.values.keywords;
 
 using namespace Karm;
+using namespace Karm::Literals;
 
 namespace Vaev::Style {
 
@@ -19,8 +20,8 @@ export struct TableLayoutProperty : Property {
     struct Registration : Property::Registration {
         Registration() : Property::Registration(Properties::TABLE_LAYOUT) {}
 
-        Rc<Property> initial() const override {
-            return makeRc<TableLayoutProperty>(self(), Keywords::AUTO);
+        InitialValue initial() const override {
+            return "auto"s;
         }
 
         Rc<Property> load(ComputedValues const& s) const override {
@@ -56,8 +57,8 @@ export struct CaptionSideProperty : Property {
         Registration()
             : Property::Registration(Properties::CAPTION_SIDE, {INHERITED, BULK_INHERITED}) {}
 
-        Rc<Property> initial() const override {
-            return makeRc<CaptionSideProperty>(self(), Keywords::TOP);
+        InitialValue initial() const override {
+            return "top"s;
         }
 
         Rc<Property> load(ComputedValues const& s) const override {

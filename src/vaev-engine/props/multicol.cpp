@@ -11,6 +11,7 @@ import :style.computed;
 import :style.values.keywords;
 
 using namespace Karm;
+using namespace Karm::Literals;
 
 namespace Vaev::Style {
 
@@ -25,8 +26,8 @@ export struct ColumnWidthProperty : Property {
         Registration()
             : Property::Registration(Properties::COLUMN_WIDTH) {}
 
-        Rc<Property> initial() const override {
-            return makeRc<ColumnWidthProperty>(self(), Keywords::AUTO);
+        InitialValue initial() const override {
+            return "auto"s;
         }
 
         Rc<Property> load(ComputedValues const& c) const override {
@@ -86,8 +87,8 @@ export struct ColumnHeightProperty : Property {
         Registration()
             : Property::Registration(Properties::COLUMN_HEIGHT) {}
 
-        Rc<Property> initial() const override {
-            return makeRc<ColumnHeightProperty>(self(), Keywords::AUTO);
+        InitialValue initial() const override {
+            return "auto"s;
         }
 
         Rc<Property> load(ComputedValues const& c) const override {
@@ -142,8 +143,8 @@ export struct ColumnCountProperty : Property {
         Registration()
             : Property::Registration(Properties::COLUMN_COUNT) {}
 
-        Rc<Property> initial() const override {
-            return makeRc<ColumnCountProperty>(self(), Keywords::AUTO);
+        InitialValue initial() const override {
+            return "auto"s;
         }
 
         Rc<Property> load(ComputedValues const& c) const override {
@@ -179,8 +180,8 @@ export struct ColumnsProperty : Property {
         Registration()
             : Property::Registration(Properties::COLUMNS, SHORTHAND) {}
 
-        Rc<Property> initial() const override {
-            return makeRc<ColumnsProperty>(self(), Tuple<ColumnWidthProperty::Value, Css::ColumnCount, ColumnHeightProperty::Value>{.v0 = Keywords::AUTO, .v1 = Keywords::AUTO, .v2 = Keywords::AUTO});
+        InitialValue initial() const override {
+            return "auto"s;
         }
 
         Rc<Property> load(ComputedValues const& c) const override {

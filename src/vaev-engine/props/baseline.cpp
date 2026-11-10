@@ -11,6 +11,7 @@ import :style.computed;
 import :style.values.keywords;
 
 using namespace Karm;
+using namespace Karm::Literals;
 
 namespace Vaev::Style {
 
@@ -22,8 +23,8 @@ export struct LineHeightProperty : Property {
         Registration()
             : Property::Registration(Properties::LINE_HEIGHT, INHERITED) {}
 
-        Rc<Property> initial() const override {
-            return makeRc<LineHeightProperty>(self(), Keywords::NORMAL);
+        InitialValue initial() const override {
+            return "normal"s;
         }
 
         void inherit(ComputedValues const& parent, ComputedValues& child) const override {
@@ -87,8 +88,8 @@ export struct DominantBaselineProperty : Property {
     struct Registration : Property::Registration {
         Registration() : Property::Registration(Properties::DOMINANT_BASELINE) {}
 
-        Rc<Property> initial() const override {
-            return makeRc<DominantBaselineProperty>(self(), Keywords::AUTO);
+        InitialValue initial() const override {
+            return "auto"s;
         }
 
         Rc<Property> load(ComputedValues const& c) const override {
@@ -123,8 +124,8 @@ export struct BaselineSourceProperty : Property {
     struct Registration : Property::Registration {
         Registration() : Property::Registration(Properties::BASELINE_SOURCE) {}
 
-        Rc<Property> initial() const override {
-            return makeRc<BaselineSourceProperty>(self(), Keywords::AUTO);
+        InitialValue initial() const override {
+            return "auto"s;
         }
 
         Rc<Property> load(ComputedValues const& c) const override {
@@ -159,8 +160,8 @@ export struct AlignmentBaselineProperty : Property {
     struct Registration : Property::Registration {
         Registration() : Property::Registration(Properties::ALIGNMENT_BASELINE) {}
 
-        Rc<Property> initial() const override {
-            return makeRc<AlignmentBaselineProperty>(self(), Keywords::BASELINE);
+        InitialValue initial() const override {
+            return "baseline"s;
         }
 
         Rc<Property> load(ComputedValues const& c) const override {
@@ -203,8 +204,8 @@ export struct BaselineShiftProperty : Property {
     struct Registration : Property::Registration {
         Registration() : Property::Registration(Properties::BASELINE_SHIFT) {}
 
-        Rc<Property> initial() const override {
-            return makeRc<BaselineShiftProperty>(self(), Css::LengthPercentage{Css::px(0)});
+        InitialValue initial() const override {
+            return "0"s;
         }
 
         Rc<Property> load(ComputedValues const& c) const override {
@@ -246,8 +247,8 @@ export struct VerticalAlignProperty : Property {
         Registration()
             : Property::Registration(Properties::VERTICAL_ALIGN, SHORTHAND) {}
 
-        Rc<Property> initial() const override {
-            return makeRc<VerticalAlignProperty>(self(), Value{.alignmentBaseline = Some(Keywords::BASELINE)});
+        InitialValue initial() const override {
+            return "baseline"s;
         }
 
         Rc<Property> load(ComputedValues const& c) const override {

@@ -12,6 +12,7 @@ import :style.computed;
 import :style.values.keywords;
 
 using namespace Karm;
+using namespace Karm::Literals;
 
 namespace Vaev::Style {
 
@@ -23,12 +24,13 @@ export struct FontFamilyProperty : Property {
         Registration()
             : Property::Registration(Properties::FONT_FAMILY, {INHERITED, BULK_INHERITED}) {}
 
-        ComputationPhase computationPhase() const override {
-            return ComputationPhase::FONT;
+        // NOSPEC: The initial value depends on the user agent.
+        InitialValue initial() const override {
+            return "sans-serif"s;
         }
 
-        Rc<Property> initial() const override {
-            return makeRc<FontFamilyProperty>(self(), Vec<Css::FontFamily>{"sans-serif"_sym});
+        ComputationPhase computationPhase() const override {
+            return ComputationPhase::FONT;
         }
 
         Rc<Property> load(ComputedValues const& c) const override {
@@ -91,12 +93,12 @@ export struct FontWeightProperty : Property {
         Registration()
             : Property::Registration(Properties::FONT_WEIGHT, {INHERITED, BULK_INHERITED}) {}
 
-        ComputationPhase computationPhase() const override {
-            return ComputationPhase::FONT;
+        InitialValue initial() const override {
+            return "normal"s;
         }
 
-        Rc<Property> initial() const override {
-            return makeRc<FontWeightProperty>(self(), Value{Gfx::FontWeight::REGULAR});
+        ComputationPhase computationPhase() const override {
+            return ComputationPhase::FONT;
         }
 
         void inherit(ComputedValues const& parent, ComputedValues& child) const override {
@@ -136,6 +138,10 @@ export struct FontWidthProperty : Property {
         Registration()
             : Property::Registration(Properties::FONT_WIDTH, {INHERITED, BULK_INHERITED}) {}
 
+        InitialValue initial() const override {
+            return "normal"s;
+        }
+
         // https://drafts.csswg.org/css-fonts/#font-stretch-prop
         SmallVec<Symbol, 1> legacyNameAlias() const override {
             return {"font-stretch"_sym};
@@ -143,10 +149,6 @@ export struct FontWidthProperty : Property {
 
         ComputationPhase computationPhase() const override {
             return ComputationPhase::FONT;
-        }
-
-        Rc<Property> initial() const override {
-            return makeRc<FontWidthProperty>(self(), Css::FontWidth::NORMAL);
         }
 
         void inherit(ComputedValues const& parent, ComputedValues& child) const override {
@@ -186,12 +188,12 @@ export struct FontStyleProperty : Property {
         Registration()
             : Property::Registration(Properties::FONT_STYLE, {INHERITED, BULK_INHERITED}) {}
 
-        ComputationPhase computationPhase() const override {
-            return ComputationPhase::FONT;
+        InitialValue initial() const override {
+            return "normal"s;
         }
 
-        Rc<Property> initial() const override {
-            return makeRc<FontStyleProperty>(self(), Css::FontStyle::NORMAL);
+        ComputationPhase computationPhase() const override {
+            return ComputationPhase::FONT;
         }
 
         void inherit(ComputedValues const& parent, ComputedValues& child) const override {
@@ -243,12 +245,12 @@ export struct FontSizeProperty : Property {
         Registration()
             : Property::Registration(Properties::FONT_SIZE, {INHERITED, BULK_INHERITED}) {}
 
-        ComputationPhase computationPhase() const override {
-            return ComputationPhase::FONT;
+        InitialValue initial() const override {
+            return "medium"s;
         }
 
-        Rc<Property> initial() const override {
-            return makeRc<FontSizeProperty>(self(), Keywords::MEDIUM);
+        ComputationPhase computationPhase() const override {
+            return ComputationPhase::FONT;
         }
 
         void inherit(ComputedValues const& parent, ComputedValues& child) const override {
@@ -341,8 +343,8 @@ export struct FontProperty : Property {
         Registration()
             : Property::Registration(Properties::FONT, SHORTHAND) {}
 
-        Rc<Property> initial() const override {
-            return makeRc<FontProperty>(self(), Value{});
+        InitialValue initial() const override {
+            return "medium sans-serif"s;
         }
 
         Rc<Property> load(ComputedValues const& c) const override {

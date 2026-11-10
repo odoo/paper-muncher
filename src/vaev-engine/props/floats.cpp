@@ -11,6 +11,7 @@ import :style.computed;
 import :style.values.keywords;
 
 using namespace Karm;
+using namespace Karm::Literals;
 
 namespace Vaev::Style {
 
@@ -20,8 +21,8 @@ export struct FloatProperty : Property {
     struct Registration : Property::Registration {
         Registration() : Property::Registration(Properties::FLOAT) {}
 
-        Rc<Property> initial() const override {
-            return makeRc<FloatProperty>(self(), Keywords::NONE);
+        InitialValue initial() const override {
+            return "none"s;
         }
 
         Rc<Property> load(ComputedValues const& c) const override {
@@ -55,8 +56,8 @@ export struct ClearProperty : Property {
     struct Registration : Property::Registration {
         Registration() : Property::Registration(Properties::CLEAR) {}
 
-        Rc<Property> initial() const override {
-            return makeRc<ClearProperty>(self(), Keywords::NONE);
+        InitialValue initial() const override {
+            return "none"s;
         }
 
         Rc<Property> load(ComputedValues const& c) const override {
