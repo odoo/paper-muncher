@@ -32,20 +32,7 @@ export struct LineHeightProperty : Property {
         }
 
         Rc<Property> load(ComputedValues const& c) const override {
-            return makeRc<LineHeightProperty>(
-                self(),
-                c.inline_->lineHeight.visit(
-                    [](Keywords::Normal const& normal) -> Value {
-                        return normal;
-                    },
-                    [](f64 const& number) -> Value {
-                        return toSpecified(number);
-                    },
-                    [](Px const& px) -> Value {
-                        return toSpecified(PxPercent{px});
-                    }
-                )
-            );
+            return makeRc<LineHeightProperty>(self(), toSpecified(c.inline_->lineHeight));
         }
 
         Res<Rc<Property>> parse(Cursor<Css::Sst>& c) const override {

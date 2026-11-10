@@ -3927,10 +3927,6 @@ test$("vaev-style-wpt-css-css-fonts-parsing-font-invalid") {
     try$(_expectInvalid(_driver, "font", "normal full-width medium serif"));
     try$(_expectInvalid(_driver, "font", "italic titling-caps medium serif"));
     try$(_expectInvalid(_driver, "font", "petite-caps medium serif"));
-    return Ok();
-}
-
-test$("vaev-style-wpt-css-css-fonts-parsing-font-invalid-xfail", XFAIL) {
     try$(_expectInvalid(_driver, "font", "italic oblique xx-small serif"));
     try$(_expectInvalid(_driver, "font", "bold bolder xx-large/1.2 cursive"));
     try$(_expectInvalid(_driver, "font", "ultra-condensed extra-condensed larger/calc(120% + 1.2em) fantasy"));

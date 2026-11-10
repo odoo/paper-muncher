@@ -4,9 +4,6 @@ module;
 
 export module Vaev.Engine:css.values.svg;
 
-import :css.lexer;
-import :css.parser;
-import :css.serializer;
 import :css.values.base;
 import :css.values.color;
 import :css.values.keywords;

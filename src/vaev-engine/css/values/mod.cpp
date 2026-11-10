@@ -26,6 +26,7 @@ export import :css.values.primitives;
 export import :css.values.shapes;
 export import :css.values.sizing;
 export import :css.values.svg;
+export import :css.values.syntax;
 export import :css.values.tables;
 export import :css.values.text;
 export import :css.values.transforms;

@@ -111,10 +111,10 @@ export struct FontFace {
 
     Vec<FontSource> sources;
 
-    Union<None, Css::FontStyle, Range<Deg>> style = Css::FontStyle{Css::FontStyle::NORMAL};
+    Union<None, FontStyle, Range<Deg>> style = FontStyle{};
 
     Opt<Range<Gfx::FontWeight>> weight = Some(Range<Gfx::FontWeight>::emptyAt(Gfx::FontWeight::REGULAR));
-    Opt<Range<Percent>> width = Some(Range<Percent>::emptyAt(toComputed(Css::FontWidth{Css::FontWidth::NORMAL})));
+    Opt<Range<Percent>> width = Some(Range<Percent>::emptyAt(toComputed(Css::FontWidth{Css::Keywords::NORMAL})));
 
     Vec<Range<Rune>> unicodeRange;
 
@@ -142,8 +142,8 @@ export struct FontFace {
             resolvedStretch = Gfx::FontStretch::fromPercent(width.expect().start.value());
 
         Gfx::FontStyle resolvedStyle = Gfx::FontStyle::NORMAL;
-        if (style.is<Css::FontStyle>())
-            resolvedStyle = style.expect<Css::FontStyle>().val;
+        if (auto const& [s] = style.is<FontStyle>())
+            resolvedStyle = s.val;
 
         return {
             .family = family,
@@ -271,36 +271,52 @@ export struct SrcFontDescriptor {
 
 // https://drafts.csswg.org/css-fonts-4/#descdef-font-face-font-style
 export struct FontStyleFontDescriptor {
-    Union<None, Css::FontStyle, Range<Deg>> value;
+    // auto | normal | italic | left | right | oblique [ <angle [-90deg,90deg]>{1,2} ]?
+    using Oblique = Css::All<Css::Keywords::Oblique, Opt<Css::Angle>, Opt<Css::Angle>>;
+    using Value = Union<
+        Css::Keywords::Auto,
+        Css::Keywords::Normal,
+        Css::Keywords::Italic,
+        Css::Keywords::Left,
+        Css::Keywords::Right,
+        Oblique>;
+
+    Union<None, FontStyle, Range<Deg>> value;
 
     static Str name() { return "font-style"; }
 
-    static auto initial() { return Css::FontStyle::NORMAL; }
+    static auto initial() { return FontStyle{}; }
 
     void apply(FontFace& f) const {
         f.style = value;
     }
 
+    // <angle [-90deg,90deg]>: math functions are clamped to the range.
+    static Deg _angle(Css::Angle const& angle) {
+        return Deg{clamp(toComputed(angle).value(), -90.0, 90.0)};
+    }
+
     Res<> parse(Cursor<Css::Sst>& c) {
-        if (c.skip(Css::Token::ident("auto"))) {
-            value = NONE;
-            return Ok();
-        }
-
-        auto style = try$(parseValue<Css::FontStyle>(c));
-        if (not style.obliqueAngle) {
-            value = style;
-            return Ok();
-        }
-
-        eatWhitespace(c);
-        auto val = parseValue<Css::Angle>(c);
-        if (not val) {
-            value = style;
-            return Ok();
-        }
-
-        value = Range<Deg>::fromStartEnd(toComputed(*style.obliqueAngle), toComputed(val.expect()));
+        value = try$(parseValue<Value>(c)).visit(
+            [](Css::Keywords::Auto) -> Union<None, FontStyle, Range<Deg>> {
+                return NONE;
+            },
+            [](Css::Keywords::Italic) -> Union<None, FontStyle, Range<Deg>> {
+                return FontStyle{.val = Gfx::FontStyle::ITALIC};
+            },
+            [](Oblique const& oblique) -> Union<None, FontStyle, Range<Deg>> {
+                if (oblique.v1 and oblique.v2)
+                    return Range<Deg>::fromStartEnd(_angle(*oblique.v1), _angle(*oblique.v2));
+                auto style = FontStyle{.val = Gfx::FontStyle::OBLIQUE};
+                if (oblique.v1)
+                    style.obliqueAngle = _angle(*oblique.v1);
+                return style;
+            },
+            // NOSPEC: left and right are treated as normal.
+            [](auto) -> Union<None, FontStyle, Range<Deg>> {
+                return FontStyle{};
+            }
+        );
         return Ok();
     }
 };
