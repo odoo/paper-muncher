@@ -12,8 +12,8 @@ jobs:
             async: epoll
           - os: ubuntu-latest
             async: uring
-          # - os: macos-latest
-          #   async: kevent
+          - os: macos-latest
+            async: kevent
 
     runs-on: ${{ matrix.os }}
 
