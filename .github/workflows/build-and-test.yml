@@ -8,13 +8,12 @@ jobs:
     strategy:
       matrix:
         include:
-          # NOTE: Temporarily disabled epoll and kevent due to same flakiness in tests.
-          # - os: ubuntu-latest
-          #   async: epoll
-          # - os: macos-latest
-          #   async: kevent
+          - os: ubuntu-latest
+            async: epoll
           - os: ubuntu-latest
             async: uring
+          # - os: macos-latest
+          #   async: kevent
 
     runs-on: ${{ matrix.os }}
 
