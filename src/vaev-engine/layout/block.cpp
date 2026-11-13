@@ -102,19 +102,14 @@ Output fragmentEmptyBox(Fragmentainer const& fc, FragmentBuilder& fragBuilder, I
         input.knownSize.height.unwrapOr(0_au),
     };
     if (fc.isDiscoveryMode()) {
-        // https://www.w3.org/TR/css-break-3/#unforced-breaks
-        // However, the UA must not break at the top of the page, i.e. it must place at least some content on each
-        // fragmentainer, so that each fragmentainer has a non-zero amount of content, in order to guarantee progress
-        // through the content.
-        // NOTE: An empty box taller than the fragmentainer never fits, so it is accepted where it stands and sliced at
-        //       the fragmentainer's end, instead of being pushed to the next fragmentainer forever.
         // FIXME: The rest of the box should continue on the next fragmentainer instead of being dropped.
         bool fitsInEmptyFragmentainer = knownSize.y + input.pendingVerticalSizes <= fc.size().y;
         if (not fitsInEmptyFragmentainer or
             fc.acceptsFit(
                 input.position.y,
                 knownSize.y,
-                input.pendingVerticalSizes
+                input.pendingVerticalSizes,
+                input.atFragmentainerStart
             )) {
 
             return Output{
@@ -427,6 +422,8 @@ struct BlockFormatingContext : FormatingContext {
 
         Vec<Rc<PlaceholderFragment>> outOfFlowChildren;
 
+        bool atFragmentainerStart = input.atFragmentainerStart;
+
         for (usize i = startAt; i < endChildren; ++i) {
             auto& c = box.children()[i];
             lookForRunningPosition(input, c);
@@ -483,6 +480,7 @@ struct BlockFormatingContext : FormatingContext {
                 .pageNumber = input.pageNumber,
                 .breakpointTraverser = input.breakpointTraverser.traverseInsideUsingIthChild(i),
                 .pendingVerticalSizes = input.pendingVerticalSizes,
+                .atFragmentainerStart = atFragmentainerStart,
             };
 
             if (not c.isRemovedFromFlow()) {
@@ -550,6 +548,9 @@ struct BlockFormatingContext : FormatingContext {
             }
 
             outOfFlowChildren.pushBack(output.outOfFlowStash);
+
+            if (output.size.y > 0_au and not c.isPseudoElement(Dom::PseudoElement::MARKER))
+                atFragmentainerStart = false;
 
             if (not(c.isRemovedFromFlow() or c.isPseudoElement(Dom::PseudoElement::MARKER))) {
                 blockSize += output.size.y + usedSpacings.margin.bottom;

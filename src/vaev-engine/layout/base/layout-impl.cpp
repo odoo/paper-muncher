@@ -250,7 +250,8 @@ static Res<None, Output> _shouldAbortFragmentingBeforeLayout(Fragmentainer& fc, 
     if (not fc.acceptsFit(
             input.position.y,
             0_au,
-            input.pendingVerticalSizes
+            input.pendingVerticalSizes,
+            input.atFragmentainerStart
         ))
         return Output{
             .fragment = NONE,

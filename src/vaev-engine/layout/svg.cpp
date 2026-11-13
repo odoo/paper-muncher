@@ -406,7 +406,8 @@ struct SvgFormatingContext : FormatingContext {
             not tree.fc.acceptsFit(
                 input.position.y,
                 size.y,
-                input.pendingVerticalSizes
+                input.pendingVerticalSizes,
+                input.atFragmentainerStart
             )) {
             return {
                 .fragment = Some(fragment),
