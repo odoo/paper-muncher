@@ -25,7 +25,7 @@ export struct VisibilityProperty : Property {
         return makeRc<VisibilityProperty>(c.visibility);
     }
 
-    static Res<Rc<Property>> parse(Cursor<Css::Sst>& c) {
+    static Res<Rc<Property>> parse(Cursor<Css::Sst>& c, ParsingMode) {
         Visibility value;
         if (c.skip(Css::Token::ident("visible"))) {
             value = Visibility::VISIBLE;
@@ -47,7 +47,7 @@ export struct VisibilityProperty : Property {
     Visibility _value;
 
     VisibilityProperty(Visibility value)
-        : Property(registrationOf<VisibilityProperty>()), _value(value) {}
+        : Property(ID), _value(value) {}
 
     void apply([[maybe_unused]] ComputedValues const& parent, ComputedValues& c, [[maybe_unused]] ComputationContext const& cx) const override {
         c.visibility = _value;
@@ -74,7 +74,7 @@ export struct OpacityProperty : Property {
         return makeRc<OpacityProperty>(c.opacity);
     }
 
-    static Res<Rc<Property>> parse(Cursor<Css::Sst>& c) {
+    static Res<Rc<Property>> parse(Cursor<Css::Sst>& c, ParsingMode) {
         auto maybePercent = parseValue<Percent>(c);
         if (maybePercent) {
             return Ok(makeRc<OpacityProperty>(maybePercent.expect().value() / 100));
@@ -89,7 +89,7 @@ export struct OpacityProperty : Property {
     Number _value;
 
     OpacityProperty(Number value)
-        : Property(registrationOf<OpacityProperty>()), _value(value) {}
+        : Property(ID), _value(value) {}
 
     void apply([[maybe_unused]] ComputedValues const& parent, ComputedValues& c, [[maybe_unused]] ComputationContext const& cx) const override {
         c.opacity = _value;
@@ -120,7 +120,7 @@ export struct ClipPathProperty : Property {
         return makeRc<ClipPathProperty>(Keywords::NONE);
     }
 
-    static Res<Rc<Property>> parse(Cursor<Css::Sst>& c) {
+    static Res<Rc<Property>> parse(Cursor<Css::Sst>& c, ParsingMode) {
         return Ok(makeRc<ClipPathProperty>(try$(parseValue<Value>(c))));
     }
 
@@ -131,7 +131,7 @@ export struct ClipPathProperty : Property {
     Value _value;
 
     ClipPathProperty(Value value)
-        : Property(registrationOf<ClipPathProperty>()), _value(value) {}
+        : Property(ID), _value(value) {}
 
     void apply([[maybe_unused]] ComputedValues const& parent, ComputedValues& c, [[maybe_unused]] ComputationContext const& cx) const override {
         if (auto clipShape = _value.is<BasicShape>())

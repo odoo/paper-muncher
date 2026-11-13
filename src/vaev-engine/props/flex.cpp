@@ -27,7 +27,7 @@ export struct FlexBasisProperty : Property {
         return makeRc<FlexBasisProperty>(c.flex->basis);
     }
 
-    static Res<Rc<Property>> parse(Cursor<Css::Sst>& c) {
+    static Res<Rc<Property>> parse(Cursor<Css::Sst>& c, ParsingMode) {
         return Ok(makeRc<FlexBasisProperty>(try$(parseValue<FlexBasis>(c))));
     }
 
@@ -38,7 +38,7 @@ export struct FlexBasisProperty : Property {
     FlexBasis _value;
 
     FlexBasisProperty(FlexBasis value)
-        : Property(registrationOf<FlexBasisProperty>()), _value(value) {}
+        : Property(ID), _value(value) {}
 
     void apply([[maybe_unused]] ComputedValues const& parent, ComputedValues& c, [[maybe_unused]] ComputationContext const& cx) const override {
         c.flex.cow().basis = _value;
@@ -65,7 +65,7 @@ export struct FlexDirectionProperty : Property {
         return makeRc<FlexDirectionProperty>(c.flex->direction);
     }
 
-    static Res<Rc<Property>> parse(Cursor<Css::Sst>& c) {
+    static Res<Rc<Property>> parse(Cursor<Css::Sst>& c, ParsingMode) {
         return Ok(makeRc<FlexDirectionProperty>(try$(parseValue<FlexDirection>(c))));
     }
 
@@ -76,7 +76,7 @@ export struct FlexDirectionProperty : Property {
     FlexDirection _value;
 
     FlexDirectionProperty(FlexDirection value)
-        : Property(registrationOf<FlexDirectionProperty>()), _value(value) {}
+        : Property(ID), _value(value) {}
 
     void apply([[maybe_unused]] ComputedValues const& parent, ComputedValues& c, [[maybe_unused]] ComputationContext const& cx) const override {
         c.flex.cow().direction = _value;
@@ -103,7 +103,7 @@ export struct FlexGrowProperty : Property {
         return makeRc<FlexGrowProperty>(c.flex->grow);
     }
 
-    static Res<Rc<Property>> parse(Cursor<Css::Sst>& c) {
+    static Res<Rc<Property>> parse(Cursor<Css::Sst>& c, ParsingMode) {
         return Ok(makeRc<FlexGrowProperty>(try$(parseValue<Number>(c))));
     }
 
@@ -114,7 +114,7 @@ export struct FlexGrowProperty : Property {
     Number _value;
 
     FlexGrowProperty(Number value)
-        : Property(registrationOf<FlexGrowProperty>()), _value(value) {}
+        : Property(ID), _value(value) {}
 
     void apply([[maybe_unused]] ComputedValues const& parent, ComputedValues& c, [[maybe_unused]] ComputationContext const& cx) const override {
         c.flex.cow().grow = _value;
@@ -141,7 +141,7 @@ export struct FlexShrinkProperty : Property {
         return makeRc<FlexShrinkProperty>(c.flex->shrink);
     }
 
-    static Res<Rc<Property>> parse(Cursor<Css::Sst>& c) {
+    static Res<Rc<Property>> parse(Cursor<Css::Sst>& c, ParsingMode) {
         return Ok(makeRc<FlexShrinkProperty>(try$(parseValue<Number>(c))));
     }
 
@@ -152,7 +152,7 @@ export struct FlexShrinkProperty : Property {
     Number _value;
 
     FlexShrinkProperty(Number value)
-        : Property(registrationOf<FlexShrinkProperty>()), _value(value) {}
+        : Property(ID), _value(value) {}
 
     void apply([[maybe_unused]] ComputedValues const& parent, ComputedValues& c, [[maybe_unused]] ComputationContext const& cx) const override {
         c.flex.cow().shrink = _value;
@@ -179,7 +179,7 @@ export struct FlexWrapProperty : Property {
         return makeRc<FlexWrapProperty>(c.flex->wrap);
     }
 
-    static Res<Rc<Property>> parse(Cursor<Css::Sst>& c) {
+    static Res<Rc<Property>> parse(Cursor<Css::Sst>& c, ParsingMode) {
         return Ok(makeRc<FlexWrapProperty>(try$(parseValue<FlexWrap>(c))));
     }
 
@@ -190,7 +190,7 @@ export struct FlexWrapProperty : Property {
     FlexWrap _value;
 
     FlexWrapProperty(FlexWrap value)
-        : Property(registrationOf<FlexWrapProperty>()), _value(value) {}
+        : Property(ID), _value(value) {}
 
     void apply([[maybe_unused]] ComputedValues const& parent, ComputedValues& c, [[maybe_unused]] ComputationContext const& cx) const override {
         c.flex.cow().wrap = _value;

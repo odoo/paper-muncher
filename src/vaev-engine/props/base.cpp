@@ -116,6 +116,7 @@ enum struct LonghandId {
 #define LONGHAND(ID, NAME) ID,
 #include "defs/longhands.inc"
 #undef LONGHAND
+    CUSTOM,
     _LEN,
 };
 
@@ -141,7 +142,71 @@ export constexpr Str propertyName(LonghandId id) {
 
 using PropertyId = Union<ShorthandId, LonghandId>;
 
-export struct LonghandRegistration : Registration {
+/// How a property value is parsed, depending on where it comes from.
+export enum struct ParsingMode : u8 {
+    STANDARD,
+
+    // https://quirks.spec.whatwg.org/
+    QUIRKS,
+
+    // https://svgwg.org/svg2-draft/styling.html#PresentationAttributes
+    PRESENTATION_ATTRIBUTE,
+};
+
+// https://svgwg.org/svg2-draft/types.html#presentation-attribute-css-value
+export template <typename T>
+Res<T> parseValueWithUnitlessLength(Cursor<Css::Sst>& c, ParsingMode mode) {
+    eatWhitespace(c);
+    if (mode == ParsingMode::PRESENTATION_ATTRIBUTE and c.peek() == Css::Token::NUMBER) {
+        Css::Sst length = c.peek();
+        StringBuilder sb;
+        sb.append(length.token.data.str());
+        sb.append("px"s);
+        length.token = {Css::Token::DIMENSION, sb.take()};
+
+        Css::Content content;
+        content.pushBack(std::move(length));
+        Cursor<Css::Sst> lengthCursor = content;
+        if (auto value = parseValue<T>(lengthCursor); value and lengthCursor.ended()) {
+            c.next();
+            return value;
+        }
+    }
+    return parseValue<T>(c);
+}
+
+enum struct ComputationPhase {
+    /// For properties which font-* properties depend on,
+    /// they must not accept <length> as their value.
+    PRE_FONT,
+
+    /// For properties that are used to decide the font-face.
+    /// If they accept <length>, it must be computed using the
+    /// parent's font-face.
+    FONT,
+
+    /// For properties that can accept <length> as a value.
+    /// Should be the default for most cases.
+    NORMAL,
+
+    /// For properties with a dependency on a property within the normal pass.
+    LATE,
+};
+
+export struct ShorthandRegistration : Registration {
+    using Registration::Registration;
+
+    virtual Res<> parse(Cursor<Css::Sst>&, Vec<Rc<Property>>& stylesheet) const = 0;
+    virtual Slice<Symbol> longhands() const = 0;
+};
+
+Opt<PropertyId> lookupProperty(Symbol name);
+Rc<Property> initialProperty(LonghandId id);
+Rc<Property> loadProperty(LonghandId id, ComputedValues const& c);
+void inheritProperty(LonghandId id, ComputedValues const& parent, ComputedValues& child);
+Res<Rc<Property>> parseProperty(LonghandId id, Cursor<Css::Sst>& c, ParsingMode mode = ParsingMode::STANDARD);
+
+export struct Property : Meta::NoCopy {
     enum struct Options : u8 {
         // https://drafts.csswg.org/css-cascade-5/#inherited-value
         INHERITED = 1 << 0,
@@ -163,84 +228,20 @@ export struct LonghandRegistration : Registration {
 
     using enum Options;
 
-    Flags<Options> flags;
-
-    LonghandRegistration(Symbol name, Flags<Options> flags = {})
-        : Registration(name), flags(flags) {}
-
-    enum struct ComputationPhase {
-        /// For custom properties only.
-        CUSTOM_PROPERTY,
-
-        /// For properties which font-* properties depend on,
-        /// they must not accept <length> as their value.
-        PRE_FONT,
-
-        /// For properties that are used to decide the font-face.
-        /// If they accept <length>, it must be computed using the
-        /// parent's font-face.
-        FONT,
-
-        /// For properties that can accept <length> as a value.
-        /// Should be the default for most cases.
-        NORMAL,
-
-        /// For properties with a dependency on a property within the normal pass.
-        LATE,
-    };
-
-    virtual ComputationPhase computationPhase() const {
-        return ComputationPhase::NORMAL;
-    }
-
-    virtual Rc<Property> initial() const = 0;
-
-    virtual Rc<Property> load(ComputedValues const&) const = 0;
-
-    virtual void inherit(ComputedValues const& parent, ComputedValues& child) const;
-
-    virtual Res<Rc<Property>> parse(Cursor<Css::Sst>&) const = 0;
-
-    // https://svgwg.org/svg2-draft/styling.html#PresentationAttributes
-    virtual Res<Rc<Property>> parsePresentationAttribute(Str style);
-};
-
-export struct ShorthandRegistration : Registration {
-    using Registration::Registration;
-
-    virtual Res<> parse(Cursor<Css::Sst>&, Vec<Rc<Property>>& stylesheet) const = 0;
-    virtual Slice<Symbol> longhands() const = 0;
-};
-
-export struct Property : Meta::NoCopy {
-    using Options = LonghandRegistration::Options;
-    using enum LonghandRegistration::Options;
-    using ComputationPhase = LonghandRegistration::ComputationPhase;
-
-    // Defaults for the static metadata of a longhand,
-    // hidden by a property declaring its own.
-    static inline Flags<Options> const FLAGS = {};
+    static constexpr Flags<Options> FLAGS = {};
     static constexpr ComputationPhase PHASE = ComputationPhase::NORMAL;
     static constexpr Slice<Str> LEGACY_NAME_ALIASES = {};
 
-    Rc<LonghandRegistration> registration;
+    LonghandId id;
     bool important = false;
 
-    Property(Rc<LonghandRegistration> registration)
-        : registration(registration) {}
+    Property(LonghandId id)
+        : id(id) {}
 
     virtual ~Property() = default;
 
-    virtual Longhands expand(RegisteredPropertySet&, [[maybe_unused]] ComputedValues const& parent, [[maybe_unused]] ComputedValues& child) const {
-        if (isBogusProperty())
-            logFatal("trying to expand {:#} which is a bogus property", registration->name);
-
-        logFatal("expand() called on non shorthand property {:#}", registration->name);
-        return {};
-    }
-
     virtual void apply([[maybe_unused]] ComputedValues const& parent, [[maybe_unused]] ComputedValues& child, [[maybe_unused]] ComputationContext const& cx) const {
-        logFatal("longhand property {:#} is missing apply() implementation", registration->name);
+        logFatal("longhand property {:#} is missing apply() implementation", propertyName(id));
     }
 
     virtual void repr(Io::Emit& e) const = 0;
@@ -271,7 +272,7 @@ export struct Property : Meta::NoCopy {
     }
 
     bool isInitial() const {
-        return *registration->initial() == *this;
+        return *initialProperty(id) == *this;
     }
 
     /// Determines whether this property instance represents a parsing failure or an unrecognized CSS declaration.
@@ -287,81 +288,27 @@ export struct Property : Meta::NoCopy {
     }
 };
 
-void LonghandRegistration::inherit(ComputedValues const& parent, ComputedValues& child) const {
-    // NOTE: This is the slow fallback path for properties that are not
-    //       commonly inherited. Any property marked with the INHERITED
-    //       flag should override this method with a faster implementation.
-    if (flags.has(INHERITED))
-        logFatal("property {:#} marked as INHERITED is using the slow fallback path. override inherit()!", name);
-
-    // NOTE: Since we are copying computed values, we don't expect much new computation to happen
-    ComputationContext dummy{};
-    load(parent)->apply(parent, child, dummy);
-}
-
-enum struct ParsingMode {
-    STANDARD,
-    QUIRKS,
-    PRESENTATIONAL_ATTRIBUTE,
-};
-
 // MARK: Custom Property -------------------------------------------------------
 
 // https://drafts.csswg.org/css-variables/#defining-variables
 // this symbolizes a custom property, it starts with `--` and can be used to store a value that can be reused in the stylesheet
 struct CustomProperty : Property {
-    struct Registration : LonghandRegistration {
-        // NOTE: Custom properties are registered at runtime, so unlike built-in
-        //       properties they can't use registrationOf<T>() and must know themselves.
-        Opt<Weak<Registration>> _self;
-
-        Registration(Symbol name)
-            : LonghandRegistration(name, {INHERITED, ALL_EXCLUDED, BULK_INHERITED}) {}
-
-        Rc<Registration> self() const {
-            return _self
-                .expect("custom property registration not self bound")
-                .upgrade()
-                .expect();
-        }
-
-        ComputationPhase computationPhase() const override {
-            return ComputationPhase::CUSTOM_PROPERTY;
-        }
-
-        Rc<Property> initial() const override {
-            return makeRc<CustomProperty>(
-                self(), Css::Content{Css::Sst::guaranteedInvalid()}
-            );
-        }
-
-        void inherit(ComputedValues const& parent, ComputedValues& child) const override {
-            if (auto maybeProp = parent.getCustomProp(name))
-                child.setCustomProp(name, maybeProp.expect());
-        }
-
-        Rc<Property> load(ComputedValues const& c) const override {
-            return makeRc<CustomProperty>(self(), c.getCustomProp(name).unwrapOr({}));
-        }
-
-        Res<Rc<Property>> parse(Cursor<Css::Sst>& c) const override {
-            Css::Content content{c};
-            c.next(c.rem());
-            return Ok(makeRc<CustomProperty>(self(), std::move(content)));
-        };
+    struct Value {
+        Symbol name;
+        Css::Content content;
     };
 
-    Css::Content _value;
+    Value _value;
 
-    CustomProperty(Rc<LonghandRegistration> registration, Css::Content value)
-        : Property(registration), _value(value) {}
+    CustomProperty(Value const& value)
+        : Property(LonghandId::CUSTOM), _value(value) {}
 
     void apply([[maybe_unused]] ComputedValues const& parent, ComputedValues& c, [[maybe_unused]] ComputationContext const& cx) const override {
-        c.setCustomProp(registration->name, _value);
+        c.setCustomProp(_value.name, _value.content);
     }
 
     Res<> serialize(Io::TextWriter& w) const override {
-        return Css::serialize(w, _value);
+        return Css::serialize(w, _value.content);
     }
 
     void repr(Io::Emit& e) const override {
@@ -373,62 +320,62 @@ struct CustomProperty : Property {
 
 // https://drafts.csswg.org/css-values-5/#toggle-notation
 // The toggle() expression allows descendant elements to cycle over a list of values instead of inheriting the same value.
-struct ToggleProperty : Property {
-    Vec<Rc<Property>> _value;
-
-    ToggleProperty(Rc<LonghandRegistration> registration, Vec<Rc<Property>> value)
-        : Property(registration), _value(value) {}
-
-    Longhands expand(RegisteredPropertySet& registry, ComputedValues const& parent, ComputedValues& child) const override {
-        // If toggle() is used on a shorthand property, it sets each of its
-        // longhands to a toggle() value with arguments corresponding to what
-        // the longhand would have received had each of the original toggle()
-        // arguments been the sole value of the shorthand.
-        Map<Symbol, Vec<Rc<Property>>> props;
-        for (auto& shorthand : _value)
-            for (auto& longhand : shorthand->expand(registry, parent, child))
-                props.lookupOrPutDefault(longhand->registration->name).pushBack(longhand);
-
-        return props.mutIterValue() |
-               Select([](Vec<Rc<Property>>& v) {
-                   return makeRc<ToggleProperty>(v[0]->registration, std::move(v));
-               }) |
-               Collect<Longhands>();
-    }
-
-    void apply(ComputedValues const& parent, ComputedValues& c, ComputationContext const& cx) const override {
-        if (isEmpty(_value))
-            return;
-
-        auto parentProperty = registration->load(parent);
-        usize index = 0;
-        for (auto& p : _value) {
-            index++;
-            if (parentProperty == p->computedValue(parent, c))
-                break;
-        }
-        _value[index % _value.len()]->apply(parent, c, cx);
-    }
-
-    // https://drafts.csswg.org/cssom/#serialize-a-comma-separated-list
-    Res<> serialize(Io::TextWriter& w) const override {
-        try$(w.writeStr("toggle("s));
-        bool first = true;
-        for (auto const& prop : _value) {
-            if (first) {
-                first = false;
-            } else {
-                try$(w.writeStr(", "s));
-            }
-            try$(prop->serialize(w));
-        }
-        return w.writeRune(')');
-    }
-
-    void repr(Io::Emit& e) const override {
-        e("(toggle {})", _value);
-    }
-};
+// struct ToggleProperty : Property {
+//     Vec<Rc<Property>> _value;
+//
+//     ToggleProperty(Rc<LonghandRegistration> registration, Vec<Rc<Property>> value)
+//         : Property(registration), _value(value) {}
+//
+//     Longhands expand(RegisteredPropertySet& registry, ComputedValues const& parent, ComputedValues& child) const override {
+//         // If toggle() is used on a shorthand property, it sets each of its
+//         // longhands to a toggle() value with arguments corresponding to what
+//         // the longhand would have received had each of the original toggle()
+//         // arguments been the sole value of the shorthand.
+//         Map<Symbol, Vec<Rc<Property>>> props;
+//         for (auto& shorthand : _value)
+//             for (auto& longhand : shorthand->expand(registry, parent, child))
+//                 props.lookupOrPutDefault(longhand->registration->name).pushBack(longhand);
+//
+//         return props.mutIterValue() |
+//                Select([](Vec<Rc<Property>>& v) {
+//                    return makeRc<ToggleProperty>(v[0]->registration, std::move(v));
+//                }) |
+//                Collect<Longhands>();
+//     }
+//
+//     void apply(ComputedValues const& parent, ComputedValues& c, ComputationContext const& cx) const override {
+//         if (isEmpty(_value))
+//             return;
+//
+//         auto parentProperty = registration->load(parent);
+//         usize index = 0;
+//         for (auto& p : _value) {
+//             index++;
+//             if (parentProperty == p->computedValue(parent, c))
+//                 break;
+//         }
+//         _value[index % _value.len()]->apply(parent, c, cx);
+//     }
+//
+//     // https://drafts.csswg.org/cssom/#serialize-a-comma-separated-list
+//     Res<> serialize(Io::TextWriter& w) const override {
+//         try$(w.writeStr("toggle("s));
+//         bool first = true;
+//         for (auto const& prop : _value) {
+//             if (first) {
+//                 first = false;
+//             } else {
+//                 try$(w.writeStr(", "s));
+//             }
+//             try$(prop->serialize(w));
+//         }
+//         return w.writeRune(')');
+//     }
+//
+//     void repr(Io::Emit& e) const override {
+//         e("(toggle {})", _value);
+//     }
+// };
 
 // MARK: Deferred Property -----------------------------------------------------
 
@@ -437,8 +384,8 @@ struct ToggleProperty : Property {
 struct DeferredProperty : Property {
     Css::Content _value;
 
-    DeferredProperty(Rc<LonghandRegistration> registration, Css::Content value)
-        : Property(registration), _value(value) {}
+    DeferredProperty(LonghandId id, Css::Content value)
+        : Property(id), _value(value) {}
 
     // https://www.w3.org/TR/css-variables-1/#substitute-a-var
     static Res<bool> _expandVariable(Cursor<Css::Sst>& c, Map<Symbol, Css::Content> const& env, Css::Content& out, usize depth) {
@@ -519,21 +466,11 @@ struct DeferredProperty : Property {
         // See: https://www.w3.org/TR/css-syntax-3/#parse-declaration
         eatWhitespace(cursor);
 
-        auto prop = registration->parse(cursor);
+        auto prop = parseProperty(id, cursor, ParsingMode::STANDARD);
         if (not prop and debugProperties)
-            logWarn("failed to parse declaration: {}: {}: {}", registration->name, prop, out);
+            logWarn("failed to parse declaration: {}: {}: {}", propertyName(id), prop, out);
 
         return prop;
-    }
-
-    Longhands expand(RegisteredPropertySet& registry, ComputedValues const& parent, ComputedValues& child) const override {
-        // FIXME: Shorthands containing var() will give each of their longhands a pending-substitution value.
-        //        https://drafts.csswg.org/css-values-5/#pending-substitution-value
-
-        auto prop = _expandProperty(child);
-        if (not prop)
-            return {};
-        return prop.expect()->expand(registry, parent, child);
     }
 
     void apply(ComputedValues const& parent, ComputedValues& c, ComputationContext const& cx) const override {
@@ -566,55 +503,29 @@ enum struct Default {
 struct DefaultedProperty : Property {
     Default _value;
 
-    DefaultedProperty(Rc<LonghandRegistration> registration, Default value)
-        : Property(registration), _value(value) {}
-
-    Longhands expand(RegisteredPropertySet& registry, ComputedValues const& parent, ComputedValues& child) const override {
-        if (_value == Default::INITIAL) {
-            // The initial CSS-wide keyword represents the value
-            // defined as the property’s initial value.
-            // https://drafts.csswg.org/css-cascade/#initial
-            return registration->initial()->expand(registry, parent, child);
-        } else if (_value == Default::INHERIT) {
-            // The inherit CSS-wide keyword represents the property’s
-            // computed value on the parent element.
-            // https://drafts.csswg.org/css-cascade/#inherit
-            return registration->load(parent)->expand(registry, parent, child);
-        } else if (_value == Default::UNSET) {
-            // The unset CSS-wide keyword acts as either inherit or initial,
-            // depending on whether the property is inherited or not.
-            // https://drafts.csswg.org/css-cascade/#inherit-initial
-            if (registration->flags.has(LonghandRegistration::INHERITED))
-                return registration->load(parent)->expand(registry, parent, child);
-
-            return registration->initial()->expand(registry, parent, child);
-        } else if (_value == Default::REVERT) {
-            // TODO: Implement revert()
-            return {};
-        } else {
-            unreachable();
-        }
-    }
+    DefaultedProperty(LonghandId id, Default value)
+        : Property(id), _value(value) {}
 
     void apply(ComputedValues const& parent, ComputedValues& c, ComputationContext const& cx) const override {
         if (_value == Default::INITIAL) {
             // The initial CSS-wide keyword represents the value
             // defined as the property’s initial value.
             // https://drafts.csswg.org/css-cascade/#initial
-            registration->initial()->apply(parent, c, cx);
+            initialProperty(id)->apply(parent, c, cx);
         } else if (_value == Default::INHERIT) {
             // The inherit CSS-wide keyword represents the property’s
             // computed value on the parent element.
             // https://drafts.csswg.org/css-cascade/#inherit
-            registration->load(parent)->apply(parent, c, cx);
+            loadProperty(id, parent)->apply(parent, c, cx);
         } else if (_value == Default::UNSET) {
+            // TODO: Re-implement
             // The unset CSS-wide keyword acts as either inherit or initial,
             // depending on whether the property is inherited or not.
             // https://drafts.csswg.org/css-cascade/#inherit-initial
-            if (registration->flags.has(LonghandRegistration::INHERITED))
-                registration->load(parent)->apply(parent, c, cx);
-            else
-                registration->initial()->apply(parent, c, cx);
+            // if (registration->flags.has(LonghandRegistration::INHERITED))
+            //     registration->load(parent)->apply(parent, c, cx);
+            // else
+            //     registration->initial()->apply(parent, c, cx);
 
         } else if (_value == Default::REVERT) {
             // TODO: Implement revert()
@@ -639,73 +550,165 @@ struct DefaultedProperty : Property {
 // MARK: Bogus Property --------------------------------------------------------
 
 // Represent a property that could not be parsed
-struct BogusProperty : Property {
-    struct Registration : LonghandRegistration {
-        Registration(Symbol const name)
-            : LonghandRegistration(name) {}
-
-        Rc<Property> initial() const override {
-            unreachable();
-        }
-
-        Rc<Property> load(ComputedValues const&) const override {
-            unreachable();
-        }
-
-        Res<Rc<Property>> parse(Cursor<Css::Sst>&) const override {
-            unreachable();
-        }
-    };
-
-    Css::Content _value;
-    Error _error;
-
-    BogusProperty(Rc<LonghandRegistration> registration, Css::Content value, Error error)
-        : Property(registration),
-          _value(value),
-          _error(error) {}
-
-    bool isBogusProperty() const override {
-        return true;
-    }
-
-    void repr(Io::Emit& e) const override {
-        e("{} (error:{})", _value, _error);
-    }
-};
+// struct BogusProperty : Property {
+//     Css::Content _value;
+//     Error _error;
+//
+//     BogusProperty(Properties::, Css::Content value, Error error)
+//         : Property(registration),
+//           _value(value),
+//           _error(error) {}
+//
+//     bool isBogusProperty() const override {
+//         return true;
+//     }
+//
+//     void repr(Io::Emit& e) const override {
+//         e("{} (error:{})", _value, _error);
+//     }
+// };
 
 // MARK: Property Registry -----------------------------------------------------
 
-export struct BuiltinProperties {
-    Map<Symbol, Rc<Registration>> registrations;
-    Map<Symbol, Symbol> legacyNameAlias;
-    Vec<Rc<LonghandRegistration>> individuallyInherited;
-    Map<Symbol, Rc<LonghandRegistration>> presentationAttributes;
+// https://www.w3.org/TR/css-cascade-4/#initial-values
+static Opt<Rc<ComputedValues>> _memoInitialComputedValues = NONE;
 
-    void registerProperty(Rc<Registration> const& registration) {
-        registrations.put(registration->name, registration);
+static Rc<ComputedValues> initialComputedValues() {
+    ComputationContext cx{};
+    if (not _memoInitialComputedValues) {
+        auto initial = makeRc<ComputedValues>();
+        for (usize i = 0; i < enumLen<LonghandId>(); i++)
+            initialProperty(static_cast<LonghandId>(i))->apply( *initial, *initial, cx);
 
+        _memoInitialComputedValues = Some(initial);
+    }
+    return makeRc<ComputedValues>(**_memoInitialComputedValues);
+}
 
-        if (auto [longhand] = registration.is<LonghandRegistration>()) {
-            if (longhand.flags.has(LonghandRegistration::PRESENTATION_ATTRIBUTE))
-                presentationAttributes.put(registration->name, registration.cast<LonghandRegistration>().expect());
+// https://www.w3.org/TR/css-cascade-4/#inheriting
+void inheritsComputedValues(ComputedValues const& parent, ComputedValues& child) {
+    // Apply defaulted inheritance fast path for property that supports it.
+    child.customProps = parent.customProps;
+    child.font = parent.font;
+    child.list = parent.list;
+    child.text = parent.text;
+    child.svgPaint = parent.svgPaint;
+    child.table = parent.table;
 
-            if (longhand.flags.has(LonghandRegistration::INHERITED) and
-                not longhand.flags.has(LonghandRegistration::BULK_INHERITED))
-                individuallyInherited.pushBack(registration.cast<LonghandRegistration>().expect());
+    // Handle the rest of the properties
+    // FIXME
+}
+
+Rc<ComputedValues> inheritsComputedValues(ComputedValues const& parent) {
+    auto computedValues = initialComputedValues();
+    inheritsComputedValues(parent, *computedValues);
+    return computedValues;
+}
+
+Res<Rc<Property>> _parseDefaulted(LonghandId id, Cursor<Css::Sst>& content) {
+        Default value;
+        if (content.skip(Css::Token::ident("initial"))) {
+            value = Default::INITIAL;
+        } else if (content.skip(Css::Token::ident("inherit"))) {
+            value = Default::INHERIT;
+        } else if (content.skip(Css::Token::ident("unset"))) {
+            value = Default::UNSET;
+        } else {
+            return Error::invalidData("unknown declaration");
         }
 
-        for (auto alias : registration->legacyNameAlias())
-            legacyNameAlias.put(alias, registration->name);
+        return Ok(makeRc<DefaultedProperty>(id, value));
     }
 
-    template <typename T>
-    void registerProperty() {
-        registerProperty(registrationOf<T>());
+    Rc<Property> _deferProperty(LonghandId id, Slice<Css::Sst> content) {
+        return makeRc<DeferredProperty>(id, content);
     }
-};
 
-export struct RegisteredPropertySet {
+    Res<Rc<Property>> parseValue(Symbol const& propertyName, Cursor<Css::Sst> content, Flags<Options> options) {
+        Cursor cursor = content;
+
+        auto id = lookupProperty(propertyName).okOr(Error::invalidData("unknown property"));
+
+        id.visit([])
+
+        eatWhitespace(cursor);
+        if (auto defaulted = _parseDefaulted(id, cursor))
+            return defaulted;
+
+        auto maybeProp = registration->parse(cursor, ParsingMode::STANDARD);
+        eatWhitespace(cursor);
+        if (not cursor.ended())
+            maybeProp = Error::invalidData("unexpected token after property value");
+
+        if (not maybeProp) {
+            return Ok(_deferProperty(registration, content));
+        }
+
+        return maybeProp;
+    }
+
+Res<Rc<Property>> parseDeclaration(Css::Sst const& sst) {
+    if (sst != Css::Sst::DECL)
+        panic("expected declaration");
+
+    if (sst.token != Css::Token::IDENT)
+        panic("expected ident");
+
+    auto propertyName = Symbol::from(sst.token.data);
+    Cursor<Css::Sst> content = sst.content;
+    auto prop = try$(parseValue(propertyName, content));
+    prop->important = sst.flags.has(Css::Sst::IMPORTANT);
+    return Ok(prop);
+}
+
+Res<Rc<Property>> parseValue(Symbol const& propertyName, Str propertyValue) {
+    Css::Lexer lex{propertyValue};
+    Diag::Collector diags = Diag::Collector::ignore();
+    auto [content, _] = Css::consumeDeclarationValue(lex, diags);
+    return parseValue(propertyName, content);
+}
+
+Vec<Rc<Property>> parseDeclarations(Css::Content const& sst) {
+    Vec<Rc<Property>> res;
+
+    for (auto const& item : sst) {
+        if (item != Css::Sst::DECL)
+            continue;
+
+        auto prop = parseDeclaration(item);
+        if (not prop)
+            continue;
+        res.pushBack(prop.take());
+    }
+
+    return res;
+}
+
+Vec<Rc<Property>> parseDeclarations(Css::Sst const& sst) {
+    return parseDeclarations(sst.content);
+}
+
+Vec<Rc<Property>> parseDeclarations(Str style) {
+    Css::Lexer lex{style};
+    auto diags = Diag::Collector::ignore();
+    auto sst = Css::consumeDeclarationList(lex, diags, true);
+    return parseDeclarations(sst);
+}
+
+Opt<Rc<Property>> parsePresentationAttribute(Symbol attrName, Str value) {
+    // FIXME: Could the caller call toLower ?
+    Symbol lower = Symbol::from(toLower(attrName.str()));
+    auto id = try$(lookupProperty(lower));
+
+    Css::Lexer lex{value};
+    Diag::Collector diags = Diag::Collector::ignore();
+    auto [content, _] = Css::consumeDeclarationValue(lex, diags);
+    Cursor<Css::Sst> cursor = content;
+
+    return parseProperty(try$(id.is<LonghandId>()), cursor, ParsingMode::PRESENTATION_ATTRIBUTE).ok();
+}
+
+export struct _RegisteredPropertySet {
     Map<Symbol, Symbol> _legacyNameAlias;
     Map<Symbol, Rc<LonghandRegistration>> _registrations;
     Map<Symbol, Rc<LonghandRegistration>> _presentationAttributes;
@@ -728,183 +731,11 @@ export struct RegisteredPropertySet {
         return _registrations;
     }
 
-    void registerProperty(
-        Symbol const& propertyName,
-        Rc<LonghandRegistration> registration
-    ) {
-        // Registrations are append-only and property names must be unique.
-        expect$(not _registrations.lookup(propertyName));
-
-        auto registrationFlags = registration->flags;
-
-        if (registrationFlags.has(LonghandRegistration::PRESENTATION_ATTRIBUTE))
-            _presentationAttributes.put(propertyName, registration);
-
-        if (registrationFlags.has(LonghandRegistration::INHERITED) and
-            not registrationFlags.has(LonghandRegistration::BULK_INHERITED))
-            _individuallyInherited.pushBack(registration);
-
-        for (auto legacyNameAlias : registration->legacyNameAlias())
-            _legacyNameAlias.put(legacyNameAlias, registration->name);
-
-        _registrations.put(propertyName, registration);
-    }
-
-    template <typename Property>
-    void registerProperty() {
-        auto registration = registrationOf<Property>();
-        registerProperty(registration->name, registration);
-    }
-
-    Rc<LonghandRegistration> registerCustomProperty(Symbol const& propertyName) {
-        auto registration = makeRc<CustomProperty::Registration>(propertyName);
-        registration->_self = Some(registration);
-        registerProperty(propertyName, registration);
-        return registration;
-    }
-
-    Opt<Rc<LonghandRegistration>> resolveRegistration(Symbol const& unresolvedPropertyName, Flags<Options> options) {
-        auto const& propertyName =
-            _legacyNameAlias
-                .lookup(unresolvedPropertyName)
-                .unwrapOr(unresolvedPropertyName);
-
-        if (auto maybeRegistration = _registrations.lookup(propertyName))
-            return Some(maybeRegistration.take());
-
-        if (options.has(GENERATE_CUSTOM_PROPERTY)) {
-            if (startWith(propertyName.str(), "--"s) != Match::NO)
-                return Some(registerCustomProperty(propertyName));
-        }
-
-        if (options.has(GENERATE_BOGUS)) {
-            logErrorIf(debugProperties, "unknown property {:#}, generating bogus registration", propertyName);
-            return Some(makeRc<BogusProperty::Registration>(propertyName));
-        }
-
-        return NONE;
-    }
-
-    Opt<Rc<LonghandRegistration>> resolveRegistration(Str propertyName, Flags<Options> options) {
-        return resolveRegistration(Symbol::from(propertyName), options);
-    }
-
     // MARK: Initial -----------------------------------------------------------
-
-    // https://www.w3.org/TR/css-cascade-4/#initial-values
-    mutable Opt<Rc<ComputedValues>> _memoInitialComputedValues = NONE;
-
-    Rc<ComputedValues> initialComputedValues() const {
-        ComputationContext cx{};
-        if (not _memoInitialComputedValues) {
-            auto initial = makeRc<ComputedValues>();
-            for (auto& [_, registration] : registrations().iterItems())
-                registration->initial()->apply(*initial, *initial, cx);
-            _memoInitialComputedValues = Some(initial);
-        }
-        return makeRc<ComputedValues>(**_memoInitialComputedValues);
-    }
 
     // MARK: Inherit -----------------------------------------------------------
 
-    // https://www.w3.org/TR/css-cascade-4/#inheriting
-    void inheritsComputedValues(ComputedValues const& parent, ComputedValues& child) const {
-        // Apply defaulted inheritance fast path for property that supports it.
-        child.customProps = parent.customProps;
-        child.font = parent.font;
-        child.list = parent.list;
-        child.text = parent.text;
-        child.svgPaint = parent.svgPaint;
-        child.table = parent.table;
-
-        // Handle the rest of the properties
-        for (auto& registration : _individuallyInherited)
-            registration->inherit(parent, child);
-    }
-
-    Rc<ComputedValues> inheritsComputedValues(ComputedValues const& parent) const {
-        auto computedValues = initialComputedValues();
-        inheritsComputedValues(parent, *computedValues);
-        return computedValues;
-    }
-
     // MARK: Value Parsing -----------------------------------------------------
-
-    Res<Rc<Property>> _parseDefaulted(Rc<LonghandRegistration> registration, Cursor<Css::Sst>& content) {
-        Default value;
-        if (content.skip(Css::Token::ident("initial"))) {
-            value = Default::INITIAL;
-        } else if (content.skip(Css::Token::ident("inherit"))) {
-            value = Default::INHERIT;
-        } else if (content.skip(Css::Token::ident("unset"))) {
-            value = Default::UNSET;
-        } else {
-            return Error::invalidData("unknown declaration");
-        }
-
-        return Ok(makeRc<DefaultedProperty>(registration, value));
-    }
-
-    Res<Rc<Property>> _parseToggle(Rc<LonghandRegistration> registration, Cursor<Css::Sst>& content) {
-        if (content.ended())
-            return Error::invalidData("unexpected end of input");
-
-        if (content.peek().prefix != Css::Token::function("toggle("))
-            return Error::invalidData("unknown declaration");
-
-        Vec<Rc<Property>> options;
-        Cursor<Css::Sst> toggleContent = content->content;
-        while (not toggleContent.ended()) {
-            options.pushBack(try$(registration->parse(toggleContent)));
-            skipOmmitableComma(toggleContent);
-        }
-        content.next();
-        return Ok(makeRc<ToggleProperty>(registration, std::move(options)));
-    }
-
-    Rc<Property> _deferProperty(Rc<LonghandRegistration> registration, Slice<Css::Sst> content) {
-        return makeRc<DeferredProperty>(registration, content);
-    }
-
-    Res<Rc<Property>> parseValue(Symbol const& propertyName, Cursor<Css::Sst> content, Flags<Options> options) {
-        Cursor cursor = content;
-
-        auto registration = try$(resolveRegistration(propertyName, options));
-        if (registration.is<BogusProperty::Registration>())
-            return Ok(makeRc<BogusProperty>(registration, content, Error::invalidData("unknow property")));
-
-        eatWhitespace(cursor);
-        if (options.has(ALLOW_DEFAULTING))
-            if (auto defaulted = _parseDefaulted(registration, cursor))
-                return defaulted;
-
-        if (options.has(ALLOW_TOGGLE))
-            if (auto toggle = _parseToggle(registration, cursor))
-                return toggle;
-
-        auto maybeProp = registration->parse(cursor);
-        eatWhitespace(cursor);
-        if (not cursor.ended())
-            maybeProp = Error::invalidData("unexpected token after property value");
-
-        if (options.has(DEFER_UNPARSABLE) and not maybeProp) {
-            return Ok(_deferProperty(registration, content));
-        }
-
-        if (options.has(GENERATE_BOGUS) and not maybeProp) {
-            auto registration = makeRc<BogusProperty::Registration>(propertyName);
-            return Ok(makeRc<BogusProperty>(registration, content, Error::invalidData("un-consumed token in property value")));
-        }
-
-        return maybeProp;
-    }
-
-    Res<Rc<Property>> parseValue(Symbol const& propertyName, Str propertyValue, Flags<Options> options) {
-        Css::Lexer lex{propertyValue};
-        Diag::Collector diags = Diag::Collector::ignore();
-        auto [content, _] = Css::consumeDeclarationValue(lex, diags);
-        return parseValue(propertyName, content, options);
-    }
 
     // MARK: Declaration Parsing -----------------------------------------------
 

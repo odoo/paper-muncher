@@ -27,7 +27,7 @@ export struct MarginTopProperty : Property {
         return makeRc<MarginTopProperty>(c.margin->top);
     }
 
-    static Res<Rc<Property>> parse(Cursor<Css::Sst>& c) {
+    static Res<Rc<Property>> parse(Cursor<Css::Sst>& c, ParsingMode) {
         return Ok(makeRc<MarginTopProperty>(try$(parseValue<Value>(c))));
     }
 
@@ -38,7 +38,7 @@ export struct MarginTopProperty : Property {
     Value _value;
 
     MarginTopProperty(Value value)
-        : Property(registrationOf<MarginTopProperty>()), _value(value) {}
+        : Property(ID), _value(value) {}
 
     void apply([[maybe_unused]] ComputedValues const& parent, ComputedValues& c, [[maybe_unused]] ComputationContext const& cx) const override {
         c.margin.cow().top = _value;
@@ -67,7 +67,7 @@ export struct MarginRightProperty : Property {
         return makeRc<MarginRightProperty>(c.margin->end);
     }
 
-    static Res<Rc<Property>> parse(Cursor<Css::Sst>& c) {
+    static Res<Rc<Property>> parse(Cursor<Css::Sst>& c, ParsingMode) {
         return Ok(makeRc<MarginRightProperty>(try$(parseValue<Value>(c))));
     }
 
@@ -78,7 +78,7 @@ export struct MarginRightProperty : Property {
     Value _value;
 
     MarginRightProperty(Value value)
-        : Property(registrationOf<MarginRightProperty>()), _value(value) {}
+        : Property(ID), _value(value) {}
 
     void apply([[maybe_unused]] ComputedValues const& parent, ComputedValues& c, [[maybe_unused]] ComputationContext const& cx) const override {
         c.margin.cow().end = _value;
@@ -107,7 +107,7 @@ export struct MarginBottomProperty : Property {
         return makeRc<MarginBottomProperty>(c.margin->bottom);
     }
 
-    static Res<Rc<Property>> parse(Cursor<Css::Sst>& c) {
+    static Res<Rc<Property>> parse(Cursor<Css::Sst>& c, ParsingMode) {
         return Ok(makeRc<MarginBottomProperty>(try$(parseValue<Value>(c))));
     }
 
@@ -118,7 +118,7 @@ export struct MarginBottomProperty : Property {
     Value _value;
 
     MarginBottomProperty(Value value)
-        : Property(registrationOf<MarginBottomProperty>()), _value(value) {}
+        : Property(ID), _value(value) {}
 
     void apply([[maybe_unused]] ComputedValues const& parent, ComputedValues& c, [[maybe_unused]] ComputationContext const& cx) const override {
         c.margin.cow().bottom = _value;
@@ -147,7 +147,7 @@ export struct MarginLeftProperty : Property {
         return makeRc<MarginLeftProperty>(c.margin->start);
     }
 
-    static Res<Rc<Property>> parse(Cursor<Css::Sst>& c) {
+    static Res<Rc<Property>> parse(Cursor<Css::Sst>& c, ParsingMode) {
         return Ok(makeRc<MarginLeftProperty>(try$(parseValue<Value>(c))));
     }
 
@@ -158,7 +158,7 @@ export struct MarginLeftProperty : Property {
     Value _value;
 
     MarginLeftProperty(Value value)
-        : Property(registrationOf<MarginLeftProperty>()), _value(value) {}
+        : Property(ID), _value(value) {}
 
     void apply([[maybe_unused]] ComputedValues const& parent, ComputedValues& c, [[maybe_unused]] ComputationContext const& cx) const override {
         c.margin.cow().start = _value;
@@ -291,7 +291,7 @@ export struct MarginInlineStartProperty : Property {
         return makeRc<MarginInlineStartProperty>(c.margin->start);
     }
 
-    static Res<Rc<Property>> parse(Cursor<Css::Sst>& c) {
+    static Res<Rc<Property>> parse(Cursor<Css::Sst>& c, ParsingMode) {
         return Ok(makeRc<MarginInlineStartProperty>(try$(parseValue<Value>(c))));
     }
 
@@ -302,7 +302,7 @@ export struct MarginInlineStartProperty : Property {
     Value _value;
 
     MarginInlineStartProperty(Value value)
-        : Property(registrationOf<MarginInlineStartProperty>()), _value(value) {}
+        : Property(ID), _value(value) {}
 
     // FIXME: Take writing mode into account
     // FIXME: Cascade together with the paired physical property, the declaration with
@@ -335,7 +335,7 @@ export struct MarginInlineEndProperty : Property {
         return makeRc<MarginInlineEndProperty>(c.margin->end);
     }
 
-    static Res<Rc<Property>> parse(Cursor<Css::Sst>& c) {
+    static Res<Rc<Property>> parse(Cursor<Css::Sst>& c, ParsingMode) {
         return Ok(makeRc<MarginInlineEndProperty>(try$(parseValue<Value>(c))));
     }
 
@@ -346,7 +346,7 @@ export struct MarginInlineEndProperty : Property {
     Value _value;
 
     MarginInlineEndProperty(Value value)
-        : Property(registrationOf<MarginInlineEndProperty>()), _value(value) {}
+        : Property(ID), _value(value) {}
 
     // FIXME: Take writing mode into account
     // FIXME: Cascade together with the paired physical property, the declaration with
@@ -417,7 +417,7 @@ export struct MarginBlockStartProperty : Property {
         return makeRc<MarginBlockStartProperty>(c.margin->top);
     }
 
-    static Res<Rc<Property>> parse(Cursor<Css::Sst>& c) {
+    static Res<Rc<Property>> parse(Cursor<Css::Sst>& c, ParsingMode) {
         return Ok(makeRc<MarginBlockStartProperty>(try$(parseValue<Value>(c))));
     }
 
@@ -428,7 +428,7 @@ export struct MarginBlockStartProperty : Property {
     Value _value;
 
     MarginBlockStartProperty(Value value)
-        : Property(registrationOf<MarginBlockStartProperty>()), _value(value) {}
+        : Property(ID), _value(value) {}
 
     // FIXME: Take writing mode into account
     // FIXME: Cascade together with the paired physical property, the declaration with
@@ -461,7 +461,7 @@ export struct MarginBlockEndProperty : Property {
         return makeRc<MarginBlockEndProperty>(c.margin->bottom);
     }
 
-    static Res<Rc<Property>> parse(Cursor<Css::Sst>& c) {
+    static Res<Rc<Property>> parse(Cursor<Css::Sst>& c, ParsingMode) {
         return Ok(makeRc<MarginBlockEndProperty>(try$(parseValue<Value>(c))));
     }
 
@@ -472,7 +472,7 @@ export struct MarginBlockEndProperty : Property {
     Union<Keywords::Auto, Calc<PercentOr<Length>>> _value;
 
     MarginBlockEndProperty(Value value)
-        : Property(registrationOf<MarginBlockEndProperty>()), _value(value) {}
+        : Property(ID), _value(value) {}
 
     // FIXME: Take writing mode into account
     // FIXME: Cascade together with the paired physical property, the declaration with

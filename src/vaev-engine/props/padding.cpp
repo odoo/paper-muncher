@@ -28,7 +28,7 @@ export struct PaddingTopProperty : Property {
         return makeRc<PaddingTopProperty>(c.padding->top);
     }
 
-    static Res<Rc<Property>> parse(Cursor<Css::Sst>& c) {
+    static Res<Rc<Property>> parse(Cursor<Css::Sst>& c, ParsingMode) {
         return Ok(makeRc<PaddingTopProperty>(try$(parseValue<Calc<PercentOr<Length>>>(c))));
     }
 
@@ -39,7 +39,7 @@ export struct PaddingTopProperty : Property {
     Calc<PercentOr<Length>> _value;
 
     PaddingTopProperty(Calc<PercentOr<Length>> value)
-        : Property(registrationOf<PaddingTopProperty>()), _value(value) {}
+        : Property(ID), _value(value) {}
 
     void apply([[maybe_unused]] ComputedValues const& parent, ComputedValues& c, [[maybe_unused]] ComputationContext const& cx) const override {
         c.padding.cow().top = _value;
@@ -65,7 +65,7 @@ export struct PaddingRightProperty : Property {
         return makeRc<PaddingRightProperty>(c.padding->end);
     }
 
-    static Res<Rc<Property>> parse(Cursor<Css::Sst>& c) {
+    static Res<Rc<Property>> parse(Cursor<Css::Sst>& c, ParsingMode) {
         return Ok(makeRc<PaddingRightProperty>(try$(parseValue<Calc<PercentOr<Length>>>(c))));
     }
 
@@ -76,7 +76,7 @@ export struct PaddingRightProperty : Property {
     Calc<PercentOr<Length>> _value;
 
     PaddingRightProperty(Calc<PercentOr<Length>> value)
-        : Property(registrationOf<PaddingRightProperty>()), _value(value) {}
+        : Property(ID), _value(value) {}
 
     void apply([[maybe_unused]] ComputedValues const& parent, ComputedValues& c, [[maybe_unused]] ComputationContext const& cx) const override {
         c.padding.cow().end = _value;
@@ -102,7 +102,7 @@ export struct PaddingBottomProperty : Property {
         return makeRc<PaddingBottomProperty>(c.padding->bottom);
     }
 
-    static Res<Rc<Property>> parse(Cursor<Css::Sst>& c) {
+    static Res<Rc<Property>> parse(Cursor<Css::Sst>& c, ParsingMode) {
         return Ok(makeRc<PaddingBottomProperty>(try$(parseValue<Calc<PercentOr<Length>>>(c))));
     }
 
@@ -113,7 +113,7 @@ export struct PaddingBottomProperty : Property {
     Calc<PercentOr<Length>> _value;
 
     PaddingBottomProperty(Calc<PercentOr<Length>> value)
-        : Property(registrationOf<PaddingBottomProperty>()), _value(value) {}
+        : Property(ID), _value(value) {}
 
     void apply([[maybe_unused]] ComputedValues const& parent, ComputedValues& c, [[maybe_unused]] ComputationContext const& cx) const override {
         c.padding.cow().bottom = _value;
@@ -139,7 +139,7 @@ export struct PaddingLeftProperty : Property {
         return makeRc<PaddingLeftProperty>(c.padding->start);
     }
 
-    static Res<Rc<Property>> parse(Cursor<Css::Sst>& c) {
+    static Res<Rc<Property>> parse(Cursor<Css::Sst>& c, ParsingMode) {
         return Ok(makeRc<PaddingLeftProperty>(try$(parseValue<Calc<PercentOr<Length>>>(c))));
     }
 
@@ -150,7 +150,7 @@ export struct PaddingLeftProperty : Property {
     Calc<PercentOr<Length>> _value;
 
     PaddingLeftProperty(Calc<PercentOr<Length>> value)
-        : Property(registrationOf<PaddingLeftProperty>()), _value(value) {}
+        : Property(ID), _value(value) {}
 
     void apply([[maybe_unused]] ComputedValues const& parent, ComputedValues& c, [[maybe_unused]] ComputationContext const& cx) const override {
         c.padding.cow().start = _value;
@@ -176,7 +176,7 @@ export struct PaddingInlineStartProperty : Property {
         return makeRc<PaddingInlineStartProperty>(c.padding->start);
     }
 
-    static Res<Rc<Property>> parse(Cursor<Css::Sst>& c) {
+    static Res<Rc<Property>> parse(Cursor<Css::Sst>& c, ParsingMode) {
         return Ok(makeRc<PaddingInlineStartProperty>(try$(parseValue<Calc<PercentOr<Length>>>(c))));
     }
 
@@ -187,7 +187,7 @@ export struct PaddingInlineStartProperty : Property {
     Calc<PercentOr<Length>> _value;
 
     PaddingInlineStartProperty(Calc<PercentOr<Length>> value)
-        : Property(registrationOf<PaddingInlineStartProperty>()), _value(value) {}
+        : Property(ID), _value(value) {}
 
     // FIXME: Take writing mode into account
     // FIXME: Cascade together with the paired physical property, the declaration with
@@ -217,7 +217,7 @@ export struct PaddingInlineEndProperty : Property {
         return makeRc<PaddingInlineEndProperty>(c.padding->end);
     }
 
-    static Res<Rc<Property>> parse(Cursor<Css::Sst>& c) {
+    static Res<Rc<Property>> parse(Cursor<Css::Sst>& c, ParsingMode) {
         return Ok(makeRc<PaddingInlineEndProperty>(try$(parseValue<Calc<PercentOr<Length>>>(c))));
     }
 
@@ -228,7 +228,7 @@ export struct PaddingInlineEndProperty : Property {
     Calc<PercentOr<Length>> _value;
 
     PaddingInlineEndProperty(Calc<PercentOr<Length>> value)
-        : Property(registrationOf<PaddingInlineEndProperty>()), _value(value) {}
+        : Property(ID), _value(value) {}
 
     // FIXME: Take writing mode into account
     // FIXME: Cascade together with the paired physical property, the declaration with

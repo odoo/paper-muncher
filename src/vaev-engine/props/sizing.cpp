@@ -28,7 +28,7 @@ export struct BoxSizingProperty : Property {
         return makeRc<BoxSizingProperty>(c.boxSizing);
     }
 
-    static Res<Rc<Property>> parse(Cursor<Css::Sst>& c) {
+    static Res<Rc<Property>> parse(Cursor<Css::Sst>& c, ParsingMode) {
         return Ok(makeRc<BoxSizingProperty>(try$(parseValue<BoxSizing>(c))));
     }
 
@@ -39,7 +39,7 @@ export struct BoxSizingProperty : Property {
     BoxSizing _value;
 
     BoxSizingProperty(BoxSizing value)
-        : Property(registrationOf<BoxSizingProperty>()), _value(value) {}
+        : Property(ID), _value(value) {}
 
     void apply([[maybe_unused]] ComputedValues const& parent, ComputedValues& c, [[maybe_unused]] ComputationContext const& cx) const override {
         c.boxSizing = _value;
@@ -57,7 +57,7 @@ export struct BoxSizingProperty : Property {
 // https://www.w3.org/TR/css-sizing-3/#propdef-width
 export struct WidthProperty : Property {
     static constexpr auto ID = LonghandId::WIDTH;
-    static inline Flags<Options> const FLAGS = {PRESENTATION_ATTRIBUTE};
+    static constexpr Flags<Options> FLAGS = {PRESENTATION_ATTRIBUTE};
 
     static Rc<Property> initial() {
         return makeRc<WidthProperty>(Size{Keywords::AUTO});
@@ -67,25 +67,19 @@ export struct WidthProperty : Property {
         return makeRc<WidthProperty>(c.sizing->width);
     }
 
-    static Res<Rc<Property>> parse(Cursor<Css::Sst>& c) {
-        return Ok(makeRc<WidthProperty>(try$(parseValue<Size>(c))));
+    static Res<Rc<Property>> parse(Cursor<Css::Sst>& c, ParsingMode mode) {
+        return Ok(makeRc<WidthProperty>(try$(parseValueWithUnitlessLength<Size>(c, mode))));
     }
 
     struct Registration : LonghandRegistration {
         Registration()
             : LonghandRegistration(Properties::WIDTH, FLAGS) {}
-
-        Res<Rc<Property>> parsePresentationAttribute(Str style) override {
-            if (auto prop = LonghandRegistration::parsePresentationAttribute(style))
-                return prop;
-            return LonghandRegistration::parsePresentationAttribute(Io::format("{}px", style));
-        }
     };
 
     Size _value;
 
     WidthProperty(Size value)
-        : Property(registrationOf<WidthProperty>()), _value(value) {}
+        : Property(ID), _value(value) {}
 
     void apply([[maybe_unused]] ComputedValues const& parent, ComputedValues& c, [[maybe_unused]] ComputationContext const& cx) const override {
         c.sizing.cow().width = _value;
@@ -104,7 +98,7 @@ export struct WidthProperty : Property {
 
 export struct HeightProperty : Property {
     static constexpr auto ID = LonghandId::HEIGHT;
-    static inline Flags<Options> const FLAGS = {PRESENTATION_ATTRIBUTE};
+    static constexpr Flags<Options> FLAGS = {PRESENTATION_ATTRIBUTE};
 
     static Rc<Property> initial() {
         return makeRc<HeightProperty>(Size{Keywords::AUTO});
@@ -114,25 +108,19 @@ export struct HeightProperty : Property {
         return makeRc<HeightProperty>(c.sizing->height);
     }
 
-    static Res<Rc<Property>> parse(Cursor<Css::Sst>& c) {
-        return Ok(makeRc<HeightProperty>(try$(parseValue<Size>(c))));
+    static Res<Rc<Property>> parse(Cursor<Css::Sst>& c, ParsingMode mode) {
+        return Ok(makeRc<HeightProperty>(try$(parseValueWithUnitlessLength<Size>(c, mode))));
     }
 
     struct Registration : LonghandRegistration {
         Registration()
             : LonghandRegistration(Properties::HEIGHT, FLAGS) {}
-
-        Res<Rc<Property>> parsePresentationAttribute(Str style) override {
-            if (auto prop = LonghandRegistration::parsePresentationAttribute(style))
-                return prop;
-            return LonghandRegistration::parsePresentationAttribute(Io::format("{}px", style));
-        }
     };
 
     Size _value;
 
     HeightProperty(Size value)
-        : Property(registrationOf<HeightProperty>()), _value(value) {}
+        : Property(ID), _value(value) {}
 
     void apply([[maybe_unused]] ComputedValues const& parent, ComputedValues& c, [[maybe_unused]] ComputationContext const& cx) const override {
         c.sizing.cow().height = _value;
@@ -159,7 +147,7 @@ export struct MinWidthProperty : Property {
         return makeRc<MinWidthProperty>(c.sizing->minWidth);
     }
 
-    static Res<Rc<Property>> parse(Cursor<Css::Sst>& c) {
+    static Res<Rc<Property>> parse(Cursor<Css::Sst>& c, ParsingMode) {
         return Ok(makeRc<MinWidthProperty>(try$(parseValue<Size>(c))));
     }
 
@@ -170,7 +158,7 @@ export struct MinWidthProperty : Property {
     Size _value;
 
     MinWidthProperty(Size value)
-        : Property(registrationOf<MinWidthProperty>()), _value(value) {}
+        : Property(ID), _value(value) {}
 
     void apply([[maybe_unused]] ComputedValues const& parent, ComputedValues& c, [[maybe_unused]] ComputationContext const& cx) const override {
         c.sizing.cow().minWidth = _value;
@@ -197,7 +185,7 @@ export struct MinHeightProperty : Property {
         return makeRc<MinHeightProperty>(c.sizing->minHeight);
     }
 
-    static Res<Rc<Property>> parse(Cursor<Css::Sst>& c) {
+    static Res<Rc<Property>> parse(Cursor<Css::Sst>& c, ParsingMode) {
         return Ok(makeRc<MinHeightProperty>(try$(parseValue<Size>(c))));
     }
 
@@ -208,7 +196,7 @@ export struct MinHeightProperty : Property {
     Size _value;
 
     MinHeightProperty(Size value)
-        : Property(registrationOf<MinHeightProperty>()), _value(value) {}
+        : Property(ID), _value(value) {}
 
     void apply([[maybe_unused]] ComputedValues const& parent, ComputedValues& c, [[maybe_unused]] ComputationContext const& cx) const override {
         c.sizing.cow().minHeight = _value;
@@ -236,7 +224,7 @@ export struct MaxWidthProperty : Property {
         return makeRc<MaxWidthProperty>(c.sizing->maxWidth);
     }
 
-    static Res<Rc<Property>> parse(Cursor<Css::Sst>& c) {
+    static Res<Rc<Property>> parse(Cursor<Css::Sst>& c, ParsingMode) {
         return Ok(makeRc<MaxWidthProperty>(try$(parseValue<MaxSize>(c))));
     }
 
@@ -247,7 +235,7 @@ export struct MaxWidthProperty : Property {
     MaxSize _value;
 
     MaxWidthProperty(MaxSize value)
-        : Property(registrationOf<MaxWidthProperty>()), _value(value) {}
+        : Property(ID), _value(value) {}
 
     void apply([[maybe_unused]] ComputedValues const& parent, ComputedValues& c, [[maybe_unused]] ComputationContext const& cx) const override {
         c.sizing.cow().maxWidth = _value;
@@ -274,7 +262,7 @@ export struct MaxHeightProperty : Property {
         return makeRc<MaxHeightProperty>(c.sizing->maxHeight);
     }
 
-    static Res<Rc<Property>> parse(Cursor<Css::Sst>& c) {
+    static Res<Rc<Property>> parse(Cursor<Css::Sst>& c, ParsingMode) {
         return Ok(makeRc<MaxHeightProperty>(try$(parseValue<MaxSize>(c))));
     }
 
@@ -285,7 +273,7 @@ export struct MaxHeightProperty : Property {
     MaxSize _value;
 
     MaxHeightProperty(MaxSize value)
-        : Property(registrationOf<MaxHeightProperty>()), _value(value) {}
+        : Property(ID), _value(value) {}
 
     void apply([[maybe_unused]] ComputedValues const& parent, ComputedValues& c, [[maybe_unused]] ComputationContext const& cx) const override {
         c.sizing.cow().maxHeight = _value;

@@ -8,7 +8,6 @@ import Karm.Sys;
 import :dom.node;
 import :dom.element;
 import :props.base;
-import :props.registry;
 import :style.stylesheet;
 
 namespace Vaev::Dom {

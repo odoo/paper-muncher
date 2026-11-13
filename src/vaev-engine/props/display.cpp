@@ -25,7 +25,7 @@ export struct DisplayProperty : Property {
         return makeRc<DisplayProperty>(s.display);
     }
 
-    static Res<Rc<Property>> parse(Cursor<Css::Sst>& c) {
+    static Res<Rc<Property>> parse(Cursor<Css::Sst>& c, ParsingMode) {
         return Ok(makeRc<DisplayProperty>(try$(parseValue<Display>(c))));
     }
 
@@ -36,7 +36,7 @@ export struct DisplayProperty : Property {
     Display _value;
 
     DisplayProperty(Display value)
-        : Property(registrationOf<DisplayProperty>()), _value(value) {}
+        : Property(ID), _value(value) {}
 
     void apply([[maybe_unused]] ComputedValues const& parent, ComputedValues& c, [[maybe_unused]] ComputationContext const& cx) const override {
         c.display = _value;
@@ -64,7 +64,7 @@ export struct ContentProperty : Property {
         return makeRc<ContentProperty>(c.content);
     }
 
-    static Res<Rc<Property>> parse(Cursor<Css::Sst>& c) {
+    static Res<Rc<Property>> parse(Cursor<Css::Sst>& c, ParsingMode) {
         return Ok(makeRc<ContentProperty>(try$(parseValue<Content>(c))));
     }
 
@@ -75,7 +75,7 @@ export struct ContentProperty : Property {
     Content _value;
 
     ContentProperty(Content value)
-        : Property(registrationOf<ContentProperty>()), _value(value) {}
+        : Property(ID), _value(value) {}
 
     void apply([[maybe_unused]] ComputedValues const& parent, ComputedValues& c, [[maybe_unused]] ComputationContext const& cx) const override {
         c.content = _value;
@@ -98,7 +98,7 @@ export struct OrderProperty : Property {
         return makeRc<OrderProperty>(c.order);
     }
 
-    static Res<Rc<Property>> parse(Cursor<Css::Sst>& c) {
+    static Res<Rc<Property>> parse(Cursor<Css::Sst>& c, ParsingMode) {
         return Ok(makeRc<OrderProperty>(try$(parseValue<Integer>(c))));
     }
 
@@ -109,7 +109,7 @@ export struct OrderProperty : Property {
     Integer _value;
 
     OrderProperty(Integer value)
-        : Property(registrationOf<OrderProperty>()), _value(value) {}
+        : Property(ID), _value(value) {}
 
     void apply([[maybe_unused]] ComputedValues const& parent, ComputedValues& c, [[maybe_unused]] ComputationContext const& cx) const override {
         c.order = _value;

@@ -11,7 +11,7 @@ namespace Vaev::Style {
 // https://www.w3.org/TR/css-lists-3/#propdef-list-style-image
 struct ListStyleImageProperty : Property {
     static constexpr auto ID = LonghandId::LIST_STYLE_IMAGE;
-    static inline Flags<Options> const FLAGS = {INHERITED, BULK_INHERITED};
+    static constexpr Flags<Options> FLAGS = {INHERITED, BULK_INHERITED};
 
     static Rc<Property> initial() {
         return makeRc<ListStyleImageProperty>(Keywords::NONE);
@@ -21,7 +21,7 @@ struct ListStyleImageProperty : Property {
         return makeRc<ListStyleImageProperty>(c.list->image);
     }
 
-    static Res<Rc<Property>> parse(Cursor<Css::Sst>& c) {
+    static Res<Rc<Property>> parse(Cursor<Css::Sst>& c, ParsingMode) {
         auto value = try$(parseValue<ListImage>(c));
         return Ok(makeRc<ListStyleImageProperty>(value));
     }
@@ -38,7 +38,7 @@ struct ListStyleImageProperty : Property {
     ListImage _value;
 
     ListStyleImageProperty(ListImage value)
-        : Property(registrationOf<ListStyleImageProperty>()), _value(value) {}
+        : Property(ID), _value(value) {}
 
     void apply(ComputedValues const&, ComputedValues& c, [[maybe_unused]] ComputationContext const& cx) const override {
         c.list.cow().image = _value;
@@ -52,7 +52,7 @@ struct ListStyleImageProperty : Property {
 // https://www.w3.org/TR/css-lists-3/#propdef-list-style-type
 struct ListStyleTypeProperty : Property {
     static constexpr auto ID = LonghandId::LIST_STYLE_TYPE;
-    static inline Flags<Options> const FLAGS = {INHERITED, BULK_INHERITED};
+    static constexpr Flags<Options> FLAGS = {INHERITED, BULK_INHERITED};
 
     static Rc<Property> initial() {
         return makeRc<ListStyleTypeProperty>(CustomIdent{"disc"_sym});
@@ -62,7 +62,7 @@ struct ListStyleTypeProperty : Property {
         return makeRc<ListStyleTypeProperty>(c.list->type);
     }
 
-    static Res<Rc<Property>> parse(Cursor<Css::Sst>& c) {
+    static Res<Rc<Property>> parse(Cursor<Css::Sst>& c, ParsingMode) {
         auto value = try$(parseValue<ListType>(c));
         return Ok(makeRc<ListStyleTypeProperty>(value));
     }
@@ -79,7 +79,7 @@ struct ListStyleTypeProperty : Property {
     ListType _value;
 
     ListStyleTypeProperty(ListType value)
-        : Property(registrationOf<ListStyleTypeProperty>()), _value(value) {}
+        : Property(ID), _value(value) {}
 
     void apply(ComputedValues const&, ComputedValues& c, [[maybe_unused]] ComputationContext const& cx) const override {
         c.list.cow().type = _value;
@@ -93,7 +93,7 @@ struct ListStyleTypeProperty : Property {
 // https://www.w3.org/TR/css-lists-3/#list-style-position-property
 struct ListStylePositionProperty : Property {
     static constexpr auto ID = LonghandId::LIST_STYLE_POSITION;
-    static inline Flags<Options> const FLAGS = {INHERITED, BULK_INHERITED};
+    static constexpr Flags<Options> FLAGS = {INHERITED, BULK_INHERITED};
 
     static Rc<Property> initial() {
         return makeRc<ListStylePositionProperty>(Keywords::OUTSIDE);
@@ -103,7 +103,7 @@ struct ListStylePositionProperty : Property {
         return makeRc<ListStylePositionProperty>(c.list->position);
     }
 
-    static Res<Rc<Property>> parse(Cursor<Css::Sst>& c) {
+    static Res<Rc<Property>> parse(Cursor<Css::Sst>& c, ParsingMode) {
         auto value = try$(parseValue<ListPosition>(c));
         return Ok(makeRc<ListStylePositionProperty>(value));
     }
@@ -120,7 +120,7 @@ struct ListStylePositionProperty : Property {
     ListPosition _value;
 
     ListStylePositionProperty(ListPosition value)
-        : Property(registrationOf<ListStylePositionProperty>()), _value(value) {}
+        : Property(ID), _value(value) {}
 
     void apply(ComputedValues const&, ComputedValues& c, [[maybe_unused]] ComputationContext const& cx) const override {
         c.list.cow().position = _value;
@@ -220,7 +220,7 @@ struct ListStylePositionProperty : Property {
 // https://www.w3.org/TR/css-lists-3/#propdef-marker-side
 struct MarkerSideProperty : Property {
     static constexpr auto ID = LonghandId::MARKER_SIDE;
-    static inline Flags<Options> const FLAGS = {INHERITED, BULK_INHERITED};
+    static constexpr Flags<Options> FLAGS = {INHERITED, BULK_INHERITED};
 
     static Rc<Property> initial() {
         return makeRc<MarkerSideProperty>(Keywords::MATCH_SELF);
@@ -230,7 +230,7 @@ struct MarkerSideProperty : Property {
         return makeRc<MarkerSideProperty>(c.list->markerSide);
     }
 
-    static Res<Rc<Property>> parse(Cursor<Css::Sst>& c) {
+    static Res<Rc<Property>> parse(Cursor<Css::Sst>& c, ParsingMode) {
         auto value = try$(parseValue<MarkerSide>(c));
         return Ok(makeRc<MarkerSideProperty>(value));
     }
@@ -247,7 +247,7 @@ struct MarkerSideProperty : Property {
     MarkerSide _value;
 
     MarkerSideProperty(MarkerSide value)
-        : Property(registrationOf<MarkerSideProperty>()), _value(value) {}
+        : Property(ID), _value(value) {}
 
     void apply(ComputedValues const&, ComputedValues& c, [[maybe_unused]] ComputationContext const& cx) const override {
         c.list.cow().markerSide = _value;

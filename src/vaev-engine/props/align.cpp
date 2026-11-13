@@ -29,7 +29,7 @@ export struct AlignContentProperty : Property {
         return makeRc<AlignContentProperty>(c.aligns.alignContent);
     }
 
-    static Res<Rc<Property>> parse(Cursor<Css::Sst>& c) {
+    static Res<Rc<Property>> parse(Cursor<Css::Sst>& c, ParsingMode) {
         return Ok(makeRc<AlignContentProperty>(try$(parseValue<Align>(c))));
     }
 
@@ -40,7 +40,7 @@ export struct AlignContentProperty : Property {
     Align _value;
 
     AlignContentProperty(Align value)
-        : Property(registrationOf<AlignContentProperty>()), _value(value) {}
+        : Property(ID), _value(value) {}
 
     void apply([[maybe_unused]] ComputedValues const& parent, ComputedValues& c, [[maybe_unused]] ComputationContext const& cx) const override {
         c.aligns.alignContent = _value;
@@ -67,7 +67,7 @@ export struct JustifyContentProperty : Property {
         return makeRc<JustifyContentProperty>(c.aligns.justifyContent);
     }
 
-    static Res<Rc<Property>> parse(Cursor<Css::Sst>& c) {
+    static Res<Rc<Property>> parse(Cursor<Css::Sst>& c, ParsingMode) {
         return Ok(makeRc<JustifyContentProperty>(try$(parseValue<Align>(c))));
     }
 
@@ -78,7 +78,7 @@ export struct JustifyContentProperty : Property {
     Align _value;
 
     JustifyContentProperty(Align value)
-        : Property(registrationOf<JustifyContentProperty>()), _value(value) {}
+        : Property(ID), _value(value) {}
 
     void apply([[maybe_unused]] ComputedValues const& parent, ComputedValues& c, [[maybe_unused]] ComputationContext const& cx) const override {
         c.aligns.justifyContent = _value;
@@ -105,7 +105,7 @@ export struct JustifySelfProperty : Property {
         return makeRc<JustifySelfProperty>(c.aligns.justifySelf);
     }
 
-    static Res<Rc<Property>> parse(Cursor<Css::Sst>& c) {
+    static Res<Rc<Property>> parse(Cursor<Css::Sst>& c, ParsingMode) {
         return Ok(makeRc<JustifySelfProperty>(try$(parseValue<Align>(c))));
     }
 
@@ -116,7 +116,7 @@ export struct JustifySelfProperty : Property {
     Align _value;
 
     JustifySelfProperty(Align value)
-        : Property(registrationOf<JustifySelfProperty>()), _value(value) {}
+        : Property(ID), _value(value) {}
 
     void apply([[maybe_unused]] ComputedValues const& parent, ComputedValues& c, [[maybe_unused]] ComputationContext const& cx) const override {
         c.aligns.justifySelf = _value;
@@ -143,7 +143,7 @@ export struct AlignSelfProperty : Property {
         return makeRc<AlignSelfProperty>(c.aligns.alignSelf);
     }
 
-    static Res<Rc<Property>> parse(Cursor<Css::Sst>& c) {
+    static Res<Rc<Property>> parse(Cursor<Css::Sst>& c, ParsingMode) {
         return Ok(makeRc<AlignSelfProperty>(try$(parseValue<Align>(c))));
     }
 
@@ -154,7 +154,7 @@ export struct AlignSelfProperty : Property {
     Align _value;
 
     AlignSelfProperty(Align value)
-        : Property(registrationOf<AlignSelfProperty>()), _value(value) {}
+        : Property(ID), _value(value) {}
 
     void apply([[maybe_unused]] ComputedValues const& parent, ComputedValues& c, [[maybe_unused]] ComputationContext const& cx) const override {
         c.aligns.alignSelf = _value;
@@ -181,7 +181,7 @@ export struct JustifyItemsProperty : Property {
         return makeRc<JustifyItemsProperty>(c.aligns.justifyItems);
     }
 
-    static Res<Rc<Property>> parse(Cursor<Css::Sst>& c) {
+    static Res<Rc<Property>> parse(Cursor<Css::Sst>& c, ParsingMode) {
         return Ok(makeRc<JustifyItemsProperty>(try$(parseValue<Align>(c))));
     }
 
@@ -192,7 +192,7 @@ export struct JustifyItemsProperty : Property {
     Align _value;
 
     JustifyItemsProperty(Align value)
-        : Property(registrationOf<JustifyItemsProperty>()), _value(value) {}
+        : Property(ID), _value(value) {}
 
     void apply([[maybe_unused]] ComputedValues const& parent, ComputedValues& c, [[maybe_unused]] ComputationContext const& cx) const override {
         c.aligns.justifyItems = _value;
@@ -219,7 +219,7 @@ export struct AlignItemsProperty : Property {
         return makeRc<AlignItemsProperty>(c.aligns.alignItems);
     }
 
-    static Res<Rc<Property>> parse(Cursor<Css::Sst>& c) {
+    static Res<Rc<Property>> parse(Cursor<Css::Sst>& c, ParsingMode) {
         return Ok(makeRc<AlignItemsProperty>(try$(parseValue<Align>(c))));
     }
 
@@ -230,7 +230,7 @@ export struct AlignItemsProperty : Property {
     Align _value;
 
     AlignItemsProperty(Align value)
-        : Property(registrationOf<AlignItemsProperty>()), _value(value) {}
+        : Property(ID), _value(value) {}
 
     void apply([[maybe_unused]] ComputedValues const& parent, ComputedValues& c, [[maybe_unused]] ComputationContext const& cx) const override {
         c.aligns.alignItems = _value;
@@ -259,7 +259,7 @@ export struct RowGapProperty : Property {
         return makeRc<RowGapProperty>(c.gaps->row);
     }
 
-    static Res<Rc<Property>> parse(Cursor<Css::Sst>& c) {
+    static Res<Rc<Property>> parse(Cursor<Css::Sst>& c, ParsingMode) {
         return Ok(makeRc<RowGapProperty>(try$(parseValue<Gap>(c))));
     }
 
@@ -270,7 +270,7 @@ export struct RowGapProperty : Property {
     Gap _value;
 
     RowGapProperty(Gap value)
-        : Property(registrationOf<RowGapProperty>()), _value(value) {}
+        : Property(ID), _value(value) {}
 
     void apply([[maybe_unused]] ComputedValues const& parent, ComputedValues& c, [[maybe_unused]] ComputationContext const& cx) const override {
         c.gaps.cow().row = _value;
@@ -299,7 +299,7 @@ export struct ColumnGapProperty : Property {
         return makeRc<ColumnGapProperty>(c.gaps->col);
     }
 
-    static Res<Rc<Property>> parse(Cursor<Css::Sst>& c) {
+    static Res<Rc<Property>> parse(Cursor<Css::Sst>& c, ParsingMode) {
         return Ok(makeRc<ColumnGapProperty>(try$(parseValue<Gap>(c))));
     }
 
@@ -310,7 +310,7 @@ export struct ColumnGapProperty : Property {
     Gap _value;
 
     ColumnGapProperty(Gap value)
-        : Property(registrationOf<ColumnGapProperty>()), _value(value) {}
+        : Property(ID), _value(value) {}
 
     void apply([[maybe_unused]] ComputedValues const& parent, ComputedValues& c, [[maybe_unused]] ComputationContext const& cx) const override {
         c.gaps.cow().col = _value;

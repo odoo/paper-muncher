@@ -27,7 +27,7 @@ export struct OutlineWidthProperty : Property {
         return makeRc<OutlineWidthProperty>(c.outline->width);
     }
 
-    static Res<Rc<Property>> parse(Cursor<Css::Sst>& c) {
+    static Res<Rc<Property>> parse(Cursor<Css::Sst>& c, ParsingMode) {
         return Ok(makeRc<OutlineWidthProperty>(try$(parseValue<LineWidth>(c))));
     }
 
@@ -38,7 +38,7 @@ export struct OutlineWidthProperty : Property {
     LineWidth _value;
 
     OutlineWidthProperty(LineWidth value)
-        : Property(registrationOf<OutlineWidthProperty>()), _value(value) {}
+        : Property(ID), _value(value) {}
 
     void apply([[maybe_unused]] ComputedValues const& parent, ComputedValues& c, [[maybe_unused]] ComputationContext const& cx) const override {
         c.outline.cow().width = _value;
@@ -67,7 +67,7 @@ export struct OutlineStyleProperty : Property {
         return makeRc<OutlineStyleProperty>(c.outline->style);
     }
 
-    static Res<Rc<Property>> parse(Cursor<Css::Sst>& c) {
+    static Res<Rc<Property>> parse(Cursor<Css::Sst>& c, ParsingMode) {
         return Ok(makeRc<OutlineStyleProperty>(try$(parseValue<Value>(c))));
     }
 
@@ -78,7 +78,7 @@ export struct OutlineStyleProperty : Property {
     Value _value;
 
     OutlineStyleProperty(Value value)
-        : Property(registrationOf<OutlineStyleProperty>()), _value(value) {}
+        : Property(ID), _value(value) {}
 
     void apply([[maybe_unused]] ComputedValues const& parent, ComputedValues& c, [[maybe_unused]] ComputationContext const& cx) const override {
         c.outline.cow().style = _value;
@@ -109,7 +109,7 @@ export struct OutlineColorProperty : Property {
         return makeRc<OutlineColorProperty>(Color{c.outline->color});
     }
 
-    static Res<Rc<Property>> parse(Cursor<Css::Sst>& c) {
+    static Res<Rc<Property>> parse(Cursor<Css::Sst>& c, ParsingMode) {
         return Ok(makeRc<OutlineColorProperty>(try$(parseValue<Value>(c))));
     }
 
@@ -120,7 +120,7 @@ export struct OutlineColorProperty : Property {
     Value _value;
 
     OutlineColorProperty(Value value)
-        : Property(registrationOf<OutlineColorProperty>()), _value(value) {}
+        : Property(ID), _value(value) {}
 
     void apply([[maybe_unused]] ComputedValues const& parent, ComputedValues& c, [[maybe_unused]] ComputationContext const& cx) const override {
         c.outline.cow().color = _value.visit(
@@ -159,7 +159,7 @@ export struct OutlineOffsetProperty : Property {
         return makeRc<OutlineOffsetProperty>(c.outline->offset);
     }
 
-    static Res<Rc<Property>> parse(Cursor<Css::Sst>& c) {
+    static Res<Rc<Property>> parse(Cursor<Css::Sst>& c, ParsingMode) {
         return Ok(makeRc<OutlineOffsetProperty>(try$(parseValue<Calc<Length>>(c))));
     }
 
@@ -170,7 +170,7 @@ export struct OutlineOffsetProperty : Property {
     Calc<Length> _value;
 
     OutlineOffsetProperty(Calc<Length> value)
-        : Property(registrationOf<OutlineOffsetProperty>()), _value(value) {}
+        : Property(ID), _value(value) {}
 
     void apply([[maybe_unused]] ComputedValues const& parent, ComputedValues& c, [[maybe_unused]] ComputationContext const& cx) const override {
         c.outline.cow().offset = _value;

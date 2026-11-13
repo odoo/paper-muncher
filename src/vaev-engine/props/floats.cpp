@@ -26,7 +26,7 @@ export struct FloatProperty : Property {
         return makeRc<FloatProperty>(c.float_);
     }
 
-    static Res<Rc<Property>> parse(Cursor<Css::Sst>& c) {
+    static Res<Rc<Property>> parse(Cursor<Css::Sst>& c, ParsingMode) {
         return Ok(makeRc<FloatProperty>(try$(parseValue<Float>(c))));
     }
 
@@ -37,7 +37,7 @@ export struct FloatProperty : Property {
     Float _value;
 
     FloatProperty(Float value)
-        : Property(registrationOf<FloatProperty>()), _value(value) {}
+        : Property(ID), _value(value) {}
 
     void apply([[maybe_unused]] ComputedValues const& parent, ComputedValues& c, [[maybe_unused]] ComputationContext const& cx) const override {
         c.float_ = _value;
@@ -63,7 +63,7 @@ export struct ClearProperty : Property {
         return makeRc<ClearProperty>(c.clear);
     }
 
-    static Res<Rc<Property>> parse(Cursor<Css::Sst>& c) {
+    static Res<Rc<Property>> parse(Cursor<Css::Sst>& c, ParsingMode) {
         return Ok(makeRc<ClearProperty>(try$(parseValue<Clear>(c))));
     }
 
@@ -74,7 +74,7 @@ export struct ClearProperty : Property {
     Clear _value;
 
     ClearProperty(Clear value)
-        : Property(registrationOf<ClearProperty>()), _value(value) {}
+        : Property(ID), _value(value) {}
 
     void apply([[maybe_unused]] ComputedValues const& parent, ComputedValues& c, [[maybe_unused]] ComputationContext const& cx) const override {
         c.clear = _value;

@@ -16,7 +16,7 @@ namespace Vaev::Style {
 // https://drafts.csswg.org/css-writing-modes-4/#propdef-writing-mode
 export struct WritingModeProperty : Property {
     static constexpr auto ID = LonghandId::WRITING_MODE;
-    static inline Flags<Options> const FLAGS = {INHERITED};
+    static constexpr Flags<Options> FLAGS = {INHERITED};
 
     static Rc<Property> initial() {
         return makeRc<WritingModeProperty>(Keywords::HORIZONTAL_TB);
@@ -26,7 +26,7 @@ export struct WritingModeProperty : Property {
         return makeRc<WritingModeProperty>(c.writingMode);
     }
 
-    static Res<Rc<Property>> parse(Cursor<Css::Sst>& c) {
+    static Res<Rc<Property>> parse(Cursor<Css::Sst>& c, ParsingMode) {
         return Ok(makeRc<WritingModeProperty>(try$(parseValue<WritingMode>(c))));
     }
 
@@ -42,7 +42,7 @@ export struct WritingModeProperty : Property {
     WritingMode _value;
 
     WritingModeProperty(WritingMode value)
-        : Property(registrationOf<WritingModeProperty>()), _value(value) {}
+        : Property(ID), _value(value) {}
 
     void apply([[maybe_unused]] ComputedValues const& parent, ComputedValues& c, [[maybe_unused]] ComputationContext const& cx) const override {
         c.writingMode = _value;
@@ -60,7 +60,7 @@ export struct WritingModeProperty : Property {
 // https://drafts.csswg.org/css-writing-modes-4/#propdef-direction
 export struct DirectionProperty : Property {
     static constexpr auto ID = LonghandId::DIRECTION;
-    static inline Flags<Options> const FLAGS = {INHERITED, ALL_EXCLUDED};
+    static constexpr Flags<Options> FLAGS = {INHERITED, ALL_EXCLUDED};
 
     static Rc<Property> initial() {
         return makeRc<DirectionProperty>(Keywords::LTR);
@@ -70,7 +70,7 @@ export struct DirectionProperty : Property {
         return makeRc<DirectionProperty>(c.direction);
     }
 
-    static Res<Rc<Property>> parse(Cursor<Css::Sst>& c) {
+    static Res<Rc<Property>> parse(Cursor<Css::Sst>& c, ParsingMode) {
         return Ok(makeRc<DirectionProperty>(try$(parseValue<Direction>(c))));
     }
 
@@ -86,7 +86,7 @@ export struct DirectionProperty : Property {
     Direction _value;
 
     DirectionProperty(Direction value)
-        : Property(registrationOf<DirectionProperty>()), _value(value) {}
+        : Property(ID), _value(value) {}
 
     void apply([[maybe_unused]] ComputedValues const& parent, ComputedValues& c, [[maybe_unused]] ComputationContext const& cx) const override {
         c.direction = _value;

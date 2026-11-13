@@ -16,7 +16,7 @@ namespace Vaev::Style {
 // https://drafts.csswg.org/css-inline/#line-height-property
 export struct LineHeightProperty : Property {
     static constexpr auto ID = LonghandId::LINE_HEIGHT;
-    static inline Flags<Options> const FLAGS = {INHERITED};
+    static constexpr Flags<Options> FLAGS = {INHERITED};
 
     static Rc<Property> initial() {
         return makeRc<LineHeightProperty>(Keywords::NORMAL);
@@ -26,7 +26,7 @@ export struct LineHeightProperty : Property {
         return makeRc<LineHeightProperty>(c.inline_->lineHeight);
     }
 
-    static Res<Rc<Property>> parse(Cursor<Css::Sst>& c) {
+    static Res<Rc<Property>> parse(Cursor<Css::Sst>& c, ParsingMode) {
         return Ok(makeRc<LineHeightProperty>(try$(parseValue<LineHeight>(c))));
     }
 
@@ -42,7 +42,7 @@ export struct LineHeightProperty : Property {
     LineHeight _value;
 
     LineHeightProperty(LineHeight value)
-        : Property(registrationOf<LineHeightProperty>()), _value(value) {}
+        : Property(ID), _value(value) {}
 
     void apply([[maybe_unused]] ComputedValues const& parent, ComputedValues& c, [[maybe_unused]] ComputationContext const& cx) const override {
         c.inline_.cow().lineHeight = _value;
@@ -69,7 +69,7 @@ export struct DominantBaselineProperty : Property {
         return makeRc<DominantBaselineProperty>(c.inline_->dominantBaseline);
     }
 
-    static Res<Rc<Property>> parse(Cursor<Css::Sst>& c) {
+    static Res<Rc<Property>> parse(Cursor<Css::Sst>& c, ParsingMode) {
         return Ok(makeRc<DominantBaselineProperty>(try$(parseValue<DominantBaseline>(c))));
     }
 
@@ -80,7 +80,7 @@ export struct DominantBaselineProperty : Property {
     DominantBaseline _value;
 
     DominantBaselineProperty(DominantBaseline value)
-        : Property(registrationOf<DominantBaselineProperty>()), _value(value) {}
+        : Property(ID), _value(value) {}
 
     void apply([[maybe_unused]] ComputedValues const& parent, ComputedValues& c, [[maybe_unused]] ComputationContext const& cx) const override {
         c.inline_.cow().dominantBaseline = _value;
@@ -107,7 +107,7 @@ export struct BaselineSourceProperty : Property {
         return makeRc<BaselineSourceProperty>(c.inline_->baselineSource);
     }
 
-    static Res<Rc<Property>> parse(Cursor<Css::Sst>& c) {
+    static Res<Rc<Property>> parse(Cursor<Css::Sst>& c, ParsingMode) {
         return Ok(makeRc<BaselineSourceProperty>(try$(parseValue<BaselineSource>(c))));
     }
 
@@ -118,7 +118,7 @@ export struct BaselineSourceProperty : Property {
     BaselineSource _value;
 
     BaselineSourceProperty(BaselineSource value)
-        : Property(registrationOf<BaselineSourceProperty>()), _value(value) {}
+        : Property(ID), _value(value) {}
 
     void apply([[maybe_unused]] ComputedValues const& parent, ComputedValues& c, [[maybe_unused]] ComputationContext const& cx) const override {
         c.inline_.cow().baselineSource = _value;
@@ -145,7 +145,7 @@ export struct AlignmentBaselineProperty : Property {
         return makeRc<AlignmentBaselineProperty>(c.inline_->alignmentBaseline);
     }
 
-    static Res<Rc<Property>> parse(Cursor<Css::Sst>& c) {
+    static Res<Rc<Property>> parse(Cursor<Css::Sst>& c, ParsingMode) {
         return Ok(makeRc<AlignmentBaselineProperty>(try$(parseValue<AlignmentBaseline>(c))));
     }
 
@@ -156,7 +156,7 @@ export struct AlignmentBaselineProperty : Property {
     AlignmentBaseline _value;
 
     AlignmentBaselineProperty(AlignmentBaseline value)
-        : Property(registrationOf<AlignmentBaselineProperty>()), _value(value) {}
+        : Property(ID), _value(value) {}
 
     void apply([[maybe_unused]] ComputedValues const& parent, ComputedValues& c, [[maybe_unused]] ComputationContext const& cx) const override {
         c.inline_.cow().alignmentBaseline = _value;
@@ -183,7 +183,7 @@ export struct BaselineShiftProperty : Property {
         return makeRc<BaselineShiftProperty>(c.inline_->baselineShift);
     }
 
-    static Res<Rc<Property>> parse(Cursor<Css::Sst>& c) {
+    static Res<Rc<Property>> parse(Cursor<Css::Sst>& c, ParsingMode) {
         return Ok(makeRc<BaselineShiftProperty>(try$(parseValue<BaselineShift>(c))));
     }
 
@@ -194,7 +194,7 @@ export struct BaselineShiftProperty : Property {
     BaselineShift _value;
 
     BaselineShiftProperty(BaselineShift value)
-        : Property(registrationOf<BaselineShiftProperty>()), _value(value) {}
+        : Property(ID), _value(value) {}
 
     void apply([[maybe_unused]] ComputedValues const& parent, ComputedValues& c, [[maybe_unused]] ComputationContext const& cx) const override {
         c.inline_.cow().baselineShift = _value;

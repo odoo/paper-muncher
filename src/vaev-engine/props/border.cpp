@@ -27,7 +27,7 @@ export struct BorderTopColorProperty : Property {
         return makeRc<BorderTopColorProperty>(c.borders->top.color);
     }
 
-    static Res<Rc<Property>> parse(Cursor<Css::Sst>& c) {
+    static Res<Rc<Property>> parse(Cursor<Css::Sst>& c, ParsingMode) {
         return Ok(makeRc<BorderTopColorProperty>(try$(parseValue<Color>(c))));
     }
 
@@ -38,7 +38,7 @@ export struct BorderTopColorProperty : Property {
     Color _value;
 
     BorderTopColorProperty(Color value)
-        : Property(registrationOf<BorderTopColorProperty>()), _value(value) {}
+        : Property(ID), _value(value) {}
 
     void apply([[maybe_unused]] ComputedValues const& parent, ComputedValues& c, [[maybe_unused]] ComputationContext const& cx) const override {
         c.borders.cow().top.color = _value;
@@ -65,7 +65,7 @@ export struct BorderRightColorProperty : Property {
         return makeRc<BorderRightColorProperty>(c.borders->end.color);
     }
 
-    static Res<Rc<Property>> parse(Cursor<Css::Sst>& c) {
+    static Res<Rc<Property>> parse(Cursor<Css::Sst>& c, ParsingMode) {
         return Ok(makeRc<BorderRightColorProperty>(try$(parseValue<Color>(c))));
     }
 
@@ -76,7 +76,7 @@ export struct BorderRightColorProperty : Property {
     Color _value;
 
     BorderRightColorProperty(Color value)
-        : Property(registrationOf<BorderRightColorProperty>()), _value(value) {}
+        : Property(ID), _value(value) {}
 
     void apply([[maybe_unused]] ComputedValues const& parent, ComputedValues& c, [[maybe_unused]] ComputationContext const& cx) const override {
         c.borders.cow().end.color = _value;
@@ -103,7 +103,7 @@ export struct BorderBottomColorProperty : Property {
         return makeRc<BorderBottomColorProperty>(c.borders->bottom.color);
     }
 
-    static Res<Rc<Property>> parse(Cursor<Css::Sst>& c) {
+    static Res<Rc<Property>> parse(Cursor<Css::Sst>& c, ParsingMode) {
         return Ok(makeRc<BorderBottomColorProperty>(try$(parseValue<Color>(c))));
     }
 
@@ -114,7 +114,7 @@ export struct BorderBottomColorProperty : Property {
     Color _value;
 
     BorderBottomColorProperty(Color value)
-        : Property(registrationOf<BorderBottomColorProperty>()), _value(value) {}
+        : Property(ID), _value(value) {}
 
     void apply([[maybe_unused]] ComputedValues const& parent, ComputedValues& c, [[maybe_unused]] ComputationContext const& cx) const override {
         c.borders.cow().bottom.color = _value;
@@ -141,7 +141,7 @@ export struct BorderLeftColorProperty : Property {
         return makeRc<BorderLeftColorProperty>(c.borders->start.color);
     }
 
-    static Res<Rc<Property>> parse(Cursor<Css::Sst>& c) {
+    static Res<Rc<Property>> parse(Cursor<Css::Sst>& c, ParsingMode) {
         return Ok(makeRc<BorderLeftColorProperty>(try$(parseValue<Color>(c))));
     }
 
@@ -152,7 +152,7 @@ export struct BorderLeftColorProperty : Property {
     Color _value;
 
     BorderLeftColorProperty(Color value)
-        : Property(registrationOf<BorderLeftColorProperty>()), _value(value) {}
+        : Property(ID), _value(value) {}
 
     void apply([[maybe_unused]] ComputedValues const& parent, ComputedValues& c, [[maybe_unused]] ComputationContext const& cx) const override {
         c.borders.cow().start.color = _value;
@@ -225,7 +225,7 @@ export struct BorderLeftStyleProperty : Property {
         return makeRc<BorderLeftStyleProperty>(c.borders->start.style);
     }
 
-    static Res<Rc<Property>> parse(Cursor<Css::Sst>& c) {
+    static Res<Rc<Property>> parse(Cursor<Css::Sst>& c, ParsingMode) {
         return Ok(makeRc<BorderLeftStyleProperty>(try$(parseValue<Gfx::BorderStyle>(c))));
     }
 
@@ -236,7 +236,7 @@ export struct BorderLeftStyleProperty : Property {
     Gfx::BorderStyle _value;
 
     BorderLeftStyleProperty(Gfx::BorderStyle value)
-        : Property(registrationOf<BorderLeftStyleProperty>()), _value(value) {}
+        : Property(ID), _value(value) {}
 
     void apply([[maybe_unused]] ComputedValues const& parent, ComputedValues& c, [[maybe_unused]] ComputationContext const& cx) const override {
         c.borders.cow().start.style = _value;
@@ -263,7 +263,7 @@ export struct BorderTopStyleProperty : Property {
         return makeRc<BorderTopStyleProperty>(c.borders->top.style);
     }
 
-    static Res<Rc<Property>> parse(Cursor<Css::Sst>& c) {
+    static Res<Rc<Property>> parse(Cursor<Css::Sst>& c, ParsingMode) {
         return Ok(makeRc<BorderTopStyleProperty>(try$(parseValue<Gfx::BorderStyle>(c))));
     }
 
@@ -274,7 +274,7 @@ export struct BorderTopStyleProperty : Property {
     Gfx::BorderStyle _value;
 
     BorderTopStyleProperty(Gfx::BorderStyle value)
-        : Property(registrationOf<BorderTopStyleProperty>()), _value(value) {}
+        : Property(ID), _value(value) {}
 
     void apply([[maybe_unused]] ComputedValues const& parent, ComputedValues& c, [[maybe_unused]] ComputationContext const& cx) const override {
         c.borders.cow().top.style = _value;
@@ -301,7 +301,7 @@ export struct BorderRightStyleProperty : Property {
         return makeRc<BorderRightStyleProperty>(c.borders->end.style);
     }
 
-    static Res<Rc<Property>> parse(Cursor<Css::Sst>& c) {
+    static Res<Rc<Property>> parse(Cursor<Css::Sst>& c, ParsingMode) {
         return Ok(makeRc<BorderRightStyleProperty>(try$(parseValue<Gfx::BorderStyle>(c))));
     }
 
@@ -312,7 +312,7 @@ export struct BorderRightStyleProperty : Property {
     Gfx::BorderStyle _value;
 
     BorderRightStyleProperty(Gfx::BorderStyle value)
-        : Property(registrationOf<BorderRightStyleProperty>()), _value(value) {}
+        : Property(ID), _value(value) {}
 
     void apply([[maybe_unused]] ComputedValues const& parent, ComputedValues& c, [[maybe_unused]] ComputationContext const& cx) const override {
         c.borders.cow().end.style = _value;
@@ -339,7 +339,7 @@ export struct BorderBottomStyleProperty : Property {
         return makeRc<BorderBottomStyleProperty>(c.borders->bottom.style);
     }
 
-    static Res<Rc<Property>> parse(Cursor<Css::Sst>& c) {
+    static Res<Rc<Property>> parse(Cursor<Css::Sst>& c, ParsingMode) {
         return Ok(makeRc<BorderBottomStyleProperty>(try$(parseValue<Gfx::BorderStyle>(c))));
     }
 
@@ -350,7 +350,7 @@ export struct BorderBottomStyleProperty : Property {
     Gfx::BorderStyle _value;
 
     BorderBottomStyleProperty(Gfx::BorderStyle value)
-        : Property(registrationOf<BorderBottomStyleProperty>()), _value(value) {}
+        : Property(ID), _value(value) {}
 
     void apply([[maybe_unused]] ComputedValues const& parent, ComputedValues& c, [[maybe_unused]] ComputationContext const& cx) const override {
         c.borders.cow().bottom.style = _value;
@@ -424,7 +424,7 @@ export struct BorderTopWidthProperty : Property {
         return makeRc<BorderTopWidthProperty>(c.borders->top.width);
     }
 
-    static Res<Rc<Property>> parse(Cursor<Css::Sst>& c) {
+    static Res<Rc<Property>> parse(Cursor<Css::Sst>& c, ParsingMode) {
         return Ok(makeRc<BorderTopWidthProperty>(try$(parseValue<LineWidth>(c))));
     }
 
@@ -435,7 +435,7 @@ export struct BorderTopWidthProperty : Property {
     LineWidth _value;
 
     BorderTopWidthProperty(LineWidth value)
-        : Property(registrationOf<BorderTopWidthProperty>()), _value(value) {}
+        : Property(ID), _value(value) {}
 
     void apply([[maybe_unused]] ComputedValues const& parent, ComputedValues& c, [[maybe_unused]] ComputationContext const& cx) const override {
         c.borders.cow().top.width = _value;
@@ -462,7 +462,7 @@ export struct BorderRightWidthProperty : Property {
         return makeRc<BorderRightWidthProperty>(c.borders->end.width);
     }
 
-    static Res<Rc<Property>> parse(Cursor<Css::Sst>& c) {
+    static Res<Rc<Property>> parse(Cursor<Css::Sst>& c, ParsingMode) {
         return Ok(makeRc<BorderRightWidthProperty>(try$(parseValue<LineWidth>(c))));
     }
 
@@ -473,7 +473,7 @@ export struct BorderRightWidthProperty : Property {
     LineWidth _value;
 
     BorderRightWidthProperty(LineWidth value)
-        : Property(registrationOf<BorderRightWidthProperty>()), _value(value) {}
+        : Property(ID), _value(value) {}
 
     void apply([[maybe_unused]] ComputedValues const& parent, ComputedValues& c, [[maybe_unused]] ComputationContext const& cx) const override {
         c.borders.cow().end.width = _value;
@@ -500,7 +500,7 @@ export struct BorderBottomWidthProperty : Property {
         return makeRc<BorderBottomWidthProperty>(c.borders->bottom.width);
     }
 
-    static Res<Rc<Property>> parse(Cursor<Css::Sst>& c) {
+    static Res<Rc<Property>> parse(Cursor<Css::Sst>& c, ParsingMode) {
         return Ok(makeRc<BorderBottomWidthProperty>(try$(parseValue<Calc<Length>>(c))));
     }
 
@@ -511,7 +511,7 @@ export struct BorderBottomWidthProperty : Property {
     LineWidth _value;
 
     BorderBottomWidthProperty(LineWidth value)
-        : Property(registrationOf<BorderBottomWidthProperty>()), _value(value) {}
+        : Property(ID), _value(value) {}
 
     void apply([[maybe_unused]] ComputedValues const& parent, ComputedValues& c, [[maybe_unused]] ComputationContext const& cx) const override {
         c.borders.cow().bottom.width = _value;
@@ -538,7 +538,7 @@ export struct BorderLeftWidthProperty : Property {
         return makeRc<BorderLeftWidthProperty>(c.borders->start.width);
     }
 
-    static Res<Rc<Property>> parse(Cursor<Css::Sst>& c) {
+    static Res<Rc<Property>> parse(Cursor<Css::Sst>& c, ParsingMode) {
         return Ok(makeRc<BorderLeftWidthProperty>(try$(parseValue<LineWidth>(c))));
     }
 
@@ -549,7 +549,7 @@ export struct BorderLeftWidthProperty : Property {
     LineWidth _value;
 
     BorderLeftWidthProperty(LineWidth value)
-        : Property(registrationOf<BorderLeftWidthProperty>()), _value(value) {}
+        : Property(ID), _value(value) {}
 
     void apply([[maybe_unused]] ComputedValues const& parent, ComputedValues& c, [[maybe_unused]] ComputationContext const& cx) const override {
         c.borders.cow().start.width = _value;
@@ -579,7 +579,7 @@ export struct BorderTopRightRadiusProperty : Property {
                                                             });
     }
 
-    static Res<Rc<Property>> parse(Cursor<Css::Sst>& c) {
+    static Res<Rc<Property>> parse(Cursor<Css::Sst>& c, ParsingMode) {
         auto first = try$(parseValue<Calc<PercentOr<Length>>>(c));
         Array value{first, first};
         if (not c.ended())
@@ -594,7 +594,7 @@ export struct BorderTopRightRadiusProperty : Property {
     Array<Calc<PercentOr<Length>>, 2> _value;
 
     BorderTopRightRadiusProperty(Array<Calc<PercentOr<Length>>, 2> value)
-        : Property(registrationOf<BorderTopRightRadiusProperty>()), _value(value) {}
+        : Property(ID), _value(value) {}
 
     void apply([[maybe_unused]] ComputedValues const& parent, ComputedValues& c, [[maybe_unused]] ComputationContext const& cx) const override {
         c.borders.cow().radii.c = _value[0];
@@ -626,7 +626,7 @@ export struct BorderTopLeftRadiusProperty : Property {
         );
     }
 
-    static Res<Rc<Property>> parse(Cursor<Css::Sst>& c) {
+    static Res<Rc<Property>> parse(Cursor<Css::Sst>& c, ParsingMode) {
         auto first = try$(parseValue<Calc<PercentOr<Length>>>(c));
         Array value{first, first};
         if (not c.ended())
@@ -641,7 +641,7 @@ export struct BorderTopLeftRadiusProperty : Property {
     Array<Calc<PercentOr<Length>>, 2> _value;
 
     BorderTopLeftRadiusProperty(Array<Calc<PercentOr<Length>>, 2> value)
-        : Property(registrationOf<BorderTopLeftRadiusProperty>()), _value(value) {}
+        : Property(ID), _value(value) {}
 
     void apply([[maybe_unused]] ComputedValues const& parent, ComputedValues& c, [[maybe_unused]] ComputationContext const& cx) const override {
         c.borders.cow().radii.a = _value[1];
@@ -672,7 +672,7 @@ export struct BorderBottomRightRadiusProperty : Property {
                                                                });
     }
 
-    static Res<Rc<Property>> parse(Cursor<Css::Sst>& c) {
+    static Res<Rc<Property>> parse(Cursor<Css::Sst>& c, ParsingMode) {
         auto first = try$(parseValue<Calc<PercentOr<Length>>>(c));
         Array value{first, first};
         if (not c.ended())
@@ -687,7 +687,7 @@ export struct BorderBottomRightRadiusProperty : Property {
     Array<Calc<PercentOr<Length>>, 2> _value;
 
     BorderBottomRightRadiusProperty(Array<Calc<PercentOr<Length>>, 2> value)
-        : Property(registrationOf<BorderBottomRightRadiusProperty>()), _value(value) {}
+        : Property(ID), _value(value) {}
 
     void apply([[maybe_unused]] ComputedValues const& parent, ComputedValues& c, [[maybe_unused]] ComputationContext const& cx) const override {
         c.borders.cow().radii.e = _value[1];
@@ -719,7 +719,7 @@ export struct BorderBottomLeftRadiusProperty : Property {
         );
     }
 
-    static Res<Rc<Property>> parse(Cursor<Css::Sst>& c) {
+    static Res<Rc<Property>> parse(Cursor<Css::Sst>& c, ParsingMode) {
         auto first = try$(parseValue<Calc<PercentOr<Length>>>(c));
         Array value{first, first};
         if (not c.ended())
@@ -734,7 +734,7 @@ export struct BorderBottomLeftRadiusProperty : Property {
     Array<Calc<PercentOr<Length>>, 2> _value;
 
     BorderBottomLeftRadiusProperty(Array<Calc<PercentOr<Length>>, 2> value)
-        : Property(registrationOf<BorderBottomLeftRadiusProperty>()), _value(value) {}
+        : Property(ID), _value(value) {}
 
     void apply([[maybe_unused]] ComputedValues const& parent, ComputedValues& c, [[maybe_unused]] ComputationContext const& cx) const override {
         c.borders.cow().radii.g = _value[0];
@@ -1062,7 +1062,7 @@ export struct BorderBottomLeftRadiusProperty : Property {
 // https://www.w3.org/TR/CSS22/tables.html#propdef-border-collapse
 export struct BorderCollapseProperty : Property {
     static constexpr auto ID = LonghandId::BORDER_COLLAPSE;
-    static inline Flags<Options> const FLAGS = {INHERITED, BULK_INHERITED};
+    static constexpr Flags<Options> FLAGS = {INHERITED, BULK_INHERITED};
 
     static Rc<Property> initial() {
         return makeRc<BorderCollapseProperty>(BorderCollapse::SEPARATE);
@@ -1072,7 +1072,7 @@ export struct BorderCollapseProperty : Property {
         return makeRc<BorderCollapseProperty>(c.table->collapse);
     }
 
-    static Res<Rc<Property>> parse(Cursor<Css::Sst>& c) {
+    static Res<Rc<Property>> parse(Cursor<Css::Sst>& c, ParsingMode) {
         return Ok(makeRc<BorderCollapseProperty>(try$(parseValue<BorderCollapse>(c))));
     }
 
@@ -1084,7 +1084,7 @@ export struct BorderCollapseProperty : Property {
     BorderCollapse _value;
 
     BorderCollapseProperty(BorderCollapse value)
-        : Property(registrationOf<BorderCollapseProperty>()), _value(value) {}
+        : Property(ID), _value(value) {}
 
     void apply([[maybe_unused]] ComputedValues const& parent, ComputedValues& c, [[maybe_unused]] ComputationContext const& cx) const override {
         c.table.cow().collapse = _value;
@@ -1102,7 +1102,7 @@ export struct BorderCollapseProperty : Property {
 // https://www.w3.org/TR/CSS22/tables.html#propdef-border-spacing
 export struct BorderSpacingProperty : Property {
     static constexpr auto ID = LonghandId::BORDER_SPACING;
-    static inline Flags<Options> const FLAGS = {INHERITED, BULK_INHERITED};
+    static constexpr Flags<Options> FLAGS = {INHERITED, BULK_INHERITED};
 
     static Rc<Property> initial() {
         return makeRc<BorderSpacingProperty>(BorderSpacing{0_au, 0_au});
@@ -1112,7 +1112,7 @@ export struct BorderSpacingProperty : Property {
         return makeRc<BorderSpacingProperty>(c.table->spacing);
     }
 
-    static Res<Rc<Property>> parse(Cursor<Css::Sst>& c) {
+    static Res<Rc<Property>> parse(Cursor<Css::Sst>& c, ParsingMode) {
         return Ok(makeRc<BorderSpacingProperty>(try$(parseValue<BorderSpacing>(c))));
     }
 
@@ -1124,7 +1124,7 @@ export struct BorderSpacingProperty : Property {
     BorderSpacing _value;
 
     BorderSpacingProperty(BorderSpacing value)
-        : Property(registrationOf<BorderSpacingProperty>()), _value(value) {}
+        : Property(ID), _value(value) {}
 
     void apply([[maybe_unused]] ComputedValues const& parent, ComputedValues& c, [[maybe_unused]] ComputationContext const& cx) const override {
         c.table.cow().spacing = _value;

@@ -20,7 +20,7 @@ namespace Vaev::Style {
 // https://www.w3.org/TR/css-fonts-4/#font-family-prop
 export struct FontFamilyProperty : Property {
     static constexpr auto ID = LonghandId::FONT_FAMILY;
-    static inline Flags<Options> const FLAGS = {INHERITED, BULK_INHERITED};
+    static constexpr Flags<Options> FLAGS = {INHERITED, BULK_INHERITED};
     static constexpr auto PHASE = ComputationPhase::FONT;
 
     static Rc<Property> initial() {
@@ -31,7 +31,7 @@ export struct FontFamilyProperty : Property {
         return makeRc<FontFamilyProperty>(c.font->families);
     }
 
-    static Res<Rc<Property>> parse(Cursor<Css::Sst>& c) {
+    static Res<Rc<Property>> parse(Cursor<Css::Sst>& c, ParsingMode) {
         Vec<FontFamily> value{};
         eatWhitespace(c);
         while (not c.ended()) {
@@ -56,7 +56,7 @@ export struct FontFamilyProperty : Property {
     Vec<FontFamily> _value;
 
     FontFamilyProperty(Vec<FontFamily> value)
-        : Property(registrationOf<FontFamilyProperty>()), _value(std::move(value)) {}
+        : Property(ID), _value(std::move(value)) {}
 
     void apply([[maybe_unused]] ComputedValues const& parent, ComputedValues& c, [[maybe_unused]] ComputationContext const& cx) const override {
         c.font.cow().families = _value;
@@ -86,7 +86,7 @@ export struct FontFamilyProperty : Property {
 // https://www.w3.org/TR/css-fonts-4/#font-weight-prop
 export struct FontWeightProperty : Property {
     static constexpr auto ID = LonghandId::FONT_WEIGHT;
-    static inline Flags<Options> const FLAGS = {INHERITED, BULK_INHERITED};
+    static constexpr Flags<Options> FLAGS = {INHERITED, BULK_INHERITED};
     static constexpr auto PHASE = ComputationPhase::FONT;
 
     static Rc<Property> initial() {
@@ -97,7 +97,7 @@ export struct FontWeightProperty : Property {
         return makeRc<FontWeightProperty>(c.font->weight);
     }
 
-    static Res<Rc<Property>> parse(Cursor<Css::Sst>& c) {
+    static Res<Rc<Property>> parse(Cursor<Css::Sst>& c, ParsingMode) {
         return Ok(makeRc<FontWeightProperty>(try$(parseValue<FontWeight>(c))));
     }
 
@@ -113,7 +113,7 @@ export struct FontWeightProperty : Property {
     FontWeight _value;
 
     FontWeightProperty(FontWeight value)
-        : Property(registrationOf<FontWeightProperty>()), _value(value) {}
+        : Property(ID), _value(value) {}
 
     void apply(ComputedValues const& parent, ComputedValues& c, [[maybe_unused]] ComputationContext const& cx) const override {
         c.font.cow().weight = _value.resolve(parent.font->weight);
@@ -131,7 +131,7 @@ export struct FontWeightProperty : Property {
 // https://www.w3.org/TR/css-fonts-4/#font-width-prop
 export struct FontWidthProperty : Property {
     static constexpr auto ID = LonghandId::FONT_WIDTH;
-    static inline Flags<Options> const FLAGS = {INHERITED, BULK_INHERITED};
+    static constexpr Flags<Options> FLAGS = {INHERITED, BULK_INHERITED};
     // https://drafts.csswg.org/css-fonts/#font-stretch-prop
     static constexpr Array LEGACY_NAME_ALIASES = {"font-stretch"s};
     static constexpr auto PHASE = ComputationPhase::FONT;
@@ -144,7 +144,7 @@ export struct FontWidthProperty : Property {
         return makeRc<FontWidthProperty>(c.font->width);
     }
 
-    static Res<Rc<Property>> parse(Cursor<Css::Sst>& c) {
+    static Res<Rc<Property>> parse(Cursor<Css::Sst>& c, ParsingMode) {
         return Ok(makeRc<FontWidthProperty>(try$(parseValue<FontWidth>(c))));
     }
 
@@ -160,7 +160,7 @@ export struct FontWidthProperty : Property {
     FontWidth _value;
 
     FontWidthProperty(FontWidth value)
-        : Property(registrationOf<FontWidthProperty>()), _value(value) {}
+        : Property(ID), _value(value) {}
 
     void apply([[maybe_unused]] ComputedValues const& parent, ComputedValues& c, [[maybe_unused]] ComputationContext const& cx) const override {
         c.font.cow().width = _value;
@@ -178,7 +178,7 @@ export struct FontWidthProperty : Property {
 // https://www.w3.org/TR/css-fonts-4/#font-style-prop
 export struct FontStyleProperty : Property {
     static constexpr auto ID = LonghandId::FONT_STYLE;
-    static inline Flags<Options> const FLAGS = {INHERITED, BULK_INHERITED};
+    static constexpr Flags<Options> FLAGS = {INHERITED, BULK_INHERITED};
     static constexpr auto PHASE = ComputationPhase::FONT;
 
     static Rc<Property> initial() {
@@ -189,7 +189,7 @@ export struct FontStyleProperty : Property {
         return makeRc<FontStyleProperty>(c.font->style);
     }
 
-    static Res<Rc<Property>> parse(Cursor<Css::Sst>& c) {
+    static Res<Rc<Property>> parse(Cursor<Css::Sst>& c, ParsingMode) {
         return Ok(makeRc<FontStyleProperty>(try$(parseValue<FontStyle>(c))));
     }
 
@@ -205,7 +205,7 @@ export struct FontStyleProperty : Property {
     FontStyle _value;
 
     FontStyleProperty(FontStyle value)
-        : Property(registrationOf<FontStyleProperty>()), _value(value) {}
+        : Property(ID), _value(value) {}
 
     void apply([[maybe_unused]] ComputedValues const& parent, ComputedValues& c, [[maybe_unused]] ComputationContext const& cx) const override {
         c.font.cow().style = _value;
@@ -223,7 +223,7 @@ export struct FontStyleProperty : Property {
 // https://www.w3.org/TR/css-fonts-4/#font-size-prop
 export struct FontSizeProperty : Property {
     static constexpr auto ID = LonghandId::FONT_SIZE;
-    static inline Flags<Options> const FLAGS = {INHERITED, BULK_INHERITED};
+    static constexpr Flags<Options> FLAGS = {INHERITED, BULK_INHERITED};
     static constexpr auto PHASE = ComputationPhase::FONT;
 
     static Rc<Property> initial() {
@@ -234,7 +234,7 @@ export struct FontSizeProperty : Property {
         return makeRc<FontSizeProperty>(Length{c.font->size});
     }
 
-    static Res<Rc<Property>> parse(Cursor<Css::Sst>& c) {
+    static Res<Rc<Property>> parse(Cursor<Css::Sst>& c, ParsingMode) {
         return Ok(makeRc<FontSizeProperty>(try$(parseValue<FontSize>(c))));
     }
 
@@ -250,7 +250,7 @@ export struct FontSizeProperty : Property {
     FontSize _value;
 
     FontSizeProperty(FontSize value)
-        : Property(registrationOf<FontSizeProperty>()), _value(value) {}
+        : Property(ID), _value(value) {}
 
     void apply([[maybe_unused]] ComputedValues const& parent, ComputedValues& c, [[maybe_unused]] ComputationContext const& cx) const override {
         c.font.cow().size = resolve(_value, cx);

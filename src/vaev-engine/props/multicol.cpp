@@ -33,7 +33,7 @@ export struct ColumnWidthProperty : Property {
         );
     }
 
-    static Res<Rc<Property>> parse(Cursor<Css::Sst>& c) {
+    static Res<Rc<Property>> parse(Cursor<Css::Sst>& c, ParsingMode) {
         return Ok(makeRc<ColumnWidthProperty>(try$(parseValue<ColumnWidth>(c))));
     }
 
@@ -45,7 +45,7 @@ export struct ColumnWidthProperty : Property {
     ColumnWidth _value;
 
     ColumnWidthProperty(ColumnWidth value)
-        : Property(registrationOf<ColumnWidthProperty>()), _value(value) {}
+        : Property(ID), _value(value) {}
 
     void apply([[maybe_unused]] ComputedValues const& parent, ComputedValues& c, ComputationContext const& cx) const override {
         // Computed value: the keyword `auto` or an absolute length
@@ -89,7 +89,7 @@ export struct ColumnHeightProperty : Property {
         );
     }
 
-    static Res<Rc<Property>> parse(Cursor<Css::Sst>& c) {
+    static Res<Rc<Property>> parse(Cursor<Css::Sst>& c, ParsingMode) {
         return Ok(makeRc<ColumnHeightProperty>(try$(parseValue<ColumnHeight>(c))));
     }
 
@@ -101,7 +101,7 @@ export struct ColumnHeightProperty : Property {
     ColumnHeight _value;
 
     ColumnHeightProperty(ColumnHeight value)
-        : Property(registrationOf<ColumnHeightProperty>()), _value(value) {}
+        : Property(ID), _value(value) {}
 
     void apply([[maybe_unused]] ComputedValues const& parent, ComputedValues& c, ComputationContext const& cx) const override {
         // Computed value: the keyword auto or an absolute length
@@ -137,7 +137,7 @@ export struct ColumnCountProperty : Property {
         return makeRc<ColumnCountProperty>(c.column->count);
     }
 
-    static Res<Rc<Property>> parse(Cursor<Css::Sst>& c) {
+    static Res<Rc<Property>> parse(Cursor<Css::Sst>& c, ParsingMode) {
         return Ok(makeRc<ColumnCountProperty>(try$(parseValue<ColumnCount>(c))));
     }
 
@@ -149,7 +149,7 @@ export struct ColumnCountProperty : Property {
     ColumnCount _value;
 
     ColumnCountProperty(ColumnCount value)
-        : Property(registrationOf<ColumnCountProperty>()), _value(value) {}
+        : Property(ID), _value(value) {}
 
     void apply([[maybe_unused]] ComputedValues const& parent, ComputedValues& c, [[maybe_unused]] ComputationContext const& cx) const override {
         c.column.cow().count = _value;

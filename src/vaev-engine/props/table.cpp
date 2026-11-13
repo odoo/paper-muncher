@@ -25,7 +25,7 @@ export struct TableLayoutProperty : Property {
         return makeRc<TableLayoutProperty>(s.tableLayout);
     }
 
-    static Res<Rc<Property>> parse(Cursor<Css::Sst>& c) {
+    static Res<Rc<Property>> parse(Cursor<Css::Sst>& c, ParsingMode) {
         return Ok(makeRc<TableLayoutProperty>(try$(parseValue<TableLayout>(c))));
     }
 
@@ -36,7 +36,7 @@ export struct TableLayoutProperty : Property {
     TableLayout _value;
 
     TableLayoutProperty(TableLayout value)
-        : Property(registrationOf<TableLayoutProperty>()), _value(value) {}
+        : Property(ID), _value(value) {}
 
     void apply([[maybe_unused]] ComputedValues const& parent, ComputedValues& c, [[maybe_unused]] ComputationContext const& cx) const override {
         c.tableLayout = _value;
@@ -54,7 +54,7 @@ export struct TableLayoutProperty : Property {
 // https://www.w3.org/TR/CSS21/tables.html#caption-position
 export struct CaptionSideProperty : Property {
     static constexpr auto ID = LonghandId::CAPTION_SIDE;
-    static inline Flags<Options> const FLAGS = {INHERITED, BULK_INHERITED};
+    static constexpr Flags<Options> FLAGS = {INHERITED, BULK_INHERITED};
 
     static Rc<Property> initial() {
         return makeRc<CaptionSideProperty>(CaptionSide::TOP);
@@ -64,7 +64,7 @@ export struct CaptionSideProperty : Property {
         return makeRc<CaptionSideProperty>(s.table->captionSide);
     }
 
-    static Res<Rc<Property>> parse(Cursor<Css::Sst>& c) {
+    static Res<Rc<Property>> parse(Cursor<Css::Sst>& c, ParsingMode) {
         return Ok(makeRc<CaptionSideProperty>(try$(parseValue<CaptionSide>(c))));
     }
 
@@ -76,7 +76,7 @@ export struct CaptionSideProperty : Property {
     CaptionSide _value;
 
     CaptionSideProperty(CaptionSide value)
-        : Property(registrationOf<CaptionSideProperty>()), _value(value) {}
+        : Property(ID), _value(value) {}
 
     void apply([[maybe_unused]] ComputedValues const& parent, ComputedValues& c, [[maybe_unused]] ComputationContext const& cx) const override {
         c.table.cow().captionSide = _value;

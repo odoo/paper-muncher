@@ -20,7 +20,7 @@ namespace Vaev::Style {
 
 export struct TextAlignProperty : Property {
     static constexpr auto ID = LonghandId::TEXT_ALIGN;
-    static inline Flags<Options> const FLAGS = {INHERITED, BULK_INHERITED};
+    static constexpr Flags<Options> FLAGS = {INHERITED, BULK_INHERITED};
 
     static Rc<Property> initial() {
         return makeRc<TextAlignProperty>(TextAlign::LEFT);
@@ -30,7 +30,7 @@ export struct TextAlignProperty : Property {
         return makeRc<TextAlignProperty>(c.text->align);
     }
 
-    static Res<Rc<Property>> parse(Cursor<Css::Sst>& c) {
+    static Res<Rc<Property>> parse(Cursor<Css::Sst>& c, ParsingMode) {
         TextAlign value;
         if (c.skip(Css::Token::ident("left"))) {
             value = TextAlign::LEFT;
@@ -68,7 +68,7 @@ export struct TextAlignProperty : Property {
     TextAlign _value;
 
     TextAlignProperty(TextAlign value)
-        : Property(registrationOf<TextAlignProperty>()), _value(value) {}
+        : Property(ID), _value(value) {}
 
     void apply([[maybe_unused]] ComputedValues const& parent, ComputedValues& c, [[maybe_unused]] ComputationContext const& cx) const override {
         c.text.cow().align = _value;
@@ -90,7 +90,7 @@ export struct TextAlignProperty : Property {
 
 export struct TextTransformProperty : Property {
     static constexpr auto ID = LonghandId::TEXT_TRANSFORM;
-    static inline Flags<Options> const FLAGS = {INHERITED, BULK_INHERITED};
+    static constexpr Flags<Options> FLAGS = {INHERITED, BULK_INHERITED};
 
     static Rc<Property> initial() {
         return makeRc<TextTransformProperty>(TextTransform::NONE);
@@ -100,7 +100,7 @@ export struct TextTransformProperty : Property {
         return makeRc<TextTransformProperty>(c.text->transform);
     }
 
-    static Res<Rc<Property>> parse(Cursor<Css::Sst>& c) {
+    static Res<Rc<Property>> parse(Cursor<Css::Sst>& c, ParsingMode) {
         if (c.ended())
             return Error::invalidData("unexpected end of input");
 
@@ -130,7 +130,7 @@ export struct TextTransformProperty : Property {
     TextTransform _value;
 
     TextTransformProperty(TextTransform value)
-        : Property(registrationOf<TextTransformProperty>()), _value(value) {}
+        : Property(ID), _value(value) {}
 
     void apply([[maybe_unused]] ComputedValues const& parent, ComputedValues& c, [[maybe_unused]] ComputationContext const& cx) const override {
         c.text.cow().transform = _value;
@@ -149,7 +149,7 @@ export struct TextTransformProperty : Property {
 
 export struct WhiteSpaceProperty : Property {
     static constexpr auto ID = LonghandId::WHITE_SPACE;
-    static inline Flags<Options> const FLAGS = {INHERITED, BULK_INHERITED};
+    static constexpr Flags<Options> FLAGS = {INHERITED, BULK_INHERITED};
 
     static Rc<Property> initial() {
         return makeRc<WhiteSpaceProperty>(WhiteSpace::NORMAL);
@@ -159,7 +159,7 @@ export struct WhiteSpaceProperty : Property {
         return makeRc<WhiteSpaceProperty>(c.text->whiteSpace);
     }
 
-    static Res<Rc<Property>> parse(Cursor<Css::Sst>& c) {
+    static Res<Rc<Property>> parse(Cursor<Css::Sst>& c, ParsingMode) {
         WhiteSpace value;
         if (c.skip(Css::Token::ident("normal"))) {
             value = WhiteSpace::NORMAL;
@@ -192,7 +192,7 @@ export struct WhiteSpaceProperty : Property {
     WhiteSpace _value;
 
     WhiteSpaceProperty(WhiteSpace value)
-        : Property(registrationOf<WhiteSpaceProperty>()), _value(value) {}
+        : Property(ID), _value(value) {}
 
     void apply([[maybe_unused]] ComputedValues const& parent, ComputedValues& c, [[maybe_unused]] ComputationContext const& cx) const override {
         c.text.cow().whiteSpace = _value;

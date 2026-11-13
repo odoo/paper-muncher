@@ -22,5 +22,4 @@ export import :props.table;
 export import :props.text;
 export import :props.transform;
 export import :props.visibility;
-export import :props.registry;
 export import :props.writing;

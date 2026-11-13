@@ -27,7 +27,7 @@ export struct OverflowXProperty : Property {
         return makeRc<OverflowXProperty>(c.overflows.x);
     }
 
-    static Res<Rc<Property>> parse(Cursor<Css::Sst>& c) {
+    static Res<Rc<Property>> parse(Cursor<Css::Sst>& c, ParsingMode) {
         return Ok(makeRc<OverflowXProperty>(try$(parseValue<Overflow>(c))));
     }
 
@@ -38,7 +38,7 @@ export struct OverflowXProperty : Property {
     Overflow _value;
 
     OverflowXProperty(Overflow value)
-        : Property(registrationOf<OverflowXProperty>()), _value(value) {}
+        : Property(ID), _value(value) {}
 
     void apply([[maybe_unused]] ComputedValues const& parent, ComputedValues& c, [[maybe_unused]] ComputationContext const& cx) const override {
         c.overflows.x = _value;
@@ -65,7 +65,7 @@ export struct OverflowYProperty : Property {
         return makeRc<OverflowYProperty>(c.overflows.y);
     }
 
-    static Res<Rc<Property>> parse(Cursor<Css::Sst>& c) {
+    static Res<Rc<Property>> parse(Cursor<Css::Sst>& c, ParsingMode) {
         return Ok(makeRc<OverflowYProperty>(try$(parseValue<Overflow>(c))));
     }
 
@@ -76,7 +76,7 @@ export struct OverflowYProperty : Property {
     Overflow _value;
 
     OverflowYProperty(Overflow value)
-        : Property(registrationOf<OverflowYProperty>()), _value(value) {}
+        : Property(ID), _value(value) {}
 
     void apply([[maybe_unused]] ComputedValues const& parent, ComputedValues& c, [[maybe_unused]] ComputationContext const& cx) const override {
         c.overflows.y = _value;
@@ -103,7 +103,7 @@ export struct OverflowBlockProperty : Property {
         return makeRc<OverflowBlockProperty>(c.overflows.block);
     }
 
-    static Res<Rc<Property>> parse(Cursor<Css::Sst>& c) {
+    static Res<Rc<Property>> parse(Cursor<Css::Sst>& c, ParsingMode) {
         return Ok(makeRc<OverflowBlockProperty>(try$(parseValue<Overflow>(c))));
     }
 
@@ -114,7 +114,7 @@ export struct OverflowBlockProperty : Property {
     Overflow _value;
 
     OverflowBlockProperty(Overflow value)
-        : Property(registrationOf<OverflowBlockProperty>()), _value(value) {}
+        : Property(ID), _value(value) {}
 
     void apply([[maybe_unused]] ComputedValues const& parent, ComputedValues& c, [[maybe_unused]] ComputationContext const& cx) const override {
         c.overflows.block = _value;
@@ -141,7 +141,7 @@ export struct OverflowInlineProperty : Property {
         return makeRc<OverflowInlineProperty>(c.overflows.inline_);
     }
 
-    static Res<Rc<Property>> parse(Cursor<Css::Sst>& c) {
+    static Res<Rc<Property>> parse(Cursor<Css::Sst>& c, ParsingMode) {
         return Ok(makeRc<OverflowInlineProperty>(try$(parseValue<Overflow>(c))));
     }
 
@@ -152,7 +152,7 @@ export struct OverflowInlineProperty : Property {
     Overflow _value;
 
     OverflowInlineProperty(Overflow value)
-        : Property(registrationOf<OverflowInlineProperty>()), _value(value) {}
+        : Property(ID), _value(value) {}
 
     void apply([[maybe_unused]] ComputedValues const& parent, ComputedValues& c, [[maybe_unused]] ComputationContext const& cx) const override {
         c.overflows.inline_ = _value;

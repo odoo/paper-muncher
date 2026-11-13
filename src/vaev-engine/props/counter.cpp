@@ -23,7 +23,7 @@ export struct CounterResetProperty : Property {
         return makeRc<CounterResetProperty>(c.counters->reset);
     }
 
-    static Res<Rc<Property>> parse(Cursor<Css::Sst>& c) {
+    static Res<Rc<Property>> parse(Cursor<Css::Sst>& c, ParsingMode) {
         if (parseValue<Keywords::None>(c))
             return Ok(makeRc<CounterResetProperty>(Vec<CounterProps::Reset>{}));
         auto value = try$(parseValue<Vec<CounterProps::Reset>>(c));
@@ -37,7 +37,7 @@ export struct CounterResetProperty : Property {
     Vec<CounterProps::Reset> _value;
 
     CounterResetProperty(Vec<CounterProps::Reset> value)
-        : Property(registrationOf<CounterResetProperty>()), _value(value) {}
+        : Property(ID), _value(value) {}
 
     void apply(ComputedValues const&, ComputedValues& c, [[maybe_unused]] ComputationContext const& cx) const override {
         c.counters.cow().reset = _value;
@@ -60,7 +60,7 @@ export struct CounterIncrementProperty : Property {
         return makeRc<CounterIncrementProperty>(c.counters->increment);
     }
 
-    static Res<Rc<Property>> parse(Cursor<Css::Sst>& c) {
+    static Res<Rc<Property>> parse(Cursor<Css::Sst>& c, ParsingMode) {
         if (parseValue<Keywords::None>(c))
             return Ok(makeRc<CounterIncrementProperty>(Vec<CounterProps::Increment>{}));
         auto value = try$(parseValue<Vec<CounterProps::Increment>>(c));
@@ -74,7 +74,7 @@ export struct CounterIncrementProperty : Property {
     Vec<CounterProps::Increment> _value;
 
     CounterIncrementProperty(Vec<CounterProps::Increment> value)
-        : Property(registrationOf<CounterIncrementProperty>()), _value(value) {}
+        : Property(ID), _value(value) {}
 
     void apply(ComputedValues const&, ComputedValues& c, [[maybe_unused]] ComputationContext const& cx) const override {
         c.counters.cow().increment = _value;
@@ -97,7 +97,7 @@ export struct CounterSetProperty : Property {
         return makeRc<CounterSetProperty>(c.counters->set);
     }
 
-    static Res<Rc<Property>> parse(Cursor<Css::Sst>& c) {
+    static Res<Rc<Property>> parse(Cursor<Css::Sst>& c, ParsingMode) {
         if (parseValue<Keywords::None>(c))
             return Ok(makeRc<CounterSetProperty>(Vec<CounterProps::Set>{}));
         auto value = try$(parseValue<Vec<CounterProps::Set>>(c));
@@ -111,7 +111,7 @@ export struct CounterSetProperty : Property {
     Vec<CounterProps::Set> _value;
 
     CounterSetProperty(Vec<CounterProps::Set> value)
-        : Property(registrationOf<CounterSetProperty>()), _value(value) {}
+        : Property(ID), _value(value) {}
 
     void apply(ComputedValues const&, ComputedValues& c, [[maybe_unused]] ComputationContext const& cx) const override {
         c.counters.cow().set = _value;

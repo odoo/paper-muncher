@@ -30,7 +30,7 @@ export struct BackgroundColorProperty : Property {
         return makeRc<BackgroundColorProperty>(c.backgrounds->color);
     }
 
-    static Res<Rc<Property>> parse(Cursor<Css::Sst>& c) {
+    static Res<Rc<Property>> parse(Cursor<Css::Sst>& c, ParsingMode) {
         return Ok(makeRc<BackgroundColorProperty>(try$(parseValue<Color>(c))));
     }
 
@@ -41,7 +41,7 @@ export struct BackgroundColorProperty : Property {
     Color _value;
 
     BackgroundColorProperty(Color value)
-        : Property(registrationOf<BackgroundColorProperty>()), _value(value) {}
+        : Property(ID), _value(value) {}
 
     void apply([[maybe_unused]] ComputedValues const& parent, ComputedValues& c, [[maybe_unused]] ComputationContext const& cx) const override {
         c.backgrounds.cow().color = _value;
@@ -73,7 +73,7 @@ export struct BackgroundAttachmentProperty : Property {
         return makeRc<BackgroundAttachmentProperty>(std::move(layers));
     }
 
-    static Res<Rc<Property>> parse(Cursor<Css::Sst>& c) {
+    static Res<Rc<Property>> parse(Cursor<Css::Sst>& c, ParsingMode) {
 
         Vec<BackgroundAttachment> value;
         while (not c.ended()) {
@@ -91,7 +91,7 @@ export struct BackgroundAttachmentProperty : Property {
     Vec<BackgroundAttachment> _value;
 
     BackgroundAttachmentProperty(Vec<BackgroundAttachment> value)
-        : Property(registrationOf<BackgroundAttachmentProperty>()), _value(std::move(value)) {}
+        : Property(ID), _value(std::move(value)) {}
 
     void apply([[maybe_unused]] ComputedValues const& parent, ComputedValues& c, [[maybe_unused]] ComputationContext const& cx) const override {
         auto& layers = c.backgrounds.cow().layers;
@@ -117,7 +117,7 @@ export struct BackgroundImageProperty : Property {
         return makeRc<BackgroundImageProperty>(Vec<Image>{});
     }
 
-    static Res<Rc<Property>> parse(Cursor<Css::Sst>&) {
+    static Res<Rc<Property>> parse(Cursor<Css::Sst>&, ParsingMode) {
         // TODO
         return Ok(makeRc<BackgroundImageProperty>(Vec<Image>{}));
     }
@@ -129,7 +129,7 @@ export struct BackgroundImageProperty : Property {
     Vec<Image> _value;
 
     BackgroundImageProperty(Vec<Image> value)
-        : Property(registrationOf<BackgroundImageProperty>()), _value(std::move(value)) {}
+        : Property(ID), _value(std::move(value)) {}
 
     void apply(ComputedValues const&, ComputedValues&, [[maybe_unused]] ComputationContext const& cx) const override {
         // TODO
@@ -152,7 +152,7 @@ export struct BackgroundPositionProperty : Property {
         return makeRc<BackgroundPositionProperty>(Vec<BackgroundPosition>{});
     }
 
-    static Res<Rc<Property>> parse(Cursor<Css::Sst>&) {
+    static Res<Rc<Property>> parse(Cursor<Css::Sst>&, ParsingMode) {
         // TODO
         return Ok(makeRc<BackgroundPositionProperty>(Vec<BackgroundPosition>{}));
     }
@@ -164,7 +164,7 @@ export struct BackgroundPositionProperty : Property {
     Vec<BackgroundPosition> _value;
 
     BackgroundPositionProperty(Vec<BackgroundPosition> value)
-        : Property(registrationOf<BackgroundPositionProperty>()), _value(std::move(value)) {}
+        : Property(ID), _value(std::move(value)) {}
 
     void apply(ComputedValues const&, ComputedValues&, [[maybe_unused]] ComputationContext const& cx) const override {
         // TODO
@@ -188,7 +188,7 @@ export struct BackgroundRepeatProperty : Property {
         return makeRc<BackgroundRepeatProperty>(Vec<BackgroundRepeat>{BackgroundRepeat::REPEAT});
     }
 
-    static Res<Rc<Property>> parse(Cursor<Css::Sst>&) {
+    static Res<Rc<Property>> parse(Cursor<Css::Sst>&, ParsingMode) {
         // TODO
         return Ok(makeRc<BackgroundRepeatProperty>(Vec<BackgroundRepeat>{}));
     }
@@ -200,7 +200,7 @@ export struct BackgroundRepeatProperty : Property {
     Vec<BackgroundRepeat> _value;
 
     BackgroundRepeatProperty(Vec<BackgroundRepeat> value)
-        : Property(registrationOf<BackgroundRepeatProperty>()),
+        : Property(ID),
           _value(std::move(value)) {}
 
     void apply(ComputedValues const&, ComputedValues&, [[maybe_unused]] ComputationContext const& cx) const override {
@@ -255,7 +255,7 @@ export struct BackgroundRepeatProperty : Property {
 // https://www.w3.org/TR/CSS22/colors.html#propdef-color
 export struct ColorProperty : Property {
     static constexpr auto ID = LonghandId::COLOR;
-    static inline Flags<Options> const FLAGS = {INHERITED};
+    static constexpr Flags<Options> FLAGS = {INHERITED};
 
     static Rc<Property> initial() {
         return makeRc<ColorProperty>(BLACK);
@@ -265,7 +265,7 @@ export struct ColorProperty : Property {
         return makeRc<ColorProperty>(c.color);
     }
 
-    static Res<Rc<Property>> parse(Cursor<Css::Sst>& c) {
+    static Res<Rc<Property>> parse(Cursor<Css::Sst>& c, ParsingMode) {
         return Ok(makeRc<ColorProperty>(try$(parseValue<Color>(c))));
     }
 
@@ -281,7 +281,7 @@ export struct ColorProperty : Property {
     Color _value;
 
     ColorProperty(Color value)
-        : Property(registrationOf<ColorProperty>()), _value(value) {}
+        : Property(ID), _value(value) {}
 
     void apply(ComputedValues const& parent, ComputedValues& c, [[maybe_unused]] ComputationContext const& cx) const override {
         // In the color property, the used value of currentcolor is the resolved inherited value.

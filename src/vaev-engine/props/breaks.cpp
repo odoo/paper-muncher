@@ -27,7 +27,7 @@ export struct BreakAfterProperty : Property {
         return makeRc<BreakAfterProperty>(c.break_->after);
     }
 
-    static Res<Rc<Property>> parse(Cursor<Css::Sst>& c) {
+    static Res<Rc<Property>> parse(Cursor<Css::Sst>& c, ParsingMode) {
         return Ok(makeRc<BreakAfterProperty>(try$(parseValue<BreakBetween>(c))));
     }
 
@@ -38,7 +38,7 @@ export struct BreakAfterProperty : Property {
     BreakBetween _value;
 
     BreakAfterProperty(BreakBetween value)
-        : Property(registrationOf<BreakAfterProperty>()), _value(value) {}
+        : Property(ID), _value(value) {}
 
     void apply([[maybe_unused]] ComputedValues const& parent, ComputedValues& c, [[maybe_unused]] ComputationContext const& cx) const override {
         c.break_.cow().after = _value;
@@ -65,7 +65,7 @@ export struct BreakBeforeProperty : Property {
         return makeRc<BreakBeforeProperty>(c.break_->before);
     }
 
-    static Res<Rc<Property>> parse(Cursor<Css::Sst>& c) {
+    static Res<Rc<Property>> parse(Cursor<Css::Sst>& c, ParsingMode) {
         return Ok(makeRc<BreakBeforeProperty>(try$(parseValue<BreakBetween>(c))));
     }
 
@@ -76,7 +76,7 @@ export struct BreakBeforeProperty : Property {
     BreakBetween _value;
 
     BreakBeforeProperty(BreakBetween value)
-        : Property(registrationOf<BreakBeforeProperty>()), _value(value) {}
+        : Property(ID), _value(value) {}
 
     void apply([[maybe_unused]] ComputedValues const& parent, ComputedValues& c, [[maybe_unused]] ComputationContext const& cx) const override {
         c.break_.cow().before = _value;
@@ -103,7 +103,7 @@ export struct BreakInsideProperty : Property {
         return makeRc<BreakInsideProperty>(c.break_->inside);
     }
 
-    static Res<Rc<Property>> parse(Cursor<Css::Sst>& c) {
+    static Res<Rc<Property>> parse(Cursor<Css::Sst>& c, ParsingMode) {
         return Ok(makeRc<BreakInsideProperty>(try$(parseValue<BreakInside>(c))));
     }
 
@@ -114,7 +114,7 @@ export struct BreakInsideProperty : Property {
     BreakInside _value;
 
     BreakInsideProperty(BreakInside value)
-        : Property(registrationOf<BreakInsideProperty>()), _value(value) {}
+        : Property(ID), _value(value) {}
 
     void apply([[maybe_unused]] ComputedValues const& parent, ComputedValues& c, [[maybe_unused]] ComputationContext const& cx) const override {
         c.break_.cow().inside = _value;

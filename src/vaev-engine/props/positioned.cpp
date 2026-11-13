@@ -27,7 +27,7 @@ export struct PositionProperty : Property {
         return makeRc<PositionProperty>(c.position);
     }
 
-    static Res<Rc<Property>> parse(Cursor<Css::Sst>& c) {
+    static Res<Rc<Property>> parse(Cursor<Css::Sst>& c, ParsingMode) {
         return Ok(makeRc<PositionProperty>(try$(parseValue<Position>(c))));
     }
 
@@ -38,7 +38,7 @@ export struct PositionProperty : Property {
     Position _value;
 
     PositionProperty(Position value)
-        : Property(registrationOf<PositionProperty>()), _value(value) {}
+        : Property(ID), _value(value) {}
 
     void apply([[maybe_unused]] ComputedValues const& parent, ComputedValues& c, [[maybe_unused]] ComputationContext const& cx) const override {
         c.position = _value;
@@ -63,7 +63,7 @@ export struct TopProperty : Property {
         return makeRc<TopProperty>(c.insets->top);
     }
 
-    static Res<Rc<Property>> parse(Cursor<Css::Sst>& c) {
+    static Res<Rc<Property>> parse(Cursor<Css::Sst>& c, ParsingMode) {
         return Ok(makeRc<TopProperty>(try$(parseValue<Value>(c))));
     }
 
@@ -74,7 +74,7 @@ export struct TopProperty : Property {
     Value _value;
 
     TopProperty(Value value)
-        : Property(registrationOf<TopProperty>()), _value(value) {}
+        : Property(ID), _value(value) {}
 
     void apply([[maybe_unused]] ComputedValues const& parent, ComputedValues& c, [[maybe_unused]] ComputationContext const& cx) const override {
         c.insets.cow().top = _value;
@@ -103,7 +103,7 @@ export struct RightProperty : Property {
         return makeRc<RightProperty>(c.insets->end);
     }
 
-    static Res<Rc<Property>> parse(Cursor<Css::Sst>& c) {
+    static Res<Rc<Property>> parse(Cursor<Css::Sst>& c, ParsingMode) {
         return Ok(makeRc<RightProperty>(try$(parseValue<Value>(c))));
     }
 
@@ -114,7 +114,7 @@ export struct RightProperty : Property {
     Value _value;
 
     RightProperty(Value value)
-        : Property(registrationOf<RightProperty>()), _value(value) {}
+        : Property(ID), _value(value) {}
 
     void apply([[maybe_unused]] ComputedValues const& parent, ComputedValues& c, [[maybe_unused]] ComputationContext const& cx) const override {
         c.insets.cow().end = _value;
@@ -143,7 +143,7 @@ export struct BottomProperty : Property {
         return makeRc<BottomProperty>(c.insets->bottom);
     }
 
-    static Res<Rc<Property>> parse(Cursor<Css::Sst>& c) {
+    static Res<Rc<Property>> parse(Cursor<Css::Sst>& c, ParsingMode) {
         return Ok(makeRc<BottomProperty>(try$(parseValue<Value>(c))));
     }
 
@@ -154,7 +154,7 @@ export struct BottomProperty : Property {
     Union<Keywords::Auto, Calc<PercentOr<Length>>> _value;
 
     BottomProperty(Value value)
-        : Property(registrationOf<BottomProperty>()), _value(value) {}
+        : Property(ID), _value(value) {}
 
     void apply([[maybe_unused]] ComputedValues const& parent, ComputedValues& c, [[maybe_unused]] ComputationContext const& cx) const override {
         c.insets.cow().bottom = _value;
@@ -183,7 +183,7 @@ export struct LeftProperty : Property {
         return makeRc<LeftProperty>(c.insets->start);
     }
 
-    static Res<Rc<Property>> parse(Cursor<Css::Sst>& c) {
+    static Res<Rc<Property>> parse(Cursor<Css::Sst>& c, ParsingMode) {
         return Ok(makeRc<LeftProperty>(try$(parseValue<Value>(c))));
     }
 
@@ -194,7 +194,7 @@ export struct LeftProperty : Property {
     Value _value;
 
     LeftProperty(Value value)
-        : Property(registrationOf<LeftProperty>()), _value(value) {}
+        : Property(ID), _value(value) {}
 
     void apply([[maybe_unused]] ComputedValues const& parent, ComputedValues& c, [[maybe_unused]] ComputationContext const& cx) const override {
         c.insets.cow().start = _value;
@@ -221,7 +221,7 @@ export struct ZIndexProperty : Property {
         return makeRc<ZIndexProperty>(c.zIndex);
     }
 
-    static Res<Rc<Property>> parse(Cursor<Css::Sst>& c) {
+    static Res<Rc<Property>> parse(Cursor<Css::Sst>& c, ParsingMode) {
         return Ok(makeRc<ZIndexProperty>(try$(parseValue<ZIndex>(c))));
     }
 
@@ -232,7 +232,7 @@ export struct ZIndexProperty : Property {
     ZIndex _value;
 
     ZIndexProperty(ZIndex value)
-        : Property(registrationOf<ZIndexProperty>()), _value(value) {}
+        : Property(ID), _value(value) {}
 
     void apply([[maybe_unused]] ComputedValues const& parent, ComputedValues& c, [[maybe_unused]] ComputationContext const& cx) const override {
         c.zIndex = _value;
