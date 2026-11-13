@@ -1,0 +1,517 @@
+<!-- Ported from web-platform-tests @ ba6d9f67 -->
+
+<!-- https://github.com/web-platform-tests/wpt/tree/ba6d9f678ee91de9f58097921ed34e9b6b6849d3 -->
+
+<!-- SPDX-License-Identifier: BSD-3-Clause -->
+<!--
+    The 3-Clause BSD License
+
+    Copyright © web-platform-tests contributors
+
+    Redistribution and use in source and binary forms, with or without modification, are permitted provided that the
+    following conditions are met:
+
+    1. Redistributions of source code must retain the above copyright notice, this list of conditions and the following
+    disclaimer.
+    2. Redistributions in binary form must reproduce the above copyright notice, this list of conditions and the
+    following disclaimer in the documentation and/or other materials provided with the distribution.
+    3. Neither the name of the copyright holder nor the names of its contributors may be used to endorse or promote
+    products derived from this software without specific prior written permission.
+
+    THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES,
+    INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
+    DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
+    SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
+    SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY,
+    WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE
+    USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+-->
+
+<tests>
+
+<!-- https://github.com/web-platform-tests/wpt/blob/ba6d9f67/css/css-overflow/clip-002.html -->
+<!-- https://github.com/web-platform-tests/wpt/blob/ba6d9f67/css/css-overflow/clip-002-ref.html -->
+<test name="css/css-overflow/clip-002.html" width="800px" height="600px">
+    <rendering>
+        <style>
+            .outer {
+              width: 50px;
+              height: 50px;
+              margin-left: 100px;
+              margin-top: 100px;
+              background: black;
+            }
+            .inner {
+              position: relative;
+              background: blue;
+              height: 100px;
+              width: 100px;
+              opacity: 0.5;
+            }
+        </style>
+        <!-- there should be no overflow -->
+        <div class="outer">
+          <div class="inner" style="width:50px; height:50px;"></div>
+        </div>
+        <!-- there should be overflow in the vertical dimension, but not horizontally -->
+        <div class="outer">
+          <div class="inner" style="top:-20px; width:50px"></div>
+        </div>
+        <!-- there should be overflow in the horizontal dimension, but not vertically -->
+        <div class="outer">
+          <div class="inner" style="left:-40px; height:50px"></div>
+        </div>
+    </rendering>
+
+    <rendering help="CSS Test: overflow:clip can be combined with overflow:visible" xfail="true">
+        <style>
+            .outer {
+              width: 50px;
+              height: 50px;
+              margin-left: 100px;
+              margin-top: 100px;
+              background: black;
+            }
+            .inner {
+              position: relative;
+              top: -20px;
+              left: -40px;
+              background: blue;
+              height: 100px;
+              width: 100px;
+              opacity: 0.5;
+            }
+        </style>
+        <!-- there should be no overflow -->
+        <div class="outer" style="overflow:clip">
+          <div class="inner"></div>
+        </div>
+        <!-- there should be overflow in the vertical dimension, but not horizontally -->
+        <div class="outer" style="overflow-x:clip">
+          <div class="inner"></div>
+        </div>
+        <!-- there should be overflow in the horizontal dimension, but not vertically -->
+        <div class="outer" style="overflow-y:clip">
+          <div class="inner"></div>
+        </div>
+    </rendering>
+</test>
+
+<!-- https://github.com/web-platform-tests/wpt/blob/ba6d9f67/css/css-overflow/clip-003.html -->
+<!-- https://github.com/web-platform-tests/wpt/blob/ba6d9f67/css/css-overflow/clip-003-ref.html -->
+<test name="css/css-overflow/clip-003.html" width="800px" height="600px">
+    <rendering>
+        <style>
+            .wrapper {
+              margin-left: 30px;
+              margin-bottom: 20px;
+              width: 50px;
+              height: 50px;
+            }
+            .outer {
+              width: 50px;
+              height: 50px;
+              background: black;
+            }
+            .inner {
+              position: relative;
+              top: -10px;
+              left: -10px;
+              height: 100px;
+              width: 100px;
+              background: blue;
+              opacity: 0.5;
+            }
+        </style>
+        <!-- there should be no scrollbars -->
+        <div class="wrapper" style="overflow: hidden">
+        <div class="outer">
+          <div class="inner"></div>
+        </div>
+        </div>
+        <!-- there should be no white areas inside the outline -->
+        <div class="wrapper" style="outline: solid">
+        <div class="outer">
+          <div class="inner" style="left:0; width:50px"></div>
+        </div>
+        </div>
+        <!-- there should be a vertical scrollbar, but not a horizontal one -->
+        <div class="wrapper" style="overflow: hidden scroll; margin-top:50px">
+        <div class="outer">
+          <div class="inner" style="width:1px"></div>
+        </div>
+        </div>
+        <!-- there should be no white areas inside the outline -->
+        <div class="wrapper" style="outline: solid">
+        <div class="outer">
+          <div class="inner" style="top:0; height:50px"></div>
+        </div>
+        </div>
+        <!-- there should be horizontal scrollbar, but not a vertical one -->
+        <div class="wrapper" style="overflow: scroll hidden">
+        <div class="outer">
+          <div class="inner" style="height:1px"></div>
+        </div>
+        </div>
+    </rendering>
+
+    <rendering help="CSS Test: overflow:clip can be combined with overflow:visible" xfail="true">
+        <style>
+            .wrapper {
+              margin-left: 30px;
+              margin-bottom: 20px;
+              width: 50px;
+              height: 50px;
+            }
+            .outer {
+              width: 50px;
+              height: 50px;
+              background: black;
+            }
+            .inner {
+              position: relative;
+              top: -10px;
+              left: -10px;
+              height: 100px;
+              width: 100px;
+              background: blue;
+              opacity: 0.5;
+            }
+        </style>
+        <!-- there should be no scrollbars -->
+        <div class="wrapper" style="overflow: auto">
+        <div class="outer" style="overflow:clip; outline:solid red">
+          <div class="inner"></div>
+        </div>
+        </div>
+        <!-- there should be no white areas inside the outline -->
+        <div class="wrapper" style="outline: solid">
+        <div class="outer" style="overflow-x:clip">
+          <div class="inner"></div>
+        </div>
+        </div>
+        <!-- there should be a vertical scrollbar, but not a horizontal one -->
+        <div class="wrapper" style="overflow: auto; margin-top:50px">
+        <div class="outer" style="overflow-x:clip">
+          <div class="inner" style="width:1px"></div>
+        </div>
+        </div>
+        <!-- there should be no white areas inside the outline -->
+        <div class="wrapper" style="outline: solid">
+        <div class="outer" style="overflow-y:clip">
+          <div class="inner"></div>
+        </div>
+        </div>
+        <!-- there should be horizontal scrollbar, but not a vertical one -->
+        <div class="wrapper" style="overflow: auto">
+        <div class="outer" style="overflow-y:clip">
+          <div class="inner" style="height:1px"></div>
+        </div>
+        </div>
+    </rendering>
+</test>
+
+<!-- https://github.com/web-platform-tests/wpt/blob/ba6d9f67/css/css-overflow/clip-004.html -->
+<!-- https://github.com/web-platform-tests/wpt/blob/ba6d9f67/css/css-overflow/clip-004-ref.html -->
+<test name="css/css-overflow/clip-004.html" width="800px" height="600px">
+    <rendering>
+        <style>
+            .outer {
+              width: 50px;
+              height: 50px;
+              margin-left: 100px;
+              margin-top: 100px;
+              background: black;
+            }
+            .inner {
+              position: relative;
+              background: blue;
+              height: 100px;
+              width: 100px;
+              opacity: 0.5;
+            }
+        </style>
+        <!-- there should be no overflow -->
+        <div class="outer">
+          <div class="inner" style="width:50px; height:50px;"></div>
+        </div>
+        <!-- there should be overflow in the vertical dimension, but not horizontally -->
+        <div class="outer">
+          <div class="inner" style="top:-10px; width:50px"></div>
+        </div>
+        <!-- there should be overflow in the horizontal dimension, but not vertically -->
+        <div class="outer">
+          <div class="inner" style="left:-30px; height:50px"></div>
+        </div>
+    </rendering>
+
+    <rendering help="CSS Test: overflow:clip can be combined with overflow:visible" xfail="true">
+        <style>
+            .outer {
+              width: 30px;
+              height: 30px;
+              padding: 10px;
+              margin-left: 100px;
+              margin-top: 100px;
+              background: black;
+            }
+            .inner {
+              position: relative;
+              top: -20px;
+              left: -40px;
+              background: blue;
+              height: 100px;
+              width: 100px;
+              opacity: 0.5;
+            }
+        </style>
+        <!-- there should be no overflow -->
+        <div class="outer" style="overflow:clip">
+          <div class="inner"></div>
+        </div>
+        <!-- there should be overflow in the vertical dimension, but not horizontally -->
+        <div class="outer" style="overflow-x:clip">
+          <div class="inner"></div>
+        </div>
+        <!-- there should be overflow in the horizontal dimension, but not vertically -->
+        <div class="outer" style="overflow-y:clip">
+          <div class="inner"></div>
+        </div>
+    </rendering>
+</test>
+
+<!-- https://github.com/web-platform-tests/wpt/blob/ba6d9f67/css/css-overflow/clip-005.html -->
+<!-- https://github.com/web-platform-tests/wpt/blob/ba6d9f67/css/css-overflow/clip-005-ref.html -->
+<test name="css/css-overflow/clip-005.html" width="800px" height="600px">
+    <rendering>
+        <style>
+            .outer {
+              width: 50px;
+              height: 50px;
+              margin-left: 100px;
+              margin-top: 100px;
+              background: black;
+              outline: 2px solid grey;
+            }
+            .inner {
+              position: relative;
+              background: blue;
+              height: 100px;
+              width: 100px;
+              opacity: 0.5;
+            }
+        </style>
+        <!-- there should be no overflow -->
+        <div class="outer">
+          <div class="inner" style="width:50px; height:50px;"></div>
+        </div>
+        <!-- there should be overflow in the vertical dimension, but not horizontally -->
+        <div class="outer">
+          <div class="inner" style="top:-10px; width:50px"></div>
+        </div>
+        <!-- there should be overflow in the horizontal dimension, but not vertically -->
+        <div class="outer">
+          <div class="inner" style="left:-30px; height:50px"></div>
+        </div>
+    </rendering>
+
+    <rendering help="CSS Test: overflow:clip doesn't affect the box' own outline" xfail="true">
+        <style>
+            .outer {
+              width: 30px;
+              height: 30px;
+              padding: 10px;
+              margin-left: 100px;
+              margin-top: 100px;
+              background: black;
+              outline: 2px solid grey;
+            }
+            .inner {
+              position: relative;
+              top: -20px;
+              left: -40px;
+              background: blue;
+              height: 100px;
+              width: 100px;
+              opacity: 0.5;
+            }
+        </style>
+        <!-- there should be no overflow -->
+        <div class="outer" style="overflow:clip">
+          <div class="inner"></div>
+        </div>
+        <!-- there should be overflow in the vertical dimension, but not horizontally -->
+        <div class="outer" style="overflow-x:clip">
+          <div class="inner"></div>
+        </div>
+        <!-- there should be overflow in the horizontal dimension, but not vertically -->
+        <div class="outer" style="overflow-y:clip">
+          <div class="inner"></div>
+        </div>
+    </rendering>
+</test>
+
+<!-- https://github.com/web-platform-tests/wpt/blob/ba6d9f67/css/css-backgrounds/border-radius-clipping-002.html -->
+<!-- https://github.com/web-platform-tests/wpt/blob/ba6d9f67/css/reference/ref-nothing-below.xht -->
+<test name="css/css-backgrounds/border-radius-clipping-002.html" width="800px" height="600px">
+    <rendering>
+        <p>Test passes if there is nothing below.</p>
+    </rendering>
+
+    <rendering help="CSS Backgrounds and Borders Test: 'border-radius' and corner-clipping of content elements" xfail="true">
+        <style>
+            body
+              {
+                overflow: hidden;
+                /*
+                otherwise, horizontal and vertical
+                scroll bars will be generated
+                */
+              }
+            div#fail-condition
+              {
+                border-radius: 250em;
+                color: red;
+                font-size: 32px;
+                height: 500em;
+                overflow: hidden;
+                width: 500em;
+              }
+        </style>
+        <p>Test passes if there is nothing below.</p>
+        <div id="fail-condition">FAIL FAIL FAIL FAIL</div>
+    </rendering>
+</test>
+
+<!-- https://github.com/web-platform-tests/wpt/blob/ba6d9f67/css/css-overflow/rounded-overflow-visible-clip.html -->
+<!-- https://github.com/web-platform-tests/wpt/blob/ba6d9f67/css/css-overflow/rounded-overflow-visible-clip-ref.html -->
+<test name="css/css-overflow/rounded-overflow-visible-clip.html" width="800px" height="600px">
+    <rendering>
+        <style>
+            .box {
+              width: 100px;
+              height: 100px;
+              background: green;
+              display: inline-block;
+            }
+        </style>
+        There should be 4 100x100 green squares (no rounded corners) below.<br/>
+        <div class="box"></div>
+        <br/>
+        <div class="box"></div>
+        <br/>
+        <div class="box"></div>
+        <br/>
+        <div class="box"></div>
+    </rendering>
+
+    <rendering help="Border radius should not round the clipping region when mixing overflow: visible and clip" xfail="true">
+        <style>
+            .container {
+              width: 50px;
+              height: 100px;
+              overflow: visible clip;
+              background: red;
+              display: inline-block;
+            }
+            .border-radius {
+              border-radius: 25px;
+            }
+            .child {
+              width: 100px;
+              height: 200px;
+              background: green;
+              fill: green;
+            }
+        </style>
+        There should be 4 100x100 green squares (no rounded corners) below.<br/>
+        <div class="container border-radius">
+          <div class="child"></div>
+        </div>
+        <br/>
+        <div class="container">
+          <div class="child"></div>
+        </div>
+        <br/>
+        <svg xmlns="http://www.w3.org/2000/svg" class="container border-radius">
+          <rect class="child"></rect>
+        </svg>
+        <br/>
+        <svg xmlns="http://www.w3.org/2000/svg" class="container">
+          <rect class="child"></rect>
+        </svg>
+    </rendering>
+</test>
+
+<!-- https://github.com/web-platform-tests/wpt/blob/ba6d9f67/css/css-overflow/overflow-clip-margin-001.html -->
+<!-- https://github.com/web-platform-tests/wpt/blob/ba6d9f67/css/css-overflow/overflow-clip-margin-001-ref.html -->
+<test name="css/css-overflow/overflow-clip-margin-001.html" width="800px" height="600px">
+    <rendering>
+        <style>
+            .container {
+                display: flex;
+            }
+            .parent {
+                position: relative;
+                top: -10px;
+                left: -10px;
+                width: 120px;
+                height: 120px;
+                flex: none;
+                background-color: green;
+            }
+            .spacer {
+                flex: none;
+                height: 100px;
+                width: 100px;
+            }
+        </style>
+        <p>You should see two green squares touching each other. The one on the
+          right should be slightly larger.</p>
+        <div class="spacer"></div>
+        <div class="container">
+          <div class="spacer" style="background-color: green"></div>
+          <div class="parent"></div>
+        </div>
+    </rendering>
+
+    <rendering help="Verifies overflow-clip-margin extends outside bounds" xfail="true">
+        <style>
+            .container {
+                display: flex;
+            }
+            .parent {
+                width: 100px;
+                height: 100px;
+                flex: none;
+                overflow: clip;
+                overflow-clip-margin: 10px;
+            }
+            .child {
+                width: 200px;
+                height: 200px;
+                position: relative;
+                top: -50px;
+                left: -50px;
+                background-color: green;
+            }
+            .spacer {
+                flex: none;
+                height: 100px;
+                width: 100px;
+            }
+        </style>
+        <p>You should see two green squares touching each other. The one on the
+          right should be slightly larger.</p>
+        <div class="spacer"></div>
+        <div class="container">
+          <div class="spacer" style="width: 90px; background-color: green"></div>
+          <div class="spacer" style="width: 10px"></div>
+          <div class="parent">
+            <div class="child"></div>
+          </div>
+        </div>
+    </rendering>
+</test>
+
+</tests>

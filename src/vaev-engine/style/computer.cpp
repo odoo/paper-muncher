@@ -513,6 +513,39 @@ export struct Computer {
         }
     }
 
+    // MARK: Overflow Viewport Propagation -------------------------------------
+
+    // https://www.w3.org/TR/css-overflow-3/#overflow-propagation
+    // NOTE: The viewport never scrolls, the propagated values have no effect on it and are only removed from the
+    //       element.
+    static void _propagateOverflowToViewport(Dom::Document& doc) {
+        // UAs must apply the overflow-* values set on the root element to the viewport when the root element’s
+        // display value is not none.
+        auto propagatedElement = doc.documentElement();
+        if (not propagatedElement or propagatedElement->computedValues()->display == Display::NONE)
+            return;
+
+        // However, when the root element is an [HTML] html element (including XML syntax for HTML) whose overflow
+        // value is visible (in both axes), and that element has as a child a body element whose display value is
+        // also not none, user agents must instead apply the overflow-* values of the first such child element to
+        // the viewport.
+        if (propagatedElement->namespaceUri() == Html::NAMESPACE and
+            not propagatedElement->computedValues()->overflows.clips()) {
+            auto bodyElement = doc.body();
+            if (bodyElement and bodyElement->computedValues()->display != Display::NONE)
+                propagatedElement = bodyElement;
+        }
+
+        if (not propagatedElement->computedValues()->overflows.clips())
+            return;
+
+        // The element from which the value is propagated must then have a used overflow value of visible.
+        // NOSPEC: The computed value is changed, used values are not stored apart.
+        auto newValues = makeRc<ComputedValues>(*propagatedElement->computedValues());
+        newValues->overflows = {};
+        propagatedElement->_computedValues = Some(newValues);
+    }
+
     static void _collectCounterStyle(Rule const& rule, CounterDescriptorSet& counters) {
         if (auto it = rule.is<CounterRule>()) {
             CounterDescriptors descriptor;
@@ -561,6 +594,7 @@ export struct Computer {
         }
 
         _propagateBodyBackgroundToHtml(doc);
+        _propagateOverflowToViewport(doc);
         logDebugIf(debugMpc, "{}", _mpc);
     }
 

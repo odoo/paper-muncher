@@ -142,15 +142,15 @@ struct Box : Meta::NoCopy {
     // https://www.w3.org/TR/css-display-3/#formatting-context
     // Unless otherwise specified, however, establishing a new formatting context creates an independent formatting
     // context.
+    // https://www.w3.org/TR/css-overflow-3/#overflow-control
+    // If the computed value of overflow on a block box is neither visible nor clip nor a combination thereof, it
+    // establishes an independent formatting context for its contents.
     // NOTE: 'overflow-block' and 'overflow-inline' are stored apart from 'overflow-x' and 'overflow-y'.
     bool establishesBlockFormatingContext() const {
         return isRemovedFromFlow() or
                isReplaced() or
                style->display != Display::Inside::FLOW or
-               style->overflows.x != Overflow::VISIBLE or
-               style->overflows.y != Overflow::VISIBLE or
-               style->overflows.block != Overflow::VISIBLE or
-               style->overflows.inline_ != Overflow::VISIBLE;
+               style->overflows.scrollable();
     }
 
     // https://www.w3.org/TR/CSS22/zindex.html
