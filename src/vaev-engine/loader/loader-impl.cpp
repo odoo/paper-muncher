@@ -80,12 +80,7 @@ Async::Task<Rc<Gfx::Fontface>> _loadFontfaceAsync(Http::Client& client, Ref::Url
         co_return Error::notFound("could not load image");
     auto body = resp->body.expect();
     auto data = co_trya$(Aio::readAllAsync(*body, ct));
-
-    // FIXME: Make this more streamline and avoid the extra copy once we reworked karm-font.
-    auto size = alignUp(data.len(), Sys::pageSize());
-    auto mem = co_try$(Sys::mutMmap(NONE, {.size = size}));
-    copy(sub(data), mem.mutBytes());
-    co_return Font::loadFontface(mem.seal());
+    co_return Font::loadFontface(std::move(data));
 }
 
 // Formats the engine cannot decode (no woff/woff2/brotli unwrap, no svg/eot
@@ -95,8 +90,6 @@ Async::Task<Rc<Gfx::Fontface>> _loadFontfaceAsync(Http::Client& client, Ref::Url
 static bool _isDecodableFontFormat(Str format) {
     // format() keywords are ASCII case-insensitive (CSS Fonts 4).
     return not(
-        eqCi(format, "woff"s) or
-        eqCi(format, "woff2"s) or
         eqCi(format, "svg"s) or
         eqCi(format, "embedded-opentype"s)
     );
