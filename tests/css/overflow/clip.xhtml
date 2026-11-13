@@ -1,0 +1,92 @@
+<tests>
+
+<test name="overflow-hidden-clips">
+    <container>
+        <html lang="en" xmlns="http://www.w3.org/1999/xhtml">
+        <head>
+            <style>
+                html, body { margin: 0; background: white; font-size: 0; }
+                    .g { background-color: green; }
+                .big { width: 200px; height: 200px; background-color: green; }
+            </style>
+        </head>
+        <body>
+            <slot/>
+        </body>
+        </html>
+    </container>
+
+    <rendering help="reference: 100x50 green box">
+        <div class="g" style="width: 100px; height: 50px"/>
+    </rendering>
+
+    <rendering help="wkhtmltopdf parity (Odoo reports): overflow: hidden must clip the overflowing child (labels, body.overflow-hidden)">
+        <div style="width: 100px; height: 50px; overflow: hidden"><div class="big"/></div>
+    </rendering>
+
+    <rendering help="wkhtmltopdf parity (Odoo reports): overflow: clip">
+        <div style="width: 100px; height: 50px; overflow: clip"><div class="big"/></div>
+    </rendering>
+
+    <rendering help="wkhtmltopdf parity (Odoo reports): overflow-x / overflow-y: hidden">
+        <div style="width: 100px; height: 50px; overflow-x: hidden; overflow-y: hidden"><div class="big"/></div>
+    </rendering>
+</test>
+
+<test name="overflow-clips-text">
+    <container>
+        <html lang="en" xmlns="http://www.w3.org/1999/xhtml">
+        <body style="margin: 0; background: white">
+            <slot/>
+        </body>
+        </html>
+    </container>
+
+    <rendering help="reference: nothing">
+        <div/>
+    </rendering>
+
+    <rendering help="the text of the box itself is clipped">
+        <div style="height: 0; overflow: hidden; color: red">FAIL</div>
+    </rendering>
+</test>
+
+<test name="overflow-clip-does-not-establish-formatting-context">
+    <container>
+        <html lang="en" xmlns="http://www.w3.org/1999/xhtml">
+        <body style="margin: 0; background: white">
+            <slot/>
+        </body>
+        </html>
+    </container>
+
+    <rendering help="reference: 100x50 green box">
+        <div style="width: 100px; height: 50px; background: green"/>
+    </rendering>
+
+    <rendering help="the box doesn't avoid the float, it is placed under it">
+        <div style="float: left; width: 50px; height: 50px; background: green"/>
+        <div style="width: 100px; height: 50px; background: green; overflow: clip"/>
+    </rendering>
+</test>
+
+<test name="overflow-propagates-from-body-to-viewport">
+    <container>
+        <html lang="en" xmlns="http://www.w3.org/1999/xhtml">
+        <body style="margin: 0; width: 100px; height: 50px; background: white">
+            <slot/>
+        </body>
+        </html>
+    </container>
+
+    <rendering help="reference: 150x150 green box">
+        <div style="width: 150px; height: 150px; background: green"/>
+    </rendering>
+
+    <rendering help="overflow on body is propagated to the viewport, body doesn't clip">
+        <style>body { overflow: hidden; }</style>
+        <div style="width: 150px; height: 150px; background: green"/>
+    </rendering>
+</test>
+
+</tests>
