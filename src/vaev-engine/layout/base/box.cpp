@@ -155,15 +155,24 @@ struct Box : Meta::NoCopy {
     // https://www.w3.org/TR/css-display-3/#formatting-context
     // Unless otherwise specified, however, establishing a new formatting context creates an independent formatting
     // context.
+    // https://www.w3.org/TR/css-overflow-3/#overflow-control
+    // If the computed value of overflow on a block box is neither visible nor clip nor a combination thereof, it
+    // establishes an independent formatting context for its contents.
     // NOTE: 'overflow-block' and 'overflow-inline' are stored apart from 'overflow-x' and 'overflow-y'.
     bool establishesBlockFormatingContext() const {
+        auto scrollableValue = [](auto overflow) {
+            return overflow == Keywords::SCROLL or
+                   overflow == Keywords::AUTO or
+                   overflow == Keywords::HIDDEN;
+        };
+
         return isRemovedFromFlow() or
                isReplaced() or
                style->display != Style::Display::Inside::FLOW or
-               style->overflows.x != Keywords::VISIBLE or
-               style->overflows.y != Keywords::VISIBLE or
-               style->overflows.block != Keywords::VISIBLE or
-               style->overflows.inline_ != Keywords::VISIBLE;
+               scrollableValue(style->overflows.x) or
+               scrollableValue(style->overflows.y) or
+               scrollableValue(style->overflows.block) or
+               scrollableValue(style->overflows.inline_);
     }
 
     // https://www.w3.org/TR/CSS22/zindex.html
