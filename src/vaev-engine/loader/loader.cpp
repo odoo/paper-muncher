@@ -136,8 +136,8 @@ Async::Task<Gfx::Snapshot> _fetchImageContentAsync(Http::Client& client, Ref::Ur
 
 export struct ResourceLoader {
     Rc<Http::Client> _client;
-    Map<String, Rc<Style::StyleSheet>> _stylesheets;
-    Map<String, Gfx::Snapshot> _images;
+    Map<Ref::Url, Rc<Style::StyleSheet>> _stylesheets;
+    Map<Ref::Url, Gfx::Snapshot> _images;
 
     ResourceLoader(Rc<Http::Client> client)
         : _client(std::move(client)) {}
@@ -151,8 +151,7 @@ export struct ResourceLoader {
     }
 
     Async::Task<Rc<Style::StyleSheet>> fetchStylesheetAsync(Dom::Document& document, Ref::Url url, Style::Origin origin, Async::CancellationToken ct) {
-        auto key = Io::format("{}:{}", toUnderlyingType(origin), url);
-        if (auto cached = _stylesheets.lookup(key))
+        if (auto cached = _stylesheets.lookup(url))
             co_return Ok(cached.take());
 
         auto resp = co_trya$(_client->getAsync(url, ct));
@@ -172,17 +171,16 @@ export struct ResourceLoader {
         }
 
         auto sheet = makeRc<Style::StyleSheet>(std::move(stylesheet));
-        _stylesheets.put(key, sheet);
+        _stylesheets.put(url, sheet);
         co_return Ok(sheet);
     }
 
     Async::Task<Gfx::Snapshot> fetchImageAsync(Ref::Url url, Async::CancellationToken ct) {
-        auto key = Io::format("{}", url);
-        if (auto cached = _images.lookup(key))
+        if (auto cached = _images.lookup(url))
             co_return Ok(cached.take());
 
         auto image = co_trya$(_fetchImageContentAsync(*_client, url, ct));
-        _images.put(key, image);
+        _images.put(url, image);
         co_return Ok(image);
     }
 };

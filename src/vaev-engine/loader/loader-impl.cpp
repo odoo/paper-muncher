@@ -138,7 +138,7 @@ Async::_Task<Rc<Font::Database>> _loadFontfacesAsync(Http::Client& client, Dom::
 
                 auto fontface = co_await _loadFontfaceAsync(client, resolvedUrl.expect(), ct);
                 if (not fontface) {
-                    logWarn("Failed to load font {}", ff.family);
+                    logWarn("Failed to load font {}: {}", ff.family, fontface.error());
                     continue;
                 }
 
