@@ -178,6 +178,11 @@ export struct Computer {
                 for (auto const& subRule : r.rules)
                     _evalRule(subRule, page, c);
             },
+            [&](SupportsRule const& r) {
+                if (r.match())
+                    for (auto const& subRule : r.rules)
+                        _evalRule(subRule, page, c);
+            },
             [&](auto const&) {
                 // Ignore other rule types
             }
@@ -593,6 +598,11 @@ export struct Computer {
                                     : _layers.declareAnonymous(layer);
                 for (auto const& subRule : r.rules)
                     _addRuleToLookup(&subRule, subLayer);
+            },
+            [&](SupportsRule const& r) {
+                if (r.match())
+                    for (auto const& subRule : r.rules)
+                        _addRuleToLookup(&subRule, layer);
             },
             [&](auto const&) {
                 // Ignore other rule types

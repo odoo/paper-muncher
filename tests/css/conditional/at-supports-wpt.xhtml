@@ -1,0 +1,3587 @@
+<!-- Ported from web-platform-tests @ ba6d9f67 -->
+<!-- https://github.com/web-platform-tests/wpt/tree/ba6d9f678ee91de9f58097921ed34e9b6b6849d3 -->
+
+<!-- SPDX-License-Identifier: BSD-3-Clause -->
+<!--
+    The 3-Clause BSD License
+
+    Copyright © web-platform-tests contributors
+
+    Redistribution and use in source and binary forms, with or without modification, are permitted provided that the
+    following conditions are met:
+
+    1. Redistributions of source code must retain the above copyright notice, this list of conditions and the following
+    disclaimer.
+    2. Redistributions in binary form must reproduce the above copyright notice, this list of conditions and the
+    following disclaimer in the documentation and/or other materials provided with the distribution.
+    3. Neither the name of the copyright holder nor the names of its contributors may be used to endorse or promote
+    products derived from this software without specific prior written permission.
+
+    THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES,
+    INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
+    DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
+    SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
+    SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY,
+    WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE
+    USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+-->
+
+<tests>
+
+<!-- https://github.com/web-platform-tests/wpt/blob/ba6d9f67/css/css-conditional/at-supports-001.html -->
+<!-- https://github.com/web-platform-tests/wpt/blob/ba6d9f67/css/css-conditional/at-supports-001-ref.html -->
+<test name="css/css-conditional/at-supports-001.html" width="800px" height="600px">
+    <rendering>
+        <style>
+			div {
+				background-color:green;
+				height:100px;
+				width:100px;
+			}
+		</style>
+        <p>Test passes if there is a <strong>filled green square</strong> and <strong>no red</strong>.</p>
+        <div/>
+    </rendering>
+
+    <rendering help="CSS Test (Conditional Rules): Support for simple passing conditions in @supports">
+        <style>
+		div {
+			background-color:red;
+			height:50px;
+			width:100px;
+		}
+		@supports (margin: 0) {
+			.test1 { background:green; }
+			.test2 { background: red; }
+		}
+		.test2 { background: green; }
+	</style>
+        <p>Test passes if there is a <strong>filled green square</strong> and <strong>no red</strong>.</p>
+        <div class="test1"/>
+        <div class="test2"/>
+    </rendering>
+</test>
+
+<!-- https://github.com/web-platform-tests/wpt/blob/ba6d9f67/css/css-conditional/at-supports-002.html -->
+<!-- https://github.com/web-platform-tests/wpt/blob/ba6d9f67/css/css-conditional/at-supports-001-ref.html -->
+<test name="css/css-conditional/at-supports-002.html" width="800px" height="600px">
+    <rendering>
+        <style>
+			div {
+				background-color:green;
+				height:100px;
+				width:100px;
+			}
+		</style>
+        <p>Test passes if there is a <strong>filled green square</strong> and <strong>no red</strong>.</p>
+        <div/>
+    </rendering>
+
+    <rendering help="CSS Test (Conditional Rules): Support for @supports within @media">
+        <style>
+			div {
+				background-color:red;
+				height:100px;
+				width:100px;
+			}
+			@media all {
+				@supports (margin: 0) {
+					div { background-color:green; }
+				}
+			}
+		</style>
+        <p>Test passes if there is a <strong>filled green square</strong> and <strong>no red</strong>.</p>
+        <div/>
+    </rendering>
+</test>
+
+<!-- https://github.com/web-platform-tests/wpt/blob/ba6d9f67/css/css-conditional/at-supports-003.html -->
+<!-- https://github.com/web-platform-tests/wpt/blob/ba6d9f67/css/css-conditional/at-supports-001-ref.html -->
+<test name="css/css-conditional/at-supports-003.html" width="800px" height="600px">
+    <rendering>
+        <style>
+			div {
+				background-color:green;
+				height:100px;
+				width:100px;
+			}
+		</style>
+        <p>Test passes if there is a <strong>filled green square</strong> and <strong>no red</strong>.</p>
+        <div/>
+    </rendering>
+
+    <rendering help="CSS Test (Conditional Rules): Support for @media within @supports">
+        <style>
+			div {
+				background-color:red;
+				height:100px;
+				width:100px;
+			}
+			@supports (margin: 0) {
+				@media all{
+					div { background-color:green; }
+				}
+			}
+		</style>
+        <p>Test passes if there is a <strong>filled green square</strong> and <strong>no red</strong>.</p>
+        <div/>
+    </rendering>
+</test>
+
+<!-- https://github.com/web-platform-tests/wpt/blob/ba6d9f67/css/css-conditional/at-supports-006.html -->
+<!-- https://github.com/web-platform-tests/wpt/blob/ba6d9f67/css/css-conditional/at-supports-001-ref.html -->
+<test name="css/css-conditional/at-supports-006.html" width="800px" height="600px">
+    <rendering>
+        <style>
+			div {
+				background-color:green;
+				height:100px;
+				width:100px;
+			}
+		</style>
+        <p>Test passes if there is a <strong>filled green square</strong> and <strong>no red</strong>.</p>
+        <div/>
+    </rendering>
+
+    <rendering help="CSS Test (Conditional Rules): Nested parens around conditions in @supports should work">
+        <style>
+			div {
+				background-color:red;
+				height:100px;
+				width:100px;
+			}
+			@supports ((margin: 0)) {
+				div { background-color:green; }
+			}
+		</style>
+        <p>Test passes if there is a <strong>filled green square</strong> and <strong>no red</strong>.</p>
+        <div/>
+    </rendering>
+</test>
+
+<!-- https://github.com/web-platform-tests/wpt/blob/ba6d9f67/css/css-conditional/at-supports-007.html -->
+<!-- https://github.com/web-platform-tests/wpt/blob/ba6d9f67/css/css-conditional/at-supports-001-ref.html -->
+<test name="css/css-conditional/at-supports-007.html" width="800px" height="600px">
+    <rendering>
+        <style>
+			div {
+				background-color:green;
+				height:100px;
+				width:100px;
+			}
+		</style>
+        <p>Test passes if there is a <strong>filled green square</strong> and <strong>no red</strong>.</p>
+        <div/>
+    </rendering>
+
+    <rendering help="CSS Test (Conditional Rules): Conjunctions of passing simple conditions in @supports should pass">
+        <style>
+			div {
+				background-color:red;
+				height:100px;
+				width:100px;
+			}
+			@supports ((margin: 0) and (display:inline-block !important)) {
+				div { background-color:green; }
+			}
+		</style>
+        <p>Test passes if there is a <strong>filled green square</strong> and <strong>no red</strong>.</p>
+        <div/>
+    </rendering>
+</test>
+
+<!-- https://github.com/web-platform-tests/wpt/blob/ba6d9f67/css/css-conditional/at-supports-008.html -->
+<!-- https://github.com/web-platform-tests/wpt/blob/ba6d9f67/css/css-conditional/at-supports-001-ref.html -->
+<test name="css/css-conditional/at-supports-008.html" width="800px" height="600px">
+    <rendering>
+        <style>
+			div {
+				background-color:green;
+				height:100px;
+				width:100px;
+			}
+		</style>
+        <p>Test passes if there is a <strong>filled green square</strong> and <strong>no red</strong>.</p>
+        <div/>
+    </rendering>
+
+    <rendering help="CSS Test (Conditional Rules): Disjunctions with at least a passing simple condition in @supports should pass">
+        <style>
+			div {
+				background-color:red;
+				height:100px;
+				width:100px;
+			}
+			@supports ((margin: 0) or (foo: 15em)) {
+				div { background-color:green; }
+			}
+		</style>
+        <p>Test passes if there is a <strong>filled green square</strong> and <strong>no red</strong>.</p>
+        <div/>
+    </rendering>
+</test>
+
+<!-- https://github.com/web-platform-tests/wpt/blob/ba6d9f67/css/css-conditional/at-supports-009.html -->
+<!-- https://github.com/web-platform-tests/wpt/blob/ba6d9f67/css/css-conditional/at-supports-001-ref.html -->
+<test name="css/css-conditional/at-supports-009.html" width="800px" height="600px">
+    <rendering>
+        <style>
+			div {
+				background-color:green;
+				height:100px;
+				width:100px;
+			}
+		</style>
+        <p>Test passes if there is a <strong>filled green square</strong> and <strong>no red</strong>.</p>
+        <div/>
+    </rendering>
+
+    <rendering help="CSS Test (Conditional Rules): Negations of failing simple conditions in @supports should pass">
+        <style>
+			div {
+				background-color:red;
+				height:100px;
+				width:100px;
+			}
+			@supports (not (yadayada: x, calc( 2/3 ))) {
+				div { background-color:green; }
+			}
+		</style>
+        <p>Test passes if there is a <strong>filled green square</strong> and <strong>no red</strong>.</p>
+        <div/>
+    </rendering>
+</test>
+
+<!-- https://github.com/web-platform-tests/wpt/blob/ba6d9f67/css/css-conditional/at-supports-010.html -->
+<!-- https://github.com/web-platform-tests/wpt/blob/ba6d9f67/css/css-conditional/at-supports-001-ref.html -->
+<test name="css/css-conditional/at-supports-010.html" width="800px" height="600px">
+    <rendering>
+        <style>
+			div {
+				background-color:green;
+				height:100px;
+				width:100px;
+			}
+		</style>
+        <p>Test passes if there is a <strong>filled green square</strong> and <strong>no red</strong>.</p>
+        <div/>
+    </rendering>
+
+    <rendering help="CSS Test (Conditional Rules): Combinations of conjuctions, disjunctions, and negations of simple conditions in @supports should work">
+        <style>
+			div {
+				background-color:red;
+				height:100px;
+				width:100px;
+			}
+			@supports ((yada: 2kg !trivial) or ((not (foo:bar)) and (((visibility:hidden))))) {
+				div { background-color:green; }
+			}
+		</style>
+        <p>Test passes if there is a <strong>filled green square</strong> and <strong>no red</strong>.</p>
+        <div/>
+    </rendering>
+</test>
+
+<!-- https://github.com/web-platform-tests/wpt/blob/ba6d9f67/css/css-conditional/at-supports-011.html -->
+<!-- https://github.com/web-platform-tests/wpt/blob/ba6d9f67/css/css-conditional/at-supports-001-ref.html -->
+<test name="css/css-conditional/at-supports-011.html" width="800px" height="600px">
+    <rendering>
+        <style>
+			div {
+				background-color:green;
+				height:100px;
+				width:100px;
+			}
+		</style>
+        <p>Test passes if there is a <strong>filled green square</strong> and <strong>no red</strong>.</p>
+        <div/>
+    </rendering>
+
+    <rendering help="CSS Test (Conditional Rules): Conditions not enclosed in parens in @supports should not work">
+        <style>
+			div {
+				background-color:red;
+				height:100px;
+				width:100px;
+			}
+			@supports (margin:0) { div { background-color:green; } }
+			@supports margin: 0 {
+				div { background-color:red; }
+			}
+		</style>
+        <p>Test passes if there is a <strong>filled green square</strong> and <strong>no red</strong>.</p>
+        <div/>
+    </rendering>
+</test>
+
+<!-- https://github.com/web-platform-tests/wpt/blob/ba6d9f67/css/css-conditional/at-supports-012.html -->
+<!-- https://github.com/web-platform-tests/wpt/blob/ba6d9f67/css/css-conditional/at-supports-001-ref.html -->
+<test name="css/css-conditional/at-supports-012.html" width="800px" height="600px">
+    <rendering>
+        <style>
+			div {
+				background-color:green;
+				height:100px;
+				width:100px;
+			}
+		</style>
+        <p>Test passes if there is a <strong>filled green square</strong> and <strong>no red</strong>.</p>
+        <div/>
+    </rendering>
+
+    <rendering help="CSS Test (Conditional Rules): Conjunctions with more than two terms in @supports should work">
+        <style>
+			div {
+				background-color:red;
+				height:100px;
+				width:100px;
+			}
+			@supports ((margin: 0) and (background: blue) and (padding:inherit)) {
+				div { background-color:green; }
+			}
+		</style>
+        <p>Test passes if there is a <strong>filled green square</strong> and <strong>no red</strong>.</p>
+        <div/>
+    </rendering>
+</test>
+
+<!-- https://github.com/web-platform-tests/wpt/blob/ba6d9f67/css/css-conditional/at-supports-013.html -->
+<!-- https://github.com/web-platform-tests/wpt/blob/ba6d9f67/css/css-conditional/at-supports-001-ref.html -->
+<test name="css/css-conditional/at-supports-013.html" width="800px" height="600px">
+    <rendering>
+        <style>
+			div {
+				background-color:green;
+				height:100px;
+				width:100px;
+			}
+		</style>
+        <p>Test passes if there is a <strong>filled green square</strong> and <strong>no red</strong>.</p>
+        <div/>
+    </rendering>
+
+    <rendering help="CSS Test (Conditional Rules): Disjunction with more than two terms in @supports should work">
+        <style>
+			div {
+				background-color:red;
+				height:100px;
+				width:100px;
+			}
+			@supports ((yoyo: yaya) or (margin: 0) or (answer: 42)) {
+				div { background-color:green; }
+			}
+		</style>
+        <p>Test passes if there is a <strong>filled green square</strong> and <strong>no red</strong>.</p>
+        <div/>
+    </rendering>
+</test>
+
+<!-- https://github.com/web-platform-tests/wpt/blob/ba6d9f67/css/css-conditional/at-supports-014.html -->
+<!-- https://github.com/web-platform-tests/wpt/blob/ba6d9f67/css/css-conditional/at-supports-001-ref.html -->
+<test name="css/css-conditional/at-supports-014.html" width="800px" height="600px">
+    <rendering>
+        <style>
+			div {
+				background-color:green;
+				height:100px;
+				width:100px;
+			}
+		</style>
+        <p>Test passes if there is a <strong>filled green square</strong> and <strong>no red</strong>.</p>
+        <div/>
+    </rendering>
+
+    <rendering help="CSS Test (Conditional Rules): Negations in @supports should not work if &quot;not&quot; isn't follow by a space">
+        <style>
+			div {
+				background-color:red;
+				height:100px;
+				width:100px;
+			}
+			@supports (width: 0) {
+				div { background-color:green; }
+			}
+			@supports not(foo: baz) {
+				div { background-color:red; }
+			}
+		</style>
+        <p>Test passes if there is a <strong>filled green square</strong> and <strong>no red</strong>.</p>
+        <div/>
+    </rendering>
+</test>
+
+<!-- https://github.com/web-platform-tests/wpt/blob/ba6d9f67/css/css-conditional/at-supports-015.html -->
+<!-- https://github.com/web-platform-tests/wpt/blob/ba6d9f67/css/css-conditional/at-supports-001-ref.html -->
+<test name="css/css-conditional/at-supports-015.html" width="800px" height="600px">
+    <rendering>
+        <style>
+			div {
+				background-color:green;
+				height:100px;
+				width:100px;
+			}
+		</style>
+        <p>Test passes if there is a <strong>filled green square</strong> and <strong>no red</strong>.</p>
+        <div/>
+    </rendering>
+
+    <rendering help="CSS Test (Conditional Rules): Bizarre syntax that still conforms to the core grammar should succesfully parse in @supports">
+        <style>
+			div {
+				background-color:red;
+				height:100px;
+				width:100px;
+			}
+			@supports (not (foo: baz !unrelated $ ,/[&amp;])) {
+				div { background-color:green; }
+			}
+		</style>
+        <p>Test passes if there is a <strong>filled green square</strong> and <strong>no red</strong>.</p>
+        <div/>
+    </rendering>
+</test>
+
+<!-- https://github.com/web-platform-tests/wpt/blob/ba6d9f67/css/css-conditional/at-supports-016.html -->
+<!-- https://github.com/web-platform-tests/wpt/blob/ba6d9f67/css/css-conditional/at-supports-001-ref.html -->
+<test name="css/css-conditional/at-supports-016.html" width="800px" height="600px">
+    <rendering>
+        <style>
+			div {
+				background-color:green;
+				height:100px;
+				width:100px;
+			}
+		</style>
+        <p>Test passes if there is a <strong>filled green square</strong> and <strong>no red</strong>.</p>
+        <div/>
+    </rendering>
+
+    <rendering help="CSS Test (Conditional Rules): In @supports, parens are required to mix conjunctions with disjunctions">
+        <style>
+			div{
+				background-color:red;
+				height:100px;
+				width:100px;
+			}
+			@supports (margin:0) { div { background-color:green; } }
+			@supports ((margin: 0) and (display: inline) or (width:1em)) {
+				div { background-color:red; }
+			}
+		</style>
+        <p>Test passes if there is a <strong>filled green square</strong> and <strong>no red</strong>.</p>
+        <div/>
+    </rendering>
+</test>
+
+<!-- https://github.com/web-platform-tests/wpt/blob/ba6d9f67/css/css-conditional/at-supports-018.html -->
+<!-- https://github.com/web-platform-tests/wpt/blob/ba6d9f67/css/css-conditional/at-supports-001-ref.html -->
+<test name="css/css-conditional/at-supports-018.html" width="800px" height="600px">
+    <rendering>
+        <style>
+			div {
+				background-color:green;
+				height:100px;
+				width:100px;
+			}
+		</style>
+        <p>Test passes if there is a <strong>filled green square</strong> and <strong>no red</strong>.</p>
+        <div/>
+    </rendering>
+
+    <rendering help="CSS Test (Conditional Rules): In @supports conditions, the arguments of a function can begin with spaces">
+        <style>
+			div {
+				background:red;
+				height:100px;
+				width:100px;
+			}
+			@supports (not (width:compute( 2px + 2px ))) {
+				div { background-color:green; }
+			}
+		</style>
+        <p>Test passes if there is a <strong>filled green square</strong> and <strong>no red</strong>.</p>
+        <div/>
+    </rendering>
+</test>
+
+<!-- https://github.com/web-platform-tests/wpt/blob/ba6d9f67/css/css-conditional/at-supports-019.html -->
+<!-- https://github.com/web-platform-tests/wpt/blob/ba6d9f67/css/css-conditional/at-supports-001-ref.html -->
+<test name="css/css-conditional/at-supports-019.html" width="800px" height="600px">
+    <rendering>
+        <style>
+			div {
+				background-color:green;
+				height:100px;
+				width:100px;
+			}
+		</style>
+        <p>Test passes if there is a <strong>filled green square</strong> and <strong>no red</strong>.</p>
+        <div/>
+    </rendering>
+
+    <rendering help="CSS Test (Conditional Rules): Incorrect syntax in @supports recovers properly">
+        <style>
+			div {
+				background-color:red;
+				height:100px;
+				width:100px;
+			}
+			@supports (margin: ) {
+				div { background-color:red !important; }
+			}
+			@supports (margin:0) { div { background-color:green; } }
+		</style>
+        <p>Test passes if there is a <strong>filled green square</strong> and <strong>no red</strong>.</p>
+        <div/>
+    </rendering>
+</test>
+
+<!-- https://github.com/web-platform-tests/wpt/blob/ba6d9f67/css/css-conditional/at-supports-020.html -->
+<!-- https://github.com/web-platform-tests/wpt/blob/ba6d9f67/css/css-conditional/at-supports-001-ref.html -->
+<test name="css/css-conditional/at-supports-020.html" width="800px" height="600px">
+    <rendering>
+        <style>
+			div {
+				background-color:green;
+				height:100px;
+				width:100px;
+			}
+		</style>
+        <p>Test passes if there is a <strong>filled green square</strong> and <strong>no red</strong>.</p>
+        <div/>
+    </rendering>
+
+    <rendering help="CSS Test (Conditional Rules): Incorrect syntax in @supports recovers properly">
+        <style>
+			div {
+				background-color:red;
+				height:100px;
+				width:100px;
+			}
+			@supports (margin: 2px) ) {
+				div { background-color:red !important; }
+			}
+			@supports (margin:0) { div { background-color:green; } }
+		</style>
+        <p>Test passes if there is a <strong>filled green square</strong> and <strong>no red</strong>.</p>
+        <div/>
+    </rendering>
+</test>
+
+<!-- https://github.com/web-platform-tests/wpt/blob/ba6d9f67/css/css-conditional/at-supports-021.html -->
+<!-- https://github.com/web-platform-tests/wpt/blob/ba6d9f67/css/css-conditional/at-supports-001-ref.html -->
+<test name="css/css-conditional/at-supports-021.html" width="800px" height="600px">
+    <rendering>
+        <style>
+			div {
+				background-color:green;
+				height:100px;
+				width:100px;
+			}
+		</style>
+        <p>Test passes if there is a <strong>filled green square</strong> and <strong>no red</strong>.</p>
+        <div/>
+    </rendering>
+
+    <rendering help="CSS Test (Conditional Rules): Incorrect syntax in @supports recovers properly">
+        <style>
+			div {
+				background-color:red;
+				height:100px;
+				width:100px;
+			}
+			@supports (margin:0 );
+			@supports (margin:0) { div { background-color:green; } }
+		</style>
+        <p>Test passes if there is a <strong>filled green square</strong> and <strong>no red</strong>.</p>
+        <div/>
+    </rendering>
+</test>
+
+<!-- https://github.com/web-platform-tests/wpt/blob/ba6d9f67/css/css-conditional/at-supports-022.html -->
+<!-- https://github.com/web-platform-tests/wpt/blob/ba6d9f67/css/css-conditional/at-supports-001-ref.html -->
+<test name="css/css-conditional/at-supports-022.html" width="800px" height="600px">
+    <rendering>
+        <style>
+			div {
+				background-color:green;
+				height:100px;
+				width:100px;
+			}
+		</style>
+        <p>Test passes if there is a <strong>filled green square</strong> and <strong>no red</strong>.</p>
+        <div/>
+    </rendering>
+
+    <rendering help="CSS Test (Conditional Rules): Incorrect syntax in @supports recovers properly">
+        <style>
+			div {
+				background-color:red;
+				height:100px;
+				width:100px;
+			}
+			@supports [margin: 0] {
+				div { background-color:red !important; }
+			}
+			@supports (margin:0) { div { background-color:green; } }
+		</style>
+        <p>Test passes if there is a <strong>filled green square</strong> and <strong>no red</strong>.</p>
+        <div/>
+    </rendering>
+</test>
+
+<!-- https://github.com/web-platform-tests/wpt/blob/ba6d9f67/css/css-conditional/at-supports-023.html -->
+<!-- https://github.com/web-platform-tests/wpt/blob/ba6d9f67/css/css-conditional/at-supports-001-ref.html -->
+<test name="css/css-conditional/at-supports-023.html" width="800px" height="600px">
+    <rendering>
+        <style>
+			div {
+				background-color:green;
+				height:100px;
+				width:100px;
+			}
+		</style>
+        <p>Test passes if there is a <strong>filled green square</strong> and <strong>no red</strong>.</p>
+        <div/>
+    </rendering>
+
+    <rendering help="CSS Test (Conditional Rules): Incorrect syntax in nested @supports recovers properly">
+        <style>
+			div {
+				background-color:red;
+				height:100px;
+				width:100px;
+			}
+			@media all {
+				@supports (width: 0)) {}
+				@supports (margin:0) { div { background-color:green !important; } }
+			}
+			div { background-color:red; }
+		</style>
+        <p>Test passes if there is a <strong>filled green square</strong> and <strong>no red</strong>.</p>
+        <div/>
+    </rendering>
+</test>
+
+<!-- https://github.com/web-platform-tests/wpt/blob/ba6d9f67/css/css-conditional/at-supports-024.html -->
+<!-- https://github.com/web-platform-tests/wpt/blob/ba6d9f67/css/css-conditional/at-supports-001-ref.html -->
+<test name="css/css-conditional/at-supports-024.html" width="800px" height="600px">
+    <rendering>
+        <style>
+			div {
+				background-color:green;
+				height:100px;
+				width:100px;
+			}
+		</style>
+        <p>Test passes if there is a <strong>filled green square</strong> and <strong>no red</strong>.</p>
+        <div/>
+    </rendering>
+
+    <rendering help="CSS Test (Conditional Rules): Incorrect syntax in @supports recovers properly">
+        <style>
+			div {
+				background-color:red;
+				height:100px;
+				width:100px;
+			}
+			@supports;
+			@supports (margin:0) { div { background-color:green; } }
+		</style>
+        <p>Test passes if there is a <strong>filled green square</strong> and <strong>no red</strong>.</p>
+        <div/>
+    </rendering>
+</test>
+
+<!-- https://github.com/web-platform-tests/wpt/blob/ba6d9f67/css/css-conditional/at-supports-025.html -->
+<!-- https://github.com/web-platform-tests/wpt/blob/ba6d9f67/css/css-conditional/at-supports-001-ref.html -->
+<test name="css/css-conditional/at-supports-025.html" width="800px" height="600px">
+    <rendering>
+        <style>
+			div {
+				background-color:green;
+				height:100px;
+				width:100px;
+			}
+		</style>
+        <p>Test passes if there is a <strong>filled green square</strong> and <strong>no red</strong>.</p>
+        <div/>
+    </rendering>
+
+    <rendering help="CSS Test (Conditional Rules): Incorrect syntax in @supports recovers properly">
+        <style>
+			div {
+				background-color:red;
+				height:100px;
+				width:100px;
+			}
+			@supports ((margin:0) and [padding:0]) {
+				div { background-color:red !important; }
+			}
+			@supports (margin:0) { div { background-color:green; } }
+		</style>
+        <p>Test passes if there is a <strong>filled green square</strong> and <strong>no red</strong>.</p>
+        <div/>
+    </rendering>
+</test>
+
+<!-- https://github.com/web-platform-tests/wpt/blob/ba6d9f67/css/css-conditional/at-supports-026.html -->
+<!-- https://github.com/web-platform-tests/wpt/blob/ba6d9f67/css/css-conditional/at-supports-001-ref.html -->
+<test name="css/css-conditional/at-supports-026.html" width="800px" height="600px">
+    <rendering>
+        <style>
+			div {
+				background-color:green;
+				height:100px;
+				width:100px;
+			}
+		</style>
+        <p>Test passes if there is a <strong>filled green square</strong> and <strong>no red</strong>.</p>
+        <div/>
+    </rendering>
+
+    <rendering help="CSS Test (Conditional Rules): Incorrect syntax in @supports recovers properly">
+        <style>
+			div {
+				background-color:red;
+				height:100px;
+				width:100px;
+			}
+			@supports (margin: 0]) {
+				div { background-color:red !important; }
+			}
+			@supports (margin:0) { div { background-color:green; } }
+		</style>
+        <p>Test passes if there is a <strong>filled green square</strong> and <strong>no red</strong>.</p>
+        <div/>
+    </rendering>
+</test>
+
+<!-- https://github.com/web-platform-tests/wpt/blob/ba6d9f67/css/css-conditional/at-supports-028.html -->
+<!-- https://github.com/web-platform-tests/wpt/blob/ba6d9f67/css/css-conditional/at-supports-001-ref.html -->
+<test name="css/css-conditional/at-supports-028.html" width="800px" height="600px">
+    <rendering>
+        <style>
+			div {
+				background-color:green;
+				height:100px;
+				width:100px;
+			}
+		</style>
+        <p>Test passes if there is a <strong>filled green square</strong> and <strong>no red</strong>.</p>
+        <div/>
+    </rendering>
+
+    <rendering help="CSS Test (Conditional Rules): Incorrect syntax in @supports recovers properly">
+        <style>
+			div {
+				background-color:red;
+				height:100px;
+				width:100px;
+			}
+			@supports (margin: 0)) {}
+			@supports (margin:0) { div { background-color:green; } }
+		</style>
+        <p>Test passes if there is a <strong>filled green square</strong> and <strong>no red</strong>.</p>
+        <div/>
+    </rendering>
+</test>
+
+<!-- https://github.com/web-platform-tests/wpt/blob/ba6d9f67/css/css-conditional/at-supports-031.html -->
+<!-- https://github.com/web-platform-tests/wpt/blob/ba6d9f67/css/css-conditional/at-supports-001-ref.html -->
+<test name="css/css-conditional/at-supports-031.html" width="800px" height="600px">
+    <rendering>
+        <style>
+			div {
+				background-color:green;
+				height:100px;
+				width:100px;
+			}
+		</style>
+        <p>Test passes if there is a <strong>filled green square</strong> and <strong>no red</strong>.</p>
+        <div/>
+    </rendering>
+
+    <rendering help="CSS Test (Conditional Rules): Incorrect syntax in @supports recovers properly">
+        <style>
+			div {
+				background-color:red;
+				height:100px;
+				width:100px;
+			}
+			@supports (margin: 0)) ;
+			@supports (margin:0) { div { background-color:green; } }
+		</style>
+        <p>Test passes if there is a <strong>filled green square</strong> and <strong>no red</strong>.</p>
+        <div/>
+    </rendering>
+</test>
+
+<!-- https://github.com/web-platform-tests/wpt/blob/ba6d9f67/css/css-conditional/at-supports-032.html -->
+<!-- https://github.com/web-platform-tests/wpt/blob/ba6d9f67/css/css-conditional/at-supports-001-ref.html -->
+<test name="css/css-conditional/at-supports-032.html" width="800px" height="600px">
+    <rendering>
+        <style>
+			div {
+				background-color:green;
+				height:100px;
+				width:100px;
+			}
+		</style>
+        <p>Test passes if there is a <strong>filled green square</strong> and <strong>no red</strong>.</p>
+        <div/>
+    </rendering>
+
+    <rendering help="CSS Test (Conditional Rules): Incorrect syntax in @supports recovers properly">
+        <style>
+			div {
+				background-color:red;
+				height:100px;
+				width:100px;
+			}
+			@supports {}
+			@supports (margin:0) { div { background-color:green; } }
+		</style>
+        <p>Test passes if there is a <strong>filled green square</strong> and <strong>no red</strong>.</p>
+        <div/>
+    </rendering>
+</test>
+
+<!-- https://github.com/web-platform-tests/wpt/blob/ba6d9f67/css/css-conditional/at-supports-033.html -->
+<!-- https://github.com/web-platform-tests/wpt/blob/ba6d9f67/css/css-conditional/at-supports-001-ref.html -->
+<test name="css/css-conditional/at-supports-033.html" width="800px" height="600px">
+    <rendering>
+        <style>
+			div {
+				background-color:green;
+				height:100px;
+				width:100px;
+			}
+		</style>
+        <p>Test passes if there is a <strong>filled green square</strong> and <strong>no red</strong>.</p>
+        <div/>
+    </rendering>
+
+    <rendering help="CSS Test (Conditional Rules): Incorrect syntax in @supports recovers properly">
+        <style>
+			div {
+				background-color:red;
+				height:100px;
+				width:100px;
+			}
+			@supports ;
+			@supports (margin:0) { div { background-color:green; } }
+		</style>
+        <p>Test passes if there is a <strong>filled green square</strong> and <strong>no red</strong>.</p>
+        <div/>
+    </rendering>
+</test>
+
+<!-- https://github.com/web-platform-tests/wpt/blob/ba6d9f67/css/css-conditional/at-supports-034.html -->
+<!-- https://github.com/web-platform-tests/wpt/blob/ba6d9f67/css/css-conditional/at-supports-001-ref.html -->
+<test name="css/css-conditional/at-supports-034.html" width="800px" height="600px">
+    <rendering>
+        <style>
+			div {
+				background-color:green;
+				height:100px;
+				width:100px;
+			}
+		</style>
+        <p>Test passes if there is a <strong>filled green square</strong> and <strong>no red</strong>.</p>
+        <div/>
+    </rendering>
+
+    <rendering help="CSS Test (Conditional Rules): Incorrect syntax of supports condition">
+        <style>
+			div
+			{
+				background-color: red;
+				height: 100px;
+				width: 100px;
+			}
+
+			@supports (margin: 0 or padding: 0) {	div {background-color: red !important;} }
+
+			@supports (margin: 0) { div {background-color: green;} }
+		</style>
+        <p>Test passes if there is a <strong>filled green square</strong> and <strong>no red</strong>.</p>
+        <div/>
+    </rendering>
+</test>
+
+<!-- https://github.com/web-platform-tests/wpt/blob/ba6d9f67/css/css-conditional/at-supports-035.html -->
+<!-- https://github.com/web-platform-tests/wpt/blob/ba6d9f67/css/css-conditional/at-supports-001-ref.html -->
+<test name="css/css-conditional/at-supports-035.html" width="800px" height="600px">
+    <rendering>
+        <style>
+			div {
+				background-color:green;
+				height:100px;
+				width:100px;
+			}
+		</style>
+        <p>Test passes if there is a <strong>filled green square</strong> and <strong>no red</strong>.</p>
+        <div/>
+    </rendering>
+
+    <rendering help="CSS Test (Conditional Rules): Incorrect syntax of supports condition">
+        <style>
+			div
+			{
+				background-color: red;
+				height: 100px;
+				width: 100px;
+			}
+
+			@supports (margin: 0) { div {background-color: green;} }
+
+			@supports (margin: 0 or padding: 0) {	div {background-color: red;} }
+		</style>
+        <p>Test passes if there is a <strong>filled green square</strong> and <strong>no red</strong>.</p>
+        <div/>
+    </rendering>
+</test>
+
+<!-- https://github.com/web-platform-tests/wpt/blob/ba6d9f67/css/css-conditional/at-supports-036.html -->
+<!-- https://github.com/web-platform-tests/wpt/blob/ba6d9f67/css/css-conditional/at-supports-001-ref.html -->
+<test name="css/css-conditional/at-supports-036.html" width="800px" height="600px">
+    <rendering>
+        <style>
+			div {
+				background-color:green;
+				height:100px;
+				width:100px;
+			}
+		</style>
+        <p>Test passes if there is a <strong>filled green square</strong> and <strong>no red</strong>.</p>
+        <div/>
+    </rendering>
+
+    <rendering help="CSS Test (Conditional Rules): Incorrect syntax of supports condition">
+        <style>
+			div
+			{
+				background-color: red;
+				height: 100px;
+				width: 100px;
+			}
+
+			@supports (margin: 0 and padding: 0)
+			{
+				div {background-color: red !important;}
+			}
+
+			@supports (margin: 0) { div {background-color: green;} }
+		</style>
+        <p>Test passes if there is a <strong>filled green square</strong> and <strong>no red</strong>.</p>
+        <div/>
+    </rendering>
+</test>
+
+<!-- https://github.com/web-platform-tests/wpt/blob/ba6d9f67/css/css-conditional/at-supports-037.html -->
+<!-- https://github.com/web-platform-tests/wpt/blob/ba6d9f67/css/css-conditional/at-supports-001-ref.html -->
+<test name="css/css-conditional/at-supports-037.html" width="800px" height="600px">
+    <rendering>
+        <style>
+			div {
+				background-color:green;
+				height:100px;
+				width:100px;
+			}
+		</style>
+        <p>Test passes if there is a <strong>filled green square</strong> and <strong>no red</strong>.</p>
+        <div/>
+    </rendering>
+
+    <rendering help="CSS Test (Conditional Rules): Incorrect syntax of supports condition">
+        <style>
+			div
+			{
+				background-color: red;
+				height: 100px;
+				width: 100px;
+			}
+
+			@supports (margin: 0) { div {background-color: green;} }
+
+			@supports (margin: 0 and padding: 0) {	div {background-color: red;}	}
+
+		</style>
+        <p>Test passes if there is a <strong>filled green square</strong> and <strong>no red</strong>.</p>
+        <div/>
+    </rendering>
+</test>
+
+<!-- https://github.com/web-platform-tests/wpt/blob/ba6d9f67/css/css-conditional/at-supports-038.html -->
+<!-- https://github.com/web-platform-tests/wpt/blob/ba6d9f67/css/css-conditional/at-supports-001-ref.html -->
+<test name="css/css-conditional/at-supports-038.html" width="800px" height="600px">
+    <rendering>
+        <style>
+			div {
+				background-color:green;
+				height:100px;
+				width:100px;
+			}
+		</style>
+        <p>Test passes if there is a <strong>filled green square</strong> and <strong>no red</strong>.</p>
+        <div/>
+    </rendering>
+
+    <rendering help="CSS Test (Conditional Rules): a supports condition declaration can not end with a semi-colon">
+        <style>
+			div
+			{
+				background-color: red;
+				height: 100px;
+				width: 100px;
+			}
+
+			@supports (margin: 0;) { div {background-color: red !important;} }
+
+			@supports (margin: 0) { div {background-color: green;} }
+		</style>
+        <p>Test passes if there is a <strong>filled green square</strong> and <strong>no red</strong>.</p>
+        <div/>
+    </rendering>
+</test>
+
+<!-- https://github.com/web-platform-tests/wpt/blob/ba6d9f67/css/css-conditional/at-supports-039.html -->
+<!-- https://github.com/web-platform-tests/wpt/blob/ba6d9f67/css/css-conditional/at-supports-001-ref.html -->
+<test name="css/css-conditional/at-supports-039.html" width="800px" height="600px">
+    <rendering>
+        <style>
+			div {
+				background-color:green;
+				height:100px;
+				width:100px;
+			}
+		</style>
+        <p>Test passes if there is a <strong>filled green square</strong> and <strong>no red</strong>.</p>
+        <div/>
+    </rendering>
+
+    <rendering help="CSS Test (Conditional Rules): a supports condition declaration can not end with a semi-colon">
+        <style>
+			div
+			{
+				background-color: red;
+				height: 100px;
+				width: 100px;
+			}
+
+			@supports (margin: 0) { div {background-color: green;} }
+
+			@supports (margin: 0;) { div {background-color: red;}	}
+		</style>
+        <p>Test passes if there is a <strong>filled green square</strong> and <strong>no red</strong>.</p>
+        <div/>
+    </rendering>
+</test>
+
+<!-- https://github.com/web-platform-tests/wpt/blob/ba6d9f67/css/css-conditional/at-supports-043.html -->
+<!-- https://github.com/web-platform-tests/wpt/blob/ba6d9f67/css/css-conditional/at-supports-001-ref.html -->
+<test name="css/css-conditional/at-supports-043.html" width="800px" height="600px">
+    <rendering>
+        <style>
+			div {
+				background-color:green;
+				height:100px;
+				width:100px;
+			}
+		</style>
+        <p>Test passes if there is a <strong>filled green square</strong> and <strong>no red</strong>.</p>
+        <div/>
+    </rendering>
+
+    <rendering help="CSS Conditional Test: Disjunction token `or` should not immediately precede its following opening paren.">
+        <style>
+            div {
+                background-color: green;
+                height: 100px;
+                width: 100px;
+            }
+
+            @supports ( ( background-color: red ) or( background-color: green ) ) {
+                div { background-color: red; }
+            }
+        </style>
+        <p>Test passes if there is a <strong>filled green square</strong> and <strong>no red</strong>.</p>
+        <div/>
+    </rendering>
+</test>
+
+<!-- https://github.com/web-platform-tests/wpt/blob/ba6d9f67/css/css-conditional/at-supports-044.html -->
+<!-- https://github.com/web-platform-tests/wpt/blob/ba6d9f67/css/css-conditional/at-supports-001-ref.html -->
+<test name="css/css-conditional/at-supports-044.html" width="800px" height="600px">
+    <rendering>
+        <style>
+			div {
+				background-color:green;
+				height:100px;
+				width:100px;
+			}
+		</style>
+        <p>Test passes if there is a <strong>filled green square</strong> and <strong>no red</strong>.</p>
+        <div/>
+    </rendering>
+
+    <rendering help="CSS Conditional Test: Custom Properties in @supports">
+        <style>
+  div {
+    background: green;
+    height: 20px;
+    width: 100px;
+  }
+
+  body {
+    --badcolor: red;
+    --goodcolor: green;
+  }
+  div {
+    background: var(--badcolor);
+  }
+  @supports (--foo: whatever) {
+    .test1 { background: green; }
+  }
+
+  @supports (--foo: whatever !important) {
+    .test2 { background: var(--goodcolor); }
+  }
+
+  .test3 { background: green; }
+  @supports (--foo: whatever !bogus) {
+    .test3 { background: red; }
+  }
+
+  @supports (color: var(--anything) invalid-value) {
+    .test4 { background: green; }
+  }
+
+  .test5 { background: red; }
+  @supports not (--goodcolor: green) {
+    .test5 { background: green; }
+  }
+  .test5 { background: var(--goodcolor) }
+</style>
+        <p>Test passes if there is a <strong>filled green square</strong> and <strong>no red</strong>.</p>
+        <div class="test1"/>
+        <div class="test2"/>
+        <div class="test3"/>
+        <div class="test4"/>
+        <div class="test5"/>
+    </rendering>
+</test>
+
+<!-- https://github.com/web-platform-tests/wpt/blob/ba6d9f67/css/css-conditional/at-supports-046.html -->
+<!-- https://github.com/web-platform-tests/wpt/blob/ba6d9f67/css/css-conditional/at-supports-001-ref.html -->
+<test name="css/css-conditional/at-supports-046.html" width="800px" height="600px">
+    <rendering>
+        <style>
+			div {
+				background-color:green;
+				height:100px;
+				width:100px;
+			}
+		</style>
+        <p>Test passes if there is a <strong>filled green square</strong> and <strong>no red</strong>.</p>
+        <div/>
+    </rendering>
+
+    <rendering help="CSS Conditional Test: Unknown Functional Notation as False in @supports">
+        <style>
+  div {
+    background: green;
+    height: 10px;
+    width: 100px;
+  }
+
+  div {
+    background: red;
+  }
+
+  @supports not unknown() {
+    .test1.bare { background: green; }
+  }
+  @supports (not (unknown())) {
+    .test1.wrapped { background: green; }
+  }
+
+  @supports not unknown(with stuff) {
+    .test2.bare { background: green; }
+  }
+  @supports (not (unknown(with stuff))) {
+    .test2.wrapped { background: green; }
+  }
+
+  @supports not unknown(!@#% { ... } more() @stuff [ ]) {
+    .test3.bare { background: green; }
+  }
+  @supports (not (unknown(!@#% { ... } more() @stuff [ ]))) {
+    .test3.wrapped { background: green; }
+  }
+
+  .test4, .test5 { background: green; }
+
+  @supports unknown() {
+    .test4.bare { background: red; }
+  }
+  @supports (unknown()) {
+    .test4.wrapped { background: red; }
+  }
+
+  @supports unknown(with stuff) {
+    .test5.bare { background: red; }
+  }
+  @supports (unknown(with stuff)) {
+    .test5.wrapped { background: red; }
+  }
+</style>
+        <p>Test passes if there is a <strong>filled green square</strong> and <strong>no red</strong>.</p>
+        <div class="test1 bare"/>
+        <div class="test2 bare"/>
+        <div class="test3 bare"/>
+        <div class="test4 bare"/>
+        <div class="test5 bare"/>
+        <div class="test1 wrapped"/>
+        <div class="test2 wrapped"/>
+        <div class="test3 wrapped"/>
+        <div class="test4 wrapped"/>
+        <div class="test5 wrapped"/>
+    </rendering>
+</test>
+
+<!-- https://github.com/web-platform-tests/wpt/blob/ba6d9f67/css/css-conditional/css-supports-001.xht -->
+<!-- https://github.com/web-platform-tests/wpt/blob/ba6d9f67/css/css-conditional/support/pass.xht -->
+<test name="css/css-conditional/css-supports-001.xht" width="800px" height="600px">
+    <rendering>
+        <style>
+   html { background-color: green }
+  </style>
+    </rendering>
+
+    <rendering help="CSS Test: An @supports rule with valid syntax and a passing condition must apply rules inside it">
+        <style>
+    @supports (color: green) {
+      html { background-color: green }
+    }
+  </style>
+    </rendering>
+</test>
+
+<!-- https://github.com/web-platform-tests/wpt/blob/ba6d9f67/css/css-conditional/css-supports-002.xht -->
+<!-- https://github.com/web-platform-tests/wpt/blob/ba6d9f67/css/css-conditional/support/pass.xht -->
+<test name="css/css-conditional/css-supports-002.xht" width="800px" height="600px">
+    <rendering>
+        <style>
+   html { background-color: green }
+  </style>
+    </rendering>
+
+    <rendering help="CSS Test: An @supports rule with invalid syntax must not apply rules inside it">
+        <style>
+    html { background-color: green }
+    @supports color: green {
+      html { background-color: red }
+    }
+  </style>
+    </rendering>
+</test>
+
+<!-- https://github.com/web-platform-tests/wpt/blob/ba6d9f67/css/css-conditional/css-supports-003.xht -->
+<!-- https://github.com/web-platform-tests/wpt/blob/ba6d9f67/css/css-conditional/support/pass.xht -->
+<test name="css/css-conditional/css-supports-003.xht" width="800px" height="600px">
+    <rendering>
+        <style>
+   html { background-color: green }
+  </style>
+    </rendering>
+
+    <rendering help="CSS Test: An @supports rule with valid syntax and a passing condition must apply rules inside it">
+        <style>
+    @supports ((color: green)) {
+      html { background-color: green }
+    }
+  </style>
+    </rendering>
+</test>
+
+<!-- https://github.com/web-platform-tests/wpt/blob/ba6d9f67/css/css-conditional/css-supports-004.xht -->
+<!-- https://github.com/web-platform-tests/wpt/blob/ba6d9f67/css/css-conditional/support/pass.xht -->
+<test name="css/css-conditional/css-supports-004.xht" width="800px" height="600px">
+    <rendering>
+        <style>
+   html { background-color: green }
+  </style>
+    </rendering>
+
+    <rendering help="CSS Test: An @supports rule with valid syntax and a passing condition must apply rules inside it">
+        <style>
+    @supports (color: green !important) {
+      html { background-color: green }
+    }
+  </style>
+    </rendering>
+</test>
+
+<!-- https://github.com/web-platform-tests/wpt/blob/ba6d9f67/css/css-conditional/css-supports-005.xht -->
+<!-- https://github.com/web-platform-tests/wpt/blob/ba6d9f67/css/css-conditional/support/pass.xht -->
+<test name="css/css-conditional/css-supports-005.xht" width="800px" height="600px">
+    <rendering>
+        <style>
+   html { background-color: green }
+  </style>
+    </rendering>
+
+    <rendering help="CSS Test: An @supports rule with valid syntax but a failing condition must not apply rules inside it">
+        <style>
+    html { background-color: green }
+    @supports (color: rainbow) {
+      html { background-color: red }
+    }
+  </style>
+    </rendering>
+</test>
+
+<!-- https://github.com/web-platform-tests/wpt/blob/ba6d9f67/css/css-conditional/css-supports-006.xht -->
+<!-- https://github.com/web-platform-tests/wpt/blob/ba6d9f67/css/css-conditional/support/pass.xht -->
+<test name="css/css-conditional/css-supports-006.xht" width="800px" height="600px">
+    <rendering>
+        <style>
+   html { background-color: green }
+  </style>
+    </rendering>
+
+    <rendering help="CSS Test: An @supports rule with valid syntax and a passing condition must apply rules inside it">
+        <style>
+    @supports (color: rainbow) or (color: green) {
+      html { background-color: green }
+    }
+  </style>
+    </rendering>
+</test>
+
+<!-- https://github.com/web-platform-tests/wpt/blob/ba6d9f67/css/css-conditional/css-supports-007.xht -->
+<!-- https://github.com/web-platform-tests/wpt/blob/ba6d9f67/css/css-conditional/support/pass.xht -->
+<test name="css/css-conditional/css-supports-007.xht" width="800px" height="600px">
+    <rendering>
+        <style>
+   html { background-color: green }
+  </style>
+    </rendering>
+
+    <rendering help="CSS Test: An @supports rule with valid syntax and a passing condition must apply rules inside it">
+        <style>
+    @supports (color: green) or (color: rainbow) {
+      html { background-color: green }
+    }
+  </style>
+    </rendering>
+</test>
+
+<!-- https://github.com/web-platform-tests/wpt/blob/ba6d9f67/css/css-conditional/css-supports-008.xht -->
+<!-- https://github.com/web-platform-tests/wpt/blob/ba6d9f67/css/css-conditional/support/pass.xht -->
+<test name="css/css-conditional/css-supports-008.xht" width="800px" height="600px">
+    <rendering>
+        <style>
+   html { background-color: green }
+  </style>
+    </rendering>
+
+    <rendering help="CSS Test: An @supports rule with valid syntax and a passing condition must apply rules inside it">
+        <style>
+    @supports (color: green) and (color: blue) {
+      html { background-color: green }
+    }
+  </style>
+    </rendering>
+</test>
+
+<!-- https://github.com/web-platform-tests/wpt/blob/ba6d9f67/css/css-conditional/css-supports-009.xht -->
+<!-- https://github.com/web-platform-tests/wpt/blob/ba6d9f67/css/css-conditional/support/pass.xht -->
+<test name="css/css-conditional/css-supports-009.xht" width="800px" height="600px">
+    <rendering>
+        <style>
+   html { background-color: green }
+  </style>
+    </rendering>
+
+    <rendering help="CSS Test: An @supports rule with valid syntax but a failing condition must not apply rules inside it">
+        <style>
+    html { background-color: green }
+    @supports (color: rainbow) and (color: blue) {
+      html { background-color: red }
+    }
+  </style>
+    </rendering>
+</test>
+
+<!-- https://github.com/web-platform-tests/wpt/blob/ba6d9f67/css/css-conditional/css-supports-010.xht -->
+<!-- https://github.com/web-platform-tests/wpt/blob/ba6d9f67/css/css-conditional/support/pass.xht -->
+<test name="css/css-conditional/css-supports-010.xht" width="800px" height="600px">
+    <rendering>
+        <style>
+   html { background-color: green }
+  </style>
+    </rendering>
+
+    <rendering help="CSS Test: An @supports rule with valid syntax but a failing condition must not apply rules inside it">
+        <style>
+    html { background-color: green }
+    @supports (color: blue) and (color: rainbow) {
+      html { background-color: red }
+    }
+  </style>
+    </rendering>
+</test>
+
+<!-- https://github.com/web-platform-tests/wpt/blob/ba6d9f67/css/css-conditional/css-supports-011.xht -->
+<!-- https://github.com/web-platform-tests/wpt/blob/ba6d9f67/css/css-conditional/support/pass.xht -->
+<test name="css/css-conditional/css-supports-011.xht" width="800px" height="600px">
+    <rendering>
+        <style>
+   html { background-color: green }
+  </style>
+    </rendering>
+
+    <rendering help="CSS Test: An @supports rule with valid syntax and a passing condition must apply rules inside it">
+        <style>
+    @supports (color: rainbow) or (color: iridescent) or (color: green) {
+      html { background-color: green }
+    }
+  </style>
+    </rendering>
+</test>
+
+<!-- https://github.com/web-platform-tests/wpt/blob/ba6d9f67/css/css-conditional/css-supports-012.xht -->
+<!-- https://github.com/web-platform-tests/wpt/blob/ba6d9f67/css/css-conditional/support/pass.xht -->
+<test name="css/css-conditional/css-supports-012.xht" width="800px" height="600px">
+    <rendering>
+        <style>
+   html { background-color: green }
+  </style>
+    </rendering>
+
+    <rendering help="CSS Test: An @supports rule with valid syntax and a passing condition must apply rules inside it">
+        <style>
+    @supports (color: red) and (color: green) and (color: blue) {
+      html { background-color: green }
+    }
+  </style>
+    </rendering>
+</test>
+
+<!-- https://github.com/web-platform-tests/wpt/blob/ba6d9f67/css/css-conditional/css-supports-013.xht -->
+<!-- https://github.com/web-platform-tests/wpt/blob/ba6d9f67/css/css-conditional/support/pass.xht -->
+<test name="css/css-conditional/css-supports-013.xht" width="800px" height="600px">
+    <rendering>
+        <style>
+   html { background-color: green }
+  </style>
+    </rendering>
+
+    <rendering help="CSS Test: An @supports rule with invalid syntax must not apply rules inside it">
+        <style>
+    html { background-color: green }
+    @supports (color: green) and (color: green) or (color: green) {
+      html { background-color: red }
+    }
+  </style>
+    </rendering>
+</test>
+
+<!-- https://github.com/web-platform-tests/wpt/blob/ba6d9f67/css/css-conditional/css-supports-014.xht -->
+<!-- https://github.com/web-platform-tests/wpt/blob/ba6d9f67/css/css-conditional/support/pass.xht -->
+<test name="css/css-conditional/css-supports-014.xht" width="800px" height="600px">
+    <rendering>
+        <style>
+   html { background-color: green }
+  </style>
+    </rendering>
+
+    <rendering help="CSS Test: An @supports rule with invalid syntax must not apply rules inside it">
+        <style>
+    html { background-color: green }
+    @supports (color: green) or (color: green) and (color: green) {
+      html { background-color: red }
+    }
+  </style>
+    </rendering>
+</test>
+
+<!-- https://github.com/web-platform-tests/wpt/blob/ba6d9f67/css/css-conditional/css-supports-015.xht -->
+<!-- https://github.com/web-platform-tests/wpt/blob/ba6d9f67/css/css-conditional/support/pass.xht -->
+<test name="css/css-conditional/css-supports-015.xht" width="800px" height="600px">
+    <rendering>
+        <style>
+   html { background-color: green }
+  </style>
+    </rendering>
+
+    <rendering help="CSS Test: An @supports rule with valid syntax and a passing condition must apply rules inside it">
+        <style>
+    @supports(color:green){
+      html { background-color: green }
+    }
+  </style>
+    </rendering>
+</test>
+
+<!-- https://github.com/web-platform-tests/wpt/blob/ba6d9f67/css/css-conditional/css-supports-016.xht -->
+<!-- https://github.com/web-platform-tests/wpt/blob/ba6d9f67/css/css-conditional/support/pass.xht -->
+<test name="css/css-conditional/css-supports-016.xht" width="800px" height="600px">
+    <rendering>
+        <style>
+   html { background-color: green }
+  </style>
+    </rendering>
+
+    <rendering help="CSS Test: An @supports rule with valid syntax and a passing condition must apply rules inside it">
+        <style>
+    @supports not (color: rainbow) {
+      html { background-color: green }
+    }
+  </style>
+    </rendering>
+</test>
+
+<!-- https://github.com/web-platform-tests/wpt/blob/ba6d9f67/css/css-conditional/css-supports-017.xht -->
+<!-- https://github.com/web-platform-tests/wpt/blob/ba6d9f67/css/css-conditional/support/pass.xht -->
+<test name="css/css-conditional/css-supports-017.xht" width="800px" height="600px">
+    <rendering>
+        <style>
+   html { background-color: green }
+  </style>
+    </rendering>
+
+    <rendering help="CSS Test: An @supports rule with invalid syntax must not apply rules inside it">
+        <style>
+    html { background-color: green }
+    @supports not not (color: green) {
+      html { background-color: red }
+    }
+  </style>
+    </rendering>
+</test>
+
+<!-- https://github.com/web-platform-tests/wpt/blob/ba6d9f67/css/css-conditional/css-supports-018.xht -->
+<!-- https://github.com/web-platform-tests/wpt/blob/ba6d9f67/css/css-conditional/support/pass.xht -->
+<test name="css/css-conditional/css-supports-018.xht" width="800px" height="600px">
+    <rendering>
+        <style>
+   html { background-color: green }
+  </style>
+    </rendering>
+
+    <rendering help="CSS Test: An @supports rule with valid syntax and a passing condition must apply rules inside it">
+        <style>
+    @supports not (not (color: green)) {
+      html { background-color: green }
+    }
+  </style>
+    </rendering>
+</test>
+
+<!-- https://github.com/web-platform-tests/wpt/blob/ba6d9f67/css/css-conditional/css-supports-019.xht -->
+<!-- https://github.com/web-platform-tests/wpt/blob/ba6d9f67/css/css-conditional/support/pass.xht -->
+<test name="css/css-conditional/css-supports-019.xht" width="800px" height="600px">
+    <rendering>
+        <style>
+   html { background-color: green }
+  </style>
+    </rendering>
+
+    <rendering help="CSS Test: An @supports rule with invalid syntax must not apply rules inside it">
+        <style>
+    html { background-color: green }
+    @supports not (color: rainbow) and not (color: iridescent) {
+      html { background-color: red }
+    }
+  </style>
+    </rendering>
+</test>
+
+<!-- https://github.com/web-platform-tests/wpt/blob/ba6d9f67/css/css-conditional/css-supports-020.xht -->
+<!-- https://github.com/web-platform-tests/wpt/blob/ba6d9f67/css/css-conditional/support/pass.xht -->
+<test name="css/css-conditional/css-supports-020.xht" width="800px" height="600px">
+    <rendering>
+        <style>
+   html { background-color: green }
+  </style>
+    </rendering>
+
+    <rendering help="CSS Test: An @supports rule with valid syntax but a failing condition must not apply rules inside it">
+        <style>
+    html { background-color: green }
+    @supports (unknown: green) {
+      html { background-color: red }
+    }
+  </style>
+    </rendering>
+</test>
+
+<!-- https://github.com/web-platform-tests/wpt/blob/ba6d9f67/css/css-conditional/css-supports-021.xht -->
+<!-- https://github.com/web-platform-tests/wpt/blob/ba6d9f67/css/css-conditional/support/pass.xht -->
+<test name="css/css-conditional/css-supports-021.xht" width="800px" height="600px">
+    <rendering>
+        <style>
+   html { background-color: green }
+  </style>
+    </rendering>
+
+    <rendering help="CSS Test: An @supports rule with valid syntax but a failing condition must not apply rules inside it">
+        <style>
+    @supports (unknown: green) or (color: green) {
+      html { background-color: green }
+    }
+  </style>
+    </rendering>
+</test>
+
+<!-- https://github.com/web-platform-tests/wpt/blob/ba6d9f67/css/css-conditional/css-supports-022.xht -->
+<!-- https://github.com/web-platform-tests/wpt/blob/ba6d9f67/css/css-conditional/support/pass.xht -->
+<test name="css/css-conditional/css-supports-022.xht" width="800px" height="600px">
+    <rendering>
+        <style>
+   html { background-color: green }
+  </style>
+    </rendering>
+
+    <rendering help="CSS Test: An @supports rule with balanced invalid syntax within parentheses must evaluate to false">
+        <style>
+    html { background-color: red }
+    @supports (unknown:) or (color: green) {
+      html { background-color: green }
+    }
+  </style>
+    </rendering>
+</test>
+
+<!-- https://github.com/web-platform-tests/wpt/blob/ba6d9f67/css/css-conditional/css-supports-023.xht -->
+<!-- https://github.com/web-platform-tests/wpt/blob/ba6d9f67/css/css-conditional/support/pass.xht -->
+<test name="css/css-conditional/css-supports-023.xht" width="800px" height="600px">
+    <rendering>
+        <style>
+   html { background-color: green }
+  </style>
+    </rendering>
+
+    <rendering help="CSS Test: An @supports rule with balanced invalid syntax within parentheses must evaluate to false">
+        <style>
+    html { background-color: red }
+    @supports (unknown) or (color: green) {
+      html { background-color: green }
+    }
+  </style>
+    </rendering>
+</test>
+
+<!-- https://github.com/web-platform-tests/wpt/blob/ba6d9f67/css/css-conditional/css-supports-024.xht -->
+<!-- https://github.com/web-platform-tests/wpt/blob/ba6d9f67/css/css-conditional/support/pass.xht -->
+<test name="css/css-conditional/css-supports-024.xht" width="800px" height="600px">
+    <rendering>
+        <style>
+   html { background-color: green }
+  </style>
+    </rendering>
+
+    <rendering help="CSS Test: An @supports rule with valid syntax and a passing condition must apply rules inside it">
+        <style>
+    @supports (font: 16px serif) {
+      html { background-color: green }
+    }
+  </style>
+    </rendering>
+</test>
+
+<!-- https://github.com/web-platform-tests/wpt/blob/ba6d9f67/css/css-conditional/css-supports-025.xht -->
+<!-- https://github.com/web-platform-tests/wpt/blob/ba6d9f67/css/css-conditional/support/pass.xht -->
+<test name="css/css-conditional/css-supports-025.xht" width="800px" height="600px">
+    <rendering>
+        <style>
+   html { background-color: green }
+  </style>
+    </rendering>
+
+    <rendering help="CSS Test: A nested @supports rule with valid syntax and a passing condition must apply rules inside it">
+        <style>
+    @supports (color: green) {
+      @supports (color: blue) {
+        html { background-color: green }
+      }
+    }
+  </style>
+    </rendering>
+</test>
+
+<!-- https://github.com/web-platform-tests/wpt/blob/ba6d9f67/css/css-conditional/css-supports-026.xht -->
+<!-- https://github.com/web-platform-tests/wpt/blob/ba6d9f67/css/css-conditional/support/pass.xht -->
+<test name="css/css-conditional/css-supports-026.xht" width="800px" height="600px">
+    <rendering>
+        <style>
+   html { background-color: green }
+  </style>
+    </rendering>
+
+    <rendering help="CSS Test: A nested @supports rule with valid syntax and a passing condition must apply rules inside it">
+        <style>
+    @supports (color: green) {
+      @media all {
+        html { background-color: green }
+      }
+    }
+  </style>
+    </rendering>
+</test>
+
+<!-- https://github.com/web-platform-tests/wpt/blob/ba6d9f67/css/css-conditional/css-supports-029.xht -->
+<!-- https://github.com/web-platform-tests/wpt/blob/ba6d9f67/css/css-conditional/support/pass.xht -->
+<test name="css/css-conditional/css-supports-029.xht" width="800px" height="600px">
+    <rendering>
+        <style>
+   html { background-color: green }
+  </style>
+    </rendering>
+
+    <rendering help="CSS Test: An @supports rule with valid syntax and a passing condition must apply rules inside it">
+        <style>
+    html { background-color: green }
+    @supports not (color: rainbow) or (color: green) {
+      html { background-color: red }
+    }
+  </style>
+    </rendering>
+</test>
+
+<!-- https://github.com/web-platform-tests/wpt/blob/ba6d9f67/css/css-conditional/css-supports-030.xht -->
+<!-- https://github.com/web-platform-tests/wpt/blob/ba6d9f67/css/css-conditional/support/pass.xht -->
+<test name="css/css-conditional/css-supports-030.xht" width="800px" height="600px">
+    <rendering>
+        <style>
+   html { background-color: green }
+  </style>
+    </rendering>
+
+    <rendering help="CSS Test: An @supports rule with valid syntax and a passing condition must apply rules inside it">
+        <style>
+    html { background-color: green }
+    @supports (not (color: rainbow) or (color: green)) {
+      html { background-color: red }
+    }
+  </style>
+    </rendering>
+</test>
+
+<!-- https://github.com/web-platform-tests/wpt/blob/ba6d9f67/css/css-conditional/css-supports-031.xht -->
+<!-- https://github.com/web-platform-tests/wpt/blob/ba6d9f67/css/css-conditional/support/pass.xht -->
+<test name="css/css-conditional/css-supports-031.xht" width="800px" height="600px">
+    <rendering>
+        <style>
+   html { background-color: green }
+  </style>
+    </rendering>
+
+    <rendering help="CSS Test: An @supports rule with balanced invalid syntax within parentheses must evaluate to false">
+        <style>
+    html { background-color: red }
+    @supports (color:) or (color: green) {
+      html { background-color: green }
+    }
+  </style>
+    </rendering>
+</test>
+
+<!-- https://github.com/web-platform-tests/wpt/blob/ba6d9f67/css/css-conditional/css-supports-032.xht -->
+<!-- https://github.com/web-platform-tests/wpt/blob/ba6d9f67/css/css-conditional/support/pass.xht -->
+<test name="css/css-conditional/css-supports-032.xht" width="800px" height="600px">
+    <rendering>
+        <style>
+   html { background-color: green }
+  </style>
+    </rendering>
+
+    <rendering help="CSS Test: An @supports rule with balanced invalid syntax must evaluate to false">
+        <style>
+    html { background-color: red }
+    @supports not (@page) {
+      html { background-color: green }
+    }
+  </style>
+    </rendering>
+</test>
+
+<!-- https://github.com/web-platform-tests/wpt/blob/ba6d9f67/css/css-conditional/css-supports-033.xht -->
+<!-- https://github.com/web-platform-tests/wpt/blob/ba6d9f67/css/css-conditional/support/pass.xht -->
+<test name="css/css-conditional/css-supports-033.xht" width="800px" height="600px">
+    <rendering>
+        <style>
+   html { background-color: green }
+  </style>
+    </rendering>
+
+    <rendering help="CSS Test: An @supports rule with balanced invalid syntax must evaluate to false">
+        <style>
+    html { background-color: red }
+    @supports not ({ something @with [ balanced ] parens }) {
+      html { background-color: green }
+    }
+  </style>
+    </rendering>
+</test>
+
+<!-- https://github.com/web-platform-tests/wpt/blob/ba6d9f67/css/css-conditional/css-supports-034.xht -->
+<!-- https://github.com/web-platform-tests/wpt/blob/ba6d9f67/css/css-conditional/support/pass.xht -->
+<test name="css/css-conditional/css-supports-034.xht" width="800px" height="600px">
+    <rendering>
+        <style>
+   html { background-color: green }
+  </style>
+    </rendering>
+
+    <rendering help="CSS Test: An @supports rule with balanced invalid syntax must evaluate to false">
+        <style>
+    html { background-color: red }
+    @supports not ({ something @with [ balanced ] parens }) {
+      html { background-color: green }
+    }
+  </style>
+    </rendering>
+</test>
+
+<!-- https://github.com/web-platform-tests/wpt/blob/ba6d9f67/css/css-conditional/css-supports-036.xht -->
+<!-- https://github.com/web-platform-tests/wpt/blob/ba6d9f67/css/css-conditional/support/pass.xht -->
+<test name="css/css-conditional/css-supports-036.xht" width="800px" height="600px">
+    <rendering>
+        <style>
+   html { background-color: green }
+  </style>
+    </rendering>
+
+    <rendering help="CSS Test: An @supports rule with an unrecognized condition using functional notation must evaluate to false">
+        <style>
+    html { background-color: red }
+    @supports an-extension(of some kind) or (color: green) {
+      html { background-color: green }
+    }
+  </style>
+    </rendering>
+</test>
+
+<!-- https://github.com/web-platform-tests/wpt/blob/ba6d9f67/css/css-conditional/css-supports-038.xht -->
+<!-- https://github.com/web-platform-tests/wpt/blob/ba6d9f67/css/css-conditional/support/pass.xht -->
+<test name="css/css-conditional/css-supports-038.xht" width="800px" height="600px">
+    <rendering>
+        <style>
+   html { background-color: green }
+  </style>
+    </rendering>
+
+    <rendering help="CSS Test: In an @supports rule &quot;not(&quot; must be parsed as a FUNCTION">
+        <style>
+    html { background-color: green }
+    @supports not(unknown: unknown) {
+      html { background-color: red }
+    }
+  </style>
+    </rendering>
+</test>
+
+<!-- https://github.com/web-platform-tests/wpt/blob/ba6d9f67/css/css-conditional/css-supports-039.xht -->
+<!-- https://github.com/web-platform-tests/wpt/blob/ba6d9f67/css/css-conditional/support/pass.xht -->
+<test name="css/css-conditional/css-supports-039.xht" width="800px" height="600px">
+    <rendering>
+        <style>
+   html { background-color: green }
+  </style>
+    </rendering>
+
+    <rendering help="CSS Test: In an @supports rule &quot;or(&quot; must be parsed as a FUNCTION">
+        <style>
+    html { background-color: green }
+    @supports (color: green) or(color: blue) {
+      html { background-color: red }
+    }
+  </style>
+    </rendering>
+</test>
+
+<!-- https://github.com/web-platform-tests/wpt/blob/ba6d9f67/css/css-conditional/css-supports-040.xht -->
+<!-- https://github.com/web-platform-tests/wpt/blob/ba6d9f67/css/css-conditional/support/pass.xht -->
+<test name="css/css-conditional/css-supports-040.xht" width="800px" height="600px">
+    <rendering>
+        <style>
+   html { background-color: green }
+  </style>
+    </rendering>
+
+    <rendering help="CSS Test: An @supports rule condition with empty parentheses should evaluates to false">
+        <style>
+    @supports not () {
+      html { background-color: green }
+    }
+  </style>
+    </rendering>
+</test>
+
+<!-- https://github.com/web-platform-tests/wpt/blob/ba6d9f67/css/css-conditional/css-supports-041.xht -->
+<!-- https://github.com/web-platform-tests/wpt/blob/ba6d9f67/css/css-conditional/support/pass.xht -->
+<test name="css/css-conditional/css-supports-041.xht" width="800px" height="600px">
+    <rendering>
+        <style>
+   html { background-color: green }
+  </style>
+    </rendering>
+
+    <rendering help="CSS Test: An @supports rule condition with empty parentheses should evaluates to false">
+        <style>
+    @supports () or (color: green) {
+      html { background-color: green }
+    }
+  </style>
+    </rendering>
+</test>
+
+<!-- https://github.com/web-platform-tests/wpt/blob/ba6d9f67/css/css-conditional/css-supports-042.xht -->
+<!-- https://github.com/web-platform-tests/wpt/blob/ba6d9f67/css/css-conditional/support/pass.xht -->
+<test name="css/css-conditional/css-supports-042.xht" width="800px" height="600px">
+    <rendering>
+        <style>
+   html { background-color: green }
+  </style>
+    </rendering>
+
+    <rendering help="CSS Test: An @supports rule condition with an unexpected token before the closing paren of a supports_condition_in_parens should parse as a general_enclosed">
+        <style>
+    @supports ((color: green) bad) or (color: green) {
+      html { background-color: green }
+    }
+  </style>
+    </rendering>
+</test>
+
+<!-- https://github.com/web-platform-tests/wpt/blob/ba6d9f67/css/css-conditional/css-supports-043.xht -->
+<!-- https://github.com/web-platform-tests/wpt/blob/ba6d9f67/css/css-conditional/support/pass.xht -->
+<test name="css/css-conditional/css-supports-043.xht" width="800px" height="600px">
+    <rendering>
+        <style>
+   html { background-color: green }
+  </style>
+    </rendering>
+
+    <rendering help="CSS Test: An @supports rule condition with a bogus priority should evaluate to false">
+        <style>
+    html { background-color: red; }
+    @supports not (color: green !bogus) {
+      html { background-color: green; }
+    }
+  </style>
+    </rendering>
+</test>
+
+<!-- https://github.com/web-platform-tests/wpt/blob/ba6d9f67/css/css-conditional/css-supports-044.xht -->
+<!-- https://github.com/web-platform-tests/wpt/blob/ba6d9f67/css/css-conditional/support/pass.xht -->
+<test name="css/css-conditional/css-supports-044.xht" width="800px" height="600px">
+    <rendering>
+        <style>
+   html { background-color: green }
+  </style>
+    </rendering>
+
+    <rendering help="CSS Test: An @supports rule condition with tokens after the priority should evaluate to false">
+        <style>
+    html { background-color: red; }
+    @supports not (color: green !important green) {
+      html { background-color: green; }
+    }
+  </style>
+    </rendering>
+</test>
+
+<!-- https://github.com/web-platform-tests/wpt/blob/ba6d9f67/css/css-conditional/css-supports-045.xht -->
+<!-- https://github.com/web-platform-tests/wpt/blob/ba6d9f67/css/css-conditional/support/pass.xht -->
+<test name="css/css-conditional/css-supports-045.xht" width="800px" height="600px">
+    <rendering>
+        <style>
+   html { background-color: green }
+  </style>
+    </rendering>
+
+    <rendering help="CSS Test: An @supports rule condition with two priorities should evaluate to false">
+        <style>
+    html { background-color: red; }
+    @supports not (color: green !important !important) {
+      html { background-color: green; }
+    }
+  </style>
+    </rendering>
+</test>
+
+<!-- https://github.com/web-platform-tests/wpt/blob/ba6d9f67/css/css-conditional/css-supports-046.xht -->
+<!-- https://github.com/web-platform-tests/wpt/blob/ba6d9f67/css/css-conditional/support/pass.xht -->
+<test name="css/css-conditional/css-supports-046.xht" width="800px" height="600px">
+    <rendering>
+        <style>
+   html { background-color: green }
+  </style>
+    </rendering>
+
+    <rendering help="CSS Test: A nested @supports rule with valid syntax and a passing condition must apply rules inside it">
+        <style>
+    @media all {
+      @supports (color: green) {
+        html { background-color: green }
+      }
+    }
+  </style>
+    </rendering>
+</test>
+
+<!-- https://github.com/web-platform-tests/wpt/blob/ba6d9f67/css/css-variables/variable-supports-01.html -->
+<!-- https://github.com/web-platform-tests/wpt/blob/ba6d9f67/css/css-variables/support/color-green-ref.html -->
+<test name="css/css-variables/variable-supports-01.html" width="800px" height="600px">
+    <rendering>
+        <style>
+p {
+  color: green;
+}
+</style>
+        <p>This text must be green.</p>
+    </rendering>
+
+    <rendering help="CSS Test: Test a passing non-custom property declaration in an @supports rule where the property value contains a variable reference and no white space tokens.">
+        <style>
+body { color: red; }
+@supports (color:var(--a)) {
+  p { color: green; }
+}
+</style>
+        <p>This text must be green.</p>
+    </rendering>
+</test>
+
+<!-- https://github.com/web-platform-tests/wpt/blob/ba6d9f67/css/css-variables/variable-supports-02.html -->
+<!-- https://github.com/web-platform-tests/wpt/blob/ba6d9f67/css/css-variables/support/color-green-ref.html -->
+<test name="css/css-variables/variable-supports-02.html" width="800px" height="600px">
+    <rendering>
+        <style>
+p {
+  color: green;
+}
+</style>
+        <p>This text must be green.</p>
+    </rendering>
+
+    <rendering help="CSS Test: Test a passing non-custom property declaration in an @supports rule where the property value contains a white space token followed by a variable reference.">
+        <style>
+body { color: red; }
+@supports (color: var(--a)) {
+  p { color: green; }
+}
+</style>
+        <p>This text must be green.</p>
+    </rendering>
+</test>
+
+<!-- https://github.com/web-platform-tests/wpt/blob/ba6d9f67/css/css-variables/variable-supports-03.html -->
+<!-- https://github.com/web-platform-tests/wpt/blob/ba6d9f67/css/css-variables/support/color-green-ref.html -->
+<test name="css/css-variables/variable-supports-03.html" width="800px" height="600px">
+    <rendering>
+        <style>
+p {
+  color: green;
+}
+</style>
+        <p>This text must be green.</p>
+    </rendering>
+
+    <rendering help="CSS Test: Test a passing non-custom property declaration in an @supports rule where the property value contains a variable reference surrounded by white space tokens.">
+        <style>
+body { color: red; }
+@supports (color: var(--a) ) {
+  p { color: green; }
+}
+</style>
+        <p>This text must be green.</p>
+    </rendering>
+</test>
+
+<!-- https://github.com/web-platform-tests/wpt/blob/ba6d9f67/css/css-variables/variable-supports-04.html -->
+<!-- https://github.com/web-platform-tests/wpt/blob/ba6d9f67/css/css-variables/support/color-green-ref.html -->
+<test name="css/css-variables/variable-supports-04.html" width="800px" height="600px">
+    <rendering>
+        <style>
+p {
+  color: green;
+}
+</style>
+        <p>This text must be green.</p>
+    </rendering>
+
+    <rendering help="CSS Test: Test a passing non-custom property declaration in an @supports rule where the property value contains a variable reference surrounded by white space tokens and with white space surrounding the variable name.">
+        <style>
+body { color: red; }
+@supports (color: var( --a ) ) {
+  p { color: green; }
+}
+</style>
+        <p>This text must be green.</p>
+    </rendering>
+</test>
+
+<!-- https://github.com/web-platform-tests/wpt/blob/ba6d9f67/css/css-variables/variable-supports-05.html -->
+<!-- https://github.com/web-platform-tests/wpt/blob/ba6d9f67/css/css-variables/support/color-green-ref.html -->
+<test name="css/css-variables/variable-supports-05.html" width="800px" height="600px">
+    <rendering>
+        <style>
+p {
+  color: green;
+}
+</style>
+        <p>This text must be green.</p>
+    </rendering>
+
+    <rendering help="CSS Test: Test a non-custom property declaration in an @supports rule where the property value contains a variable reference having no fallback tokens.">
+        <style>
+body { color: red; }
+@supports (color: var(--a)) and (color: var(--a,)) {
+  p { color: green; }
+}
+</style>
+        <p>This text must be green.</p>
+    </rendering>
+</test>
+
+<!-- https://github.com/web-platform-tests/wpt/blob/ba6d9f67/css/css-variables/variable-supports-06.html -->
+<!-- https://github.com/web-platform-tests/wpt/blob/ba6d9f67/css/css-variables/support/color-green-ref.html -->
+<test name="css/css-variables/variable-supports-06.html" width="800px" height="600px">
+    <rendering>
+        <style>
+p {
+  color: green;
+}
+</style>
+        <p>This text must be green.</p>
+    </rendering>
+
+    <rendering help="CSS Test: Test a passing non-custom property declaration in an @supports rule where the property value contains a variable reference with fallback that is only white space.">
+        <style>
+body { color: red; }
+@supports (color: var(--a, )) {
+  p { color: green; }
+}
+</style>
+        <p>This text must be green.</p>
+    </rendering>
+</test>
+
+<!-- https://github.com/web-platform-tests/wpt/blob/ba6d9f67/css/css-variables/variable-supports-07.html -->
+<!-- https://github.com/web-platform-tests/wpt/blob/ba6d9f67/css/css-variables/support/color-green-ref.html -->
+<test name="css/css-variables/variable-supports-07.html" width="800px" height="600px">
+    <rendering>
+        <style>
+p {
+  color: green;
+}
+</style>
+        <p>This text must be green.</p>
+    </rendering>
+
+    <rendering help="CSS Test: Test a non-custom property declaration in an @supports rule where the property value contains a variable reference having no fallback tokens, just a comment.">
+        <style>
+body { color: red; }
+@supports (color: var(--a)) and (color: var(--a,/**/)) {
+  p { color: green; }
+}
+</style>
+        <p>This text must be green.</p>
+    </rendering>
+</test>
+
+<!-- https://github.com/web-platform-tests/wpt/blob/ba6d9f67/css/css-variables/variable-supports-08.html -->
+<!-- https://github.com/web-platform-tests/wpt/blob/ba6d9f67/css/css-variables/support/color-green-ref.html -->
+<test name="css/css-variables/variable-supports-08.html" width="800px" height="600px">
+    <rendering>
+        <style>
+p {
+  color: green;
+}
+</style>
+        <p>This text must be green.</p>
+    </rendering>
+
+    <rendering help="CSS Test: Test a passing non-custom property declaration in an @supports rule where the property value contains a comment and an identifier.">
+        <style>
+body { color: red; }
+@supports (color: var(--a,/**/a)) {
+  p { color: green; }
+}
+</style>
+        <p>This text must be green.</p>
+    </rendering>
+</test>
+
+<!-- https://github.com/web-platform-tests/wpt/blob/ba6d9f67/css/css-variables/variable-supports-09.html -->
+<!-- https://github.com/web-platform-tests/wpt/blob/ba6d9f67/css/css-variables/support/color-green-ref.html -->
+<test name="css/css-variables/variable-supports-09.html" width="800px" height="600px">
+    <rendering>
+        <style>
+p {
+  color: green;
+}
+</style>
+        <p>This text must be green.</p>
+    </rendering>
+
+    <rendering help="CSS Test: Test a failing non-custom property declaration in an @supports rule where the property value contains a syntactically invalid variable reference due to having a '!' token at the top level of its fallback.">
+        <style>
+body { color: red; }
+@supports (color: var(--a)) and (not (color: var(--a,!))) {
+  p { color: green; }
+}
+</style>
+        <p>This text must be green.</p>
+    </rendering>
+</test>
+
+<!-- https://github.com/web-platform-tests/wpt/blob/ba6d9f67/css/css-variables/variable-supports-10.html -->
+<!-- https://github.com/web-platform-tests/wpt/blob/ba6d9f67/css/css-variables/support/color-green-ref.html -->
+<test name="css/css-variables/variable-supports-10.html" width="800px" height="600px">
+    <rendering>
+        <style>
+p {
+  color: green;
+}
+</style>
+        <p>This text must be green.</p>
+    </rendering>
+
+    <rendering help="CSS Test: Test a failing non-custom property declaration in an @supports rule where the property value contains a syntactically invalid variable reference due to having &quot;!important&quot; at the top level of its fallback.">
+        <style>
+body { color: red; }
+@supports (color: var(--a)) and (not (color: var(--a,!important))) {
+  p { color: green; }
+}
+</style>
+        <p>This text must be green.</p>
+    </rendering>
+</test>
+
+<!-- https://github.com/web-platform-tests/wpt/blob/ba6d9f67/css/css-variables/variable-supports-11.html -->
+<!-- https://github.com/web-platform-tests/wpt/blob/ba6d9f67/css/css-variables/support/color-green-ref.html -->
+<test name="css/css-variables/variable-supports-11.html" width="800px" height="600px">
+    <rendering>
+        <style>
+p {
+  color: green;
+}
+</style>
+        <p>This text must be green.</p>
+    </rendering>
+
+    <rendering help="CSS Test: Test a passing 'color' property declaration in an @supports rule with a variable reference that comes after a non-color value.">
+        <style>
+body { color: red; }
+@supports (color: 1px var(--a)) {
+  p { color: green; }
+}
+</style>
+        <p>This text must be green.</p>
+    </rendering>
+</test>
+
+<!-- https://github.com/web-platform-tests/wpt/blob/ba6d9f67/css/css-variables/variable-supports-12.html -->
+<!-- https://github.com/web-platform-tests/wpt/blob/ba6d9f67/css/css-variables/support/color-green-ref.html -->
+<test name="css/css-variables/variable-supports-12.html" width="800px" height="600px">
+    <rendering>
+        <style>
+p {
+  color: green;
+}
+</style>
+        <p>This text must be green.</p>
+    </rendering>
+
+    <rendering help="CSS Test: Test a passing 'color' property declaration in an @supports rule with a variable reference that comes before a non-color value.">
+        <style>
+body { color: red; }
+@supports (color: var(--a) 1px) {
+  p { color: green; }
+}
+</style>
+        <p>This text must be green.</p>
+    </rendering>
+</test>
+
+<!-- https://github.com/web-platform-tests/wpt/blob/ba6d9f67/css/css-variables/variable-supports-13.html -->
+<!-- https://github.com/web-platform-tests/wpt/blob/ba6d9f67/css/css-variables/support/color-green-ref.html -->
+<test name="css/css-variables/variable-supports-13.html" width="800px" height="600px">
+    <rendering>
+        <style>
+p {
+  color: green;
+}
+</style>
+        <p>This text must be green.</p>
+    </rendering>
+
+    <rendering help="CSS Test: Test a passing 'color' property declaration in an @supports rule with a range of different tokens and a variable reference not at the top level.">
+        <style>
+body { color: red; }
+@supports (color: something 3px url(whereever) calc(var(--a) + 1px)) {
+  p { color: green; }
+}
+</style>
+        <p>This text must be green.</p>
+    </rendering>
+</test>
+
+<!-- https://github.com/web-platform-tests/wpt/blob/ba6d9f67/css/css-variables/variable-supports-14.html -->
+<!-- https://github.com/web-platform-tests/wpt/blob/ba6d9f67/css/css-variables/support/color-green-ref.html -->
+<test name="css/css-variables/variable-supports-14.html" width="800px" height="600px">
+    <rendering>
+        <style>
+p {
+  color: green;
+}
+</style>
+        <p>This text must be green.</p>
+    </rendering>
+
+    <rendering help="CSS Test: Test a passing non-custom property declaration in an @supports rule with a variable reference and an &quot;!important&quot; priority.">
+        <style>
+body { color: red; }
+@supports (color: var(--a) !important) {
+  p { color: green; }
+}
+</style>
+        <p>This text must be green.</p>
+    </rendering>
+</test>
+
+<!-- https://github.com/web-platform-tests/wpt/blob/ba6d9f67/css/css-variables/variable-supports-15.html -->
+<!-- https://github.com/web-platform-tests/wpt/blob/ba6d9f67/css/css-variables/support/color-green-ref.html -->
+<test name="css/css-variables/variable-supports-15.html" width="800px" height="600px">
+    <rendering>
+        <style>
+p {
+  color: green;
+}
+</style>
+        <p>This text must be green.</p>
+    </rendering>
+
+    <rendering help="CSS Test: Test a passing non-custom property declaration in an @supports rule with two adjacent variable references with no intervening white space.">
+        <style>
+body { color: red; }
+@supports (color: var(--a)var(--b)) {
+  p { color: green; }
+}
+</style>
+        <p>This text must be green.</p>
+    </rendering>
+</test>
+
+<!-- https://github.com/web-platform-tests/wpt/blob/ba6d9f67/css/css-variables/variable-supports-16.html -->
+<!-- https://github.com/web-platform-tests/wpt/blob/ba6d9f67/css/css-variables/support/color-green-ref.html -->
+<test name="css/css-variables/variable-supports-16.html" width="800px" height="600px">
+    <rendering>
+        <style>
+p {
+  color: green;
+}
+</style>
+        <p>This text must be green.</p>
+    </rendering>
+
+    <rendering help="CSS Test: Test a passing non-custom property declaration in an @supports rule with a variable reference that has a number of levels of variable reference fallbacks.">
+        <style>
+body { color: red; }
+@supports (color: var(--a, var(--b, var(--c, black)))) {
+  p { color: green; }
+}
+</style>
+        <p>This text must be green.</p>
+    </rendering>
+</test>
+
+<!-- https://github.com/web-platform-tests/wpt/blob/ba6d9f67/css/css-variables/variable-supports-17.html -->
+<!-- https://github.com/web-platform-tests/wpt/blob/ba6d9f67/css/css-variables/support/color-green-ref.html -->
+<test name="css/css-variables/variable-supports-17.html" width="800px" height="600px">
+    <rendering>
+        <style>
+p {
+  color: green;
+}
+</style>
+        <p>This text must be green.</p>
+    </rendering>
+
+    <rendering help="CSS Test: Test a failing non-custom property declaration in an @supports rule with two &quot;!important&quot; priorities.">
+        <style>
+body { color: red; }
+@supports (color: var(--a)) and (not (color: var(--a) !important !important)) {
+  p { color: green; }
+}
+</style>
+        <p>This text must be green.</p>
+    </rendering>
+</test>
+
+<!-- https://github.com/web-platform-tests/wpt/blob/ba6d9f67/css/css-variables/variable-supports-18.html -->
+<!-- https://github.com/web-platform-tests/wpt/blob/ba6d9f67/css/css-variables/support/color-green-ref.html -->
+<test name="css/css-variables/variable-supports-18.html" width="800px" height="600px">
+    <rendering>
+        <style>
+p {
+  color: green;
+}
+</style>
+        <p>This text must be green.</p>
+    </rendering>
+
+    <rendering help="CSS Test: Test a passing non-custom property declaration in an @supports rule whose value contains a variable reference and a CDO token.">
+        <style>
+body { color: red; }
+@supports (color: var(--a) &lt;!--) {
+  p { color: green; }
+}
+</style>
+        <p>This text must be green.</p>
+    </rendering>
+</test>
+
+<!-- https://github.com/web-platform-tests/wpt/blob/ba6d9f67/css/css-variables/variable-supports-19.html -->
+<!-- https://github.com/web-platform-tests/wpt/blob/ba6d9f67/css/css-variables/support/color-green-ref.html -->
+<test name="css/css-variables/variable-supports-19.html" width="800px" height="600px">
+    <rendering>
+        <style>
+p {
+  color: green;
+}
+</style>
+        <p>This text must be green.</p>
+    </rendering>
+
+    <rendering help="CSS Test: Test a passing non-custom property declaration in an @supports rule whose value contains a variable reference and a CDC token.">
+        <style>
+body { color: red; }
+@supports (color: --> var(--a)) {
+  p { color: green; }
+}
+</style>
+        <p>This text must be green.</p>
+    </rendering>
+</test>
+
+<!-- https://github.com/web-platform-tests/wpt/blob/ba6d9f67/css/css-variables/variable-supports-20.html -->
+<!-- https://github.com/web-platform-tests/wpt/blob/ba6d9f67/css/css-variables/support/color-green-ref.html -->
+<test name="css/css-variables/variable-supports-20.html" width="800px" height="600px">
+    <rendering>
+        <style>
+p {
+  color: green;
+}
+</style>
+        <p>This text must be green.</p>
+    </rendering>
+
+    <rendering help="CSS Test: Test a passing non-custom property declaration in an @supports rule whose value contains a variable reference and balanced braces and square brackets.">
+        <style>
+body { color: red; }
+@supports (color: { [ var(--a) ] }) {
+  p { color: green; }
+}
+</style>
+        <p>This text must be green.</p>
+    </rendering>
+</test>
+
+<!-- https://github.com/web-platform-tests/wpt/blob/ba6d9f67/css/css-variables/variable-supports-21.html -->
+<!-- https://github.com/web-platform-tests/wpt/blob/ba6d9f67/css/css-variables/support/color-green-ref.html -->
+<test name="css/css-variables/variable-supports-21.html" width="800px" height="600px">
+    <rendering>
+        <style>
+p {
+  color: green;
+}
+</style>
+        <p>This text must be green.</p>
+    </rendering>
+
+    <rendering help="CSS Test: Test a failing non-custom property declaration in an @supports rule where the property value contains a syntactically invalid variable reference due to having a ';' token at the top level of its fallback.">
+        <style>
+body { color: red; }
+@supports (color: var(--a)) and (not (color: var(--a,;))) {
+  p { color: green; }
+}
+</style>
+        <p>This text must be green.</p>
+    </rendering>
+</test>
+
+<!-- https://github.com/web-platform-tests/wpt/blob/ba6d9f67/css/css-variables/variable-supports-22.html -->
+<!-- https://github.com/web-platform-tests/wpt/blob/ba6d9f67/css/css-variables/support/color-green-ref.html -->
+<test name="css/css-variables/variable-supports-22.html" width="800px" height="600px">
+    <rendering>
+        <style>
+p {
+  color: green;
+}
+</style>
+        <p>This text must be green.</p>
+    </rendering>
+
+    <rendering help="CSS Test: Test a passing non-custom property declaration in an @supports rule whose value contains a variable reference and a non-top level ';' token.">
+        <style>
+body { color: red; }
+@supports (color: [;] var(--a)) {
+  p { color: green; }
+}
+</style>
+        <p>This text must be green.</p>
+    </rendering>
+</test>
+
+<!-- https://github.com/web-platform-tests/wpt/blob/ba6d9f67/css/css-variables/variable-supports-23.html -->
+<!-- https://github.com/web-platform-tests/wpt/blob/ba6d9f67/css/css-variables/support/color-green-ref.html -->
+<test name="css/css-variables/variable-supports-23.html" width="800px" height="600px">
+    <rendering>
+        <style>
+p {
+  color: green;
+}
+</style>
+        <p>This text must be green.</p>
+    </rendering>
+
+    <rendering help="CSS Test: Test a failing non-custom property declaration in an @supports rule whose value contains a variable reference with a top level ';' token.">
+        <style>
+body { color: red; }
+@supports (color: var(--a)) and (not (color: var(--a);)) {
+  p { color: green; }
+}
+</style>
+        <p>This text must be green.</p>
+    </rendering>
+</test>
+
+<!-- https://github.com/web-platform-tests/wpt/blob/ba6d9f67/css/css-variables/variable-supports-24.html -->
+<!-- https://github.com/web-platform-tests/wpt/blob/ba6d9f67/css/css-variables/support/color-green-ref.html -->
+<test name="css/css-variables/variable-supports-24.html" width="800px" height="600px">
+    <rendering>
+        <style>
+p {
+  color: green;
+}
+</style>
+        <p>This text must be green.</p>
+    </rendering>
+
+    <rendering help="CSS Test: Test a passing non-custom property declaration in an @supports rule whose value contains a variable reference with a non-top level ';' token in its fallback.">
+        <style>
+body { color: red; }
+@supports (color: var(--a,(;))) {
+  p { color: green; }
+}
+</style>
+        <p>This text must be green.</p>
+    </rendering>
+</test>
+
+<!-- https://github.com/web-platform-tests/wpt/blob/ba6d9f67/css/css-variables/variable-supports-25.html -->
+<!-- https://github.com/web-platform-tests/wpt/blob/ba6d9f67/css/css-variables/support/color-green-ref.html -->
+<test name="css/css-variables/variable-supports-25.html" width="800px" height="600px">
+    <rendering>
+        <style>
+p {
+  color: green;
+}
+</style>
+        <p>This text must be green.</p>
+    </rendering>
+
+    <rendering help="CSS Test: Test a passing non-custom property declaration in an @supports rule whose value contains a variable reference whose function token is in uppercase.">
+        <style>
+body { color: red; }
+@supports (color: VAR(--a)) {
+  p { color: green; }
+}
+</style>
+        <p>This text must be green.</p>
+    </rendering>
+</test>
+
+<!-- https://github.com/web-platform-tests/wpt/blob/ba6d9f67/css/css-variables/variable-supports-26.html -->
+<!-- https://github.com/web-platform-tests/wpt/blob/ba6d9f67/css/css-variables/support/color-green-ref.html -->
+<test name="css/css-variables/variable-supports-26.html" width="800px" height="600px">
+    <rendering>
+        <style>
+p {
+  color: green;
+}
+</style>
+        <p>This text must be green.</p>
+    </rendering>
+
+    <rendering help="CSS Test: Test a passing non-custom property declaration in an @supports rule whose value contains a variable reference with a digit after the &quot;--&quot; variable name prefix.">
+        <style>
+body { color: red; }
+@supports (color: var(--0)) {
+  p { color: green; }
+}
+</style>
+        <p>This text must be green.</p>
+    </rendering>
+</test>
+
+<!-- https://github.com/web-platform-tests/wpt/blob/ba6d9f67/css/css-variables/variable-supports-27.html -->
+<!-- https://github.com/web-platform-tests/wpt/blob/ba6d9f67/css/css-variables/support/color-green-ref.html -->
+<test name="css/css-variables/variable-supports-27.html" width="800px" height="600px">
+    <rendering>
+        <style>
+p {
+  color: green;
+}
+</style>
+        <p>This text must be green.</p>
+    </rendering>
+
+    <rendering help="CSS Test: Test a passing non-custom property declaration in an @supports rule whose value contains a variable reference with a variable name beginning with an escaped digit.">
+        <style>
+body { color: red; }
+@supports (color: var(--\30)) {
+  p { color: green; }
+}
+</style>
+        <p>This text must be green.</p>
+    </rendering>
+</test>
+
+<!-- https://github.com/web-platform-tests/wpt/blob/ba6d9f67/css/css-variables/variable-supports-28.html -->
+<!-- https://github.com/web-platform-tests/wpt/blob/ba6d9f67/css/css-variables/support/color-green-ref.html -->
+<test name="css/css-variables/variable-supports-28.html" width="800px" height="600px">
+    <rendering>
+        <style>
+p {
+  color: green;
+}
+</style>
+        <p>This text must be green.</p>
+    </rendering>
+
+    <rendering help="CSS Test: Test a passing non-custom property declaration in an @supports rule whose value contains a variable reference with a U+FFFD variable name specified by an escaped lone surrogate.">
+        <style>
+body { color: red; }
+@supports (color: var(--\d800)) {
+  p { color: green; }
+}
+</style>
+        <p>This text must be green.</p>
+    </rendering>
+</test>
+
+<!-- https://github.com/web-platform-tests/wpt/blob/ba6d9f67/css/css-variables/variable-supports-29.html -->
+<!-- https://github.com/web-platform-tests/wpt/blob/ba6d9f67/css/css-variables/support/color-green-ref.html -->
+<test name="css/css-variables/variable-supports-29.html" width="800px" height="600px">
+    <rendering>
+        <style>
+p {
+  color: green;
+}
+</style>
+        <p>This text must be green.</p>
+    </rendering>
+
+    <rendering help="CSS Test: Test a passing non-custom property declaration in an @supports rule whose value contains a variable reference with a U+FFFD variable name specified by an out-of-range Unicode character escape.">
+        <style>
+body { color: red; }
+@supports (color: var(--\ffffff)) {
+  p { color: green; }
+}
+</style>
+        <p>This text must be green.</p>
+    </rendering>
+</test>
+
+<!-- https://github.com/web-platform-tests/wpt/blob/ba6d9f67/css/css-variables/variable-supports-30.html -->
+<!-- https://github.com/web-platform-tests/wpt/blob/ba6d9f67/css/css-variables/support/color-green-ref.html -->
+<test name="css/css-variables/variable-supports-30.html" width="800px" height="600px">
+    <rendering>
+        <style>
+p {
+  color: green;
+}
+</style>
+        <p>This text must be green.</p>
+    </rendering>
+
+    <rendering help="CSS Test: A non-custom property declaration in an @supports rule whose value is a var() reference with a dimension token as the name argument is supported.">
+        <style>
+body { color: red; }
+/* var()'s name argument is a &lt;declaration-value>, so var(1px) is valid at parse time; the name
+   fails to parse as a &lt;custom-property-name> only at computed-value time, so the declaration is
+   supported. https://drafts.csswg.org/css-variables-2/#funcdef-var */
+@supports (color: var(--a)) and (color: var(1px)) {
+  p { color: green; }
+}
+</style>
+        <p>This text must be green.</p>
+    </rendering>
+</test>
+
+<!-- https://github.com/web-platform-tests/wpt/blob/ba6d9f67/css/css-variables/variable-supports-31.html -->
+<!-- https://github.com/web-platform-tests/wpt/blob/ba6d9f67/css/css-variables/support/color-green-ref.html -->
+<test name="css/css-variables/variable-supports-31.html" width="800px" height="600px">
+    <rendering>
+        <style>
+p {
+  color: green;
+}
+</style>
+        <p>This text must be green.</p>
+    </rendering>
+
+    <rendering help="CSS Test: Test a passing non-custom property declaration in an @supports rule whose value contains a variable reference with white space surrounding the fallback comma.">
+        <style>
+body { color: red; }
+@supports (color: var(--a , )) {
+  p { color: green; }
+}
+</style>
+        <p>This text must be green.</p>
+    </rendering>
+</test>
+
+<!-- https://github.com/web-platform-tests/wpt/blob/ba6d9f67/css/css-variables/variable-supports-32.html -->
+<!-- https://github.com/web-platform-tests/wpt/blob/ba6d9f67/css/css-variables/support/color-green-ref.html -->
+<test name="css/css-variables/variable-supports-32.html" width="800px" height="600px">
+    <rendering>
+        <style>
+p {
+  color: green;
+}
+</style>
+        <p>This text must be green.</p>
+    </rendering>
+
+    <rendering help="CSS Test: Test a passing non-custom shorthand property declaration in an @supports rule whose value contains a variable reference.">
+        <style>
+body { color: red; }
+@supports (background: var(--a)) {
+  p { color: green; }
+}
+</style>
+        <p>This text must be green.</p>
+    </rendering>
+</test>
+
+<!-- https://github.com/web-platform-tests/wpt/blob/ba6d9f67/css/css-variables/variable-supports-33.html -->
+<!-- https://github.com/web-platform-tests/wpt/blob/ba6d9f67/css/css-variables/support/color-green-ref.html -->
+<test name="css/css-variables/variable-supports-33.html" width="800px" height="600px">
+    <rendering>
+        <style>
+p {
+  color: green;
+}
+</style>
+        <p>This text must be green.</p>
+    </rendering>
+
+    <rendering help="CSS Test: Test a passing custom property declaration in an @supports rule whose value contains a variable reference.">
+        <style>
+body { color: red; }
+@supports (--a:var(--b)) {
+  p { color: green; }
+}
+</style>
+        <p>This text must be green.</p>
+    </rendering>
+</test>
+
+<!-- https://github.com/web-platform-tests/wpt/blob/ba6d9f67/css/css-variables/variable-supports-34.html -->
+<!-- https://github.com/web-platform-tests/wpt/blob/ba6d9f67/css/css-variables/support/color-green-ref.html -->
+<test name="css/css-variables/variable-supports-34.html" width="800px" height="600px">
+    <rendering>
+        <style>
+p {
+  color: green;
+}
+</style>
+        <p>This text must be green.</p>
+    </rendering>
+
+    <rendering help="CSS Test: Test a passing custom property declaration in an @supports rule whose value contains white space and a variable reference.">
+        <style>
+body { color: red; }
+@supports (--a: var(--b)) {
+  p { color: green; }
+}
+</style>
+        <p>This text must be green.</p>
+    </rendering>
+</test>
+
+<!-- https://github.com/web-platform-tests/wpt/blob/ba6d9f67/css/css-variables/variable-supports-35.html -->
+<!-- https://github.com/web-platform-tests/wpt/blob/ba6d9f67/css/css-variables/support/color-green-ref.html -->
+<test name="css/css-variables/variable-supports-35.html" width="800px" height="600px">
+    <rendering>
+        <style>
+p {
+  color: green;
+}
+</style>
+        <p>This text must be green.</p>
+    </rendering>
+
+    <rendering help="CSS Test: Test a passing custom property declaration in an @supports rule whose value contains a variable reference surrounded by white space.">
+        <style>
+body { color: red; }
+@supports (--a: var(--b) ) {
+  p { color: green; }
+}
+</style>
+        <p>This text must be green.</p>
+    </rendering>
+</test>
+
+<!-- https://github.com/web-platform-tests/wpt/blob/ba6d9f67/css/css-variables/variable-supports-36.html -->
+<!-- https://github.com/web-platform-tests/wpt/blob/ba6d9f67/css/css-variables/support/color-green-ref.html -->
+<test name="css/css-variables/variable-supports-36.html" width="800px" height="600px">
+    <rendering>
+        <style>
+p {
+  color: green;
+}
+</style>
+        <p>This text must be green.</p>
+    </rendering>
+
+    <rendering help="CSS Test: Test a passing custom property declaration in an @supports rule whose value contains a variable reference surrounded by white space with the variable name also surrounded by white space.">
+        <style>
+body { color: red; }
+@supports (--a: var( --b ) ) {
+  p { color: green; }
+}
+</style>
+        <p>This text must be green.</p>
+    </rendering>
+</test>
+
+<!-- https://github.com/web-platform-tests/wpt/blob/ba6d9f67/css/css-variables/variable-supports-37.html -->
+<!-- https://github.com/web-platform-tests/wpt/blob/ba6d9f67/css/css-variables/support/color-green-ref.html -->
+<test name="css/css-variables/variable-supports-37.html" width="800px" height="600px">
+    <rendering>
+        <style>
+p {
+  color: green;
+}
+</style>
+        <p>This text must be green.</p>
+    </rendering>
+
+    <rendering help="CSS Test: Test a custom property declaration in an @supports rule whose value contains a variable reference with no fallback tokens.">
+        <style>
+body { color: red; }
+@supports (--a: a) and (--a: var(--b,)) {
+  p { color: green; }
+}
+</style>
+        <p>This text must be green.</p>
+    </rendering>
+</test>
+
+<!-- https://github.com/web-platform-tests/wpt/blob/ba6d9f67/css/css-variables/variable-supports-38.html -->
+<!-- https://github.com/web-platform-tests/wpt/blob/ba6d9f67/css/css-variables/support/color-green-ref.html -->
+<test name="css/css-variables/variable-supports-38.html" width="800px" height="600px">
+    <rendering>
+        <style>
+p {
+  color: green;
+}
+</style>
+        <p>This text must be green.</p>
+    </rendering>
+
+    <rendering help="CSS Test: Test a passing custom property declaration in an @supports rule whose value contains a variable reference with fallback consisting only of white space.">
+        <style>
+body { color: red; }
+@supports (--a: var(--b, )) {
+  p { color: green; }
+}
+</style>
+        <p>This text must be green.</p>
+    </rendering>
+</test>
+
+<!-- https://github.com/web-platform-tests/wpt/blob/ba6d9f67/css/css-variables/variable-supports-39.html -->
+<!-- https://github.com/web-platform-tests/wpt/blob/ba6d9f67/css/css-variables/support/color-green-ref.html -->
+<test name="css/css-variables/variable-supports-39.html" width="800px" height="600px">
+    <rendering>
+        <style>
+p {
+  color: green;
+}
+</style>
+        <p>This text must be green.</p>
+    </rendering>
+
+    <rendering help="CSS Test: Test a property declaration in an @supports rule whose value contains a variable reference with no fallback tokens, just a comment.">
+        <style>
+body { color: red; }
+@supports (--a: a) and (--a: var(--b,/**/)) {
+  p { color: green; }
+}
+</style>
+        <p>This text must be green.</p>
+    </rendering>
+</test>
+
+<!-- https://github.com/web-platform-tests/wpt/blob/ba6d9f67/css/css-variables/variable-supports-40.html -->
+<!-- https://github.com/web-platform-tests/wpt/blob/ba6d9f67/css/css-variables/support/color-green-ref.html -->
+<test name="css/css-variables/variable-supports-40.html" width="800px" height="600px">
+    <rendering>
+        <style>
+p {
+  color: green;
+}
+</style>
+        <p>This text must be green.</p>
+    </rendering>
+
+    <rendering help="CSS Test: Test a passing custom property declaration in an @supports rule whose value contains a variable reference with fallback consisting of a comment and an identifier.">
+        <style>
+body { color: red; }
+@supports (--a: var(--b,/**/a)) {
+  p { color: green; }
+}
+</style>
+        <p>This text must be green.</p>
+    </rendering>
+</test>
+
+<!-- https://github.com/web-platform-tests/wpt/blob/ba6d9f67/css/css-variables/variable-supports-41.html -->
+<!-- https://github.com/web-platform-tests/wpt/blob/ba6d9f67/css/css-variables/support/color-green-ref.html -->
+<test name="css/css-variables/variable-supports-41.html" width="800px" height="600px">
+    <rendering>
+        <style>
+p {
+  color: green;
+}
+</style>
+        <p>This text must be green.</p>
+    </rendering>
+
+    <rendering help="CSS Test: Test a failing custom property declaration in an @supports rule whose value contains a variable reference with fallback containing a top level '!' token.">
+        <style>
+body { color: red; }
+@supports (--a: a) and (not (--a: var(--b,!))) {
+  p { color: green; }
+}
+</style>
+        <p>This text must be green.</p>
+    </rendering>
+</test>
+
+<!-- https://github.com/web-platform-tests/wpt/blob/ba6d9f67/css/css-variables/variable-supports-42.html -->
+<!-- https://github.com/web-platform-tests/wpt/blob/ba6d9f67/css/css-variables/support/color-green-ref.html -->
+<test name="css/css-variables/variable-supports-42.html" width="800px" height="600px">
+    <rendering>
+        <style>
+p {
+  color: green;
+}
+</style>
+        <p>This text must be green.</p>
+    </rendering>
+
+    <rendering help="CSS Test: Test a failing custom property declaration in an @supports rule whose value contains a variable reference with fallback containing a top level &quot;!important&quot;.">
+        <style>
+body { color: red; }
+@supports (--a: a) and (not (--a: var(--b,!important))) {
+  p { color: green; }
+}
+</style>
+        <p>This text must be green.</p>
+    </rendering>
+</test>
+
+<!-- https://github.com/web-platform-tests/wpt/blob/ba6d9f67/css/css-variables/variable-supports-43.html -->
+<!-- https://github.com/web-platform-tests/wpt/blob/ba6d9f67/css/css-variables/support/color-green-ref.html -->
+<test name="css/css-variables/variable-supports-43.html" width="800px" height="600px">
+    <rendering>
+        <style>
+p {
+  color: green;
+}
+</style>
+        <p>This text must be green.</p>
+    </rendering>
+
+    <rendering help="CSS Test: Test a passing custom property declaration in an @supports rule whose value contains a dimension followed by a variable reference.">
+        <style>
+body { color: red; }
+@supports (--a: 1px var(--b)) {
+  p { color: green; }
+}
+</style>
+        <p>This text must be green.</p>
+    </rendering>
+</test>
+
+<!-- https://github.com/web-platform-tests/wpt/blob/ba6d9f67/css/css-variables/variable-supports-44.html -->
+<!-- https://github.com/web-platform-tests/wpt/blob/ba6d9f67/css/css-variables/support/color-green-ref.html -->
+<test name="css/css-variables/variable-supports-44.html" width="800px" height="600px">
+    <rendering>
+        <style>
+p {
+  color: green;
+}
+</style>
+        <p>This text must be green.</p>
+    </rendering>
+
+    <rendering help="CSS Test: Test a passing custom property declaration in an @supports rule whose value contains a variable reference followed bya dimension.">
+        <style>
+body { color: red; }
+@supports (--a: var(--b) 1px) {
+  p { color: green; }
+}
+</style>
+        <p>This text must be green.</p>
+    </rendering>
+</test>
+
+<!-- https://github.com/web-platform-tests/wpt/blob/ba6d9f67/css/css-variables/variable-supports-45.html -->
+<!-- https://github.com/web-platform-tests/wpt/blob/ba6d9f67/css/css-variables/support/color-green-ref.html -->
+<test name="css/css-variables/variable-supports-45.html" width="800px" height="600px">
+    <rendering>
+        <style>
+p {
+  color: green;
+}
+</style>
+        <p>This text must be green.</p>
+    </rendering>
+
+    <rendering help="CSS Test: Test a passing custom property declaration in an @supports rule whose value contains a selection of tokens and a non-top level variable reference.">
+        <style>
+body { color: red; }
+@supports (--a: something 3px url(whereever) calc(var(--b) + 1px)) {
+  p { color: green; }
+}
+</style>
+        <p>This text must be green.</p>
+    </rendering>
+</test>
+
+<!-- https://github.com/web-platform-tests/wpt/blob/ba6d9f67/css/css-variables/variable-supports-46.html -->
+<!-- https://github.com/web-platform-tests/wpt/blob/ba6d9f67/css/css-variables/support/color-green-ref.html -->
+<test name="css/css-variables/variable-supports-46.html" width="800px" height="600px">
+    <rendering>
+        <style>
+p {
+  color: green;
+}
+</style>
+        <p>This text must be green.</p>
+    </rendering>
+
+    <rendering help="CSS Test: Test a passing custom property declaration in an @supports rule whose value contains a variable reference and an &quot;!important&quot; priority.">
+        <style>
+body { color: red; }
+@supports (--a: var(--b) !important) {
+  p { color: green; }
+}
+</style>
+        <p>This text must be green.</p>
+    </rendering>
+</test>
+
+<!-- https://github.com/web-platform-tests/wpt/blob/ba6d9f67/css/css-variables/variable-supports-47.html -->
+<!-- https://github.com/web-platform-tests/wpt/blob/ba6d9f67/css/css-variables/support/color-green-ref.html -->
+<test name="css/css-variables/variable-supports-47.html" width="800px" height="600px">
+    <rendering>
+        <style>
+p {
+  color: green;
+}
+</style>
+        <p>This text must be green.</p>
+    </rendering>
+
+    <rendering help="CSS Test: Test a passing custom property declaration in an @supports rule whose value contains two adjacent variable references with no intervening white space.">
+        <style>
+body { color: red; }
+@supports (--a: var(--b)var(--b)) {
+  p { color: green; }
+}
+</style>
+        <p>This text must be green.</p>
+    </rendering>
+</test>
+
+<!-- https://github.com/web-platform-tests/wpt/blob/ba6d9f67/css/css-variables/variable-supports-48.html -->
+<!-- https://github.com/web-platform-tests/wpt/blob/ba6d9f67/css/css-variables/support/color-green-ref.html -->
+<test name="css/css-variables/variable-supports-48.html" width="800px" height="600px">
+    <rendering>
+        <style>
+p {
+  color: green;
+}
+</style>
+        <p>This text must be green.</p>
+    </rendering>
+
+    <rendering help="CSS Test: Test a passing custom property declaration in an @supports rule whose value contains a variable reference with a number of levels of variable reference fallbacks.">
+        <style>
+body { color: red; }
+@supports (--a: var(--b, var(--c, var(--d, black)))) {
+  p { color: green; }
+}
+</style>
+        <p>This text must be green.</p>
+    </rendering>
+</test>
+
+<!-- https://github.com/web-platform-tests/wpt/blob/ba6d9f67/css/css-variables/variable-supports-49.html -->
+<!-- https://github.com/web-platform-tests/wpt/blob/ba6d9f67/css/css-variables/support/color-green-ref.html -->
+<test name="css/css-variables/variable-supports-49.html" width="800px" height="600px">
+    <rendering>
+        <style>
+p {
+  color: green;
+}
+</style>
+        <p>This text must be green.</p>
+    </rendering>
+
+    <rendering help="CSS Test: Test a failing custom property declaration in an @supports rule whose value contains two &quot;!important&quot; priorities.">
+        <style>
+body { color: red; }
+@supports (--a: a) and (not (--a: var(--b) !important !important)) {
+  p { color: green; }
+}
+</style>
+        <p>This text must be green.</p>
+    </rendering>
+</test>
+
+<!-- https://github.com/web-platform-tests/wpt/blob/ba6d9f67/css/css-variables/variable-supports-50.html -->
+<!-- https://github.com/web-platform-tests/wpt/blob/ba6d9f67/css/css-variables/support/color-green-ref.html -->
+<test name="css/css-variables/variable-supports-50.html" width="800px" height="600px">
+    <rendering>
+        <style>
+p {
+  color: green;
+}
+</style>
+        <p>This text must be green.</p>
+    </rendering>
+
+    <rendering help="CSS Test: Test a passing custom property declaration in an @supports rule whose value contains a variable reference and a CDO token.">
+        <style>
+body { color: red; }
+@supports (--a: var(--b) &lt;!--) {
+  p { color: green; }
+}
+</style>
+        <p>This text must be green.</p>
+    </rendering>
+</test>
+
+<!-- https://github.com/web-platform-tests/wpt/blob/ba6d9f67/css/css-variables/variable-supports-51.html -->
+<!-- https://github.com/web-platform-tests/wpt/blob/ba6d9f67/css/css-variables/support/color-green-ref.html -->
+<test name="css/css-variables/variable-supports-51.html" width="800px" height="600px">
+    <rendering>
+        <style>
+p {
+  color: green;
+}
+</style>
+        <p>This text must be green.</p>
+    </rendering>
+
+    <rendering help="CSS Test: Test a passing custom property declaration in an @supports rule whose value contains a variable reference and a CDC token.">
+        <style>
+body { color: red; }
+@supports (--a: --> var(--b)) {
+  p { color: green; }
+}
+</style>
+        <p>This text must be green.</p>
+    </rendering>
+</test>
+
+<!-- https://github.com/web-platform-tests/wpt/blob/ba6d9f67/css/css-variables/variable-supports-52.html -->
+<!-- https://github.com/web-platform-tests/wpt/blob/ba6d9f67/css/css-variables/support/color-green-ref.html -->
+<test name="css/css-variables/variable-supports-52.html" width="800px" height="600px">
+    <rendering>
+        <style>
+p {
+  color: green;
+}
+</style>
+        <p>This text must be green.</p>
+    </rendering>
+
+    <rendering help="CSS Test: Test a passing custom property declaration in an @supports rule whose value contains a variable reference and balanced braces and square brackets.">
+        <style>
+body { color: red; }
+@supports (--a: { [ var(--b) ] }) {
+  p { color: green; }
+}
+</style>
+        <p>This text must be green.</p>
+    </rendering>
+</test>
+
+<!-- https://github.com/web-platform-tests/wpt/blob/ba6d9f67/css/css-variables/variable-supports-53.html -->
+<!-- https://github.com/web-platform-tests/wpt/blob/ba6d9f67/css/css-variables/support/color-green-ref.html -->
+<test name="css/css-variables/variable-supports-53.html" width="800px" height="600px">
+    <rendering>
+        <style>
+p {
+  color: green;
+}
+</style>
+        <p>This text must be green.</p>
+    </rendering>
+
+    <rendering help="CSS Test: Test a failing custom property declaration in an @supports rule whose value contains a variable reference with a top level ';' token in its fallback.">
+        <style>
+body { color: red; }
+@supports (--a: a) and (not (--a: var(--b,;))) {
+  p { color: green; }
+}
+</style>
+        <p>This text must be green.</p>
+    </rendering>
+</test>
+
+<!-- https://github.com/web-platform-tests/wpt/blob/ba6d9f67/css/css-variables/variable-supports-54.html -->
+<!-- https://github.com/web-platform-tests/wpt/blob/ba6d9f67/css/css-variables/support/color-green-ref.html -->
+<test name="css/css-variables/variable-supports-54.html" width="800px" height="600px">
+    <rendering>
+        <style>
+p {
+  color: green;
+}
+</style>
+        <p>This text must be green.</p>
+    </rendering>
+
+    <rendering help="CSS Test: Test a passing custom property declaration in an @supports rule whose value contains a variable reference and a non-top level ';' token.">
+        <style>
+body { color: red; }
+@supports (--a: [;] var(--b)) {
+  p { color: green; }
+}
+</style>
+        <p>This text must be green.</p>
+    </rendering>
+</test>
+
+<!-- https://github.com/web-platform-tests/wpt/blob/ba6d9f67/css/css-variables/variable-supports-55.html -->
+<!-- https://github.com/web-platform-tests/wpt/blob/ba6d9f67/css/css-variables/support/color-green-ref.html -->
+<test name="css/css-variables/variable-supports-55.html" width="800px" height="600px">
+    <rendering>
+        <style>
+p {
+  color: green;
+}
+</style>
+        <p>This text must be green.</p>
+    </rendering>
+
+    <rendering help="CSS Test: Test a failing custom property declaration in an @supports rule whose value contains a variable reference and a top level ';' token in its fallback.">
+        <style>
+body { color: red; }
+@supports (--a: a) and (not (--a: var(--b);)) {
+  p { color: green; }
+}
+</style>
+        <p>This text must be green.</p>
+    </rendering>
+</test>
+
+<!-- https://github.com/web-platform-tests/wpt/blob/ba6d9f67/css/css-variables/variable-supports-56.html -->
+<!-- https://github.com/web-platform-tests/wpt/blob/ba6d9f67/css/css-variables/support/color-green-ref.html -->
+<test name="css/css-variables/variable-supports-56.html" width="800px" height="600px">
+    <rendering>
+        <style>
+p {
+  color: green;
+}
+</style>
+        <p>This text must be green.</p>
+    </rendering>
+
+    <rendering help="CSS Test: Test a passing custom property declaration in an @supports rule whose value contains only a white space token.">
+        <style>
+body { color: red; }
+@supports (--a: ) {
+  p { color: green; }
+}
+</style>
+        <p>This text must be green.</p>
+    </rendering>
+</test>
+
+<!-- https://github.com/web-platform-tests/wpt/blob/ba6d9f67/css/css-variables/variable-supports-57.html -->
+<!-- https://github.com/web-platform-tests/wpt/blob/ba6d9f67/css/css-variables/support/color-green-ref.html -->
+<test name="css/css-variables/variable-supports-57.html" width="800px" height="600px">
+    <rendering>
+        <style>
+p {
+  color: green;
+}
+</style>
+        <p>This text must be green.</p>
+    </rendering>
+
+    <rendering help="CSS Test: Test a failing custom property declaration in an @supports rule whose value contains no tokens.">
+        <style>
+body { color: red; }
+@supports (--a: a) and (--a:) {
+  p { color: green; }
+}
+</style>
+        <p>This text must be green.</p>
+    </rendering>
+</test>
+
+<!-- https://github.com/web-platform-tests/wpt/blob/ba6d9f67/css/css-variables/variable-supports-58.html -->
+<!-- https://github.com/web-platform-tests/wpt/blob/ba6d9f67/css/css-variables/support/color-green-ref.html -->
+<test name="css/css-variables/variable-supports-58.html" width="800px" height="600px">
+    <rendering>
+        <style>
+p {
+  color: green;
+}
+</style>
+        <p>This text must be green.</p>
+    </rendering>
+
+    <rendering help="CSS Test: Test a property declaration in an @supports rule with property name &quot;--&quot;.">
+        <style>
+body { color: green; }
+@supports (--: a) {
+  p { color: red; }
+}
+</style>
+        <p>This text must be green.</p>
+    </rendering>
+</test>
+
+<!-- https://github.com/web-platform-tests/wpt/blob/ba6d9f67/css/css-variables/variable-supports-59.html -->
+<!-- https://github.com/web-platform-tests/wpt/blob/ba6d9f67/css/css-variables/support/color-green-ref.html -->
+<test name="css/css-variables/variable-supports-59.html" width="800px" height="600px">
+    <rendering>
+        <style>
+p {
+  color: green;
+}
+</style>
+        <p>This text must be green.</p>
+    </rendering>
+
+    <rendering help="CSS Test: Test a passing custom property declaration in an @supports rule whose value contains a variable reference to itself.">
+        <style>
+body { color: red; }
+@supports (--a:var(--a)) {
+  p { color: green; }
+}
+</style>
+        <p>This text must be green.</p>
+    </rendering>
+</test>
+
+<!-- https://github.com/web-platform-tests/wpt/blob/ba6d9f67/css/css-variables/variable-supports-60.html -->
+<!-- https://github.com/web-platform-tests/wpt/blob/ba6d9f67/css/css-variables/support/color-green-ref.html -->
+<test name="css/css-variables/variable-supports-60.html" width="800px" height="600px">
+    <rendering>
+        <style>
+p {
+  color: green;
+}
+</style>
+        <p>This text must be green.</p>
+    </rendering>
+
+    <rendering help="CSS Test: Test a passing custom property declaration in an @supports rule for a variable whose name is a digit.">
+        <style>
+body { color: red; }
+@supports (--0: a) {
+  p { color: green; }
+}
+</style>
+        <p>This text must be green.</p>
+    </rendering>
+</test>
+
+<!-- https://github.com/web-platform-tests/wpt/blob/ba6d9f67/css/css-variables/variable-supports-61.html -->
+<!-- https://github.com/web-platform-tests/wpt/blob/ba6d9f67/css/css-variables/support/color-green-ref.html -->
+<test name="css/css-variables/variable-supports-61.html" width="800px" height="600px">
+    <rendering>
+        <style>
+p {
+  color: green;
+}
+</style>
+        <p>This text must be green.</p>
+    </rendering>
+
+    <rendering help="CSS Test: Test a passing custom property declaration in an @supports rule for a variable whose name is a digit which is specified with an escape.">
+        <style>
+body { color: red; }
+@supports (--\61: a) {
+  p { color: green; }
+}
+</style>
+        <p>This text must be green.</p>
+    </rendering>
+</test>
+
+<!-- https://github.com/web-platform-tests/wpt/blob/ba6d9f67/css/css-variables/variable-supports-62.html -->
+<!-- https://github.com/web-platform-tests/wpt/blob/ba6d9f67/css/css-variables/support/color-green-ref.html -->
+<test name="css/css-variables/variable-supports-62.html" width="800px" height="600px">
+    <rendering>
+        <style>
+p {
+  color: green;
+}
+</style>
+        <p>This text must be green.</p>
+    </rendering>
+
+    <rendering help="CSS Test: Test a passing custom property declaration in an @supports rule for a variable whose name is U+FFFD which is specified with an escaped lone surrogate.">
+        <style>
+body { color: red; }
+@supports (--\d800: a) {
+  p { color: green; }
+}
+</style>
+        <p>This text must be green.</p>
+    </rendering>
+</test>
+
+<!-- https://github.com/web-platform-tests/wpt/blob/ba6d9f67/css/css-variables/variable-supports-63.html -->
+<!-- https://github.com/web-platform-tests/wpt/blob/ba6d9f67/css/css-variables/support/color-green-ref.html -->
+<test name="css/css-variables/variable-supports-63.html" width="800px" height="600px">
+    <rendering>
+        <style>
+p {
+  color: green;
+}
+</style>
+        <p>This text must be green.</p>
+    </rendering>
+
+    <rendering help="CSS Test: Test a passing custom property declaration in an @supports rule for a variable whose name is U+FFFD which is specified with an out-of-range Unicode character escape.">
+        <style>
+body { color: red; }
+@supports (--\ffffff: a) {
+  p { color: green; }
+}
+</style>
+        <p>This text must be green.</p>
+    </rendering>
+</test>
+
+<!-- https://github.com/web-platform-tests/wpt/blob/ba6d9f67/css/css-variables/variable-supports-64.html -->
+<!-- https://github.com/web-platform-tests/wpt/blob/ba6d9f67/css/css-variables/support/color-green-ref.html -->
+<test name="css/css-variables/variable-supports-64.html" width="800px" height="600px">
+    <rendering>
+        <style>
+p {
+  color: green;
+}
+</style>
+        <p>This text must be green.</p>
+    </rendering>
+
+    <rendering help="CSS Test: A custom property declaration in an @supports rule whose value is a var() reference with a dimension token as the name argument is supported.">
+        <style>
+body { color: red; }
+/* var()'s name argument is a &lt;declaration-value>, so var(1px) is valid at parse time; the name
+   fails to parse as a &lt;custom-property-name> only at computed-value time, so the declaration is
+   supported. https://drafts.csswg.org/css-variables-2/#funcdef-var */
+@supports (--a: a) and (--a: var(1px)) {
+  p { color: green; }
+}
+</style>
+        <p>This text must be green.</p>
+    </rendering>
+</test>
+
+<!-- https://github.com/web-platform-tests/wpt/blob/ba6d9f67/css/css-variables/variable-supports-65.html -->
+<!-- https://github.com/web-platform-tests/wpt/blob/ba6d9f67/css/css-variables/support/color-green-ref.html -->
+<test name="css/css-variables/variable-supports-65.html" width="800px" height="600px">
+    <rendering>
+        <style>
+p {
+  color: green;
+}
+</style>
+        <p>This text must be green.</p>
+    </rendering>
+
+    <rendering help="CSS Test: Test a passing custom property declaration in an @supports rule whose value is a variable reference with white space surrounding the fallback comma.">
+        <style>
+body { color: red; }
+@supports (--a: var(--b , )) {
+  p { color: green; }
+}
+</style>
+        <p>This text must be green.</p>
+    </rendering>
+</test>
+
+<!-- https://github.com/web-platform-tests/wpt/blob/ba6d9f67/css/css-variables/variable-supports-66.html -->
+<!-- https://github.com/web-platform-tests/wpt/blob/ba6d9f67/css/css-variables/support/color-green-ref.html -->
+<test name="css/css-variables/variable-supports-66.html" width="800px" height="600px">
+    <rendering>
+        <style>
+p {
+  color: green;
+}
+</style>
+        <p>This text must be green.</p>
+    </rendering>
+
+    <rendering help="CSS Test: Test a failing custom property declaration in an @supports rule where the property name begins with &quot;VAR-&quot;.">
+        <style>
+body { color: red; }
+@supports (--a: a) and (not (VAR-a: a)) {
+  p { color: green; }
+}
+</style>
+        <p>This text must be green.</p>
+    </rendering>
+</test>
+
+<!-- https://github.com/web-platform-tests/wpt/blob/ba6d9f67/css/css-variables/variable-supports-67.html -->
+<!-- https://github.com/web-platform-tests/wpt/blob/ba6d9f67/css/css-variables/support/color-green-ref.html -->
+<test name="css/css-variables/variable-supports-67.html" width="800px" height="600px">
+    <rendering>
+        <style>
+p {
+  color: green;
+}
+</style>
+        <p>This text must be green.</p>
+    </rendering>
+
+    <rendering help="CSS Test: Test a declaration for a custom property has an invalid value does not cause the @supports rule to fail to parse.">
+        <style>
+body { color: red; }
+@supports (--a: !) or (--a: a) {
+  p { color: green; }
+}
+</style>
+        <p>This text must be green.</p>
+    </rendering>
+</test>
+
+</tests>
