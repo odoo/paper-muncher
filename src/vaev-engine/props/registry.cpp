@@ -32,233 +32,265 @@ using namespace Karm;
 
 namespace Vaev::Style {
 
-export RegisteredPropertySet const& defaultRegistry() {
-    static RegisteredPropertySet registry = [] {
-        RegisteredPropertySet registry;
+export struct ShorthandProcs {
+    using ParseFn = Res<Rc<Property>>(Cursor<Css::Sst>& c, Vec<Rc<Property>>& longhands, ParsingMode mode);
+
+    ParseFn const& parse;
+};
+
+export struct LonghandProcs {
+    using ParseFn = Res<Rc<Property>>(Cursor<Css::Sst>& c, ParsingMode mode);
+    using InitialFn = Res<Rc<Property>>();
+    using LoadFn = Res<Rc<Property>>(ComputedValues const& style);
+
+    ParseFn const& parse;
+    InitialFn const& initial;
+    LoadFn const& load;
+};
+
+export static auto _shorthandProcs = Array<Opt<ShorthandProcs>, enumLen<ShorthandId>()>::fill(NONE);
+export static auto _longhandProcs = Array<Opt<LonghandProcs>, enumLen<LonghandId>()>::fill(NONE);
+
+export template <typename T>
+void registerShorthand() {
+    _shorthandProcs[toUnderlyingType(T::ID)] = Some(ShorthandProcs{
+        .parse = T::parse,
+    });
+}
+
+export template <typename T>
+void registerLonghand() {
+    _longhandProcs[toUnderlyingType(T::ID)] = Some(LonghandProcs{
+        .parse = T::parse,
+        .initial = T::initial,
+        .load = T::load,
+    });
+}
+
+struct PropertyTablesInit {
+    PropertyTablesInit() {
         // Align
-        registry.registerProperty<AlignContentProperty>();
-        registry.registerProperty<JustifyContentProperty>();
-        registry.registerProperty<JustifySelfProperty>();
-        registry.registerProperty<AlignSelfProperty>();
-        registry.registerProperty<JustifyItemsProperty>();
-        registry.registerProperty<AlignItemsProperty>();
+        registerLonghand<AlignContentProperty>();
+        registerLonghand<JustifyContentProperty>();
+        registerLonghand<JustifySelfProperty>();
+        registerLonghand<AlignSelfProperty>();
+        registerLonghand<JustifyItemsProperty>();
+        registerLonghand<AlignItemsProperty>();
 
         // Gaps
-        registry.registerProperty<RowGapProperty>();
-        registry.registerProperty<ColumnGapProperty>();
+        registerLonghand<RowGapProperty>();
+        registerLonghand<ColumnGapProperty>();
 
         // Baseline
-        registry.registerProperty<DominantBaselineProperty>();
-        registry.registerProperty<BaselineSourceProperty>();
-        registry.registerProperty<AlignmentBaselineProperty>();
-        registry.registerProperty<BaselineShiftProperty>();
-        registry.registerProperty<VerticalAlignProperty>();
+        registerLonghand<DominantBaselineProperty>();
+        registerLonghand<BaselineSourceProperty>();
+        registerLonghand<AlignmentBaselineProperty>();
+        registerLonghand<BaselineShiftProperty>();
+        // registry.registerProperty<VerticalAlignProperty>();
 
         // Background
-        registry.registerProperty<BackgroundAttachmentProperty>();
-        registry.registerProperty<BackgroundColorProperty>();
-        registry.registerProperty<BackgroundImageProperty>();
-        registry.registerProperty<BackgroundPositionProperty>();
-        registry.registerProperty<BackgroundRepeatProperty>();
-        registry.registerProperty<BackgroundProperty>();
-        registry.registerProperty<ColorProperty>();
-        registry.registerProperty<DisplayProperty>();
-        registry.registerProperty<TableLayoutProperty>();
-        registry.registerProperty<CaptionSideProperty>();
+        registerLonghand<BackgroundAttachmentProperty>();
+        registerLonghand<BackgroundColorProperty>();
+        registerLonghand<BackgroundImageProperty>();
+        registerLonghand<BackgroundPositionProperty>();
+        registerLonghand<BackgroundRepeatProperty>();
+        // registry.registerProperty<BackgroundProperty>();
+        registerLonghand<ColorProperty>();
+        registerLonghand<DisplayProperty>();
+        registerLonghand<TableLayoutProperty>();
+        registerLonghand<CaptionSideProperty>();
 
         // Transform
-        registry.registerProperty<TransformOriginProperty>();
-        registry.registerProperty<TransformBoxProperty>();
-        registry.registerProperty<TransformProperty>();
+        registerLonghand<TransformOriginProperty>();
+        registerLonghand<TransformBoxProperty>();
+        registerLonghand<TransformProperty>();
 
         // Visibility
-        registry.registerProperty<VisibilityProperty>();
+        registerLonghand<VisibilityProperty>();
 
         // Borders – Colors
-        registry.registerProperty<BorderTopColorProperty>();
-        registry.registerProperty<BorderRightColorProperty>();
-        registry.registerProperty<BorderBottomColorProperty>();
-        registry.registerProperty<BorderLeftColorProperty>();
-        registry.registerProperty<BorderColorProperty>();
+        registerLonghand<BorderTopColorProperty>();
+        registerLonghand<BorderRightColorProperty>();
+        registerLonghand<BorderBottomColorProperty>();
+        registerLonghand<BorderLeftColorProperty>();
+        // registry.registerProperty<BorderColorProperty>();
 
         // Borders – Widths
-        registry.registerProperty<BorderTopWidthProperty>();
-        registry.registerProperty<BorderRightWidthProperty>();
-        registry.registerProperty<BorderBottomWidthProperty>();
-        registry.registerProperty<BorderLeftWidthProperty>();
+        registerLonghand<BorderTopWidthProperty>();
+        registerLonghand<BorderRightWidthProperty>();
+        registerLonghand<BorderBottomWidthProperty>();
+        registerLonghand<BorderLeftWidthProperty>();
 
         // Borders – Styles
-        registry.registerProperty<BorderStyleProperty>();
-        registry.registerProperty<BorderTopStyleProperty>();
-        registry.registerProperty<BorderRightStyleProperty>();
-        registry.registerProperty<BorderBottomStyleProperty>();
-        registry.registerProperty<BorderLeftStyleProperty>();
+        // registry.registerProperty<BorderStyleProperty>();
+        registerLonghand<BorderTopStyleProperty>();
+        registerLonghand<BorderRightStyleProperty>();
+        registerLonghand<BorderBottomStyleProperty>();
+        registerLonghand<BorderLeftStyleProperty>();
 
         // Borders – Radius
-        registry.registerProperty<BorderTopRightRadiusProperty>();
-        registry.registerProperty<BorderTopLeftRadiusProperty>();
-        registry.registerProperty<BorderBottomRightRadiusProperty>();
-        registry.registerProperty<BorderBottomLeftRadiusProperty>();
-        registry.registerProperty<BorderRadiusProperty>();
+        registerLonghand<BorderTopRightRadiusProperty>();
+        registerLonghand<BorderTopLeftRadiusProperty>();
+        registerLonghand<BorderBottomRightRadiusProperty>();
+        registerLonghand<BorderBottomLeftRadiusProperty>();
+        // registry.registerProperty<BorderRadiusProperty>();
 
         // Borders – Shorthand
-        registry.registerProperty<BorderTopProperty>();
-        registry.registerProperty<BorderRightProperty>();
-        registry.registerProperty<BorderBottomProperty>();
-        registry.registerProperty<BorderLeftProperty>();
-        registry.registerProperty<BorderProperty>();
+        // registry.registerProperty<BorderTopProperty>();
+        // registry.registerProperty<BorderRightProperty>();
+        // registry.registerProperty<BorderBottomProperty>();
+        // registry.registerProperty<BorderLeftProperty>();
+        // registry.registerProperty<BorderProperty>();
 
-        registry.registerProperty<BorderWidthProperty>();
+        // registry.registerProperty<BorderWidthProperty>();
 
         // Table Borders
-        registry.registerProperty<BorderCollapseProperty>();
-        registry.registerProperty<BorderSpacingProperty>();
+        registerLonghand<BorderCollapseProperty>();
+        registerLonghand<BorderSpacingProperty>();
 
         // Clip
-        registry.registerProperty<ClipPathProperty>();
+        registerLonghand<ClipPathProperty>();
 
         // Content
-        registry.registerProperty<ContentProperty>();
+        registerLonghand<ContentProperty>();
 
         // Breaks
-        registry.registerProperty<BreakAfterProperty>();
-        registry.registerProperty<BreakBeforeProperty>();
-        registry.registerProperty<BreakInsideProperty>();
-        registry.registerProperty<PageBreakAfterProperty>();
-        registry.registerProperty<PageBreakBeforeProperty>();
-        registry.registerProperty<PageBreakInsideProperty>();
+        registerLonghand<BreakAfterProperty>();
+        registerLonghand<BreakBeforeProperty>();
+        registerLonghand<BreakInsideProperty>();
+        // registry.registerProperty<PageBreakAfterProperty>();
+        // registry.registerProperty<PageBreakBeforeProperty>();
+        // registry.registerProperty<PageBreakInsideProperty>();
 
         // Flex
-        registry.registerProperty<FlexBasisProperty>();
-        registry.registerProperty<FlexDirectionProperty>();
-        registry.registerProperty<FlexGrowProperty>();
-        registry.registerProperty<FlexShrinkProperty>();
-        registry.registerProperty<FlexWrapProperty>();
-        registry.registerProperty<FlexFlowProperty>();
-        registry.registerProperty<FlexProperty>();
+        registerLonghand<FlexBasisProperty>();
+        registerLonghand<FlexDirectionProperty>();
+        registerLonghand<FlexGrowProperty>();
+        registerLonghand<FlexShrinkProperty>();
+        registerLonghand<FlexWrapProperty>();
+        // registry.registerProperty<FlexFlowProperty>();
+        // registry.registerProperty<FlexProperty>();
 
         // Float & Clear
-        registry.registerProperty<FloatProperty>();
-        registry.registerProperty<ClearProperty>();
+        registerLonghand<FloatProperty>();
+        registerLonghand<ClearProperty>();
 
         // Font
-        registry.registerProperty<FontFamilyProperty>();
-        registry.registerProperty<FontWeightProperty>();
-        registry.registerProperty<FontWidthProperty>();
+        registerLonghand<FontFamilyProperty>();
+        registerLonghand<FontWeightProperty>();
+        registerLonghand<FontWidthProperty>();
 
-        registry.registerProperty<FontStyleProperty>();
-        registry.registerProperty<FontSizeProperty>();
-        registry.registerProperty<FontProperty>();
+        registerLonghand<FontStyleProperty>();
+        registerLonghand<FontSizeProperty>();
+        // registry.registerProperty<FontProperty>();
 
         // Line
-        registry.registerProperty<LineHeightProperty>();
+        registerLonghand<LineHeightProperty>();
 
         // Margin
-        registry.registerProperty<MarginTopProperty>();
-        registry.registerProperty<MarginRightProperty>();
-        registry.registerProperty<MarginBottomProperty>();
-        registry.registerProperty<MarginLeftProperty>();
-        registry.registerProperty<MarginProperty>();
+        registerLonghand<MarginTopProperty>();
+        registerLonghand<MarginRightProperty>();
+        registerLonghand<MarginBottomProperty>();
+        registerLonghand<MarginLeftProperty>();
+        registerLonghand<MarginShorthand>();
 
-        registry.registerProperty<MarginInlineStartProperty>();
-        registry.registerProperty<MarginInlineEndProperty>();
-        registry.registerProperty<MarginInlineProperty>();
+        registerLonghand<MarginInlineStartProperty>();
+        registerLonghand<MarginInlineEndProperty>();
+        // registry.registerProperty<MarginInlineProperty>();
 
-        registry.registerProperty<MarginBlockStartProperty>();
-        registry.registerProperty<MarginBlockEndProperty>();
-        registry.registerProperty<MarginBlockProperty>();
+        registerLonghand<MarginBlockStartProperty>();
+        registerLonghand<MarginBlockEndProperty>();
+        // registry.registerProperty<MarginBlockProperty>();
 
         // Outline
-        registry.registerProperty<OutlineProperty>();
-        registry.registerProperty<OutlineColorProperty>();
-        registry.registerProperty<OutlineOffsetProperty>();
-        registry.registerProperty<OutlineStyleProperty>();
-        registry.registerProperty<OutlineWidthProperty>();
+        // registry.registerProperty<OutlineProperty>();
+        registerLonghand<OutlineColorProperty>();
+        registerLonghand<OutlineOffsetProperty>();
+        registerLonghand<OutlineStyleProperty>();
+        registerLonghand<OutlineWidthProperty>();
 
         // Overflow
-        registry.registerProperty<OverflowXProperty>();
-        registry.registerProperty<OverflowYProperty>();
-        registry.registerProperty<OverflowBlockProperty>();
-        registry.registerProperty<OverflowInlineProperty>();
-        registry.registerProperty<OverflowProperty>();
+        registerLonghand<OverflowXProperty>();
+        registerLonghand<OverflowYProperty>();
+        registerLonghand<OverflowBlockProperty>();
+        registerLonghand<OverflowInlineProperty>();
+        // registry.registerProperty<OverflowProperty>();
 
-        registry.registerProperty<OpacityProperty>();
+        registerLonghand<OpacityProperty>();
 
         // Padding
-        registry.registerProperty<PaddingTopProperty>();
-        registry.registerProperty<PaddingRightProperty>();
-        registry.registerProperty<PaddingBottomProperty>();
-        registry.registerProperty<PaddingLeftProperty>();
-        registry.registerProperty<PaddingInlineStartProperty>();
-        registry.registerProperty<PaddingInlineEndProperty>();
-        registry.registerProperty<PaddingProperty>();
+        registerLonghand<PaddingTopProperty>();
+        registerLonghand<PaddingRightProperty>();
+        registerLonghand<PaddingBottomProperty>();
+        registerLonghand<PaddingLeftProperty>();
+        registerLonghand<PaddingInlineStartProperty>();
+        registerLonghand<PaddingInlineEndProperty>();
+        // registry.registerProperty<PaddingProperty>();
 
         // Positioning
-        registry.registerProperty<PositionProperty>();
-        registry.registerProperty<TopProperty>();
-        registry.registerProperty<RightProperty>();
-        registry.registerProperty<BottomProperty>();
-        registry.registerProperty<LeftProperty>();
+        registerLonghand<PositionProperty>();
+        registerLonghand<TopProperty>();
+        registerLonghand<RightProperty>();
+        registerLonghand<BottomProperty>();
+        registerLonghand<LeftProperty>();
 
         // Sizing
-        registry.registerProperty<BoxSizingProperty>();
-        registry.registerProperty<WidthProperty>();
-        registry.registerProperty<HeightProperty>();
-        registry.registerProperty<MinWidthProperty>();
-        registry.registerProperty<MinHeightProperty>();
-        registry.registerProperty<MaxWidthProperty>();
-        registry.registerProperty<MaxHeightProperty>();
+        registerLonghand<BoxSizingProperty>();
+        registerLonghand<WidthProperty>();
+        registerLonghand<HeightProperty>();
+        registerLonghand<MinWidthProperty>();
+        registerLonghand<MinHeightProperty>();
+        registerLonghand<MaxWidthProperty>();
+        registerLonghand<MaxHeightProperty>();
 
         // Text
-        registry.registerProperty<TextAlignProperty>();
-        registry.registerProperty<TextTransformProperty>();
-        registry.registerProperty<WhiteSpaceProperty>();
+        registerLonghand<TextAlignProperty>();
+        registerLonghand<TextTransformProperty>();
+        registerLonghand<WhiteSpaceProperty>();
 
         // ZIndex
-        registry.registerProperty<ZIndexProperty>();
+        registerLonghand<ZIndexProperty>();
 
         // SVG
-        registry.registerProperty<SvgXProperty>();
-        registry.registerProperty<SvgYProperty>();
-        registry.registerProperty<SvgCXProperty>();
-        registry.registerProperty<SvgCYProperty>();
-        registry.registerProperty<SvgRProperty>();
-        registry.registerProperty<SvgRxProperty>();
-        registry.registerProperty<SvgRyProperty>();
-        registry.registerProperty<SvgFillProperty>();
-        registry.registerProperty<SvgDProperty>();
-        registry.registerProperty<SvgStrokeProperty>();
-        registry.registerProperty<SvgStrokeOpacityProperty>();
-        registry.registerProperty<SvgViewBoxProperty>();
-        registry.registerProperty<FillOpacityProperty>();
-        registry.registerProperty<StrokeWidthProperty>();
+        registerLonghand<SvgXProperty>();
+        registerLonghand<SvgYProperty>();
+        registerLonghand<SvgCXProperty>();
+        registerLonghand<SvgCYProperty>();
+        registerLonghand<SvgRProperty>();
+        registerLonghand<SvgRxProperty>();
+        registerLonghand<SvgRyProperty>();
+        registerLonghand<SvgFillProperty>();
+        registerLonghand<SvgDProperty>();
+        registerLonghand<SvgStrokeProperty>();
+        registerLonghand<SvgStrokeOpacityProperty>();
+        registerLonghand<SvgViewBoxProperty>();
+        registerLonghand<FillOpacityProperty>();
+        registerLonghand<StrokeWidthProperty>();
 
         // Counter
-        registry.registerProperty<CounterResetProperty>();
-        registry.registerProperty<CounterIncrementProperty>();
-        registry.registerProperty<CounterSetProperty>();
+        registerLonghand<CounterResetProperty>();
+        registerLonghand<CounterIncrementProperty>();
+        registerLonghand<CounterSetProperty>();
 
         // List
-        registry.registerProperty<ListStyleImageProperty>();
-        registry.registerProperty<ListStyleTypeProperty>();
-        registry.registerProperty<ListStylePositionProperty>();
-        registry.registerProperty<ListStyleProperty>();
-        registry.registerProperty<MarkerSideProperty>();
+        registerLonghand<ListStyleImageProperty>();
+        registerLonghand<ListStyleTypeProperty>();
+        registerLonghand<ListStylePositionProperty>();
+        // registry.registerProperty<ListStyleProperty>();
+        registerLonghand<MarkerSideProperty>();
 
         // Writing
-        registry.registerProperty<WritingModeProperty>();
-        registry.registerProperty<DirectionProperty>();
+        registerLonghand<WritingModeProperty>();
+        registerLonghand<DirectionProperty>();
 
         // Multi-column
-        registry.registerProperty<ColumnWidthProperty>();
-        registry.registerProperty<ColumnHeightProperty>();
-        registry.registerProperty<ColumnCountProperty>();
-        registry.registerProperty<ColumnsProperty>();
+        registerLonghand<ColumnWidthProperty>();
+        registerLonghand<ColumnHeightProperty>();
+        registerLonghand<ColumnCountProperty>();
+        // registry.registerProperty<ColumnsProperty>();
+    }
+};
 
-        return registry;
-    }();
-
-    return registry;
-}
+static PropertyTablesInit _propertyInit{};
 
 } // namespace Vaev::Style

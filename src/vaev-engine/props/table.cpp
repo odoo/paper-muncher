@@ -15,26 +15,28 @@ namespace Vaev::Style {
 
 // https://www.w3.org/TR/CSS21/tables.html#propdef-table-layout
 export struct TableLayoutProperty : Property {
-    struct Registration : Property::Registration {
-        Registration() : Property::Registration(Properties::TABLE_LAYOUT) {}
+    static constexpr auto ID = LonghandId::TABLE_LAYOUT;
 
-        Rc<Property> initial() const override {
-            return makeRc<TableLayoutProperty>(self(), TableLayout::AUTO);
-        }
+    static Rc<Property> initial() {
+        return makeRc<TableLayoutProperty>(TableLayout::AUTO);
+    }
 
-        Rc<Property> load(ComputedValues const& s) const override {
-            return makeRc<TableLayoutProperty>(self(), s.tableLayout);
-        }
+    static Rc<Property> load(ComputedValues const& s) {
+        return makeRc<TableLayoutProperty>(s.tableLayout);
+    }
 
-        Res<Rc<Property>> parse(Cursor<Css::Sst>& c) const override {
-            return Ok(makeRc<TableLayoutProperty>(self(), try$(parseValue<TableLayout>(c))));
-        }
+    static Res<Rc<Property>> parse(Cursor<Css::Sst>& c) {
+        return Ok(makeRc<TableLayoutProperty>(try$(parseValue<TableLayout>(c))));
+    }
+
+    struct Registration : LonghandRegistration {
+        Registration() : LonghandRegistration(Properties::TABLE_LAYOUT) {}
     };
 
     TableLayout _value;
 
-    TableLayoutProperty(Rc<Property::Registration> registration, TableLayout value)
-        : Property(registration), _value(value) {}
+    TableLayoutProperty(TableLayout value)
+        : Property(registrationOf<TableLayoutProperty>()), _value(value) {}
 
     void apply([[maybe_unused]] ComputedValues const& parent, ComputedValues& c, [[maybe_unused]] ComputationContext const& cx) const override {
         c.tableLayout = _value;
@@ -51,27 +53,30 @@ export struct TableLayoutProperty : Property {
 
 // https://www.w3.org/TR/CSS21/tables.html#caption-position
 export struct CaptionSideProperty : Property {
-    struct Registration : Property::Registration {
+    static constexpr auto ID = LonghandId::CAPTION_SIDE;
+    static inline Flags<Options> const FLAGS = {INHERITED, BULK_INHERITED};
+
+    static Rc<Property> initial() {
+        return makeRc<CaptionSideProperty>(CaptionSide::TOP);
+    }
+
+    static Rc<Property> load(ComputedValues const& s) {
+        return makeRc<CaptionSideProperty>(s.table->captionSide);
+    }
+
+    static Res<Rc<Property>> parse(Cursor<Css::Sst>& c) {
+        return Ok(makeRc<CaptionSideProperty>(try$(parseValue<CaptionSide>(c))));
+    }
+
+    struct Registration : LonghandRegistration {
         Registration()
-            : Property::Registration(Properties::CAPTION_SIDE, {INHERITED, BULK_INHERITED}) {}
-
-        Rc<Property> initial() const override {
-            return makeRc<CaptionSideProperty>(self(), CaptionSide::TOP);
-        }
-
-        Rc<Property> load(ComputedValues const& s) const override {
-            return makeRc<CaptionSideProperty>(self(), s.table->captionSide);
-        }
-
-        Res<Rc<Property>> parse(Cursor<Css::Sst>& c) const override {
-            return Ok(makeRc<CaptionSideProperty>(self(), try$(parseValue<CaptionSide>(c))));
-        }
+            : LonghandRegistration(Properties::CAPTION_SIDE, FLAGS) {}
     };
 
     CaptionSide _value;
 
-    CaptionSideProperty(Rc<Property::Registration> registration, CaptionSide value)
-        : Property(registration), _value(value) {}
+    CaptionSideProperty(CaptionSide value)
+        : Property(registrationOf<CaptionSideProperty>()), _value(value) {}
 
     void apply([[maybe_unused]] ComputedValues const& parent, ComputedValues& c, [[maybe_unused]] ComputationContext const& cx) const override {
         c.table.cow().captionSide = _value;

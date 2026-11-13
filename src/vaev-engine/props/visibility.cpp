@@ -15,37 +15,39 @@ namespace Vaev::Style {
 
 // https://drafts.csswg.org/css-display/#visibility
 export struct VisibilityProperty : Property {
-    struct Registration : Property::Registration {
-        Registration() : Property::Registration(Properties::VISIBILITY) {}
+    static constexpr auto ID = LonghandId::VISIBILITY;
 
-        Rc<Property> initial() const override {
-            return makeRc<VisibilityProperty>(self(), Visibility::VISIBLE);
+    static Rc<Property> initial() {
+        return makeRc<VisibilityProperty>(Visibility::VISIBLE);
+    }
+
+    static Rc<Property> load(ComputedValues const& c) {
+        return makeRc<VisibilityProperty>(c.visibility);
+    }
+
+    static Res<Rc<Property>> parse(Cursor<Css::Sst>& c) {
+        Visibility value;
+        if (c.skip(Css::Token::ident("visible"))) {
+            value = Visibility::VISIBLE;
+        } else if (c.skip(Css::Token::ident("hidden"))) {
+            value = Visibility::HIDDEN;
+        } else if (c.skip(Css::Token::ident("collapse"))) {
+            value = Visibility::COLLAPSE;
+        } else {
+            return Error::invalidData("expected visibility");
         }
 
-        Rc<Property> load(ComputedValues const& c) const override {
-            return makeRc<VisibilityProperty>(self(), c.visibility);
-        }
+        return Ok(makeRc<VisibilityProperty>(value));
+    }
 
-        Res<Rc<Property>> parse(Cursor<Css::Sst>& c) const override {
-            Visibility value;
-            if (c.skip(Css::Token::ident("visible"))) {
-                value = Visibility::VISIBLE;
-            } else if (c.skip(Css::Token::ident("hidden"))) {
-                value = Visibility::HIDDEN;
-            } else if (c.skip(Css::Token::ident("collapse"))) {
-                value = Visibility::COLLAPSE;
-            } else {
-                return Error::invalidData("expected visibility");
-            }
-
-            return Ok(makeRc<VisibilityProperty>(self(), value));
-        }
+    struct Registration : LonghandRegistration {
+        Registration() : LonghandRegistration(Properties::VISIBILITY) {}
     };
 
     Visibility _value;
 
-    VisibilityProperty(Rc<Property::Registration> registration, Visibility value)
-        : Property(registration), _value(value) {}
+    VisibilityProperty(Visibility value)
+        : Property(registrationOf<VisibilityProperty>()), _value(value) {}
 
     void apply([[maybe_unused]] ComputedValues const& parent, ComputedValues& c, [[maybe_unused]] ComputationContext const& cx) const override {
         c.visibility = _value;
@@ -62,30 +64,32 @@ export struct VisibilityProperty : Property {
 
 // https://www.w3.org/TR/css-color-4/#propdef-opacity
 export struct OpacityProperty : Property {
-    struct Registration : Property::Registration {
-        Registration() : Property::Registration(Properties::OPACITY) {}
+    static constexpr auto ID = LonghandId::OPACITY;
 
-        Rc<Property> initial() const override {
-            return makeRc<OpacityProperty>(self(), Number{1});
-        }
+    static Rc<Property> initial() {
+        return makeRc<OpacityProperty>(Number{1});
+    }
 
-        Rc<Property> load(ComputedValues const& c) const override {
-            return makeRc<OpacityProperty>(self(), c.opacity);
-        }
+    static Rc<Property> load(ComputedValues const& c) {
+        return makeRc<OpacityProperty>(c.opacity);
+    }
 
-        Res<Rc<Property>> parse(Cursor<Css::Sst>& c) const override {
-            auto maybePercent = parseValue<Percent>(c);
-            if (maybePercent) {
-                return Ok(makeRc<OpacityProperty>(self(), maybePercent.expect().value() / 100));
-            }
-            return Ok(makeRc<OpacityProperty>(self(), try$(parseValue<Number>(c))));
+    static Res<Rc<Property>> parse(Cursor<Css::Sst>& c) {
+        auto maybePercent = parseValue<Percent>(c);
+        if (maybePercent) {
+            return Ok(makeRc<OpacityProperty>(maybePercent.expect().value() / 100));
         }
+        return Ok(makeRc<OpacityProperty>(try$(parseValue<Number>(c))));
+    }
+
+    struct Registration : LonghandRegistration {
+        Registration() : LonghandRegistration(Properties::OPACITY) {}
     };
 
     Number _value;
 
-    OpacityProperty(Rc<Property::Registration> registration, Number value)
-        : Property(registration), _value(value) {}
+    OpacityProperty(Number value)
+        : Property(registrationOf<OpacityProperty>()), _value(value) {}
 
     void apply([[maybe_unused]] ComputedValues const& parent, ComputedValues& c, [[maybe_unused]] ComputationContext const& cx) const override {
         c.opacity = _value;
@@ -102,30 +106,32 @@ export struct OpacityProperty : Property {
 
 // https://drafts.csswg.org/css-masking/#the-clip-path
 export struct ClipPathProperty : Property {
+    static constexpr auto ID = LonghandId::CLIP_PATH;
+
     using Value = Union</* Url, */ BasicShape, Keywords::None>;
 
-    struct Registration : Property::Registration {
-        Registration() : Property::Registration(Properties::CLIP_PATH) {}
+    static Rc<Property> initial() {
+        return makeRc<ClipPathProperty>(Keywords::NONE);
+    }
 
-        Rc<Property> initial() const override {
-            return makeRc<ClipPathProperty>(self(), Keywords::NONE);
-        }
+    static Rc<Property> load(ComputedValues const& c) {
+        if (auto const& [clip] = *c.clip)
+            return makeRc<ClipPathProperty>(clip);
+        return makeRc<ClipPathProperty>(Keywords::NONE);
+    }
 
-        Rc<Property> load(ComputedValues const& c) const override {
-            if (auto const& [clip] = *c.clip)
-                return makeRc<ClipPathProperty>(self(), clip);
-            return makeRc<ClipPathProperty>(self(), Keywords::NONE);
-        }
+    static Res<Rc<Property>> parse(Cursor<Css::Sst>& c) {
+        return Ok(makeRc<ClipPathProperty>(try$(parseValue<Value>(c))));
+    }
 
-        Res<Rc<Property>> parse(Cursor<Css::Sst>& c) const override {
-            return Ok(makeRc<ClipPathProperty>(self(), try$(parseValue<Value>(c))));
-        }
+    struct Registration : LonghandRegistration {
+        Registration() : LonghandRegistration(Properties::CLIP_PATH) {}
     };
 
     Value _value;
 
-    ClipPathProperty(Rc<Property::Registration> registration, Value value)
-        : Property(registration), _value(value) {}
+    ClipPathProperty(Value value)
+        : Property(registrationOf<ClipPathProperty>()), _value(value) {}
 
     void apply([[maybe_unused]] ComputedValues const& parent, ComputedValues& c, [[maybe_unused]] ComputationContext const& cx) const override {
         if (auto clipShape = _value.is<BasicShape>())

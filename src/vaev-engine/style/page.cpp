@@ -216,18 +216,19 @@ export struct PageAreaRule {
         return Some(res);
     }
 
-    void apply(RegisteredPropertySet& registry, ComputedValues const& parent, ComputedValues& child) const {
+    void apply([[maybe_unused]] RegisteredPropertySet& registry, ComputedValues const& parent, ComputedValues& child) const {
         ComputationContext cx;
         for (auto const& prop : props) {
             if (prop->isBogusProperty())
                 continue;
 
-            if (prop->isShorthandProperty()) {
-                for (auto& longhand : prop->expand(registry, parent, child)) {
-                    longhand->apply(parent, child, cx);
-                }
-                continue;
-            }
+            // TODO: Restore once shorthands are expanded at parse time.
+            // if (prop->isShorthandProperty()) {
+            //     for (auto& longhand : prop->expand(registry, parent, child)) {
+            //         longhand->apply(parent, child, cx);
+            //     }
+            //     continue;
+            // }
             prop->apply(parent, child, cx);
         }
     }

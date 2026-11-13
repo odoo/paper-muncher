@@ -17,26 +17,28 @@ namespace Vaev::Style {
 
 // https://www.w3.org/TR/CSS22/visuren.html#positioning-scheme
 export struct PositionProperty : Property {
-    struct Registration : Property::Registration {
-        Registration() : Property::Registration(Properties::POSITION) {}
+    static constexpr auto ID = LonghandId::POSITION;
 
-        Rc<Property> initial() const override {
-            return makeRc<PositionProperty>(self(), Position{Keywords::STATIC});
-        }
+    static Rc<Property> initial() {
+        return makeRc<PositionProperty>(Position{Keywords::STATIC});
+    }
 
-        Rc<Property> load(ComputedValues const& c) const override {
-            return makeRc<PositionProperty>(self(), c.position);
-        }
+    static Rc<Property> load(ComputedValues const& c) {
+        return makeRc<PositionProperty>(c.position);
+    }
 
-        Res<Rc<Property>> parse(Cursor<Css::Sst>& c) const override {
-            return Ok(makeRc<PositionProperty>(self(), try$(parseValue<Position>(c))));
-        }
+    static Res<Rc<Property>> parse(Cursor<Css::Sst>& c) {
+        return Ok(makeRc<PositionProperty>(try$(parseValue<Position>(c))));
+    }
+
+    struct Registration : LonghandRegistration {
+        Registration() : LonghandRegistration(Properties::POSITION) {}
     };
 
     Position _value;
 
-    PositionProperty(Rc<Property::Registration> registration, Position value)
-        : Property(registration), _value(value) {}
+    PositionProperty(Position value)
+        : Property(registrationOf<PositionProperty>()), _value(value) {}
 
     void apply([[maybe_unused]] ComputedValues const& parent, ComputedValues& c, [[maybe_unused]] ComputationContext const& cx) const override {
         c.position = _value;
@@ -49,28 +51,30 @@ export struct PositionProperty : Property {
 
 // https://www.w3.org/TR/CSS22/visuren.html#propdef-top
 export struct TopProperty : Property {
+    static constexpr auto ID = LonghandId::TOP;
+
     using Value = Union<Keywords::Auto, Calc<PercentOr<Length>>>;
 
-    struct Registration : Property::Registration {
-        Registration() : Property::Registration(Properties::TOP) {}
+    static Rc<Property> initial() {
+        return makeRc<TopProperty>(Value{Keywords::AUTO});
+    }
 
-        Rc<Property> initial() const override {
-            return makeRc<TopProperty>(self(), Value{Keywords::AUTO});
-        }
+    static Rc<Property> load(ComputedValues const& c) {
+        return makeRc<TopProperty>(c.insets->top);
+    }
 
-        Rc<Property> load(ComputedValues const& c) const override {
-            return makeRc<TopProperty>(self(), c.insets->top);
-        }
+    static Res<Rc<Property>> parse(Cursor<Css::Sst>& c) {
+        return Ok(makeRc<TopProperty>(try$(parseValue<Value>(c))));
+    }
 
-        Res<Rc<Property>> parse(Cursor<Css::Sst>& c) const override {
-            return Ok(makeRc<TopProperty>(self(), try$(parseValue<Value>(c))));
-        }
+    struct Registration : LonghandRegistration {
+        Registration() : LonghandRegistration(Properties::TOP) {}
     };
 
     Value _value;
 
-    TopProperty(Rc<Property::Registration> registration, Value value)
-        : Property(registration), _value(value) {}
+    TopProperty(Value value)
+        : Property(registrationOf<TopProperty>()), _value(value) {}
 
     void apply([[maybe_unused]] ComputedValues const& parent, ComputedValues& c, [[maybe_unused]] ComputationContext const& cx) const override {
         c.insets.cow().top = _value;
@@ -87,28 +91,30 @@ export struct TopProperty : Property {
 
 // https://www.w3.org/TR/CSS22/visuren.html#propdef-right
 export struct RightProperty : Property {
+    static constexpr auto ID = LonghandId::RIGHT;
+
     using Value = TopProperty::Value;
 
-    struct Registration : Property::Registration {
-        Registration() : Property::Registration(Properties::RIGHT) {}
+    static Rc<Property> initial() {
+        return makeRc<RightProperty>(Value{Keywords::AUTO});
+    }
 
-        Rc<Property> initial() const override {
-            return makeRc<RightProperty>(self(), Value{Keywords::AUTO});
-        }
+    static Rc<Property> load(ComputedValues const& c) {
+        return makeRc<RightProperty>(c.insets->end);
+    }
 
-        Rc<Property> load(ComputedValues const& c) const override {
-            return makeRc<RightProperty>(self(), c.insets->end);
-        }
+    static Res<Rc<Property>> parse(Cursor<Css::Sst>& c) {
+        return Ok(makeRc<RightProperty>(try$(parseValue<Value>(c))));
+    }
 
-        Res<Rc<Property>> parse(Cursor<Css::Sst>& c) const override {
-            return Ok(makeRc<RightProperty>(self(), try$(parseValue<Value>(c))));
-        }
+    struct Registration : LonghandRegistration {
+        Registration() : LonghandRegistration(Properties::RIGHT) {}
     };
 
     Value _value;
 
-    RightProperty(Rc<Property::Registration> registration, Value value)
-        : Property(registration), _value(value) {}
+    RightProperty(Value value)
+        : Property(registrationOf<RightProperty>()), _value(value) {}
 
     void apply([[maybe_unused]] ComputedValues const& parent, ComputedValues& c, [[maybe_unused]] ComputationContext const& cx) const override {
         c.insets.cow().end = _value;
@@ -125,28 +131,30 @@ export struct RightProperty : Property {
 
 // https://www.w3.org/TR/CSS22/visuren.html#propdef-bottom
 export struct BottomProperty : Property {
+    static constexpr auto ID = LonghandId::BOTTOM;
+
     using Value = TopProperty::Value;
 
-    struct Registration : Property::Registration {
-        Registration() : Property::Registration(Properties::BOTTOM) {}
+    static Rc<Property> initial() {
+        return makeRc<BottomProperty>(Value{Keywords::AUTO});
+    }
 
-        Rc<Property> initial() const override {
-            return makeRc<BottomProperty>(self(), Value{Keywords::AUTO});
-        }
+    static Rc<Property> load(ComputedValues const& c) {
+        return makeRc<BottomProperty>(c.insets->bottom);
+    }
 
-        Rc<Property> load(ComputedValues const& c) const override {
-            return makeRc<BottomProperty>(self(), c.insets->bottom);
-        }
+    static Res<Rc<Property>> parse(Cursor<Css::Sst>& c) {
+        return Ok(makeRc<BottomProperty>(try$(parseValue<Value>(c))));
+    }
 
-        Res<Rc<Property>> parse(Cursor<Css::Sst>& c) const override {
-            return Ok(makeRc<BottomProperty>(self(), try$(parseValue<Value>(c))));
-        }
+    struct Registration : LonghandRegistration {
+        Registration() : LonghandRegistration(Properties::BOTTOM) {}
     };
 
     Union<Keywords::Auto, Calc<PercentOr<Length>>> _value;
 
-    BottomProperty(Rc<Property::Registration> registration, Value value)
-        : Property(registration), _value(value) {}
+    BottomProperty(Value value)
+        : Property(registrationOf<BottomProperty>()), _value(value) {}
 
     void apply([[maybe_unused]] ComputedValues const& parent, ComputedValues& c, [[maybe_unused]] ComputationContext const& cx) const override {
         c.insets.cow().bottom = _value;
@@ -163,28 +171,30 @@ export struct BottomProperty : Property {
 
 // https://www.w3.org/TR/CSS22/visuren.html#propdef-left
 export struct LeftProperty : Property {
+    static constexpr auto ID = LonghandId::LEFT;
+
     using Value = TopProperty::Value;
 
-    struct Registration : Property::Registration {
-        Registration() : Property::Registration(Properties::LEFT) {}
+    static Rc<Property> initial() {
+        return makeRc<LeftProperty>(Value{Keywords::AUTO});
+    }
 
-        Rc<Property> initial() const override {
-            return makeRc<LeftProperty>(self(), Value{Keywords::AUTO});
-        }
+    static Rc<Property> load(ComputedValues const& c) {
+        return makeRc<LeftProperty>(c.insets->start);
+    }
 
-        Rc<Property> load(ComputedValues const& c) const override {
-            return makeRc<LeftProperty>(self(), c.insets->start);
-        }
+    static Res<Rc<Property>> parse(Cursor<Css::Sst>& c) {
+        return Ok(makeRc<LeftProperty>(try$(parseValue<Value>(c))));
+    }
 
-        Res<Rc<Property>> parse(Cursor<Css::Sst>& c) const override {
-            return Ok(makeRc<LeftProperty>(self(), try$(parseValue<Value>(c))));
-        }
+    struct Registration : LonghandRegistration {
+        Registration() : LonghandRegistration(Properties::LEFT) {}
     };
 
     Value _value;
 
-    LeftProperty(Rc<Property::Registration> registration, Value value)
-        : Property(registration), _value(value) {}
+    LeftProperty(Value value)
+        : Property(registrationOf<LeftProperty>()), _value(value) {}
 
     void apply([[maybe_unused]] ComputedValues const& parent, ComputedValues& c, [[maybe_unused]] ComputationContext const& cx) const override {
         c.insets.cow().start = _value;
@@ -201,26 +211,28 @@ export struct LeftProperty : Property {
 
 // https://drafts.csswg.org/css2/#z-index
 export struct ZIndexProperty : Property {
-    struct Registration : Property::Registration {
-        Registration() : Property::Registration(Properties::Z_INDEX) {}
+    static constexpr auto ID = LonghandId::Z_INDEX;
 
-        Rc<Property> initial() const override {
-            return makeRc<ZIndexProperty>(self(), ZIndex{Keywords::AUTO});
-        }
+    static Rc<Property> initial() {
+        return makeRc<ZIndexProperty>(ZIndex{Keywords::AUTO});
+    }
 
-        Rc<Property> load(ComputedValues const& c) const override {
-            return makeRc<ZIndexProperty>(self(), c.zIndex);
-        }
+    static Rc<Property> load(ComputedValues const& c) {
+        return makeRc<ZIndexProperty>(c.zIndex);
+    }
 
-        Res<Rc<Property>> parse(Cursor<Css::Sst>& c) const override {
-            return Ok(makeRc<ZIndexProperty>(self(), try$(parseValue<ZIndex>(c))));
-        }
+    static Res<Rc<Property>> parse(Cursor<Css::Sst>& c) {
+        return Ok(makeRc<ZIndexProperty>(try$(parseValue<ZIndex>(c))));
+    }
+
+    struct Registration : LonghandRegistration {
+        Registration() : LonghandRegistration(Properties::Z_INDEX) {}
     };
 
     ZIndex _value;
 
-    ZIndexProperty(Rc<Property::Registration> registration, ZIndex value)
-        : Property(registration), _value(value) {}
+    ZIndexProperty(ZIndex value)
+        : Property(registrationOf<ZIndexProperty>()), _value(value) {}
 
     void apply([[maybe_unused]] ComputedValues const& parent, ComputedValues& c, [[maybe_unused]] ComputationContext const& cx) const override {
         c.zIndex = _value;

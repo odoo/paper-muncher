@@ -13,29 +13,31 @@ namespace Vaev::Style {
 
 // https://drafts.csswg.org/css-lists/#counter-reset
 export struct CounterResetProperty : Property {
-    struct Registration : Property::Registration {
-        Registration() : Property::Registration(Properties::COUNTER_RESET) {}
+    static constexpr auto ID = LonghandId::COUNTER_RESET;
 
-        Rc<Property> initial() const override {
-            return makeRc<CounterResetProperty>(self(), Vec<CounterProps::Reset>{});
-        }
+    static Rc<Property> initial() {
+        return makeRc<CounterResetProperty>(Vec<CounterProps::Reset>{});
+    }
 
-        Rc<Property> load(ComputedValues const& c) const override {
-            return makeRc<CounterResetProperty>(self(), c.counters->reset);
-        }
+    static Rc<Property> load(ComputedValues const& c) {
+        return makeRc<CounterResetProperty>(c.counters->reset);
+    }
 
-        Res<Rc<Property>> parse(Cursor<Css::Sst>& c) const override {
-            if (parseValue<Keywords::None>(c))
-                return Ok(makeRc<CounterResetProperty>(self(), Vec<CounterProps::Reset>{}));
-            auto value = try$(parseValue<Vec<CounterProps::Reset>>(c));
-            return Ok(makeRc<CounterResetProperty>(self(), value));
-        }
+    static Res<Rc<Property>> parse(Cursor<Css::Sst>& c) {
+        if (parseValue<Keywords::None>(c))
+            return Ok(makeRc<CounterResetProperty>(Vec<CounterProps::Reset>{}));
+        auto value = try$(parseValue<Vec<CounterProps::Reset>>(c));
+        return Ok(makeRc<CounterResetProperty>(value));
+    }
+
+    struct Registration : LonghandRegistration {
+        Registration() : LonghandRegistration(Properties::COUNTER_RESET) {}
     };
 
     Vec<CounterProps::Reset> _value;
 
-    CounterResetProperty(Rc<Property::Registration> registration, Vec<CounterProps::Reset> value)
-        : Property(registration), _value(value) {}
+    CounterResetProperty(Vec<CounterProps::Reset> value)
+        : Property(registrationOf<CounterResetProperty>()), _value(value) {}
 
     void apply(ComputedValues const&, ComputedValues& c, [[maybe_unused]] ComputationContext const& cx) const override {
         c.counters.cow().reset = _value;
@@ -48,29 +50,31 @@ export struct CounterResetProperty : Property {
 
 // https://drafts.csswg.org/css-lists/#propdef-counter-increment
 export struct CounterIncrementProperty : Property {
-    struct Registration : Property::Registration {
-        Registration() : Property::Registration(Properties::COUNTER_INCREMENT) {}
+    static constexpr auto ID = LonghandId::COUNTER_INCREMENT;
 
-        Rc<Property> initial() const override {
-            return makeRc<CounterIncrementProperty>(self(), Vec<CounterProps::Increment>{});
-        }
+    static Rc<Property> initial() {
+        return makeRc<CounterIncrementProperty>(Vec<CounterProps::Increment>{});
+    }
 
-        Rc<Property> load(ComputedValues const& c) const override {
-            return makeRc<CounterIncrementProperty>(self(), c.counters->increment);
-        }
+    static Rc<Property> load(ComputedValues const& c) {
+        return makeRc<CounterIncrementProperty>(c.counters->increment);
+    }
 
-        Res<Rc<Property>> parse(Cursor<Css::Sst>& c) const override {
-            if (parseValue<Keywords::None>(c))
-                return Ok(makeRc<CounterIncrementProperty>(self(), Vec<CounterProps::Increment>{}));
-            auto value = try$(parseValue<Vec<CounterProps::Increment>>(c));
-            return Ok(makeRc<CounterIncrementProperty>(self(), value));
-        }
+    static Res<Rc<Property>> parse(Cursor<Css::Sst>& c) {
+        if (parseValue<Keywords::None>(c))
+            return Ok(makeRc<CounterIncrementProperty>(Vec<CounterProps::Increment>{}));
+        auto value = try$(parseValue<Vec<CounterProps::Increment>>(c));
+        return Ok(makeRc<CounterIncrementProperty>(value));
+    }
+
+    struct Registration : LonghandRegistration {
+        Registration() : LonghandRegistration(Properties::COUNTER_INCREMENT) {}
     };
 
     Vec<CounterProps::Increment> _value;
 
-    CounterIncrementProperty(Rc<Property::Registration> registration, Vec<CounterProps::Increment> value)
-        : Property(registration), _value(value) {}
+    CounterIncrementProperty(Vec<CounterProps::Increment> value)
+        : Property(registrationOf<CounterIncrementProperty>()), _value(value) {}
 
     void apply(ComputedValues const&, ComputedValues& c, [[maybe_unused]] ComputationContext const& cx) const override {
         c.counters.cow().increment = _value;
@@ -83,29 +87,31 @@ export struct CounterIncrementProperty : Property {
 
 // https://drafts.csswg.org/css-lists/#propdef-counter-set
 export struct CounterSetProperty : Property {
-    struct Registration : Property::Registration {
-        Registration() : Property::Registration(Properties::COUNTER_SET) {}
+    static constexpr auto ID = LonghandId::COUNTER_SET;
 
-        Rc<Property> initial() const override {
-            return makeRc<CounterSetProperty>(self(), Vec<CounterProps::Set>{});
-        }
+    static Rc<Property> initial() {
+        return makeRc<CounterSetProperty>(Vec<CounterProps::Set>{});
+    }
 
-        Rc<Property> load(ComputedValues const& c) const override {
-            return makeRc<CounterSetProperty>(self(), c.counters->set);
-        }
+    static Rc<Property> load(ComputedValues const& c) {
+        return makeRc<CounterSetProperty>(c.counters->set);
+    }
 
-        Res<Rc<Property>> parse(Cursor<Css::Sst>& c) const override {
-            if (parseValue<Keywords::None>(c))
-                return Ok(makeRc<CounterSetProperty>(self(), Vec<CounterProps::Set>{}));
-            auto value = try$(parseValue<Vec<CounterProps::Set>>(c));
-            return Ok(makeRc<CounterSetProperty>(self(), value));
-        }
+    static Res<Rc<Property>> parse(Cursor<Css::Sst>& c) {
+        if (parseValue<Keywords::None>(c))
+            return Ok(makeRc<CounterSetProperty>(Vec<CounterProps::Set>{}));
+        auto value = try$(parseValue<Vec<CounterProps::Set>>(c));
+        return Ok(makeRc<CounterSetProperty>(value));
+    }
+
+    struct Registration : LonghandRegistration {
+        Registration() : LonghandRegistration(Properties::COUNTER_SET) {}
     };
 
     Vec<CounterProps::Set> _value;
 
-    CounterSetProperty(Rc<Property::Registration> registration, Vec<CounterProps::Set> value)
-        : Property(registration), _value(value) {}
+    CounterSetProperty(Vec<CounterProps::Set> value)
+        : Property(registrationOf<CounterSetProperty>()), _value(value) {}
 
     void apply(ComputedValues const&, ComputedValues& c, [[maybe_unused]] ComputationContext const& cx) const override {
         c.counters.cow().set = _value;

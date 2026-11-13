@@ -19,53 +19,56 @@ namespace Vaev::Style {
 // https://drafts.csswg.org/css-text/#text-align-property
 
 export struct TextAlignProperty : Property {
-    struct Registration : Property::Registration {
+    static constexpr auto ID = LonghandId::TEXT_ALIGN;
+    static inline Flags<Options> const FLAGS = {INHERITED, BULK_INHERITED};
+
+    static Rc<Property> initial() {
+        return makeRc<TextAlignProperty>(TextAlign::LEFT);
+    }
+
+    static Rc<Property> load(ComputedValues const& c) {
+        return makeRc<TextAlignProperty>(c.text->align);
+    }
+
+    static Res<Rc<Property>> parse(Cursor<Css::Sst>& c) {
+        TextAlign value;
+        if (c.skip(Css::Token::ident("left"))) {
+            value = TextAlign::LEFT;
+        } else if (c.skip(Css::Token::ident("right"))) {
+            value = TextAlign::RIGHT;
+        } else if (c.skip(Css::Token::ident("center"))) {
+            value = TextAlign::CENTER;
+        } else if (c.skip(Css::Token::ident("justify"))) {
+            value = TextAlign::JUSTIFY;
+        } else if (c.skip(Css::Token::ident("start"))) {
+            value = TextAlign::START;
+        } else if (c.skip(Css::Token::ident("end"))) {
+            value = TextAlign::END;
+        } else if (
+            c.skip(Css::Token::ident("-vaev-block-center")) or
+            c.skip(Css::Token::ident("-webkit-center")) or
+            c.skip(Css::Token::ident("-moz-center"))
+        ) {
+            value = TextAlign::BLOCK_CENTER;
+        } else {
+            return Error::invalidData("expected text-align");
+        }
+        return Ok(makeRc<TextAlignProperty>(value));
+    }
+
+    static void inherit(ComputedValues const& parent, ComputedValues& child) {
+        child.text.cow().align = parent.text->align;
+    }
+
+    struct Registration : LonghandRegistration {
         Registration()
-            : Property::Registration(Properties::TEXT_ALIGN, {INHERITED, BULK_INHERITED}) {}
-
-        Rc<Property> initial() const override {
-            return makeRc<TextAlignProperty>(self(), TextAlign::LEFT);
-        }
-
-        void inherit(ComputedValues const& parent, ComputedValues& child) const override {
-            child.text.cow().align = parent.text->align;
-        }
-
-        Rc<Property> load(ComputedValues const& c) const override {
-            return makeRc<TextAlignProperty>(self(), c.text->align);
-        }
-
-        Res<Rc<Property>> parse(Cursor<Css::Sst>& c) const override {
-            TextAlign value;
-            if (c.skip(Css::Token::ident("left"))) {
-                value = TextAlign::LEFT;
-            } else if (c.skip(Css::Token::ident("right"))) {
-                value = TextAlign::RIGHT;
-            } else if (c.skip(Css::Token::ident("center"))) {
-                value = TextAlign::CENTER;
-            } else if (c.skip(Css::Token::ident("justify"))) {
-                value = TextAlign::JUSTIFY;
-            } else if (c.skip(Css::Token::ident("start"))) {
-                value = TextAlign::START;
-            } else if (c.skip(Css::Token::ident("end"))) {
-                value = TextAlign::END;
-            } else if (
-                c.skip(Css::Token::ident("-vaev-block-center")) or
-                c.skip(Css::Token::ident("-webkit-center")) or
-                c.skip(Css::Token::ident("-moz-center"))
-            ) {
-                value = TextAlign::BLOCK_CENTER;
-            } else {
-                return Error::invalidData("expected text-align");
-            }
-            return Ok(makeRc<TextAlignProperty>(self(), value));
-        }
+            : LonghandRegistration(Properties::TEXT_ALIGN, FLAGS) {}
     };
 
     TextAlign _value;
 
-    TextAlignProperty(Rc<Property::Registration> registration, TextAlign value)
-        : Property(registration), _value(value) {}
+    TextAlignProperty(TextAlign value)
+        : Property(registrationOf<TextAlignProperty>()), _value(value) {}
 
     void apply([[maybe_unused]] ComputedValues const& parent, ComputedValues& c, [[maybe_unused]] ComputationContext const& cx) const override {
         c.text.cow().align = _value;
@@ -86,45 +89,48 @@ export struct TextAlignProperty : Property {
 // https://drafts.csswg.org/css-text-4/#text-transform-property
 
 export struct TextTransformProperty : Property {
-    struct Registration : Property::Registration {
+    static constexpr auto ID = LonghandId::TEXT_TRANSFORM;
+    static inline Flags<Options> const FLAGS = {INHERITED, BULK_INHERITED};
+
+    static Rc<Property> initial() {
+        return makeRc<TextTransformProperty>(TextTransform::NONE);
+    }
+
+    static Rc<Property> load(ComputedValues const& c) {
+        return makeRc<TextTransformProperty>(c.text->transform);
+    }
+
+    static Res<Rc<Property>> parse(Cursor<Css::Sst>& c) {
+        if (c.ended())
+            return Error::invalidData("unexpected end of input");
+
+        TextTransform value;
+        if (c.skip(Css::Token::ident("none"))) {
+            value = TextTransform::NONE;
+        } else if (c.skip(Css::Token::ident("uppercase"))) {
+            value = TextTransform::UPPERCASE;
+        } else if (c.skip(Css::Token::ident("lowercase"))) {
+            value = TextTransform::LOWERCASE;
+        } else {
+            return Error::invalidData("expected text-transform");
+        }
+
+        return Ok(makeRc<TextTransformProperty>(value));
+    }
+
+    static void inherit(ComputedValues const& parent, ComputedValues& child) {
+        child.text.cow().transform = parent.text->transform;
+    }
+
+    struct Registration : LonghandRegistration {
         Registration()
-            : Property::Registration(Properties::TEXT_TRANSFORM, {INHERITED, BULK_INHERITED}) {}
-
-        Rc<Property> initial() const override {
-            return makeRc<TextTransformProperty>(self(), TextTransform::NONE);
-        }
-
-        void inherit(ComputedValues const& parent, ComputedValues& child) const override {
-            child.text.cow().transform = parent.text->transform;
-        }
-
-        Rc<Property> load(ComputedValues const& c) const override {
-            return makeRc<TextTransformProperty>(self(), c.text->transform);
-        }
-
-        Res<Rc<Property>> parse(Cursor<Css::Sst>& c) const override {
-            if (c.ended())
-                return Error::invalidData("unexpected end of input");
-
-            TextTransform value;
-            if (c.skip(Css::Token::ident("none"))) {
-                value = TextTransform::NONE;
-            } else if (c.skip(Css::Token::ident("uppercase"))) {
-                value = TextTransform::UPPERCASE;
-            } else if (c.skip(Css::Token::ident("lowercase"))) {
-                value = TextTransform::LOWERCASE;
-            } else {
-                return Error::invalidData("expected text-transform");
-            }
-
-            return Ok(makeRc<TextTransformProperty>(self(), value));
-        }
+            : LonghandRegistration(Properties::TEXT_TRANSFORM, FLAGS) {}
     };
 
     TextTransform _value;
 
-    TextTransformProperty(Rc<Property::Registration> registration, TextTransform value)
-        : Property(registration), _value(value) {}
+    TextTransformProperty(TextTransform value)
+        : Property(registrationOf<TextTransformProperty>()), _value(value) {}
 
     void apply([[maybe_unused]] ComputedValues const& parent, ComputedValues& c, [[maybe_unused]] ComputationContext const& cx) const override {
         c.text.cow().transform = _value;
@@ -142,48 +148,51 @@ export struct TextTransformProperty : Property {
 // https://drafts.csswg.org/css-text/#white-space-property
 
 export struct WhiteSpaceProperty : Property {
-    struct Registration : Property::Registration {
+    static constexpr auto ID = LonghandId::WHITE_SPACE;
+    static inline Flags<Options> const FLAGS = {INHERITED, BULK_INHERITED};
+
+    static Rc<Property> initial() {
+        return makeRc<WhiteSpaceProperty>(WhiteSpace::NORMAL);
+    }
+
+    static Rc<Property> load(ComputedValues const& c) {
+        return makeRc<WhiteSpaceProperty>(c.text->whiteSpace);
+    }
+
+    static Res<Rc<Property>> parse(Cursor<Css::Sst>& c) {
+        WhiteSpace value;
+        if (c.skip(Css::Token::ident("normal"))) {
+            value = WhiteSpace::NORMAL;
+        } else if (c.skip(Css::Token::ident("nowrap"))) {
+            value = WhiteSpace::NOWRAP;
+        } else if (c.skip(Css::Token::ident("pre"))) {
+            value = WhiteSpace::PRE;
+        } else if (c.skip(Css::Token::ident("pre-wrap"))) {
+            value = WhiteSpace::PRE_WRAP;
+        } else if (c.skip(Css::Token::ident("pre-line"))) {
+            value = WhiteSpace::PRE_LINE;
+        } else if (c.skip(Css::Token::ident("break-spaces"))) {
+            value = WhiteSpace::BREAK_SPACES;
+        } else {
+            return Error::invalidData("expected white-space");
+        }
+
+        return Ok(makeRc<WhiteSpaceProperty>(value));
+    }
+
+    static void inherit(ComputedValues const& parent, ComputedValues& child) {
+        child.text.cow().whiteSpace = parent.text->whiteSpace;
+    }
+
+    struct Registration : LonghandRegistration {
         Registration()
-            : Property::Registration(Properties::WHITE_SPACE, {INHERITED, BULK_INHERITED}) {}
-
-        Rc<Property> initial() const override {
-            return makeRc<WhiteSpaceProperty>(self(), WhiteSpace::NORMAL);
-        }
-
-        void inherit(ComputedValues const& parent, ComputedValues& child) const override {
-            child.text.cow().whiteSpace = parent.text->whiteSpace;
-        }
-
-        Rc<Property> load(ComputedValues const& c) const override {
-            return makeRc<WhiteSpaceProperty>(self(), c.text->whiteSpace);
-        }
-
-        Res<Rc<Property>> parse(Cursor<Css::Sst>& c) const override {
-            WhiteSpace value;
-            if (c.skip(Css::Token::ident("normal"))) {
-                value = WhiteSpace::NORMAL;
-            } else if (c.skip(Css::Token::ident("nowrap"))) {
-                value = WhiteSpace::NOWRAP;
-            } else if (c.skip(Css::Token::ident("pre"))) {
-                value = WhiteSpace::PRE;
-            } else if (c.skip(Css::Token::ident("pre-wrap"))) {
-                value = WhiteSpace::PRE_WRAP;
-            } else if (c.skip(Css::Token::ident("pre-line"))) {
-                value = WhiteSpace::PRE_LINE;
-            } else if (c.skip(Css::Token::ident("break-spaces"))) {
-                value = WhiteSpace::BREAK_SPACES;
-            } else {
-                return Error::invalidData("expected white-space");
-            }
-
-            return Ok(makeRc<WhiteSpaceProperty>(self(), value));
-        }
+            : LonghandRegistration(Properties::WHITE_SPACE, FLAGS) {}
     };
 
     WhiteSpace _value;
 
-    WhiteSpaceProperty(Rc<Property::Registration> registration, WhiteSpace value)
-        : Property(registration), _value(value) {}
+    WhiteSpaceProperty(WhiteSpace value)
+        : Property(registrationOf<WhiteSpaceProperty>()), _value(value) {}
 
     void apply([[maybe_unused]] ComputedValues const& parent, ComputedValues& c, [[maybe_unused]] ComputationContext const& cx) const override {
         c.text.cow().whiteSpace = _value;

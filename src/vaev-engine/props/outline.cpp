@@ -17,26 +17,28 @@ namespace Vaev::Style {
 
 // https://drafts.csswg.org/css-ui/#outline-width
 export struct OutlineWidthProperty : Property {
-    struct Registration : Property::Registration {
-        Registration() : Property::Registration(Properties::OUTLINE_WIDTH) {}
+    static constexpr auto ID = LonghandId::OUTLINE_WIDTH;
 
-        Rc<Property> initial() const override {
-            return makeRc<OutlineWidthProperty>(self(), LineWidth{Keywords::MEDIUM});
-        }
+    static Rc<Property> initial() {
+        return makeRc<OutlineWidthProperty>(LineWidth{Keywords::MEDIUM});
+    }
 
-        Rc<Property> load(ComputedValues const& c) const override {
-            return makeRc<OutlineWidthProperty>(self(), c.outline->width);
-        }
+    static Rc<Property> load(ComputedValues const& c) {
+        return makeRc<OutlineWidthProperty>(c.outline->width);
+    }
 
-        Res<Rc<Property>> parse(Cursor<Css::Sst>& c) const override {
-            return Ok(makeRc<OutlineWidthProperty>(self(), try$(parseValue<LineWidth>(c))));
-        }
+    static Res<Rc<Property>> parse(Cursor<Css::Sst>& c) {
+        return Ok(makeRc<OutlineWidthProperty>(try$(parseValue<LineWidth>(c))));
+    }
+
+    struct Registration : LonghandRegistration {
+        Registration() : LonghandRegistration(Properties::OUTLINE_WIDTH) {}
     };
 
     LineWidth _value;
 
-    OutlineWidthProperty(Rc<Property::Registration> registration, LineWidth value)
-        : Property(registration), _value(value) {}
+    OutlineWidthProperty(LineWidth value)
+        : Property(registrationOf<OutlineWidthProperty>()), _value(value) {}
 
     void apply([[maybe_unused]] ComputedValues const& parent, ComputedValues& c, [[maybe_unused]] ComputationContext const& cx) const override {
         c.outline.cow().width = _value;
@@ -53,28 +55,30 @@ export struct OutlineWidthProperty : Property {
 
 // https://drafts.csswg.org/css-ui/#outline-style
 export struct OutlineStyleProperty : Property {
+    static constexpr auto ID = LonghandId::OUTLINE_STYLE;
+
     using Value = Union<Keywords::Auto, Gfx::BorderStyle>;
 
-    struct Registration : Property::Registration {
-        Registration() : Property::Registration(Properties::OUTLINE_STYLE) {}
+    static Rc<Property> initial() {
+        return makeRc<OutlineStyleProperty>(Value{Gfx::BorderStyle::NONE});
+    }
 
-        Rc<Property> initial() const override {
-            return makeRc<OutlineStyleProperty>(self(), Value{Gfx::BorderStyle::NONE});
-        }
+    static Rc<Property> load(ComputedValues const& c) {
+        return makeRc<OutlineStyleProperty>(c.outline->style);
+    }
 
-        Rc<Property> load(ComputedValues const& c) const override {
-            return makeRc<OutlineStyleProperty>(self(), c.outline->style);
-        }
+    static Res<Rc<Property>> parse(Cursor<Css::Sst>& c) {
+        return Ok(makeRc<OutlineStyleProperty>(try$(parseValue<Value>(c))));
+    }
 
-        Res<Rc<Property>> parse(Cursor<Css::Sst>& c) const override {
-            return Ok(makeRc<OutlineStyleProperty>(self(), try$(parseValue<Value>(c))));
-        }
+    struct Registration : LonghandRegistration {
+        Registration() : LonghandRegistration(Properties::OUTLINE_STYLE) {}
     };
 
     Value _value;
 
-    OutlineStyleProperty(Rc<Property::Registration> registration, Value value)
-        : Property(registration), _value(value) {}
+    OutlineStyleProperty(Value value)
+        : Property(registrationOf<OutlineStyleProperty>()), _value(value) {}
 
     void apply([[maybe_unused]] ComputedValues const& parent, ComputedValues& c, [[maybe_unused]] ComputationContext const& cx) const override {
         c.outline.cow().style = _value;
@@ -91,33 +95,32 @@ export struct OutlineStyleProperty : Property {
 
 // https://drafts.csswg.org/css-ui/#outline-color
 export struct OutlineColorProperty : Property {
+    static constexpr auto ID = LonghandId::OUTLINE_COLOR;
+    // Must be applied after 'outline-style'.
+    static constexpr auto PHASE = ComputationPhase::LATE;
+
     using Value = Union<Keywords::Auto, Color>;
 
-    struct Registration : Property::Registration {
-        Registration() : Property::Registration(Properties::OUTLINE_COLOR) {}
+    static Rc<Property> initial() {
+        return makeRc<OutlineColorProperty>(Value{Keywords::AUTO});
+    }
 
-        ComputationPhase computationPhase() const override {
-            // Must be applied after 'outline-style'.
-            return ComputationPhase::LATE;
-        }
+    static Rc<Property> load(ComputedValues const& c) {
+        return makeRc<OutlineColorProperty>(Color{c.outline->color});
+    }
 
-        Rc<Property> initial() const override {
-            return makeRc<OutlineColorProperty>(self(), Value{Keywords::AUTO});
-        }
+    static Res<Rc<Property>> parse(Cursor<Css::Sst>& c) {
+        return Ok(makeRc<OutlineColorProperty>(try$(parseValue<Value>(c))));
+    }
 
-        Rc<Property> load(ComputedValues const& c) const override {
-            return makeRc<OutlineColorProperty>(self(), Color{c.outline->color});
-        }
-
-        Res<Rc<Property>> parse(Cursor<Css::Sst>& c) const override {
-            return Ok(makeRc<OutlineColorProperty>(self(), try$(parseValue<Value>(c))));
-        }
+    struct Registration : LonghandRegistration {
+        Registration() : LonghandRegistration(Properties::OUTLINE_COLOR) {}
     };
 
     Value _value;
 
-    OutlineColorProperty(Rc<Property::Registration> registration, Value value)
-        : Property(registration), _value(value) {}
+    OutlineColorProperty(Value value)
+        : Property(registrationOf<OutlineColorProperty>()), _value(value) {}
 
     void apply([[maybe_unused]] ComputedValues const& parent, ComputedValues& c, [[maybe_unused]] ComputationContext const& cx) const override {
         c.outline.cow().color = _value.visit(
@@ -146,26 +149,28 @@ export struct OutlineColorProperty : Property {
 
 // https://drafts.csswg.org/css-ui/#outline-offset
 export struct OutlineOffsetProperty : Property {
-    struct Registration : Property::Registration {
-        Registration() : Property::Registration(Properties::OUTLINE_OFFSET) {}
+    static constexpr auto ID = LonghandId::OUTLINE_OFFSET;
 
-        Rc<Property> initial() const override {
-            return makeRc<OutlineOffsetProperty>(self(), Calc<Length>{0_au});
-        }
+    static Rc<Property> initial() {
+        return makeRc<OutlineOffsetProperty>(Calc<Length>{0_au});
+    }
 
-        Rc<Property> load(ComputedValues const& c) const override {
-            return makeRc<OutlineOffsetProperty>(self(), c.outline->offset);
-        }
+    static Rc<Property> load(ComputedValues const& c) {
+        return makeRc<OutlineOffsetProperty>(c.outline->offset);
+    }
 
-        Res<Rc<Property>> parse(Cursor<Css::Sst>& c) const override {
-            return Ok(makeRc<OutlineOffsetProperty>(self(), try$(parseValue<Calc<Length>>(c))));
-        }
+    static Res<Rc<Property>> parse(Cursor<Css::Sst>& c) {
+        return Ok(makeRc<OutlineOffsetProperty>(try$(parseValue<Calc<Length>>(c))));
+    }
+
+    struct Registration : LonghandRegistration {
+        Registration() : LonghandRegistration(Properties::OUTLINE_OFFSET) {}
     };
 
     Calc<Length> _value;
 
-    OutlineOffsetProperty(Rc<Property::Registration> registration, Calc<Length> value)
-        : Property(registration), _value(value) {}
+    OutlineOffsetProperty(Calc<Length> value)
+        : Property(registrationOf<OutlineOffsetProperty>()), _value(value) {}
 
     void apply([[maybe_unused]] ComputedValues const& parent, ComputedValues& c, [[maybe_unused]] ComputationContext const& cx) const override {
         c.outline.cow().offset = _value;
@@ -180,73 +185,73 @@ export struct OutlineOffsetProperty : Property {
     }
 };
 
-// https://drafts.csswg.org/css-ui/#outline
-export struct OutlineProperty : Property {
-    struct Registration : Property::Registration {
-        Registration()
-            : Property::Registration(Properties::OUTLINE, SHORTHAND) {}
-
-        Rc<Property> initial() const override {
-            return makeRc<OutlineProperty>(self(), SpecifiedOutline{});
-        }
-
-        Rc<Property> load(ComputedValues const& c) const override {
-            return makeRc<OutlineProperty>(self(), *c.outline);
-        }
-
-        Res<Rc<Property>> parse(Cursor<Css::Sst>& c) const override {
-            SpecifiedOutline value;
-            bool styleSet = false;
-            while (not c.ended()) {
-                auto width = parseValue<Calc<Length>>(c);
-                if (width) {
-                    value.width = width.expect();
-                    continue;
-                }
-
-                auto color = parseValue<Color>(c);
-                if (color) {
-                    value.color = color.expect();
-                    continue;
-                }
-
-                auto style = parseValue<Gfx::BorderStyle>(c);
-                if (style) {
-                    value.style = style.expect();
-                    styleSet = true;
-                    continue;
-                }
-
-                if (c.skip(Css::Token::ident("auto"))) {
-                    if (not styleSet)
-                        value.style = Keywords::AUTO;
-                    value.color = Keywords::AUTO;
-                    continue;
-                }
-
-                break;
-            }
-
-            return Ok(makeRc<OutlineProperty>(self(), value));
-        }
-    };
-
-    SpecifiedOutline _value;
-
-    OutlineProperty(Rc<Property::Registration> registration, SpecifiedOutline value)
-        : Property(registration), _value(value) {}
-
-    Longhands expand(RegisteredPropertySet& registry, ComputedValues const&, ComputedValues&) const override {
-        return {
-            makeRc<OutlineWidthProperty>(registry.resolveRegistration(Properties::OUTLINE_WIDTH, {}).expect(), _value.width),
-            makeRc<OutlineStyleProperty>(registry.resolveRegistration(Properties::OUTLINE_STYLE, {}).expect(), _value.style),
-            makeRc<OutlineColorProperty>(registry.resolveRegistration(Properties::OUTLINE_COLOR, {}).expect(), _value.color),
-        };
-    }
-
-    void repr(Io::Emit& e) const override {
-        e("{}", _value);
-    }
-};
+// // https://drafts.csswg.org/css-ui/#outline
+// export struct OutlineProperty : Property {
+//     struct Registration : Property::Registration {
+//         Registration()
+//             : Property::Registration(Properties::OUTLINE, SHORTHAND) {}
+//
+//         Rc<Property> initial() const override {
+//             return makeRc<OutlineProperty>(self(), SpecifiedOutline{});
+//         }
+//
+//         Rc<Property> load(ComputedValues const& c) const override {
+//             return makeRc<OutlineProperty>(self(), *c.outline);
+//         }
+//
+//         Res<Rc<Property>> parse(Cursor<Css::Sst>& c) const override {
+//             SpecifiedOutline value;
+//             bool styleSet = false;
+//             while (not c.ended()) {
+//                 auto width = parseValue<Calc<Length>>(c);
+//                 if (width) {
+//                     value.width = width.expect();
+//                     continue;
+//                 }
+//
+//                 auto color = parseValue<Color>(c);
+//                 if (color) {
+//                     value.color = color.expect();
+//                     continue;
+//                 }
+//
+//                 auto style = parseValue<Gfx::BorderStyle>(c);
+//                 if (style) {
+//                     value.style = style.expect();
+//                     styleSet = true;
+//                     continue;
+//                 }
+//
+//                 if (c.skip(Css::Token::ident("auto"))) {
+//                     if (not styleSet)
+//                         value.style = Keywords::AUTO;
+//                     value.color = Keywords::AUTO;
+//                     continue;
+//                 }
+//
+//                 break;
+//             }
+//
+//             return Ok(makeRc<OutlineProperty>(self(), value));
+//         }
+//     };
+//
+//     SpecifiedOutline _value;
+//
+//     OutlineProperty(Rc<Property::Registration> registration, SpecifiedOutline value)
+//         : Property(registration), _value(value) {}
+//
+//     Longhands expand(RegisteredPropertySet& registry, ComputedValues const&, ComputedValues&) const override {
+//         return {
+//             makeRc<OutlineWidthProperty>(registry.resolveRegistration(Properties::OUTLINE_WIDTH, {}).expect(), _value.width),
+//             makeRc<OutlineStyleProperty>(registry.resolveRegistration(Properties::OUTLINE_STYLE, {}).expect(), _value.style),
+//             makeRc<OutlineColorProperty>(registry.resolveRegistration(Properties::OUTLINE_COLOR, {}).expect(), _value.color),
+//         };
+//     }
+//
+//     void repr(Io::Emit& e) const override {
+//         e("{}", _value);
+//     }
+// };
 
 } // namespace Vaev::Style

@@ -374,11 +374,12 @@ export struct Computer {
             cx.populateUsingParentComputedValues(parent);
             cx.populateUsingOwnComputedValues(parent);
 
-            cascadedValues.apply(Property::ComputationPhase::CUSTOM_PROPERTY, parent, values, cx);
-            cascadedValues.expands(parent, values.cow(), _registeredPropertySet);
+            cascadedValues.apply(LonghandRegistration::ComputationPhase::CUSTOM_PROPERTY, parent, values, cx);
+            // TODO: Replaced by pending-substitution values, resolved when applying each longhand.
+            // cascadedValues.expands(parent, values.cow(), _registeredPropertySet);
 
-            cascadedValues.apply(Property::ComputationPhase::PRE_FONT, parent, values, cx);
-            cascadedValues.apply(Property::ComputationPhase::FONT, parent, values, cx);
+            cascadedValues.apply(LonghandRegistration::ComputationPhase::PRE_FONT, parent, values, cx);
+            cascadedValues.apply(LonghandRegistration::ComputationPhase::FONT, parent, values, cx);
 
             _updateFontface(parent, values);
 
@@ -389,8 +390,8 @@ export struct Computer {
             }
             cx.populateUsingOwnComputedValues(*values);
 
-            cascadedValues.apply(Property::ComputationPhase::NORMAL, parent, values, cx);
-            cascadedValues.apply(Property::ComputationPhase::LATE, parent, values, cx);
+            cascadedValues.apply(LonghandRegistration::ComputationPhase::NORMAL, parent, values, cx);
+            cascadedValues.apply(LonghandRegistration::ComputationPhase::LATE, parent, values, cx);
 
             if (cacheEligible)
                 _mpc.put(parent, matchingRules, values);

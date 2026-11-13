@@ -317,12 +317,13 @@ export struct PageRule {
             if (prop->isBogusProperty())
                 continue;
 
-            if (prop->isShorthandProperty()) {
-                for (auto& longhand : prop->expand(registry, *c.style, *c.style)) {
-                    longhand->apply(*c.style, *c.style, cx);
-                }
-                continue;
-            }
+            // TODO: Restore once shorthands are expanded at parse time.
+            // if (prop->isShorthandProperty()) {
+            //     for (auto& longhand : prop->expand(registry, *c.style, *c.style)) {
+            //         longhand->apply(*c.style, *c.style, cx);
+            //     }
+            //     continue;
+            // }
 
             prop->apply(*c.style, *c.style, cx);
         }

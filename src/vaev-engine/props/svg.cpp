@@ -17,31 +17,34 @@ namespace Vaev::Style {
 
 // https://svgwg.org/svg2-draft/geometry.html#XProperty
 export struct SvgXProperty : Property {
-    struct Registration : Property::Registration {
+    static constexpr auto ID = LonghandId::X;
+    static inline Flags<Options> const FLAGS = {PRESENTATION_ATTRIBUTE};
+
+    static Rc<Property> initial() {
+        return makeRc<SvgXProperty>(PercentOr<Length>{Length{0_au}});
+    }
+
+    static Rc<Property> load(ComputedValues const& c) {
+        return makeRc<SvgXProperty>(c.svg->x);
+    }
+
+    static Res<Rc<Property>> parse(Cursor<Css::Sst>& c) {
+        return Ok(makeRc<SvgXProperty>(try$(parseValue<PercentOr<Length>>(c))));
+    }
+
+    struct Registration : LonghandRegistration {
         Registration()
-            : Property::Registration(Properties::X, PRESENTATION_ATTRIBUTE) {}
-
-        Rc<Property> initial() const override {
-            return makeRc<SvgXProperty>(self(), PercentOr<Length>{Length{0_au}});
-        }
-
-        Rc<Property> load(ComputedValues const& c) const override {
-            return makeRc<SvgXProperty>(self(), c.svg->x);
-        }
+            : LonghandRegistration(Properties::X, FLAGS) {}
 
         Res<Rc<Property>> parsePresentationAttribute(Str style) override {
-            return Property::Registration::parsePresentationAttribute(Io::format("{}px", style));
-        }
-
-        Res<Rc<Property>> parse(Cursor<Css::Sst>& c) const override {
-            return Ok(makeRc<SvgXProperty>(self(), try$(parseValue<PercentOr<Length>>(c))));
+            return LonghandRegistration::parsePresentationAttribute(Io::format("{}px", style));
         }
     };
 
     PercentOr<Length> _value;
 
-    SvgXProperty(Rc<Property::Registration> registration, PercentOr<Length> value)
-        : Property(registration), _value(value) {}
+    SvgXProperty(PercentOr<Length> value)
+        : Property(registrationOf<SvgXProperty>()), _value(value) {}
 
     void apply([[maybe_unused]] ComputedValues const& parent, ComputedValues& c, [[maybe_unused]] ComputationContext const& cx) const override {
         c.svg.cow().x = _value;
@@ -58,31 +61,34 @@ export struct SvgXProperty : Property {
 
 // https://svgwg.org/svg2-draft/geometry.html#YProperty
 export struct SvgYProperty : Property {
-    struct Registration : Property::Registration {
+    static constexpr auto ID = LonghandId::Y;
+    static inline Flags<Options> const FLAGS = {PRESENTATION_ATTRIBUTE};
+
+    static Rc<Property> initial() {
+        return makeRc<SvgYProperty>(PercentOr<Length>{Length{0_au}});
+    }
+
+    static Rc<Property> load(ComputedValues const& c) {
+        return makeRc<SvgYProperty>(c.svg->y);
+    }
+
+    static Res<Rc<Property>> parse(Cursor<Css::Sst>& c) {
+        return Ok(makeRc<SvgYProperty>(try$(parseValue<PercentOr<Length>>(c))));
+    }
+
+    struct Registration : LonghandRegistration {
         Registration()
-            : Property::Registration(Properties::Y, PRESENTATION_ATTRIBUTE) {}
-
-        Rc<Property> initial() const override {
-            return makeRc<SvgYProperty>(self(), PercentOr<Length>{Length{0_au}});
-        }
-
-        Rc<Property> load(ComputedValues const& c) const override {
-            return makeRc<SvgYProperty>(self(), c.svg->y);
-        }
+            : LonghandRegistration(Properties::Y, FLAGS) {}
 
         Res<Rc<Property>> parsePresentationAttribute(Str style) override {
-            return Property::Registration::parsePresentationAttribute(Io::format("{}px", style));
-        }
-
-        Res<Rc<Property>> parse(Cursor<Css::Sst>& c) const override {
-            return Ok(makeRc<SvgYProperty>(self(), try$(parseValue<PercentOr<Length>>(c))));
+            return LonghandRegistration::parsePresentationAttribute(Io::format("{}px", style));
         }
     };
 
     PercentOr<Length> _value;
 
-    SvgYProperty(Rc<Property::Registration> registration, PercentOr<Length> value)
-        : Property(registration), _value(value) {}
+    SvgYProperty(PercentOr<Length> value)
+        : Property(registrationOf<SvgYProperty>()), _value(value) {}
 
     void apply([[maybe_unused]] ComputedValues const& parent, ComputedValues& c, [[maybe_unused]] ComputationContext const& cx) const override {
         c.svg.cow().y = _value;
@@ -99,31 +105,34 @@ export struct SvgYProperty : Property {
 
 // https://svgwg.org/svg2-draft/geometry.html#CXProperty
 export struct SvgCXProperty : Property {
-    struct Registration : Property::Registration {
+    static constexpr auto ID = LonghandId::CX;
+    static inline Flags<Options> const FLAGS = {PRESENTATION_ATTRIBUTE};
+
+    static Rc<Property> initial() {
+        return makeRc<SvgCXProperty>(PercentOr<Length>{Length{0_au}});
+    }
+
+    static Rc<Property> load(ComputedValues const& c) {
+        return makeRc<SvgCXProperty>(c.svg->cx);
+    }
+
+    static Res<Rc<Property>> parse(Cursor<Css::Sst>& c) {
+        return Ok(makeRc<SvgCXProperty>(try$(parseValue<PercentOr<Length>>(c))));
+    }
+
+    struct Registration : LonghandRegistration {
         Registration()
-            : Property::Registration(Properties::CX, PRESENTATION_ATTRIBUTE) {}
-
-        Rc<Property> initial() const override {
-            return makeRc<SvgCXProperty>(self(), PercentOr<Length>{Length{0_au}});
-        }
-
-        Rc<Property> load(ComputedValues const& c) const override {
-            return makeRc<SvgCXProperty>(self(), c.svg->cx);
-        }
+            : LonghandRegistration(Properties::CX, FLAGS) {}
 
         Res<Rc<Property>> parsePresentationAttribute(Str style) override {
-            return Property::Registration::parsePresentationAttribute(Io::format("{}px", style));
-        }
-
-        Res<Rc<Property>> parse(Cursor<Css::Sst>& c) const override {
-            return Ok(makeRc<SvgCXProperty>(self(), try$(parseValue<PercentOr<Length>>(c))));
+            return LonghandRegistration::parsePresentationAttribute(Io::format("{}px", style));
         }
     };
 
     PercentOr<Length> _value;
 
-    SvgCXProperty(Rc<Property::Registration> registration, PercentOr<Length> value)
-        : Property(registration), _value(value) {}
+    SvgCXProperty(PercentOr<Length> value)
+        : Property(registrationOf<SvgCXProperty>()), _value(value) {}
 
     void apply([[maybe_unused]] ComputedValues const& parent, ComputedValues& c, [[maybe_unused]] ComputationContext const& cx) const override {
         c.svg.cow().cx = _value;
@@ -140,31 +149,34 @@ export struct SvgCXProperty : Property {
 
 // https://svgwg.org/svg2-draft/geometry.html#CYProperty
 export struct SvgCYProperty : Property {
-    struct Registration : Property::Registration {
+    static constexpr auto ID = LonghandId::CY;
+    static inline Flags<Options> const FLAGS = {PRESENTATION_ATTRIBUTE};
+
+    static Rc<Property> initial() {
+        return makeRc<SvgCYProperty>(PercentOr<Length>{Length{0_au}});
+    }
+
+    static Rc<Property> load(ComputedValues const& c) {
+        return makeRc<SvgCYProperty>(c.svg->cy);
+    }
+
+    static Res<Rc<Property>> parse(Cursor<Css::Sst>& c) {
+        return Ok(makeRc<SvgCYProperty>(try$(parseValue<PercentOr<Length>>(c))));
+    }
+
+    struct Registration : LonghandRegistration {
         Registration()
-            : Property::Registration(Properties::CY, PRESENTATION_ATTRIBUTE) {}
-
-        Rc<Property> initial() const override {
-            return makeRc<SvgCYProperty>(self(), PercentOr<Length>{Length{0_au}});
-        }
-
-        Rc<Property> load(ComputedValues const& c) const override {
-            return makeRc<SvgCYProperty>(self(), c.svg->cy);
-        }
+            : LonghandRegistration(Properties::CY, FLAGS) {}
 
         Res<Rc<Property>> parsePresentationAttribute(Str style) override {
-            return Property::Registration::parsePresentationAttribute(Io::format("{}px", style));
-        }
-
-        Res<Rc<Property>> parse(Cursor<Css::Sst>& c) const override {
-            return Ok(makeRc<SvgCYProperty>(self(), try$(parseValue<PercentOr<Length>>(c))));
+            return LonghandRegistration::parsePresentationAttribute(Io::format("{}px", style));
         }
     };
 
     PercentOr<Length> _value;
 
-    SvgCYProperty(Rc<Property::Registration> registration, PercentOr<Length> value)
-        : Property(registration), _value(value) {}
+    SvgCYProperty(PercentOr<Length> value)
+        : Property(registrationOf<SvgCYProperty>()), _value(value) {}
 
     void apply([[maybe_unused]] ComputedValues const& parent, ComputedValues& c, [[maybe_unused]] ComputationContext const& cx) const override {
         c.svg.cow().cy = _value;
@@ -181,31 +193,34 @@ export struct SvgCYProperty : Property {
 
 // https://svgwg.org/svg2-draft/geometry.html#RProperty
 export struct SvgRProperty : Property {
-    struct Registration : Property::Registration {
+    static constexpr auto ID = LonghandId::R;
+    static inline Flags<Options> const FLAGS = {PRESENTATION_ATTRIBUTE};
+
+    static Rc<Property> initial() {
+        return makeRc<SvgRProperty>(PercentOr<Length>{Length{0_au}});
+    }
+
+    static Rc<Property> load(ComputedValues const& c) {
+        return makeRc<SvgRProperty>(c.svg->r);
+    }
+
+    static Res<Rc<Property>> parse(Cursor<Css::Sst>& c) {
+        return Ok(makeRc<SvgRProperty>(try$(parseValue<PercentOr<Length>>(c))));
+    }
+
+    struct Registration : LonghandRegistration {
         Registration()
-            : Property::Registration(Properties::R, PRESENTATION_ATTRIBUTE) {}
-
-        Rc<Property> initial() const override {
-            return makeRc<SvgRProperty>(self(), PercentOr<Length>{Length{0_au}});
-        }
-
-        Rc<Property> load(ComputedValues const& c) const override {
-            return makeRc<SvgRProperty>(self(), c.svg->r);
-        }
+            : LonghandRegistration(Properties::R, FLAGS) {}
 
         Res<Rc<Property>> parsePresentationAttribute(Str style) override {
-            return Property::Registration::parsePresentationAttribute(Io::format("{}px", style));
-        }
-
-        Res<Rc<Property>> parse(Cursor<Css::Sst>& c) const override {
-            return Ok(makeRc<SvgRProperty>(self(), try$(parseValue<PercentOr<Length>>(c))));
+            return LonghandRegistration::parsePresentationAttribute(Io::format("{}px", style));
         }
     };
 
     PercentOr<Length> _value;
 
-    SvgRProperty(Rc<Property::Registration> registration, PercentOr<Length> value)
-        : Property(registration), _value(value) {}
+    SvgRProperty(PercentOr<Length> value)
+        : Property(registrationOf<SvgRProperty>()), _value(value) {}
 
     void apply([[maybe_unused]] ComputedValues const& parent, ComputedValues& c, [[maybe_unused]] ComputationContext const& cx) const override {
         c.svg.cow().r = _value;
@@ -222,34 +237,37 @@ export struct SvgRProperty : Property {
 
 // https://svgwg.org/svg2-draft/geometry.html#RxProperty
 export struct SvgRxProperty : Property {
-    struct Registration : Property::Registration {
+    static constexpr auto ID = LonghandId::RX;
+    static inline Flags<Options> const FLAGS = {PRESENTATION_ATTRIBUTE};
+
+    static Rc<Property> initial() {
+        return makeRc<SvgRxProperty>(Keywords::AUTO);
+    }
+
+    static Rc<Property> load(ComputedValues const& c) {
+        return makeRc<SvgRxProperty>(c.svg->rx);
+    }
+
+    static Res<Rc<Property>> parse(Cursor<Css::Sst>& c) {
+        // FIXME: Negative values are invalid and must be ignored.
+        return Ok(makeRc<SvgRxProperty>(try$(parseValue<Union<Keywords::Auto, PercentOr<Length>>>(c))));
+    }
+
+    struct Registration : LonghandRegistration {
         Registration()
-            : Property::Registration(Properties::RX, PRESENTATION_ATTRIBUTE) {}
-
-        Rc<Property> initial() const override {
-            return makeRc<SvgRxProperty>(self(), Keywords::AUTO);
-        }
-
-        Rc<Property> load(ComputedValues const& c) const override {
-            return makeRc<SvgRxProperty>(self(), c.svg->rx);
-        }
+            : LonghandRegistration(Properties::RX, FLAGS) {}
 
         Res<Rc<Property>> parsePresentationAttribute(Str style) override {
-            if (auto property = Property::Registration::parsePresentationAttribute(style))
+            if (auto property = LonghandRegistration::parsePresentationAttribute(style))
                 return property;
-            return Property::Registration::parsePresentationAttribute(Io::format("{}px", style));
-        }
-
-        Res<Rc<Property>> parse(Cursor<Css::Sst>& c) const override {
-            // FIXME: Negative values are invalid and must be ignored.
-            return Ok(makeRc<SvgRxProperty>(self(), try$(parseValue<Union<Keywords::Auto, PercentOr<Length>>>(c))));
+            return LonghandRegistration::parsePresentationAttribute(Io::format("{}px", style));
         }
     };
 
     Union<Keywords::Auto, PercentOr<Length>> _value;
 
-    SvgRxProperty(Rc<Property::Registration> registration, Union<Keywords::Auto, PercentOr<Length>> value)
-        : Property(registration), _value(value) {}
+    SvgRxProperty(Union<Keywords::Auto, PercentOr<Length>> value)
+        : Property(registrationOf<SvgRxProperty>()), _value(value) {}
 
     void apply([[maybe_unused]] ComputedValues const& parent, ComputedValues& c, [[maybe_unused]] ComputationContext const& cx) const override {
         c.svg.cow().rx = _value;
@@ -266,34 +284,37 @@ export struct SvgRxProperty : Property {
 
 // https://svgwg.org/svg2-draft/geometry.html#RyProperty
 export struct SvgRyProperty : Property {
-    struct Registration : Property::Registration {
+    static constexpr auto ID = LonghandId::RY;
+    static inline Flags<Options> const FLAGS = {PRESENTATION_ATTRIBUTE};
+
+    static Rc<Property> initial() {
+        return makeRc<SvgRyProperty>(Keywords::AUTO);
+    }
+
+    static Rc<Property> load(ComputedValues const& c) {
+        return makeRc<SvgRyProperty>(c.svg->ry);
+    }
+
+    static Res<Rc<Property>> parse(Cursor<Css::Sst>& c) {
+        // FIXME: Negative values are invalid and must be ignored.
+        return Ok(makeRc<SvgRyProperty>(try$(parseValue<Union<Keywords::Auto, PercentOr<Length>>>(c))));
+    }
+
+    struct Registration : LonghandRegistration {
         Registration()
-            : Property::Registration(Properties::RY, PRESENTATION_ATTRIBUTE) {}
-
-        Rc<Property> initial() const override {
-            return makeRc<SvgRyProperty>(self(), Keywords::AUTO);
-        }
-
-        Rc<Property> load(ComputedValues const& c) const override {
-            return makeRc<SvgRyProperty>(self(), c.svg->ry);
-        }
+            : LonghandRegistration(Properties::RY, FLAGS) {}
 
         Res<Rc<Property>> parsePresentationAttribute(Str style) override {
-            if (auto property = Property::Registration::parsePresentationAttribute(style))
+            if (auto property = LonghandRegistration::parsePresentationAttribute(style))
                 return property;
-            return Property::Registration::parsePresentationAttribute(Io::format("{}px", style));
-        }
-
-        Res<Rc<Property>> parse(Cursor<Css::Sst>& c) const override {
-            // FIXME: Negative values are invalid and must be ignored.
-            return Ok(makeRc<SvgRyProperty>(self(), try$(parseValue<Union<Keywords::Auto, PercentOr<Length>>>(c))));
+            return LonghandRegistration::parsePresentationAttribute(Io::format("{}px", style));
         }
     };
 
     Union<Keywords::Auto, PercentOr<Length>> _value;
 
-    SvgRyProperty(Rc<Property::Registration> registration, Union<Keywords::Auto, PercentOr<Length>> value)
-        : Property(registration), _value(value) {}
+    SvgRyProperty(Union<Keywords::Auto, PercentOr<Length>> value)
+        : Property(registrationOf<SvgRyProperty>()), _value(value) {}
 
     void apply([[maybe_unused]] ComputedValues const& parent, ComputedValues& c, [[maybe_unused]] ComputationContext const& cx) const override {
         c.svg.cow().ry = _value;
@@ -310,27 +331,30 @@ export struct SvgRyProperty : Property {
 
 // https://svgwg.org/svg2-draft/painting.html#FillProperty
 export struct SvgFillProperty : Property {
-    struct Registration : Property::Registration {
+    static constexpr auto ID = LonghandId::FILL;
+    static inline Flags<Options> const FLAGS = {PRESENTATION_ATTRIBUTE, INHERITED, BULK_INHERITED};
+
+    static Rc<Property> initial() {
+        return makeRc<SvgFillProperty>(SvgPaint{Some(Color{Gfx::BLACK})});
+    }
+
+    static Rc<Property> load(ComputedValues const& c) {
+        return makeRc<SvgFillProperty>(SvgPaint{c.svgPaint->fill});
+    }
+
+    static Res<Rc<Property>> parse(Cursor<Css::Sst>& c) {
+        return Ok(makeRc<SvgFillProperty>(try$(parseValue<SvgPaint>(c))));
+    }
+
+    struct Registration : LonghandRegistration {
         Registration()
-            : Property::Registration(Properties::FILL, {PRESENTATION_ATTRIBUTE, INHERITED, BULK_INHERITED}) {}
-
-        Rc<Property> initial() const override {
-            return makeRc<SvgFillProperty>(self(), SvgPaint{Some(Color{Gfx::BLACK})});
-        }
-
-        Rc<Property> load(ComputedValues const& c) const override {
-            return makeRc<SvgFillProperty>(self(), SvgPaint{c.svgPaint->fill});
-        }
-
-        Res<Rc<Property>> parse(Cursor<Css::Sst>& c) const override {
-            return Ok(makeRc<SvgFillProperty>(self(), try$(parseValue<SvgPaint>(c))));
-        }
+            : LonghandRegistration(Properties::FILL, FLAGS) {}
     };
 
     SvgPaint _value;
 
-    SvgFillProperty(Rc<Property::Registration> registration, SvgPaint value)
-        : Property(registration), _value(value) {}
+    SvgFillProperty(SvgPaint value)
+        : Property(registrationOf<SvgFillProperty>()), _value(value) {}
 
     void apply([[maybe_unused]] ComputedValues const& parent, ComputedValues& c, [[maybe_unused]] ComputationContext const& cx) const override {
         c.svgPaint.cow().fill = _value;
@@ -347,17 +371,31 @@ export struct SvgFillProperty : Property {
 
 // https://svgwg.org/svg2-draft/paths.html#TheDProperty
 export struct SvgDProperty : Property {
-    struct Registration : Property::Registration {
+    static constexpr auto ID = LonghandId::D;
+    static inline Flags<Options> const FLAGS = {PRESENTATION_ATTRIBUTE};
+
+    static Rc<Property> initial() {
+        return makeRc<SvgDProperty>(Union<String, None>{NONE});
+    }
+
+    static Rc<Property> load(ComputedValues const& c) {
+        return makeRc<SvgDProperty>(c.svg->d);
+    }
+
+    static Res<Rc<Property>> parse(Cursor<Css::Sst>& c) {
+        eatWhitespace(c);
+        if (c.peek() != Css::Sst::FUNC or c.peek().prefix != Css::Token::function("path(")) {
+            return Error::invalidData("expected path function");
+        }
+
+        auto pathFunc = c.next();
+        Cursor<Css::Sst> scanPath{pathFunc.content};
+        return Ok(makeRc<SvgDProperty>(try$(parseValue<String>(scanPath))));
+    }
+
+    struct Registration : LonghandRegistration {
         Registration()
-            : Property::Registration(Properties::D, PRESENTATION_ATTRIBUTE) {}
-
-        Rc<Property> initial() const override {
-            return makeRc<SvgDProperty>(self(), Union<String, None>{NONE});
-        }
-
-        Rc<Property> load(ComputedValues const& c) const override {
-            return makeRc<SvgDProperty>(self(), c.svg->d);
-        }
+            : LonghandRegistration(Properties::D, FLAGS) {}
 
         static String _wrapPathAsCSSStyle(Str style) {
             StringBuilder sb;
@@ -379,23 +417,12 @@ export struct SvgDProperty : Property {
             Cursor<Css::Sst> content = sst;
             return parse(content);
         }
-
-        Res<Rc<Property>> parse(Cursor<Css::Sst>& c) const override {
-            eatWhitespace(c);
-            if (c.peek() != Css::Sst::FUNC or c.peek().prefix != Css::Token::function("path(")) {
-                return Error::invalidData("expected path function");
-            }
-
-            auto pathFunc = c.next();
-            Cursor<Css::Sst> scanPath{pathFunc.content};
-            return Ok(makeRc<SvgDProperty>(self(), try$(parseValue<String>(scanPath))));
-        }
     };
 
     Union<String, None> _value;
 
-    SvgDProperty(Rc<Property::Registration> registration, Union<String, None> value)
-        : Property(registration), _value(value) {}
+    SvgDProperty(Union<String, None> value)
+        : Property(registrationOf<SvgDProperty>()), _value(value) {}
 
     void apply([[maybe_unused]] ComputedValues const& parent, ComputedValues& c, [[maybe_unused]] ComputationContext const& cx) const override {
         c.svg.cow().d = _value;
@@ -423,40 +450,43 @@ export struct SvgDProperty : Property {
 
 // https://svgwg.org/svg2-draft/coords.html#ViewBoxAttribute
 export struct SvgViewBoxProperty : Property {
-    struct Registration : Property::Registration {
+    static constexpr auto ID = LonghandId::VIEWBOX;
+    static inline Flags<Options> const FLAGS = {PRESENTATION_ATTRIBUTE};
+
+    static Rc<Property> initial() {
+        return makeRc<SvgViewBoxProperty>(Opt<SvgViewBox>{NONE});
+    }
+
+    static Rc<Property> load(ComputedValues const& c) {
+        return makeRc<SvgViewBoxProperty>(c.svg->viewBox);
+    }
+
+    static Res<Rc<Property>> parse(Cursor<Css::Sst>& c) {
+        SvgViewBox viewBox;
+
+        viewBox.minX = try$(parseValue<Number>(c));
+
+        c.skip(Css::Token::COMMA);
+        viewBox.minY = try$(parseValue<Number>(c));
+
+        c.skip(Css::Token::COMMA);
+        viewBox.width = try$(parseValue<Number>(c));
+
+        c.skip(Css::Token::COMMA);
+        viewBox.height = try$(parseValue<Number>(c));
+
+        return Ok(makeRc<SvgViewBoxProperty>(Some(std::move(viewBox))));
+    }
+
+    struct Registration : LonghandRegistration {
         Registration()
-            : Property::Registration(Properties::VIEWBOX, PRESENTATION_ATTRIBUTE) {}
-
-        Rc<Property> initial() const override {
-            return makeRc<SvgViewBoxProperty>(self(), Opt<SvgViewBox>{NONE});
-        }
-
-        Rc<Property> load(ComputedValues const& c) const override {
-            return makeRc<SvgViewBoxProperty>(self(), c.svg->viewBox);
-        }
-
-        Res<Rc<Property>> parse(Cursor<Css::Sst>& c) const override {
-            SvgViewBox viewBox;
-
-            viewBox.minX = try$(parseValue<Number>(c));
-
-            c.skip(Css::Token::COMMA);
-            viewBox.minY = try$(parseValue<Number>(c));
-
-            c.skip(Css::Token::COMMA);
-            viewBox.width = try$(parseValue<Number>(c));
-
-            c.skip(Css::Token::COMMA);
-            viewBox.height = try$(parseValue<Number>(c));
-
-            return Ok(makeRc<SvgViewBoxProperty>(self(), Some(std::move(viewBox))));
-        }
+            : LonghandRegistration(Properties::VIEWBOX, FLAGS) {}
     };
 
     Opt<SvgViewBox> _value;
 
-    SvgViewBoxProperty(Rc<Property::Registration> registration, Opt<SvgViewBox> value)
-        : Property(registration), _value(std::move(value)) {}
+    SvgViewBoxProperty(Opt<SvgViewBox> value)
+        : Property(registrationOf<SvgViewBoxProperty>()), _value(std::move(value)) {}
 
     void apply([[maybe_unused]] ComputedValues const& parent, ComputedValues& c, [[maybe_unused]] ComputationContext const& cx) const override {
         c.svg.cow().viewBox = _value;
@@ -477,27 +507,30 @@ export struct SvgViewBoxProperty : Property {
 
 // https://svgwg.org/svg2-draft/painting.html#SpecifyingStrokePaint
 export struct SvgStrokeProperty : Property {
-    struct Registration : Property::Registration {
+    static constexpr auto ID = LonghandId::STROKE;
+    static inline Flags<Options> const FLAGS = {PRESENTATION_ATTRIBUTE, INHERITED, BULK_INHERITED};
+
+    static Rc<Property> initial() {
+        return makeRc<SvgStrokeProperty>(SvgPaint{NONE});
+    }
+
+    static Rc<Property> load(ComputedValues const& c) {
+        return makeRc<SvgStrokeProperty>(SvgPaint{c.svgPaint->stroke});
+    }
+
+    static Res<Rc<Property>> parse(Cursor<Css::Sst>& c) {
+        return Ok(makeRc<SvgStrokeProperty>(try$(parseValue<SvgPaint>(c))));
+    }
+
+    struct Registration : LonghandRegistration {
         Registration()
-            : Property::Registration(Properties::STROKE, {PRESENTATION_ATTRIBUTE, INHERITED, BULK_INHERITED}) {}
-
-        Rc<Property> initial() const override {
-            return makeRc<SvgStrokeProperty>(self(), SvgPaint{NONE});
-        }
-
-        Rc<Property> load(ComputedValues const& c) const override {
-            return makeRc<SvgStrokeProperty>(self(), SvgPaint{c.svgPaint->stroke});
-        }
-
-        Res<Rc<Property>> parse(Cursor<Css::Sst>& c) const override {
-            return Ok(makeRc<SvgStrokeProperty>(self(), try$(parseValue<SvgPaint>(c))));
-        }
+            : LonghandRegistration(Properties::STROKE, FLAGS) {}
     };
 
     SvgPaint _value;
 
-    SvgStrokeProperty(Rc<Property::Registration> registration, SvgPaint value)
-        : Property(registration), _value(value) {}
+    SvgStrokeProperty(SvgPaint value)
+        : Property(registrationOf<SvgStrokeProperty>()), _value(value) {}
 
     void apply([[maybe_unused]] ComputedValues const& parent, ComputedValues& c, [[maybe_unused]] ComputationContext const& cx) const override {
         c.svgPaint.cow().stroke = _value;
@@ -514,32 +547,35 @@ export struct SvgStrokeProperty : Property {
 
 // https://svgwg.org/svg2-draft/painting.html#StrokeOpacity
 export struct SvgStrokeOpacityProperty : Property {
-    struct Registration : Property::Registration {
+    static constexpr auto ID = LonghandId::STROKE_OPACITY;
+    static inline Flags<Options> const FLAGS = {INHERITED, BULK_INHERITED};
+
+    static Rc<Property> initial() {
+        return makeRc<SvgStrokeOpacityProperty>(Number{1});
+    }
+
+    static Rc<Property> load(ComputedValues const& c) {
+        return makeRc<SvgStrokeOpacityProperty>(c.svgPaint->strokeOpacity);
+    }
+
+    static Res<Rc<Property>> parse(Cursor<Css::Sst>& c) {
+        auto maybePercent = parseValue<Percent>(c);
+        if (maybePercent) {
+            return Ok(makeRc<SvgStrokeOpacityProperty>(maybePercent.expect().value() / 100));
+        } else {
+            return Ok(makeRc<SvgStrokeOpacityProperty>(try$(parseValue<Number>(c))));
+        }
+    }
+
+    struct Registration : LonghandRegistration {
         Registration()
-            : Property::Registration(Properties::STROKE_OPACITY, {INHERITED, BULK_INHERITED}) {}
-
-        Rc<Property> initial() const override {
-            return makeRc<SvgStrokeOpacityProperty>(self(), Number{1});
-        }
-
-        Rc<Property> load(ComputedValues const& c) const override {
-            return makeRc<SvgStrokeOpacityProperty>(self(), c.svgPaint->strokeOpacity);
-        }
-
-        Res<Rc<Property>> parse(Cursor<Css::Sst>& c) const override {
-            auto maybePercent = parseValue<Percent>(c);
-            if (maybePercent) {
-                return Ok(makeRc<SvgStrokeOpacityProperty>(self(), maybePercent.expect().value() / 100));
-            } else {
-                return Ok(makeRc<SvgStrokeOpacityProperty>(self(), try$(parseValue<Number>(c))));
-            }
-        }
+            : LonghandRegistration(Properties::STROKE_OPACITY, FLAGS) {}
     };
 
     Number _value;
 
-    SvgStrokeOpacityProperty(Rc<Property::Registration> registration, Number value)
-        : Property(registration), _value(value) {}
+    SvgStrokeOpacityProperty(Number value)
+        : Property(registrationOf<SvgStrokeOpacityProperty>()), _value(value) {}
 
     void apply([[maybe_unused]] ComputedValues const& parent, ComputedValues& c, [[maybe_unused]] ComputationContext const& cx) const override {
         c.svgPaint.cow().strokeOpacity = _value;
@@ -556,32 +592,35 @@ export struct SvgStrokeOpacityProperty : Property {
 
 // https://svgwg.org/svg2-draft/painting.html#FillOpacity
 export struct FillOpacityProperty : Property {
-    struct Registration : Property::Registration {
+    static constexpr auto ID = LonghandId::FILL_OPACITY;
+    static inline Flags<Options> const FLAGS = {PRESENTATION_ATTRIBUTE, INHERITED, BULK_INHERITED};
+
+    static Rc<Property> initial() {
+        return makeRc<FillOpacityProperty>(Number{1});
+    }
+
+    static Rc<Property> load(ComputedValues const& c) {
+        return makeRc<FillOpacityProperty>(c.svgPaint->fillOpacity);
+    }
+
+    static Res<Rc<Property>> parse(Cursor<Css::Sst>& c) {
+        auto maybePercent = parseValue<Percent>(c);
+        if (maybePercent) {
+            return Ok(makeRc<FillOpacityProperty>(maybePercent.expect().value() / 100));
+        } else {
+            return Ok(makeRc<FillOpacityProperty>(try$(parseValue<Number>(c))));
+        }
+    }
+
+    struct Registration : LonghandRegistration {
         Registration()
-            : Property::Registration(Properties::FILL_OPACITY, {PRESENTATION_ATTRIBUTE, INHERITED, BULK_INHERITED}) {}
-
-        Rc<Property> initial() const override {
-            return makeRc<FillOpacityProperty>(self(), Number{1});
-        }
-
-        Rc<Property> load(ComputedValues const& c) const override {
-            return makeRc<FillOpacityProperty>(self(), c.svgPaint->fillOpacity);
-        }
-
-        Res<Rc<Property>> parse(Cursor<Css::Sst>& c) const override {
-            auto maybePercent = parseValue<Percent>(c);
-            if (maybePercent) {
-                return Ok(makeRc<FillOpacityProperty>(self(), maybePercent.expect().value() / 100));
-            } else {
-                return Ok(makeRc<FillOpacityProperty>(self(), try$(parseValue<Number>(c))));
-            }
-        }
+            : LonghandRegistration(Properties::FILL_OPACITY, FLAGS) {}
     };
 
     Number _value;
 
-    FillOpacityProperty(Rc<Property::Registration> registration, Number value)
-        : Property(registration), _value(value) {}
+    FillOpacityProperty(Number value)
+        : Property(registrationOf<FillOpacityProperty>()), _value(value) {}
 
     void apply([[maybe_unused]] ComputedValues const& parent, ComputedValues& c, [[maybe_unused]] ComputationContext const& cx) const override {
         c.svgPaint.cow().fillOpacity = _value;
@@ -598,30 +637,33 @@ export struct FillOpacityProperty : Property {
 
 // https://svgwg.org/svg2-draft/painting.html#StrokeWidth
 export struct StrokeWidthProperty : Property {
-    struct Registration : Property::Registration {
+    static constexpr auto ID = LonghandId::STROKE_WIDTH;
+    static inline Flags<Options> const FLAGS = {PRESENTATION_ATTRIBUTE, INHERITED, BULK_INHERITED};
+
+    static Rc<Property> initial() {
+        return makeRc<StrokeWidthProperty>(PercentOr<Length>{Length{1_au}});
+    }
+
+    static Rc<Property> load(ComputedValues const& c) {
+        return makeRc<StrokeWidthProperty>(c.svgPaint->strokeWidth);
+    }
+
+    // https://svgwg.org/svg2-draft/painting.html#StrokeWidth
+    static Res<Rc<Property>> parse(Cursor<Css::Sst>& c) {
+        if (auto number = parseValue<Number>(c))
+            return Ok(makeRc<StrokeWidthProperty>(PercentOr<Length>{Length::fromPx(number.take())}));
+        return Ok(makeRc<StrokeWidthProperty>(try$(parseValue<PercentOr<Length>>(c))));
+    }
+
+    struct Registration : LonghandRegistration {
         Registration()
-            : Property::Registration(Properties::STROKE_WIDTH, {PRESENTATION_ATTRIBUTE, INHERITED, BULK_INHERITED}) {}
-
-        Rc<Property> initial() const override {
-            return makeRc<StrokeWidthProperty>(self(), PercentOr<Length>{Length{1_au}});
-        }
-
-        Rc<Property> load(ComputedValues const& c) const override {
-            return makeRc<StrokeWidthProperty>(self(), c.svgPaint->strokeWidth);
-        }
-
-        // https://svgwg.org/svg2-draft/painting.html#StrokeWidth
-        Res<Rc<Property>> parse(Cursor<Css::Sst>& c) const override {
-            if (auto number = parseValue<Number>(c))
-                return Ok(makeRc<StrokeWidthProperty>(self(), PercentOr<Length>{Length::fromPx(number.take())}));
-            return Ok(makeRc<StrokeWidthProperty>(self(), try$(parseValue<PercentOr<Length>>(c))));
-        }
+            : LonghandRegistration(Properties::STROKE_WIDTH, FLAGS) {}
     };
 
     PercentOr<Length> _value;
 
-    StrokeWidthProperty(Rc<Property::Registration> registration, PercentOr<Length> value)
-        : Property(registration), _value(value) {}
+    StrokeWidthProperty(PercentOr<Length> value)
+        : Property(registrationOf<StrokeWidthProperty>()), _value(value) {}
 
     void apply([[maybe_unused]] ComputedValues const& parent, ComputedValues& c, [[maybe_unused]] ComputationContext const& cx) const override {
         c.svgPaint.cow().strokeWidth = _value;

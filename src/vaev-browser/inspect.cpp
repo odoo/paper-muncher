@@ -441,8 +441,6 @@ Ui::Child inspectStyleTabComputed(Rc<WebView> webview, InspectState const& s, Ui
                     continue;
 
                 auto property = registration->load(*el->computedValues());
-                if (property->isShorthandProperty())
-                    continue;
 
                 if (not s.showAllProperties and property->isInitial())
                     continue;

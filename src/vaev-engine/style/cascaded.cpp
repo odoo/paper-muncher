@@ -72,23 +72,24 @@ export struct CascadedValues {
         _entries.clear();
     }
 
-    void expands(ComputedValues const& parent, ComputedValues& child, RegisteredPropertySet& registeredPropertySet) {
-        Vec<Entry> shorthandEntries;
-        for (auto const& entry : _entries.iterValue()) {
-            if (entry.property->isShorthandProperty())
-                shorthandEntries.pushBack(entry);
-        }
+    // TODO: Replaced by pending-substitution values, resolved when applying each longhand.
+    // void expands(ComputedValues const& parent, ComputedValues& child, RegisteredPropertySet& registeredPropertySet) {
+    //     Vec<Entry> shorthandEntries;
+    //     for (auto const& entry : _entries.iterValue()) {
+    //         if (entry.property->isShorthandProperty())
+    //             shorthandEntries.pushBack(entry);
+    //     }
+    //
+    //     for (auto& entry : shorthandEntries) {
+    //         auto& prop = entry.property;
+    //         _entries.remove(prop->registration->name).expect();
+    //         for (auto& longhandProperty : prop->expand(registeredPropertySet, parent, child)) {
+    //             _putLonghand(longhandProperty, entry.origin, entry.layerOrder, entry.specificity, prop->important, entry.ruleOrder, entry.declarationOrder);
+    //         }
+    //     }
+    // }
 
-        for (auto& entry : shorthandEntries) {
-            auto& prop = entry.property;
-            _entries.remove(prop->registration->name).expect();
-            for (auto& longhandProperty : prop->expand(registeredPropertySet, parent, child)) {
-                _putLonghand(longhandProperty, entry.origin, entry.layerOrder, entry.specificity, prop->important, entry.ruleOrder, entry.declarationOrder);
-            }
-        }
-    }
-
-    void apply(Property::ComputationPhase computationPhase, ComputedValues const& parent, Cow<ComputedValues>& child, ComputationContext const& cx) {
+    void apply(LonghandRegistration::ComputationPhase computationPhase, ComputedValues const& parent, Cow<ComputedValues>& child, ComputationContext const& cx) {
         for (auto& entry : _entries.iterValue()) {
             auto& prop = entry.property;
 

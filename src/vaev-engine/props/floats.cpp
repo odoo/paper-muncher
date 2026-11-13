@@ -16,26 +16,28 @@ namespace Vaev::Style {
 // MARK: Float & Clear ---------------------------------------------------------
 
 export struct FloatProperty : Property {
-    struct Registration : Property::Registration {
-        Registration() : Property::Registration(Properties::FLOAT) {}
+    static constexpr auto ID = LonghandId::FLOAT;
 
-        Rc<Property> initial() const override {
-            return makeRc<FloatProperty>(self(), Float::NONE);
-        }
+    static Rc<Property> initial() {
+        return makeRc<FloatProperty>(Float::NONE);
+    }
 
-        Rc<Property> load(ComputedValues const& c) const override {
-            return makeRc<FloatProperty>(self(), c.float_);
-        }
+    static Rc<Property> load(ComputedValues const& c) {
+        return makeRc<FloatProperty>(c.float_);
+    }
 
-        Res<Rc<Property>> parse(Cursor<Css::Sst>& c) const override {
-            return Ok(makeRc<FloatProperty>(self(), try$(parseValue<Float>(c))));
-        }
+    static Res<Rc<Property>> parse(Cursor<Css::Sst>& c) {
+        return Ok(makeRc<FloatProperty>(try$(parseValue<Float>(c))));
+    }
+
+    struct Registration : LonghandRegistration {
+        Registration() : LonghandRegistration(Properties::FLOAT) {}
     };
 
     Float _value;
 
-    FloatProperty(Rc<Property::Registration> registration, Float value)
-        : Property(registration), _value(value) {}
+    FloatProperty(Float value)
+        : Property(registrationOf<FloatProperty>()), _value(value) {}
 
     void apply([[maybe_unused]] ComputedValues const& parent, ComputedValues& c, [[maybe_unused]] ComputationContext const& cx) const override {
         c.float_ = _value;
@@ -51,26 +53,28 @@ export struct FloatProperty : Property {
 };
 
 export struct ClearProperty : Property {
-    struct Registration : Property::Registration {
-        Registration() : Property::Registration(Properties::CLEAR) {}
+    static constexpr auto ID = LonghandId::CLEAR;
 
-        Rc<Property> initial() const override {
-            return makeRc<ClearProperty>(self(), Clear::NONE);
-        }
+    static Rc<Property> initial() {
+        return makeRc<ClearProperty>(Clear::NONE);
+    }
 
-        Rc<Property> load(ComputedValues const& c) const override {
-            return makeRc<ClearProperty>(self(), c.clear);
-        }
+    static Rc<Property> load(ComputedValues const& c) {
+        return makeRc<ClearProperty>(c.clear);
+    }
 
-        Res<Rc<Property>> parse(Cursor<Css::Sst>& c) const override {
-            return Ok(makeRc<ClearProperty>(self(), try$(parseValue<Clear>(c))));
-        }
+    static Res<Rc<Property>> parse(Cursor<Css::Sst>& c) {
+        return Ok(makeRc<ClearProperty>(try$(parseValue<Clear>(c))));
+    }
+
+    struct Registration : LonghandRegistration {
+        Registration() : LonghandRegistration(Properties::CLEAR) {}
     };
 
     Clear _value;
 
-    ClearProperty(Rc<Property::Registration> registration, Clear value)
-        : Property(registration), _value(value) {}
+    ClearProperty(Clear value)
+        : Property(registrationOf<ClearProperty>()), _value(value) {}
 
     void apply([[maybe_unused]] ComputedValues const& parent, ComputedValues& c, [[maybe_unused]] ComputationContext const& cx) const override {
         c.clear = _value;

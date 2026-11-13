@@ -10,6 +10,7 @@ import :css.parser;
 import :style.computed;
 
 using namespace Karm;
+using namespace Karm::Literals;
 
 namespace Vaev::Style {
 
@@ -18,38 +19,36 @@ namespace Vaev::Style {
 
 // https://drafts.csswg.org/css-transforms/#transform-origin-property
 export struct TransformOriginProperty : Property {
-    struct Registration : Property::Registration {
+    static constexpr auto ID = LonghandId::TRANSFORM_ORIGIN;
+    static inline Flags<Options> const FLAGS = {PRESENTATION_ATTRIBUTE};
+    // https://compat.spec.whatwg.org/#css-simple-aliases
+    static constexpr Array LEGACY_NAME_ALIASES = {"-webkit-transform-origin"s};
+
+    static Rc<Property> initial() {
+        return makeRc<TransformOriginProperty>(TransformOrigin{
+                .xOffset = Calc<PercentOr<Length>>{Percent{50}},
+                .yOffset = Calc<PercentOr<Length>>{Percent{50}},
+            }
+        );
+    }
+
+    static Rc<Property> load(ComputedValues const& c) {
+        return makeRc<TransformOriginProperty>(c.transform->origin);
+    }
+
+    static Res<Rc<Property>> parse(Cursor<Css::Sst>& c) {
+        return Ok(makeRc<TransformOriginProperty>(try$(parseValue<TransformOrigin>(c))));
+    }
+
+    struct Registration : LonghandRegistration {
         Registration()
-            : Property::Registration(Properties::TRANSFORM_ORIGIN, PRESENTATION_ATTRIBUTE) {}
-
-        // https://compat.spec.whatwg.org/#css-simple-aliases
-        SmallVec<Symbol, 1> legacyNameAlias() const override {
-            return {"-webkit-transform-origin"_sym};
-        }
-
-        Rc<Property> initial() const override {
-            return makeRc<TransformOriginProperty>(
-                self(),
-                TransformOrigin{
-                    .xOffset = Calc<PercentOr<Length>>{Percent{50}},
-                    .yOffset = Calc<PercentOr<Length>>{Percent{50}},
-                }
-            );
-        }
-
-        Rc<Property> load(ComputedValues const& c) const override {
-            return makeRc<TransformOriginProperty>(self(), c.transform->origin);
-        }
-
-        Res<Rc<Property>> parse(Cursor<Css::Sst>& c) const override {
-            return Ok(makeRc<TransformOriginProperty>(self(), try$(parseValue<TransformOrigin>(c))));
-        }
+            : LonghandRegistration(Properties::TRANSFORM_ORIGIN, FLAGS) {}
     };
 
     TransformOrigin _value;
 
-    TransformOriginProperty(Rc<Property::Registration> registration, TransformOrigin value)
-        : Property(registration), _value(value) {}
+    TransformOriginProperty(TransformOrigin value)
+        : Property(registrationOf<TransformOriginProperty>()), _value(value) {}
 
     void apply([[maybe_unused]] ComputedValues const& parent, ComputedValues& c, [[maybe_unused]] ComputationContext const& cx) const override {
         c.transform.cow().origin = _value;
@@ -66,26 +65,28 @@ export struct TransformOriginProperty : Property {
 
 // https://drafts.csswg.org/css-transforms/#transform-box
 export struct TransformBoxProperty : Property {
-    struct Registration : Property::Registration {
-        Registration() : Property::Registration(Properties::TRANSFORM_BOX) {}
+    static constexpr auto ID = LonghandId::TRANSFORM_BOX;
 
-        Rc<Property> initial() const override {
-            return makeRc<TransformBoxProperty>(self(), TransformBox{Keywords::VIEW_BOX});
-        }
+    static Rc<Property> initial() {
+        return makeRc<TransformBoxProperty>(TransformBox{Keywords::VIEW_BOX});
+    }
 
-        Rc<Property> load(ComputedValues const& c) const override {
-            return makeRc<TransformBoxProperty>(self(), c.transform->box);
-        }
+    static Rc<Property> load(ComputedValues const& c) {
+        return makeRc<TransformBoxProperty>(c.transform->box);
+    }
 
-        Res<Rc<Property>> parse(Cursor<Css::Sst>& c) const override {
-            return Ok(makeRc<TransformBoxProperty>(self(), try$(parseValue<TransformBox>(c))));
-        }
+    static Res<Rc<Property>> parse(Cursor<Css::Sst>& c) {
+        return Ok(makeRc<TransformBoxProperty>(try$(parseValue<TransformBox>(c))));
+    }
+
+    struct Registration : LonghandRegistration {
+        Registration() : LonghandRegistration(Properties::TRANSFORM_BOX) {}
     };
 
     TransformBox _value;
 
-    TransformBoxProperty(Rc<Property::Registration> registration, TransformBox value)
-        : Property(registration), _value(value) {}
+    TransformBoxProperty(TransformBox value)
+        : Property(registrationOf<TransformBoxProperty>()), _value(value) {}
 
     void apply([[maybe_unused]] ComputedValues const& parent, ComputedValues& c, [[maybe_unused]] ComputationContext const& cx) const override {
         c.transform.cow().box = _value;
@@ -102,22 +103,26 @@ export struct TransformBoxProperty : Property {
 
 // https://drafts.csswg.org/css-transforms/#propdef-transform
 export struct TransformProperty : Property {
-    struct Registration : Property::Registration {
+    static constexpr auto ID = LonghandId::TRANSFORM;
+    static inline Flags<Options> const FLAGS = {PRESENTATION_ATTRIBUTE};
+    // https://compat.spec.whatwg.org/#css-simple-aliases
+    static constexpr Array LEGACY_NAME_ALIASES = {"-webkit-transform"s};
+
+    static Rc<Property> initial() {
+        return makeRc<TransformProperty>(Transform{Keywords::NONE});
+    }
+
+    static Rc<Property> load(ComputedValues const& c) {
+        return makeRc<TransformProperty>(c.transform->transform);
+    }
+
+    static Res<Rc<Property>> parse(Cursor<Css::Sst>& c) {
+        return Ok(makeRc<TransformProperty>(try$(parseValue<Transform>(c))));
+    }
+
+    struct Registration : LonghandRegistration {
         Registration()
-            : Property::Registration(Properties::TRANSFORM, PRESENTATION_ATTRIBUTE) {}
-
-        // https://compat.spec.whatwg.org/#css-simple-aliases
-        SmallVec<Symbol, 1> legacyNameAlias() const override {
-            return {"-webkit-transform"_sym};
-        }
-
-        Rc<Property> initial() const override {
-            return makeRc<TransformProperty>(self(), Transform{Keywords::NONE});
-        }
-
-        Rc<Property> load(ComputedValues const& c) const override {
-            return makeRc<TransformProperty>(self(), c.transform->transform);
-        }
+            : LonghandRegistration(Properties::TRANSFORM, FLAGS) {}
 
         // https://www.w3.org/TR/SVG11/coords.html#TransformAttribute
         // rotate(<rotate-angle> <cx> <cy>) is equivalent to
@@ -209,16 +214,12 @@ export struct TransformProperty : Property {
             Cursor<Css::Sst> content{sst};
             return parse(content);
         }
-
-        Res<Rc<Property>> parse(Cursor<Css::Sst>& c) const override {
-            return Ok(makeRc<TransformProperty>(self(), try$(parseValue<Transform>(c))));
-        }
     };
 
     Transform _value;
 
-    TransformProperty(Rc<Property::Registration> registration, Transform value)
-        : Property(registration), _value(value) {}
+    TransformProperty(Transform value)
+        : Property(registrationOf<TransformProperty>()), _value(value) {}
 
     void apply([[maybe_unused]] ComputedValues const& parent, ComputedValues& c, [[maybe_unused]] ComputationContext const& cx) const override {
         c.transform.cow().transform = _value;

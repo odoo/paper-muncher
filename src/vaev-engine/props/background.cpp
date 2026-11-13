@@ -20,26 +20,28 @@ namespace Vaev::Style {
 
 // https://www.w3.org/TR/CSS22/colors.html#propdef-background-color
 export struct BackgroundColorProperty : Property {
-    struct Registration : Property::Registration {
-        Registration() : Property::Registration(Properties::BACKGROUND_COLOR) {}
+    static constexpr auto ID = LonghandId::BACKGROUND_COLOR;
 
-        Rc<Property> initial() const override {
-            return makeRc<BackgroundColorProperty>(self(), TRANSPARENT);
-        }
+    static Rc<Property> initial() {
+        return makeRc<BackgroundColorProperty>(TRANSPARENT);
+    }
 
-        Rc<Property> load(ComputedValues const& c) const override {
-            return makeRc<BackgroundColorProperty>(self(), c.backgrounds->color);
-        }
+    static Rc<Property> load(ComputedValues const& c) {
+        return makeRc<BackgroundColorProperty>(c.backgrounds->color);
+    }
 
-        Res<Rc<Property>> parse(Cursor<Css::Sst>& c) const override {
-            return Ok(makeRc<BackgroundColorProperty>(self(), try$(parseValue<Color>(c))));
-        }
+    static Res<Rc<Property>> parse(Cursor<Css::Sst>& c) {
+        return Ok(makeRc<BackgroundColorProperty>(try$(parseValue<Color>(c))));
+    }
+
+    struct Registration : LonghandRegistration {
+        Registration() : LonghandRegistration(Properties::BACKGROUND_COLOR) {}
     };
 
     Color _value;
 
-    BackgroundColorProperty(Rc<Property::Registration> registration, Color value)
-        : Property(registration), _value(value) {}
+    BackgroundColorProperty(Color value)
+        : Property(registrationOf<BackgroundColorProperty>()), _value(value) {}
 
     void apply([[maybe_unused]] ComputedValues const& parent, ComputedValues& c, [[maybe_unused]] ComputationContext const& cx) const override {
         c.backgrounds.cow().color = _value;
@@ -58,36 +60,38 @@ export struct BackgroundColorProperty : Property {
 
 // https://www.w3.org/TR/CSS22/colors.html#propdef-background-attachment
 export struct BackgroundAttachmentProperty : Property {
-    struct Registration : Property::Registration {
-        Registration() : Property::Registration(Properties::BACKGROUND_ATTACHMENT) {}
+    static constexpr auto ID = LonghandId::BACKGROUND_ATTACHMENT;
 
-        Rc<Property> initial() const override {
-            return makeRc<BackgroundAttachmentProperty>(self(), Vec<BackgroundAttachment>{Keywords::SCROLL});
+    static Rc<Property> initial() {
+        return makeRc<BackgroundAttachmentProperty>(Vec<BackgroundAttachment>{Keywords::SCROLL});
+    }
+
+    static Rc<Property> load(ComputedValues const& c) {
+        Vec<BackgroundAttachment> layers;
+        for (auto const& l : c.backgrounds->layers)
+            layers.pushBack(l.attachment);
+        return makeRc<BackgroundAttachmentProperty>(std::move(layers));
+    }
+
+    static Res<Rc<Property>> parse(Cursor<Css::Sst>& c) {
+
+        Vec<BackgroundAttachment> value;
+        while (not c.ended()) {
+            value.pushBack(try$(parseValue<BackgroundAttachment>(c)));
+            eatWhitespace(c);
         }
 
-        Rc<Property> load(ComputedValues const& c) const override {
-            Vec<BackgroundAttachment> layers;
-            for (auto const& l : c.backgrounds->layers)
-                layers.pushBack(l.attachment);
-            return makeRc<BackgroundAttachmentProperty>(self(), std::move(layers));
-        }
+        return Ok(makeRc<BackgroundAttachmentProperty>(std::move(value)));
+    }
 
-        Res<Rc<Property>> parse(Cursor<Css::Sst>& c) const override {
-
-            Vec<BackgroundAttachment> value;
-            while (not c.ended()) {
-                value.pushBack(try$(parseValue<BackgroundAttachment>(c)));
-                eatWhitespace(c);
-            }
-
-            return Ok(makeRc<BackgroundAttachmentProperty>(self(), std::move(value)));
-        }
+    struct Registration : LonghandRegistration {
+        Registration() : LonghandRegistration(Properties::BACKGROUND_ATTACHMENT) {}
     };
 
     Vec<BackgroundAttachment> _value;
 
-    BackgroundAttachmentProperty(Rc<Property::Registration> registration, Vec<BackgroundAttachment> value)
-        : Property(registration), _value(std::move(value)) {}
+    BackgroundAttachmentProperty(Vec<BackgroundAttachment> value)
+        : Property(registrationOf<BackgroundAttachmentProperty>()), _value(std::move(value)) {}
 
     void apply([[maybe_unused]] ComputedValues const& parent, ComputedValues& c, [[maybe_unused]] ComputationContext const& cx) const override {
         auto& layers = c.backgrounds.cow().layers;
@@ -103,27 +107,29 @@ export struct BackgroundAttachmentProperty : Property {
 
 // https://www.w3.org/TR/CSS22/colors.html#propdef-background-image
 export struct BackgroundImageProperty : Property {
-    struct Registration : Property::Registration {
-        Registration() : Property::Registration(Properties::BACKGROUND_IMAGE) {}
+    static constexpr auto ID = LonghandId::BACKGROUND_IMAGE;
 
-        Rc<Property> initial() const override {
-            return makeRc<BackgroundImageProperty>(self(), Vec<Image>{});
-        }
+    static Rc<Property> initial() {
+        return makeRc<BackgroundImageProperty>(Vec<Image>{});
+    }
 
-        Rc<Property> load(ComputedValues const&) const override {
-            return makeRc<BackgroundImageProperty>(self(), Vec<Image>{});
-        }
+    static Rc<Property> load(ComputedValues const&) {
+        return makeRc<BackgroundImageProperty>(Vec<Image>{});
+    }
 
-        Res<Rc<Property>> parse(Cursor<Css::Sst>&) const override {
-            // TODO
-            return Ok(makeRc<BackgroundImageProperty>(self(), Vec<Image>{}));
-        }
+    static Res<Rc<Property>> parse(Cursor<Css::Sst>&) {
+        // TODO
+        return Ok(makeRc<BackgroundImageProperty>(Vec<Image>{}));
+    }
+
+    struct Registration : LonghandRegistration {
+        Registration() : LonghandRegistration(Properties::BACKGROUND_IMAGE) {}
     };
 
     Vec<Image> _value;
 
-    BackgroundImageProperty(Rc<Property::Registration> registration, Vec<Image> value)
-        : Property(registration), _value(std::move(value)) {}
+    BackgroundImageProperty(Vec<Image> value)
+        : Property(registrationOf<BackgroundImageProperty>()), _value(std::move(value)) {}
 
     void apply(ComputedValues const&, ComputedValues&, [[maybe_unused]] ComputationContext const& cx) const override {
         // TODO
@@ -136,27 +142,29 @@ export struct BackgroundImageProperty : Property {
 
 // https://www.w3.org/TR/CSS22/colors.html#propdef-background-position
 export struct BackgroundPositionProperty : Property {
-    struct Registration : Property::Registration {
-        Registration() : Property::Registration(Properties::BACKGROUND_POSITION) {}
+    static constexpr auto ID = LonghandId::BACKGROUND_POSITION;
 
-        Rc<Property> initial() const override {
-            return makeRc<BackgroundPositionProperty>(self(), Vec<BackgroundPosition>{});
-        }
+    static Rc<Property> initial() {
+        return makeRc<BackgroundPositionProperty>(Vec<BackgroundPosition>{});
+    }
 
-        Rc<Property> load(ComputedValues const&) const override {
-            return makeRc<BackgroundPositionProperty>(self(), Vec<BackgroundPosition>{});
-        }
+    static Rc<Property> load(ComputedValues const&) {
+        return makeRc<BackgroundPositionProperty>(Vec<BackgroundPosition>{});
+    }
 
-        Res<Rc<Property>> parse(Cursor<Css::Sst>&) const override {
-            // TODO
-            return Ok(makeRc<BackgroundPositionProperty>(self(), Vec<BackgroundPosition>{}));
-        }
+    static Res<Rc<Property>> parse(Cursor<Css::Sst>&) {
+        // TODO
+        return Ok(makeRc<BackgroundPositionProperty>(Vec<BackgroundPosition>{}));
+    }
+
+    struct Registration : LonghandRegistration {
+        Registration() : LonghandRegistration(Properties::BACKGROUND_POSITION) {}
     };
 
     Vec<BackgroundPosition> _value;
 
-    BackgroundPositionProperty(Rc<Property::Registration> registration, Vec<BackgroundPosition> value)
-        : Property(registration), _value(std::move(value)) {}
+    BackgroundPositionProperty(Vec<BackgroundPosition> value)
+        : Property(registrationOf<BackgroundPositionProperty>()), _value(std::move(value)) {}
 
     void apply(ComputedValues const&, ComputedValues&, [[maybe_unused]] ComputationContext const& cx) const override {
         // TODO
@@ -169,28 +177,30 @@ export struct BackgroundPositionProperty : Property {
 
 // https://www.w3.org/TR/CSS22/colors.html#propdef-background-repeat
 export struct BackgroundRepeatProperty : Property {
-    struct Registration : Property::Registration {
-        Registration() : Property::Registration(Properties::BACKGROUND_REPEAT) {}
+    static constexpr auto ID = LonghandId::BACKGROUND_REPEAT;
 
-        Rc<Property> initial() const override {
-            return makeRc<BackgroundRepeatProperty>(self(), Vec<BackgroundRepeat>{BackgroundRepeat::REPEAT});
-        }
+    static Rc<Property> initial() {
+        return makeRc<BackgroundRepeatProperty>(Vec<BackgroundRepeat>{BackgroundRepeat::REPEAT});
+    }
 
-        Rc<Property> load(ComputedValues const&) const override {
-            // TODO
-            return makeRc<BackgroundRepeatProperty>(self(), Vec<BackgroundRepeat>{BackgroundRepeat::REPEAT});
-        }
+    static Rc<Property> load(ComputedValues const&) {
+        // TODO
+        return makeRc<BackgroundRepeatProperty>(Vec<BackgroundRepeat>{BackgroundRepeat::REPEAT});
+    }
 
-        Res<Rc<Property>> parse(Cursor<Css::Sst>&) const override {
-            // TODO
-            return Ok(makeRc<BackgroundRepeatProperty>(self(), Vec<BackgroundRepeat>{}));
-        }
+    static Res<Rc<Property>> parse(Cursor<Css::Sst>&) {
+        // TODO
+        return Ok(makeRc<BackgroundRepeatProperty>(Vec<BackgroundRepeat>{}));
+    }
+
+    struct Registration : LonghandRegistration {
+        Registration() : LonghandRegistration(Properties::BACKGROUND_REPEAT) {}
     };
 
     Vec<BackgroundRepeat> _value;
 
-    BackgroundRepeatProperty(Rc<Property::Registration> registration, Vec<BackgroundRepeat> value)
-        : Property(registration),
+    BackgroundRepeatProperty(Vec<BackgroundRepeat> value)
+        : Property(registrationOf<BackgroundRepeatProperty>()),
           _value(std::move(value)) {}
 
     void apply(ComputedValues const&, ComputedValues&, [[maybe_unused]] ComputationContext const& cx) const override {
@@ -202,73 +212,76 @@ export struct BackgroundRepeatProperty : Property {
     }
 };
 
-// https://www.w3.org/TR/CSS22/colors.html#x10
-export struct BackgroundProperty : Property {
-    struct Registration : Property::Registration {
-        Registration()
-            : Property::Registration(Properties::BACKGROUND, SHORTHAND) {}
-
-        Rc<Property> initial() const override {
-            return makeRc<BackgroundProperty>(self(), SpecifiedBackground{TRANSPARENT});
-        }
-
-        Rc<Property> load(ComputedValues const& c) const override {
-            return makeRc<BackgroundProperty>(self(), *c.backgrounds);
-        }
-
-        Res<Rc<Property>> parse(Cursor<Css::Sst>& c) const override {
-            SpecifiedBackground value;
-            value.color = try$(parseValue<Color>(c));
-            return Ok(makeRc<BackgroundProperty>(self(), std::move(value)));
-        }
-    };
-
-    SpecifiedBackground _value;
-
-    BackgroundProperty(Rc<Property::Registration> registration, SpecifiedBackground value)
-        : Property(registration), _value(std::move(value)) {}
-
-    Longhands expand(RegisteredPropertySet& registry, ComputedValues const&, ComputedValues&) const override {
-        return {
-            makeRc<BackgroundColorProperty>(
-                registry.resolveRegistration(Properties::BACKGROUND_COLOR, {}).take(),
-                _value.color
-            ),
-        };
-    }
-
-    void repr(Io::Emit& e) const override {
-        e("{}", _value);
-    }
-};
+// // https://www.w3.org/TR/CSS22/colors.html#x10
+// export struct BackgroundProperty : Property {
+//     struct Registration : Property::Registration {
+//         Registration()
+//             : Property::Registration(Properties::BACKGROUND, SHORTHAND) {}
+//
+//         Rc<Property> initial() const override {
+//             return makeRc<BackgroundProperty>(self(), SpecifiedBackground{TRANSPARENT});
+//         }
+//
+//         Rc<Property> load(ComputedValues const& c) const override {
+//             return makeRc<BackgroundProperty>(self(), *c.backgrounds);
+//         }
+//
+//         Res<Rc<Property>> parse(Cursor<Css::Sst>& c) const override {
+//             SpecifiedBackground value;
+//             value.color = try$(parseValue<Color>(c));
+//             return Ok(makeRc<BackgroundProperty>(self(), std::move(value)));
+//         }
+//     };
+//
+//     SpecifiedBackground _value;
+//
+//     BackgroundProperty(Rc<Property::Registration> registration, SpecifiedBackground value)
+//         : Property(registration), _value(std::move(value)) {}
+//
+//     Longhands expand(RegisteredPropertySet& registry, ComputedValues const&, ComputedValues&) const override {
+//         return {
+//             makeRc<BackgroundColorProperty>(
+//                 registry.resolveRegistration(Properties::BACKGROUND_COLOR, {}).take(),
+//                 _value.color
+//             ),
+//         };
+//     }
+//
+//     void repr(Io::Emit& e) const override {
+//         e("{}", _value);
+//     }
+// };
 
 // https://www.w3.org/TR/CSS22/colors.html#propdef-color
 export struct ColorProperty : Property {
-    struct Registration : Property::Registration {
+    static constexpr auto ID = LonghandId::COLOR;
+    static inline Flags<Options> const FLAGS = {INHERITED};
+
+    static Rc<Property> initial() {
+        return makeRc<ColorProperty>(BLACK);
+    }
+
+    static Rc<Property> load(ComputedValues const& c) {
+        return makeRc<ColorProperty>(c.color);
+    }
+
+    static Res<Rc<Property>> parse(Cursor<Css::Sst>& c) {
+        return Ok(makeRc<ColorProperty>(try$(parseValue<Color>(c))));
+    }
+
+    static void inherit(ComputedValues const& parent, ComputedValues& child) {
+        child.color = parent.color;
+    }
+
+    struct Registration : LonghandRegistration {
         Registration()
-            : Property::Registration(Properties::COLOR, INHERITED) {}
-
-        Rc<Property> initial() const override {
-            return makeRc<ColorProperty>(self(), BLACK);
-        }
-
-        void inherit(ComputedValues const& parent, ComputedValues& child) const override {
-            child.color = parent.color;
-        }
-
-        Rc<Property> load(ComputedValues const& c) const override {
-            return makeRc<ColorProperty>(self(), c.color);
-        }
-
-        Res<Rc<Property>> parse(Cursor<Css::Sst>& c) const override {
-            return Ok(makeRc<ColorProperty>(self(), try$(parseValue<Color>(c))));
-        }
+            : LonghandRegistration(Properties::COLOR, FLAGS) {}
     };
 
     Color _value;
 
-    ColorProperty(Rc<Property::Registration> registration, Color value)
-        : Property(registration), _value(value) {}
+    ColorProperty(Color value)
+        : Property(registrationOf<ColorProperty>()), _value(value) {}
 
     void apply(ComputedValues const& parent, ComputedValues& c, [[maybe_unused]] ComputationContext const& cx) const override {
         // In the color property, the used value of currentcolor is the resolved inherited value.
