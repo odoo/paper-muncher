@@ -16,10 +16,15 @@ namespace Vaev::Style {
 // https://drafts.csswg.org/css-display/#visibility
 export struct VisibilityProperty : Property {
     struct Registration : Property::Registration {
-        Registration() : Property::Registration(Properties::VISIBILITY) {}
+        Registration()
+            : Property::Registration(Properties::VISIBILITY, INHERITED) {}
 
         Rc<Property> initial() const override {
             return makeRc<VisibilityProperty>(self(), Visibility::VISIBLE);
+        }
+
+        void inherit(ComputedValues const& parent, ComputedValues& child) const override {
+            child.visibility = parent.visibility;
         }
 
         Rc<Property> load(ComputedValues const& c) const override {
