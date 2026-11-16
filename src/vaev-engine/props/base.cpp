@@ -798,13 +798,24 @@ export struct RegisteredPropertySet {
             return Ok(makeRc<BogusProperty>(registration, content, Error::invalidData("unknow property")));
 
         eatWhitespace(cursor);
-        if (options.has(ALLOW_DEFAULTING))
-            if (auto defaulted = _parseDefaulted(registration, cursor))
-                return defaulted;
+        if (options.has(ALLOW_DEFAULTING)) {
+            if (auto defaulted = _parseDefaulted(registration, cursor)) {
+                eatWhitespace(cursor);
+                if (not cursor.ended())
+                    return Error::invalidData("unexpected token after defaulting keyword");
 
-        if (options.has(ALLOW_TOGGLE))
-            if (auto toggle = _parseToggle(registration, cursor))
+                return defaulted;
+            }
+        }
+
+        if (options.has(ALLOW_TOGGLE)) {
+            if (auto toggle = _parseToggle(registration, cursor)) {
+                eatWhitespace(cursor);
+                if (not cursor.ended())
+                    return Error::invalidData("unexpected token after toggle");
                 return toggle;
+            }
+        }
 
         auto maybeProp = registration->parse(cursor);
         eatWhitespace(cursor);
