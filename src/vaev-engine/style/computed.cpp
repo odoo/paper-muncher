@@ -120,6 +120,11 @@ export struct ComputedValues {
         customProps.cow().put(name, value);
     }
 
+    void removeCustomProp(Symbol name) {
+        if (customProps->contains(name))
+            (void)customProps.cow().remove(name);
+    }
+
     Opt<Css::Content const&> getCustomProp(Symbol name) const {
         return customProps->lookup(name);
     }

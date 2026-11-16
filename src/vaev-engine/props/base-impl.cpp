@@ -61,6 +61,7 @@ struct PropertyTables {
     static constexpr usize SHORTHAND_LEN = enumLen<ShorthandId>();
 
     Array<Opt<LonghandProcs>, LONGHAND_LEN> longhandProcs = Array<Opt<LonghandProcs>, LONGHAND_LEN>::fill(Opt<LonghandProcs>{});
+    Array<Flags<Property::Options>, LONGHAND_LEN> longhandFlags = Array<Flags<Property::Options>, LONGHAND_LEN>::fill(Flags<Property::Options>{});
     Array<ComputationPhase, LONGHAND_LEN> longhandPhase = Array<ComputationPhase, LONGHAND_LEN>::fill(ComputationPhase::NORMAL);
     Array<Slice<Str>, LONGHAND_LEN> longhandAliases = Array<Slice<Str>, LONGHAND_LEN>::fill(Slice<Str>{});
 
@@ -85,6 +86,7 @@ struct PropertyTables {
             procs.inherit = &T::inherit;
 
         longhandProcs[id] = Some(procs);
+        longhandFlags[id] = T::FLAGS;
         longhandPhase[id] = T::PHASE;
         longhandAliases[id] = T::LEGACY_NAME_ALIASES;
     }
@@ -444,7 +446,17 @@ Res<> parseProperty(Symbol name, Cursor<Css::Sst>& c, Vec<Rc<Property>>& stylesh
     // NOTE: PARTIAL excludes "--" itself, which is reserved.
     //       https://drafts.csswg.org/css-variables/#defining-variables
     if (startWith(name.str(), "--"s) == Match::PARTIAL) {
-        auto prop = makeRc<CustomProperty>(CustomProperty::Value{name, c});
+        Union<Css::Content, Default> value = Css::Content{c};
+
+        auto keywordCursor = c;
+        eatWhitespace(keywordCursor);
+        if (auto keyword = _parseDefaulted(keywordCursor)) {
+            eatWhitespace(keywordCursor);
+            if (keywordCursor.ended())
+                value = keyword.take();
+        }
+
+        auto prop = makeRc<CustomProperty>(name, value);
         prop->important = important;
         stylesheet.pushBack(prop);
         return Ok();
@@ -538,6 +550,25 @@ Res<> parseProperty(Symbol name, Cursor<Css::Sst>& c, Vec<Rc<Property>>& stylesh
             return Error::invalidData("invalid property");
         }
     );
+}
+
+void inheritIndividualProperties(ComputedValues const& parent, ComputedValues& child) {
+    // NOTE: Properties flagged BULK_INHERITED are inherited by
+    //       inheritsComputedValues() copying their whole block.
+    for (usize i = 0; i < PropertyTables::LONGHAND_LEN; i++) {
+        auto const& procs = _propertyTables.longhandProcs[i];
+        if (not procs)
+            continue;
+
+        auto flags = _propertyTables.longhandFlags[i];
+        if (not flags.has(Property::Options::INHERITED) or flags.has(Property::Options::BULK_INHERITED))
+            continue;
+
+        if (procs->inherit)
+            procs->inherit(parent, child);
+        else
+            inheritProperty(static_cast<LonghandId>(i), parent, child);
+    }
 }
 
 void inheritProperty(LonghandId id, ComputedValues const& parent, ComputedValues& child) {

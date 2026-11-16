@@ -186,11 +186,18 @@ export struct OutlineShorthand {
         Opt<OutlineColorProperty::Value> color;
 
         // NOTE: auto is valid for both outline-style and outline-color,
-        //       it goes to the first one that is not set yet.
+        //       so it is only assigned once the other components are known:
+        //       it goes to whichever of them is not set yet.
+        usize autos = 0;
         while (true) {
             eatWhitespace(c);
             if (c.ended())
                 break;
+
+            if (c.skip(Css::Token::ident("auto"))) {
+                autos++;
+                continue;
+            }
 
             if (not width) {
                 if (auto maybeWidth = parseValue<LineWidth>(c)) {
@@ -215,6 +222,19 @@ export struct OutlineShorthand {
 
             break;
         }
+
+        if (autos and not style) {
+            style = Some(OutlineStyleProperty::Value{Keywords::AUTO});
+            autos--;
+        }
+
+        if (autos and not color) {
+            color = Some(OutlineColorProperty::Value{Keywords::AUTO});
+            autos--;
+        }
+
+        if (autos)
+            return Error::invalidData("too many auto in outline");
 
         if (not width and not style and not color)
             return Error::invalidData("expected outline-width, outline-style or outline-color");

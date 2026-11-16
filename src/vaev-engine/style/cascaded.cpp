@@ -47,7 +47,7 @@ export struct CascadedValues {
         Entry entry{specificity, property, ruleOrder, declarationOrder, important, origin, layerOrder};
 
         if (property->id == LonghandId::CUSTOM) {
-            auto name = property.is<CustomProperty>()->_value.name;
+            auto name = property.is<CustomProperty>()->_name;
             auto existing = _customProperties.lookupOrPutDefault(name, entry);
             if (entry >= existing)
                 existing = entry;

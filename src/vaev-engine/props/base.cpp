@@ -96,13 +96,6 @@ export struct Registration : Meta::NoCopy {
     }
 };
 
-
-export template <typename T>
-Rc<typename T::Registration> const& registrationOf() {
-    static auto registration = makeRc<typename T::Registration>();
-    return registration;
-}
-
 export enum struct ShorthandId {
 #define SHORTHAND(ID, NAME) ID,
 #include "defs/shorthands.inc"
@@ -199,14 +192,30 @@ export struct ShorthandRegistration : Registration {
 };
 
 Opt<PropertyId> lookupProperty(Symbol const& name);
+
 Slice<LonghandId> expandShorthand(ShorthandId id);
+
 export bool isLonghandImplemented(LonghandId id);
 export Rc<Property> initialProperty(LonghandId id);
 export Rc<Property> loadProperty(LonghandId id, ComputedValues const& c);
 ComputationPhase computationPhase(LonghandId id);
 void inheritProperty(LonghandId id, ComputedValues const& parent, ComputedValues& child);
+void inheritIndividualProperties(ComputedValues const& parent, ComputedValues& child);
+
 Res<> parseProperty(Symbol name, Cursor<Css::Sst>& c, Vec<Rc<Property>>& stylesheet, ParsingMode mode, bool important);
 Res<Rc<Property>> mustParseLonghand(LonghandId id, Cursor<Css::Sst>& c, ParsingMode mode);
+
+// MARK: CSS-wide Keywords ----------------------------------------------------
+
+// https://drafts.csswg.org/css-cascade/#defaulting-keywords
+enum struct Default {
+    INITIAL, //< represents the value defined as the property’s initial value.
+    INHERIT, //< represents the property’s computed value on the parent element.
+    UNSET,   //< acts as either inherit or initial, depending on whether the property is inherited or not.
+    REVERT,  //< rolls back the cascade to the cascaded value of the earlier origin.
+
+    _LEN,
+};
 
 export struct Property : Meta::NoCopy {
     enum struct Options : u8 {
@@ -268,8 +277,10 @@ export struct Property : Meta::NoCopy {
     //     return registration->flags.has(CUSTOM_PROPERTY);
     // }
 
-    virtual bool isDefaulted() const {
-        return false;
+    /// Returns the CSS-wide keyword this declaration was set to, if any.
+    /// https://drafts.csswg.org/css-cascade/#defaulting-keywords
+    virtual Opt<Default> cssWideKeyword() const {
+        return NONE;
     }
 
     bool isInitial() const {
@@ -294,26 +305,72 @@ export struct Property : Meta::NoCopy {
 // https://drafts.csswg.org/css-variables/#defining-variables
 // this symbolizes a custom property, it starts with `--` and can be used to store a value that can be reused in the stylesheet
 struct CustomProperty : Property {
-    struct Value {
-        Symbol name;
-        Css::Content content;
-    };
+    Symbol _name;
+    Union<Css::Content, Default> _value;
 
-    Value _value;
+    CustomProperty(Symbol name, Union<Css::Content, Default> value)
+        : Property(LonghandId::CUSTOM), _name(name), _value(value) {}
 
-    CustomProperty(Value const& value)
-        : Property(LonghandId::CUSTOM), _value(value) {}
+    void _inherit(ComputedValues const& parent, ComputedValues& c) const {
+        if (auto value = parent.getCustomProp(_name))
+            c.setCustomProp(_name, *value);
+        else
+            c.removeCustomProp(_name);
+    }
 
-    void apply([[maybe_unused]] ComputedValues const& parent, ComputedValues& c, [[maybe_unused]] ComputationContext const& cx) const override {
-        c.setCustomProp(_value.name, _value.content);
+    void apply(ComputedValues const& parent, ComputedValues& c, [[maybe_unused]] ComputationContext const& cx) const override {
+        _value.visit(
+            [&](Css::Content const& content) {
+                c.setCustomProp(_name, content);
+            },
+            [&](Default keyword) {
+                // The CSS-wide keywords can be used in custom properties, with the same meaning as in any another property.
+                // Note: That is, they’re interpreted at cascaded-value time as normal, and are not preserved as the custom property’s value,
+                // and thus are not substituted in by the corresponding variable.
+                // https://drafts.csswg.org/css-variables/#defining-variables
+                if (keyword == Default::INITIAL) {
+                    // The initial value of a custom property is a guaranteed-invalid value.
+                    // https://drafts.csswg.org/css-variables/#guaranteed-invalid
+                    c.removeCustomProp(_name);
+                } else if (keyword == Default::INHERIT or keyword == Default::UNSET) {
+                    // Custom properties are inherited, so unset acts as inherit.
+                    // https://drafts.csswg.org/css-variables/#defining-variables
+                    _inherit(parent, c);
+                } else if (keyword == Default::REVERT) {
+                    // TODO: Implement revert()
+                } else {
+                    unreachable();
+                }
+            }
+        );
+    }
+
+    Opt<Default> cssWideKeyword() const override {
+        if (auto keyword = _value.is<Default>())
+            return Some(*keyword);
+        return NONE;
     }
 
     Res<> serialize(Io::TextWriter& w) const override {
-        return Css::serialize(w, _value.content);
+        return _value.visit(
+            [&](Css::Content const& content) {
+                return Css::serialize(w, content);
+            },
+            [&](Default keyword) {
+                return serializeValue(w, keyword);
+            }
+        );
     }
 
     void repr(Io::Emit& e) const override {
-        e("(custom {} {})", _value.name, _value.content);
+        _value.visit(
+            [&](Css::Content const& content) {
+                e("(custom {} {})", _name, content);
+            },
+            [&](Default keyword) {
+                e("(custom {} (defaulted {}))", _name, keyword);
+            }
+        );
     }
 };
 
@@ -498,7 +555,7 @@ struct DeferredProperty : Property {
             Vec<Rc<Property>> longhands;
 
             // FIXME: Really hacky.
-            try$(parseProperty(Symbol::from(nameOf(shorthandId)), cursor, longhands, _mode, false));
+            try$(parseProperty(Symbol::from(propertyName(shorthandId)), cursor, longhands, _mode, false));
 
             _cachedExpansion() = ExpansionCacheEntry{
                 .id = shorthandId,
@@ -534,15 +591,6 @@ struct DeferredProperty : Property {
 
 // MARK: Defaulted Property ----------------------------------------------------
 
-enum struct Default {
-    INITIAL, //< represents the value defined as the property’s initial value.
-    INHERIT, //< represents the property’s computed value on the parent element.
-    UNSET,   //< acts as either inherit or initial, depending on whether the property is inherited or not.
-    REVERT,  //< rolls back the cascade to the cascaded value of the earlier origin.
-
-    _LEN,
-};
-
 struct DefaultedProperty : Property {
     Default _value;
 
@@ -577,8 +625,8 @@ struct DefaultedProperty : Property {
         }
     }
 
-    bool isDefaulted() const override {
-        return true;
+    Opt<Default> cssWideKeyword() const override {
+        return Some(_value);
     }
 
     Res<> serialize(Io::TextWriter& w) const override {
@@ -642,7 +690,7 @@ export void inheritsComputedValues(ComputedValues const& parent, ComputedValues&
     child.table = parent.table;
 
     // Handle the rest of the properties
-    // FIXME
+    inheritIndividualProperties(parent, child);
 }
 
 export Rc<ComputedValues> inheritsComputedValues(ComputedValues const& parent) {
