@@ -204,6 +204,7 @@ Rc<Property> initialProperty(LonghandId id);
 Rc<Property> loadProperty(LonghandId id, ComputedValues const& c);
 void inheritProperty(LonghandId id, ComputedValues const& parent, ComputedValues& child);
 Res<> parseProperty(PropertyId id, Cursor<Css::Sst>& c, Vec<Rc<Property>>& stylesheet, ParsingMode = ParsingMode::STANDARD, bool important = false);
+Res<Rc<Property>> mustParseLonghand(LonghandId id, Cursor<Css::Sst>& c, ParsingMode mode);
 
 export struct Property : Meta::NoCopy {
     enum struct Options : u8 {
@@ -380,11 +381,12 @@ struct CustomProperty : Property {
 /// A property that could not be parsed, it's used to store the value
 /// as-is and apply it with the cascade and custom properties
 struct DeferredProperty : Property {
-    PropertyId _origin;
+    Opt<ShorthandId> _shorthand;
     Css::Content _value;
+    ParsingMode _mode;
 
-    DeferredProperty(LonghandId id, PropertyId origin, Css::Content value)
-        : Property(id), _origin(origin), _value(value) {}
+    DeferredProperty(LonghandId id, Opt<ShorthandId> shorthand, Css::Content value, ParsingMode mode)
+        : Property(id), _shorthand(shorthand), _value(value), _mode(mode) {}
 
     // https://www.w3.org/TR/css-variables-1/#substitute-a-var
     static Res<bool> _expandVariable(Cursor<Css::Sst>& c, Map<Symbol, Css::Content> const& env, Css::Content& out, usize depth) {
@@ -469,7 +471,7 @@ struct DeferredProperty : Property {
         Cursor<Css::Sst> cursor = _value;
         Css::Content out;
 
-        if (auto [shorthandId] = _origin.is<ShorthandId>) {
+        if (auto [shorthandId] = _shorthand) {
             auto& entry = _cachedExpansion();
             if (shorthandId == entry.id and &child == entry.computedValues) {
                 for (auto const& longhand : entry.longhands) {
@@ -480,7 +482,6 @@ struct DeferredProperty : Property {
             }
         }
 
-
         try$(_expandContent(cursor, *child.customProps, out, 0));
         cursor = out;
 
@@ -489,11 +490,24 @@ struct DeferredProperty : Property {
         // See: https://www.w3.org/TR/css-syntax-3/#parse-declaration
         eatWhitespace(cursor);
 
-        auto prop = parseProperty(id, cursor, ParsingMode::STANDARD);
-        if (not prop and debugProperties)
-            logWarn("failed to parse declaration: {}: {}: {}", propertyName(id), prop, out);
+        if (auto [shorthandId] = _shorthand) {
+            Vec<Rc<Property>> longhands;
+            try$(parseProperty(shorthandId, cursor, longhands, _mode));
 
-        return prop;
+            _cachedExpansion() = ExpansionCacheEntry{
+                .id = shorthandId,
+                .computedValues = &child,
+                .longhands = longhands,
+            };
+
+            for (auto const& longhand : longhands) {
+                if (longhand->id == id)
+                    return Ok(longhand);
+            }
+            panic("incomplete shorthand expansion");
+        }
+
+        return mustParseLonghand(id, cursor, _mode);
     }
 
     void apply(ComputedValues const& parent, ComputedValues& c, ComputationContext const& cx) const override {

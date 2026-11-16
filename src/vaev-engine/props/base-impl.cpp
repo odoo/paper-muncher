@@ -394,6 +394,28 @@ static bool _containsVariable(Cursor<Css::Sst> c) {
     return false;
 }
 
+// FIXME: This looks very ad-hoc and hacky.
+Res<Rc<Property>> mustParseLonghand(LonghandId id, Cursor<Css::Sst>& c, ParsingMode mode) {
+    if (auto defaultValue = _parseDefaulted(c)) {
+        eatWhitespace(c);
+        if (not c.ended())
+            return Error::invalidData("unexpected tokens");
+
+        auto prop = makeRc<DefaultedProperty>(id, defaultValue.expect());
+        return Ok(prop);
+    }
+
+    if (auto property = _expectProcs(id).parse(c, mode)) {
+        eatWhitespace(c);
+        if (not c.ended())
+            return Error::invalidData("unexpected tokens");
+
+        return Ok(property.take());
+    }
+
+    return Error::invalidData("invalid property");
+}
+
 Res<> parseProperty(PropertyId id, Cursor<Css::Sst>& c, Vec<Rc<Property>>& stylesheet, ParsingMode mode, bool important) {
     eatWhitespace(c);
 
@@ -426,7 +448,7 @@ Res<> parseProperty(PropertyId id, Cursor<Css::Sst>& c, Vec<Rc<Property>>& style
             }
 
             if (_containsVariable(c)) {
-                auto prop = makeRc<DeferredProperty>(longhandId, id, c);
+                auto prop = makeRc<DeferredProperty>(longhandId, NONE, c, mode);
                 prop->important = important;
                 stylesheet.pushBack(prop);
                 return Ok();
@@ -469,7 +491,7 @@ Res<> parseProperty(PropertyId id, Cursor<Css::Sst>& c, Vec<Rc<Property>>& style
 
             if (_containsVariable(c)) {
                 for (auto const& longhandId : expandShorthand(shorthandId)) {
-                    auto prop = makeRc<DeferredProperty>(longhandId, id, c);
+                    auto prop = makeRc<DeferredProperty>(longhandId, Some(shorthandId), c, mode);
                     prop->important = important;
                     stylesheet.pushBack(prop);
                 }
