@@ -29,8 +29,6 @@ namespace Properties {
 
 } // namespace Properties
 
-export struct RegisteredPropertySet;
-
 export struct ComputationContext :
     RelativeLengthContextData,
     FontSizeContextData {
@@ -200,11 +198,12 @@ export struct ShorthandRegistration : Registration {
     virtual Slice<Symbol> longhands() const = 0;
 };
 
-Opt<PropertyId> lookupProperty(Symbol name);
+Opt<PropertyId> lookupProperty(Symbol const& name);
+Slice<LonghandId> expandShorthand(ShorthandId id);
 Rc<Property> initialProperty(LonghandId id);
 Rc<Property> loadProperty(LonghandId id, ComputedValues const& c);
 void inheritProperty(LonghandId id, ComputedValues const& parent, ComputedValues& child);
-Res<Rc<Property>> parseProperty(LonghandId id, Cursor<Css::Sst>& c, ParsingMode mode = ParsingMode::STANDARD);
+Res<> parseProperty(PropertyId id, Cursor<Css::Sst>& c, Vec<Rc<Property>>& stylesheet, ParsingMode = ParsingMode::STANDARD, bool important = false);
 
 export struct Property : Meta::NoCopy {
     enum struct Options : u8 {
@@ -235,8 +234,7 @@ export struct Property : Meta::NoCopy {
     LonghandId id;
     bool important = false;
 
-    Property(LonghandId id)
-        : id(id) {}
+    Property(LonghandId id) : id(id) {}
 
     virtual ~Property() = default;
 
@@ -256,9 +254,9 @@ export struct Property : Meta::NoCopy {
     /// altering the target element's computed values.
     Rc<Property> computedValue(ComputedValues const& parent, ComputedValues& child) const {
         ComputationContext cx{};
-        auto save = registration->load(child);
+        auto save = loadProperty(id, child);
         apply(parent, child, cx);
-        auto result = registration->load(child);
+        auto result = loadProperty(id, child);
         save->apply(parent, child, cx);
         return result;
     }
@@ -382,10 +380,11 @@ struct CustomProperty : Property {
 /// A property that could not be parsed, it's used to store the value
 /// as-is and apply it with the cascade and custom properties
 struct DeferredProperty : Property {
+    PropertyId _origin;
     Css::Content _value;
 
-    DeferredProperty(LonghandId id, Css::Content value)
-        : Property(id), _value(value) {}
+    DeferredProperty(LonghandId id, PropertyId origin, Css::Content value)
+        : Property(id), _origin(origin), _value(value) {}
 
     // https://www.w3.org/TR/css-variables-1/#substitute-a-var
     static Res<bool> _expandVariable(Cursor<Css::Sst>& c, Map<Symbol, Css::Content> const& env, Css::Content& out, usize depth) {
@@ -455,9 +454,33 @@ struct DeferredProperty : Property {
         return Ok();
     }
 
+    struct ExpansionCacheEntry {
+        ShorthandId id = ShorthandId::ALL;
+        ComputedValues* computedValues = nullptr;
+        Vec<Rc<Property>> longhands = {};
+    };
+
+    ExpansionCacheEntry& _cachedExpansion() const {
+        static ExpansionCacheEntry _cached = {};
+        return _cached;
+    }
+
     Res<Rc<Property>> _expandProperty(ComputedValues& child) const {
         Cursor<Css::Sst> cursor = _value;
         Css::Content out;
+
+        if (auto [shorthandId] = _origin.is<ShorthandId>) {
+            auto& entry = _cachedExpansion();
+            if (shorthandId == entry.id and &child == entry.computedValues) {
+                for (auto const& longhand : entry.longhands) {
+                    if (longhand->id == id)
+                        return Ok(longhand);
+                }
+                panic("incomplete shorthand expansion");
+            }
+        }
+
+
         try$(_expandContent(cursor, *child.customProps, out, 0));
         cursor = out;
 
@@ -605,49 +628,20 @@ Rc<ComputedValues> inheritsComputedValues(ComputedValues const& parent) {
     return computedValues;
 }
 
-Res<Rc<Property>> _parseDefaulted(LonghandId id, Cursor<Css::Sst>& content) {
-        Default value;
-        if (content.skip(Css::Token::ident("initial"))) {
-            value = Default::INITIAL;
-        } else if (content.skip(Css::Token::ident("inherit"))) {
-            value = Default::INHERIT;
-        } else if (content.skip(Css::Token::ident("unset"))) {
-            value = Default::UNSET;
-        } else {
-            return Error::invalidData("unknown declaration");
-        }
+Res<> parseProperty(Symbol const& propertyName, Str propertyValue, Vec<Rc<Property>>& stylesheet) {
+    Css::Lexer lex{propertyValue};
+    Diag::Collector diags = Diag::Collector::ignore();
+    auto [content, _] = Css::consumeDeclarationValue(lex, diags);
 
-        return Ok(makeRc<DefaultedProperty>(id, value));
+    if (auto [id] = lookupProperty(propertyName)) {
+        auto cursor = Cursor<Css::Sst>{content};
+        return parseProperty(id, cursor, stylesheet);
+    } else {
+        return Error::invalidData("unknown property");
     }
+}
 
-    Rc<Property> _deferProperty(LonghandId id, Slice<Css::Sst> content) {
-        return makeRc<DeferredProperty>(id, content);
-    }
-
-    Res<Rc<Property>> parseValue(Symbol const& propertyName, Cursor<Css::Sst> content, Flags<Options> options) {
-        Cursor cursor = content;
-
-        auto id = lookupProperty(propertyName).okOr(Error::invalidData("unknown property"));
-
-        id.visit([])
-
-        eatWhitespace(cursor);
-        if (auto defaulted = _parseDefaulted(id, cursor))
-            return defaulted;
-
-        auto maybeProp = registration->parse(cursor, ParsingMode::STANDARD);
-        eatWhitespace(cursor);
-        if (not cursor.ended())
-            maybeProp = Error::invalidData("unexpected token after property value");
-
-        if (not maybeProp) {
-            return Ok(_deferProperty(registration, content));
-        }
-
-        return maybeProp;
-    }
-
-Res<Rc<Property>> parseDeclaration(Css::Sst const& sst) {
+Res<> parseDeclaration(Css::Sst const& sst, Vec<Rc<Property>>& stylesheet) {
     if (sst != Css::Sst::DECL)
         panic("expected declaration");
 
@@ -656,135 +650,50 @@ Res<Rc<Property>> parseDeclaration(Css::Sst const& sst) {
 
     auto propertyName = Symbol::from(sst.token.data);
     Cursor<Css::Sst> content = sst.content;
-    auto prop = try$(parseValue(propertyName, content));
-    prop->important = sst.flags.has(Css::Sst::IMPORTANT);
-    return Ok(prop);
+
+    if (auto [id] = lookupProperty(propertyName)) {
+        auto cursor = Cursor<Css::Sst>{sst.content};
+        bool important = sst.flags.has(Css::Sst::IMPORTANT);
+        return parseProperty(id, content, stylesheet, ParsingMode::STANDARD, important);
+    } else {
+        return Error::invalidData("unknown property");
+    }
 }
 
-Res<Rc<Property>> parseValue(Symbol const& propertyName, Str propertyValue) {
-    Css::Lexer lex{propertyValue};
-    Diag::Collector diags = Diag::Collector::ignore();
-    auto [content, _] = Css::consumeDeclarationValue(lex, diags);
-    return parseValue(propertyName, content);
-}
-
-Vec<Rc<Property>> parseDeclarations(Css::Content const& sst) {
-    Vec<Rc<Property>> res;
-
+void parseDeclarations(Css::Content const& sst, Vec<Rc<Property>>& stylesheet) {
     for (auto const& item : sst) {
         if (item != Css::Sst::DECL)
             continue;
 
-        auto prop = parseDeclaration(item);
-        if (not prop)
-            continue;
-        res.pushBack(prop.take());
+        (void)parseDeclaration(item, stylesheet);
     }
-
-    return res;
 }
 
-Vec<Rc<Property>> parseDeclarations(Css::Sst const& sst) {
-    return parseDeclarations(sst.content);
+void parseDeclarations(Css::Sst const& sst, Vec<Rc<Property>>& stylesheet) {
+    return parseDeclarations(sst.content, stylesheet);
 }
 
-Vec<Rc<Property>> parseDeclarations(Str style) {
+void parseDeclarations(Str style, Vec<Rc<Property>>& stylesheet) {
     Css::Lexer lex{style};
     auto diags = Diag::Collector::ignore();
     auto sst = Css::consumeDeclarationList(lex, diags, true);
-    return parseDeclarations(sst);
+    return parseDeclarations(sst, stylesheet);
 }
 
-Opt<Rc<Property>> parsePresentationAttribute(Symbol attrName, Str value) {
-    // FIXME: Could the caller call toLower ?
-    Symbol lower = Symbol::from(toLower(attrName.str()));
-    auto id = try$(lookupProperty(lower));
-
-    Css::Lexer lex{value};
-    Diag::Collector diags = Diag::Collector::ignore();
-    auto [content, _] = Css::consumeDeclarationValue(lex, diags);
-    Cursor<Css::Sst> cursor = content;
-
-    return parseProperty(try$(id.is<LonghandId>()), cursor, ParsingMode::PRESENTATION_ATTRIBUTE).ok();
+Opt<Rc<Property>> parsePresentationAttribute(Symbol attrName, Str value, Vec<Rc<Property>>& stylesheet) {
+    // // FIXME: Could the caller call toLower ?
+    // Symbol lower = Symbol::from(toLower(attrName.str()));
+    // auto id = try$(lookupProperty(lower));
+    //
+    // Css::Lexer lex{value};
+    // Diag::Collector diags = Diag::Collector::ignore();
+    // auto [content, _] = Css::consumeDeclarationValue(lex, diags);
+    // Cursor<Css::Sst> cursor = content;
+    //
+    // return parseProperty(try$(id.is<LonghandId>()), cursor, ParsingMode::PRESENTATION_ATTRIBUTE).ok();
+    // FIXME
+    return NONE;
 }
 
-export struct _RegisteredPropertySet {
-    Map<Symbol, Symbol> _legacyNameAlias;
-    Map<Symbol, Rc<LonghandRegistration>> _registrations;
-    Map<Symbol, Rc<LonghandRegistration>> _presentationAttributes;
-
-    Vec<Rc<LonghandRegistration>> _individuallyInherited;
-
-    enum struct Options : u8 {
-        GENERATE_BOGUS = 1 << 0,
-        GENERATE_CUSTOM_PROPERTY = 1 << 1,
-        DEFER_UNPARSABLE = 1 << 2,
-        ALLOW_DEFAULTING = 1 << 3,
-        ALLOW_TOGGLE = 1 << 4,
-
-        TOP_LEVEL = GENERATE_BOGUS | GENERATE_CUSTOM_PROPERTY | DEFER_UNPARSABLE | ALLOW_DEFAULTING | ALLOW_TOGGLE,
-    };
-
-    using enum Options;
-
-    auto const& registrations() const {
-        return _registrations;
-    }
-
-    // MARK: Initial -----------------------------------------------------------
-
-    // MARK: Inherit -----------------------------------------------------------
-
-    // MARK: Value Parsing -----------------------------------------------------
-
-    // MARK: Declaration Parsing -----------------------------------------------
-
-    Res<Rc<Property>> parseDeclaration(Css::Sst const& sst, Flags<Options> options) {
-        if (sst != Css::Sst::DECL)
-            panic("expected declaration");
-
-        if (sst.token != Css::Token::IDENT)
-            panic("expected ident");
-
-        auto propertyName = Symbol::from(sst.token.data);
-        Cursor<Css::Sst> content = sst.content;
-        auto prop = try$(parseValue(propertyName, content, options));
-        prop->important = sst.flags.has(Css::Sst::IMPORTANT);
-        return Ok(prop);
-    }
-
-    Vec<Rc<Property>> parseDeclarations(Css::Content const& sst, Flags<Options> options) {
-        Vec<Rc<Property>> res;
-
-        for (auto const& item : sst) {
-            if (item != Css::Sst::DECL)
-                continue;
-
-            auto prop = parseDeclaration(item, options);
-            if (not prop)
-                continue;
-            res.pushBack(prop.take());
-        }
-
-        return res;
-    }
-
-    Vec<Rc<Property>> parseDeclarations(Css::Sst const& sst, Flags<Options> options) {
-        return parseDeclarations(sst.content, options);
-    }
-
-    Vec<Rc<Property>> parseDeclarations(Str style, Flags<Options> options) {
-        Css::Lexer lex{style};
-        auto diags = Diag::Collector::ignore();
-        auto sst = Css::consumeDeclarationList(lex, diags, true);
-        return parseDeclarations(sst, options);
-    }
-
-    Opt<Rc<Property>> parsePresentationAttribute(Symbol attrName, Str value) const {
-        Symbol lower = Symbol::from(toLower(attrName.str()));
-        auto registration = try$(_presentationAttributes.lookup(lower));
-        return registration->parsePresentationAttribute(value).ok();
-    }
-};
 
 } // namespace Vaev::Style

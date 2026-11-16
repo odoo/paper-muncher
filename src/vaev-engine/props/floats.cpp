@@ -30,10 +30,6 @@ export struct FloatProperty : Property {
         return Ok(makeRc<FloatProperty>(try$(parseValue<Float>(c))));
     }
 
-    struct Registration : LonghandRegistration {
-        Registration() : LonghandRegistration(Properties::FLOAT) {}
-    };
-
     Float _value;
 
     FloatProperty(Float value)
@@ -66,10 +62,6 @@ export struct ClearProperty : Property {
     static Res<Rc<Property>> parse(Cursor<Css::Sst>& c, ParsingMode) {
         return Ok(makeRc<ClearProperty>(try$(parseValue<Clear>(c))));
     }
-
-    struct Registration : LonghandRegistration {
-        Registration() : LonghandRegistration(Properties::CLEAR) {}
-    };
 
     Clear _value;
 

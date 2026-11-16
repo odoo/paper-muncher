@@ -32,10 +32,6 @@ export struct PaddingTopProperty : Property {
         return Ok(makeRc<PaddingTopProperty>(try$(parseValue<Calc<PercentOr<Length>>>(c))));
     }
 
-    struct Registration : LonghandRegistration {
-        Registration() : LonghandRegistration(Properties::PADDING_TOP) {}
-    };
-
     Calc<PercentOr<Length>> _value;
 
     PaddingTopProperty(Calc<PercentOr<Length>> value)
@@ -68,10 +64,6 @@ export struct PaddingRightProperty : Property {
     static Res<Rc<Property>> parse(Cursor<Css::Sst>& c, ParsingMode) {
         return Ok(makeRc<PaddingRightProperty>(try$(parseValue<Calc<PercentOr<Length>>>(c))));
     }
-
-    struct Registration : LonghandRegistration {
-        Registration() : LonghandRegistration(Properties::PADDING_RIGHT) {}
-    };
 
     Calc<PercentOr<Length>> _value;
 
@@ -106,10 +98,6 @@ export struct PaddingBottomProperty : Property {
         return Ok(makeRc<PaddingBottomProperty>(try$(parseValue<Calc<PercentOr<Length>>>(c))));
     }
 
-    struct Registration : LonghandRegistration {
-        Registration() : LonghandRegistration(Properties::PADDING_BOTTOM) {}
-    };
-
     Calc<PercentOr<Length>> _value;
 
     PaddingBottomProperty(Calc<PercentOr<Length>> value)
@@ -143,10 +131,6 @@ export struct PaddingLeftProperty : Property {
         return Ok(makeRc<PaddingLeftProperty>(try$(parseValue<Calc<PercentOr<Length>>>(c))));
     }
 
-    struct Registration : LonghandRegistration {
-        Registration() : LonghandRegistration(Properties::PADDING_LEFT) {}
-    };
-
     Calc<PercentOr<Length>> _value;
 
     PaddingLeftProperty(Calc<PercentOr<Length>> value)
@@ -179,10 +163,6 @@ export struct PaddingInlineStartProperty : Property {
     static Res<Rc<Property>> parse(Cursor<Css::Sst>& c, ParsingMode) {
         return Ok(makeRc<PaddingInlineStartProperty>(try$(parseValue<Calc<PercentOr<Length>>>(c))));
     }
-
-    struct Registration : LonghandRegistration {
-        Registration() : LonghandRegistration(Properties::PADDING_INLINE_START) {}
-    };
 
     Calc<PercentOr<Length>> _value;
 
@@ -220,10 +200,6 @@ export struct PaddingInlineEndProperty : Property {
     static Res<Rc<Property>> parse(Cursor<Css::Sst>& c, ParsingMode) {
         return Ok(makeRc<PaddingInlineEndProperty>(try$(parseValue<Calc<PercentOr<Length>>>(c))));
     }
-
-    struct Registration : LonghandRegistration {
-        Registration() : LonghandRegistration(Properties::PADDING_INLINE_END) {}
-    };
 
     Calc<PercentOr<Length>> _value;
 

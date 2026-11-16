@@ -30,11 +30,6 @@ struct ListStyleImageProperty : Property {
         child.list.cow().image = parent.list->image;
     }
 
-    struct Registration : LonghandRegistration {
-        Registration()
-            : LonghandRegistration(Properties::LIST_STYLE_IMAGE, FLAGS) {}
-    };
-
     ListImage _value;
 
     ListStyleImageProperty(ListImage value)
@@ -71,11 +66,6 @@ struct ListStyleTypeProperty : Property {
         child.list.cow().type = parent.list->type;
     }
 
-    struct Registration : LonghandRegistration {
-        Registration()
-            : LonghandRegistration(Properties::LIST_STYLE_TYPE, FLAGS) {}
-    };
-
     ListType _value;
 
     ListStyleTypeProperty(ListType value)
@@ -111,11 +101,6 @@ struct ListStylePositionProperty : Property {
     static void inherit(ComputedValues const& parent, ComputedValues& child) {
         child.list.cow().position = parent.list->position;
     }
-
-    struct Registration : LonghandRegistration {
-        Registration()
-            : LonghandRegistration(Properties::LIST_STYLE_POSITION, FLAGS) {}
-    };
 
     ListPosition _value;
 
@@ -238,11 +223,6 @@ struct MarkerSideProperty : Property {
     static void inherit(ComputedValues const& parent, ComputedValues& child) {
         child.list.cow().markerSide = parent.list->markerSide;
     }
-
-    struct Registration : LonghandRegistration {
-        Registration()
-            : LonghandRegistration(Properties::MARKER_SIDE, FLAGS) {}
-    };
 
     MarkerSide _value;
 

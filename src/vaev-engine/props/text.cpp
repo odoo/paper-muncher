@@ -60,11 +60,6 @@ export struct TextAlignProperty : Property {
         child.text.cow().align = parent.text->align;
     }
 
-    struct Registration : LonghandRegistration {
-        Registration()
-            : LonghandRegistration(Properties::TEXT_ALIGN, FLAGS) {}
-    };
-
     TextAlign _value;
 
     TextAlignProperty(TextAlign value)
@@ -122,11 +117,6 @@ export struct TextTransformProperty : Property {
         child.text.cow().transform = parent.text->transform;
     }
 
-    struct Registration : LonghandRegistration {
-        Registration()
-            : LonghandRegistration(Properties::TEXT_TRANSFORM, FLAGS) {}
-    };
-
     TextTransform _value;
 
     TextTransformProperty(TextTransform value)
@@ -183,11 +173,6 @@ export struct WhiteSpaceProperty : Property {
     static void inherit(ComputedValues const& parent, ComputedValues& child) {
         child.text.cow().whiteSpace = parent.text->whiteSpace;
     }
-
-    struct Registration : LonghandRegistration {
-        Registration()
-            : LonghandRegistration(Properties::WHITE_SPACE, FLAGS) {}
-    };
 
     WhiteSpace _value;
 

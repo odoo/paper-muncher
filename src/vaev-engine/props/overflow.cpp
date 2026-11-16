@@ -31,10 +31,6 @@ export struct OverflowXProperty : Property {
         return Ok(makeRc<OverflowXProperty>(try$(parseValue<Overflow>(c))));
     }
 
-    struct Registration : LonghandRegistration {
-        Registration() : LonghandRegistration(Properties::OVERFLOW_X) {}
-    };
-
     Overflow _value;
 
     OverflowXProperty(Overflow value)
@@ -68,10 +64,6 @@ export struct OverflowYProperty : Property {
     static Res<Rc<Property>> parse(Cursor<Css::Sst>& c, ParsingMode) {
         return Ok(makeRc<OverflowYProperty>(try$(parseValue<Overflow>(c))));
     }
-
-    struct Registration : LonghandRegistration {
-        Registration() : LonghandRegistration(Properties::OVERFLOW_Y) {}
-    };
 
     Overflow _value;
 
@@ -107,10 +99,6 @@ export struct OverflowBlockProperty : Property {
         return Ok(makeRc<OverflowBlockProperty>(try$(parseValue<Overflow>(c))));
     }
 
-    struct Registration : LonghandRegistration {
-        Registration() : LonghandRegistration(Properties::OVERFLOW_BLOCK) {}
-    };
-
     Overflow _value;
 
     OverflowBlockProperty(Overflow value)
@@ -144,10 +132,6 @@ export struct OverflowInlineProperty : Property {
     static Res<Rc<Property>> parse(Cursor<Css::Sst>& c, ParsingMode) {
         return Ok(makeRc<OverflowInlineProperty>(try$(parseValue<Overflow>(c))));
     }
-
-    struct Registration : LonghandRegistration {
-        Registration() : LonghandRegistration(Properties::OVERFLOW_INLINE) {}
-    };
 
     Overflow _value;
 

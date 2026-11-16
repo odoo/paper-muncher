@@ -32,10 +32,6 @@ export struct BoxSizingProperty : Property {
         return Ok(makeRc<BoxSizingProperty>(try$(parseValue<BoxSizing>(c))));
     }
 
-    struct Registration : LonghandRegistration {
-        Registration() : LonghandRegistration(Properties::BOX_SIZING) {}
-    };
-
     BoxSizing _value;
 
     BoxSizingProperty(BoxSizing value)
@@ -70,11 +66,6 @@ export struct WidthProperty : Property {
     static Res<Rc<Property>> parse(Cursor<Css::Sst>& c, ParsingMode mode) {
         return Ok(makeRc<WidthProperty>(try$(parseValueWithUnitlessLength<Size>(c, mode))));
     }
-
-    struct Registration : LonghandRegistration {
-        Registration()
-            : LonghandRegistration(Properties::WIDTH, FLAGS) {}
-    };
 
     Size _value;
 
@@ -112,11 +103,6 @@ export struct HeightProperty : Property {
         return Ok(makeRc<HeightProperty>(try$(parseValueWithUnitlessLength<Size>(c, mode))));
     }
 
-    struct Registration : LonghandRegistration {
-        Registration()
-            : LonghandRegistration(Properties::HEIGHT, FLAGS) {}
-    };
-
     Size _value;
 
     HeightProperty(Size value)
@@ -151,10 +137,6 @@ export struct MinWidthProperty : Property {
         return Ok(makeRc<MinWidthProperty>(try$(parseValue<Size>(c))));
     }
 
-    struct Registration : LonghandRegistration {
-        Registration() : LonghandRegistration(Properties::MIN_WIDTH) {}
-    };
-
     Size _value;
 
     MinWidthProperty(Size value)
@@ -188,10 +170,6 @@ export struct MinHeightProperty : Property {
     static Res<Rc<Property>> parse(Cursor<Css::Sst>& c, ParsingMode) {
         return Ok(makeRc<MinHeightProperty>(try$(parseValue<Size>(c))));
     }
-
-    struct Registration : LonghandRegistration {
-        Registration() : LonghandRegistration(Properties::MIN_HEIGHT) {}
-    };
 
     Size _value;
 
@@ -228,10 +206,6 @@ export struct MaxWidthProperty : Property {
         return Ok(makeRc<MaxWidthProperty>(try$(parseValue<MaxSize>(c))));
     }
 
-    struct Registration : LonghandRegistration {
-        Registration() : LonghandRegistration(Properties::MAX_WIDTH) {}
-    };
-
     MaxSize _value;
 
     MaxWidthProperty(MaxSize value)
@@ -265,10 +239,6 @@ export struct MaxHeightProperty : Property {
     static Res<Rc<Property>> parse(Cursor<Css::Sst>& c, ParsingMode) {
         return Ok(makeRc<MaxHeightProperty>(try$(parseValue<MaxSize>(c))));
     }
-
-    struct Registration : LonghandRegistration {
-        Registration() : LonghandRegistration(Properties::MAX_HEIGHT) {}
-    };
 
     MaxSize _value;
 

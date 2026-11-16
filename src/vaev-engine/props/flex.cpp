@@ -31,10 +31,6 @@ export struct FlexBasisProperty : Property {
         return Ok(makeRc<FlexBasisProperty>(try$(parseValue<FlexBasis>(c))));
     }
 
-    struct Registration : LonghandRegistration {
-        Registration() : LonghandRegistration(Properties::FLEX_BASIS) {}
-    };
-
     FlexBasis _value;
 
     FlexBasisProperty(FlexBasis value)
@@ -68,10 +64,6 @@ export struct FlexDirectionProperty : Property {
     static Res<Rc<Property>> parse(Cursor<Css::Sst>& c, ParsingMode) {
         return Ok(makeRc<FlexDirectionProperty>(try$(parseValue<FlexDirection>(c))));
     }
-
-    struct Registration : LonghandRegistration {
-        Registration() : LonghandRegistration(Properties::FLEX_DIRECTION) {}
-    };
 
     FlexDirection _value;
 
@@ -107,10 +99,6 @@ export struct FlexGrowProperty : Property {
         return Ok(makeRc<FlexGrowProperty>(try$(parseValue<Number>(c))));
     }
 
-    struct Registration : LonghandRegistration {
-        Registration() : LonghandRegistration(Properties::FLEX_GROW) {}
-    };
-
     Number _value;
 
     FlexGrowProperty(Number value)
@@ -145,10 +133,6 @@ export struct FlexShrinkProperty : Property {
         return Ok(makeRc<FlexShrinkProperty>(try$(parseValue<Number>(c))));
     }
 
-    struct Registration : LonghandRegistration {
-        Registration() : LonghandRegistration(Properties::FLEX_SHRINK) {}
-    };
-
     Number _value;
 
     FlexShrinkProperty(Number value)
@@ -182,10 +166,6 @@ export struct FlexWrapProperty : Property {
     static Res<Rc<Property>> parse(Cursor<Css::Sst>& c, ParsingMode) {
         return Ok(makeRc<FlexWrapProperty>(try$(parseValue<FlexWrap>(c))));
     }
-
-    struct Registration : LonghandRegistration {
-        Registration() : LonghandRegistration(Properties::FLEX_WRAP) {}
-    };
 
     FlexWrap _value;
 

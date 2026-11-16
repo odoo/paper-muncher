@@ -29,10 +29,6 @@ export struct DisplayProperty : Property {
         return Ok(makeRc<DisplayProperty>(try$(parseValue<Display>(c))));
     }
 
-    struct Registration : LonghandRegistration {
-        Registration() : LonghandRegistration(Properties::DISPLAY) {}
-    };
-
     Display _value;
 
     DisplayProperty(Display value)
@@ -68,10 +64,6 @@ export struct ContentProperty : Property {
         return Ok(makeRc<ContentProperty>(try$(parseValue<Content>(c))));
     }
 
-    struct Registration : LonghandRegistration {
-        Registration() : LonghandRegistration(Properties::CONTENT) {}
-    };
-
     Content _value;
 
     ContentProperty(Content value)
@@ -101,10 +93,6 @@ export struct OrderProperty : Property {
     static Res<Rc<Property>> parse(Cursor<Css::Sst>& c, ParsingMode) {
         return Ok(makeRc<OrderProperty>(try$(parseValue<Integer>(c))));
     }
-
-    struct Registration : LonghandRegistration {
-        Registration() : LonghandRegistration(Properties::ORDER) {}
-    };
 
     Integer _value;
 

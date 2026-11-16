@@ -33,10 +33,6 @@ export struct AlignContentProperty : Property {
         return Ok(makeRc<AlignContentProperty>(try$(parseValue<Align>(c))));
     }
 
-    struct Registration : LonghandRegistration {
-        Registration() : LonghandRegistration(Properties::ALIGN_CONTENT) {}
-    };
-
     Align _value;
 
     AlignContentProperty(Align value)
@@ -70,10 +66,6 @@ export struct JustifyContentProperty : Property {
     static Res<Rc<Property>> parse(Cursor<Css::Sst>& c, ParsingMode) {
         return Ok(makeRc<JustifyContentProperty>(try$(parseValue<Align>(c))));
     }
-
-    struct Registration : LonghandRegistration {
-        Registration() : LonghandRegistration(Properties::JUSTIFY_CONTENT) {}
-    };
 
     Align _value;
 
@@ -109,10 +101,6 @@ export struct JustifySelfProperty : Property {
         return Ok(makeRc<JustifySelfProperty>(try$(parseValue<Align>(c))));
     }
 
-    struct Registration : LonghandRegistration {
-        Registration() : LonghandRegistration(Properties::JUSTIFY_SELF) {}
-    };
-
     Align _value;
 
     JustifySelfProperty(Align value)
@@ -146,10 +134,6 @@ export struct AlignSelfProperty : Property {
     static Res<Rc<Property>> parse(Cursor<Css::Sst>& c, ParsingMode) {
         return Ok(makeRc<AlignSelfProperty>(try$(parseValue<Align>(c))));
     }
-
-    struct Registration : LonghandRegistration {
-        Registration() : LonghandRegistration(Properties::ALIGN_SELF) {}
-    };
 
     Align _value;
 
@@ -185,10 +169,6 @@ export struct JustifyItemsProperty : Property {
         return Ok(makeRc<JustifyItemsProperty>(try$(parseValue<Align>(c))));
     }
 
-    struct Registration : LonghandRegistration {
-        Registration() : LonghandRegistration(Properties::JUSTIFY_ITEMS) {}
-    };
-
     Align _value;
 
     JustifyItemsProperty(Align value)
@@ -222,10 +202,6 @@ export struct AlignItemsProperty : Property {
     static Res<Rc<Property>> parse(Cursor<Css::Sst>& c, ParsingMode) {
         return Ok(makeRc<AlignItemsProperty>(try$(parseValue<Align>(c))));
     }
-
-    struct Registration : LonghandRegistration {
-        Registration() : LonghandRegistration(Properties::ALIGN_ITEMS) {}
-    };
 
     Align _value;
 
@@ -263,10 +239,6 @@ export struct RowGapProperty : Property {
         return Ok(makeRc<RowGapProperty>(try$(parseValue<Gap>(c))));
     }
 
-    struct Registration : LonghandRegistration {
-        Registration() : LonghandRegistration(Properties::ROW_GAP) {}
-    };
-
     Gap _value;
 
     RowGapProperty(Gap value)
@@ -302,10 +274,6 @@ export struct ColumnGapProperty : Property {
     static Res<Rc<Property>> parse(Cursor<Css::Sst>& c, ParsingMode) {
         return Ok(makeRc<ColumnGapProperty>(try$(parseValue<Gap>(c))));
     }
-
-    struct Registration : LonghandRegistration {
-        Registration() : LonghandRegistration(Properties::COLUMN_GAP) {}
-    };
 
     Gap _value;
 

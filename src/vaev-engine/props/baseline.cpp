@@ -34,11 +34,6 @@ export struct LineHeightProperty : Property {
         child.inline_.cow().lineHeight = parent.inline_->lineHeight;
     }
 
-    struct Registration : LonghandRegistration {
-        Registration()
-            : LonghandRegistration(Properties::LINE_HEIGHT, FLAGS) {}
-    };
-
     LineHeight _value;
 
     LineHeightProperty(LineHeight value)
@@ -72,10 +67,6 @@ export struct DominantBaselineProperty : Property {
     static Res<Rc<Property>> parse(Cursor<Css::Sst>& c, ParsingMode) {
         return Ok(makeRc<DominantBaselineProperty>(try$(parseValue<DominantBaseline>(c))));
     }
-
-    struct Registration : LonghandRegistration {
-        Registration() : LonghandRegistration(Properties::DOMINANT_BASELINE) {}
-    };
 
     DominantBaseline _value;
 
@@ -111,10 +102,6 @@ export struct BaselineSourceProperty : Property {
         return Ok(makeRc<BaselineSourceProperty>(try$(parseValue<BaselineSource>(c))));
     }
 
-    struct Registration : LonghandRegistration {
-        Registration() : LonghandRegistration(Properties::BASELINE_SOURCE) {}
-    };
-
     BaselineSource _value;
 
     BaselineSourceProperty(BaselineSource value)
@@ -149,10 +136,6 @@ export struct AlignmentBaselineProperty : Property {
         return Ok(makeRc<AlignmentBaselineProperty>(try$(parseValue<AlignmentBaseline>(c))));
     }
 
-    struct Registration : LonghandRegistration {
-        Registration() : LonghandRegistration(Properties::ALIGNMENT_BASELINE) {}
-    };
-
     AlignmentBaseline _value;
 
     AlignmentBaselineProperty(AlignmentBaseline value)
@@ -186,10 +169,6 @@ export struct BaselineShiftProperty : Property {
     static Res<Rc<Property>> parse(Cursor<Css::Sst>& c, ParsingMode) {
         return Ok(makeRc<BaselineShiftProperty>(try$(parseValue<BaselineShift>(c))));
     }
-
-    struct Registration : LonghandRegistration {
-        Registration() : LonghandRegistration(Properties::BASELINE_SHIFT) {}
-    };
 
     BaselineShift _value;
 

@@ -40,11 +40,6 @@ export struct TransformOriginProperty : Property {
         return Ok(makeRc<TransformOriginProperty>(try$(parseValue<TransformOrigin>(c))));
     }
 
-    struct Registration : LonghandRegistration {
-        Registration()
-            : LonghandRegistration(Properties::TRANSFORM_ORIGIN, FLAGS) {}
-    };
-
     TransformOrigin _value;
 
     TransformOriginProperty(TransformOrigin value)
@@ -78,10 +73,6 @@ export struct TransformBoxProperty : Property {
     static Res<Rc<Property>> parse(Cursor<Css::Sst>& c, ParsingMode) {
         return Ok(makeRc<TransformBoxProperty>(try$(parseValue<TransformBox>(c))));
     }
-
-    struct Registration : LonghandRegistration {
-        Registration() : LonghandRegistration(Properties::TRANSFORM_BOX) {}
-    };
 
     TransformBox _value;
 
@@ -214,11 +205,6 @@ export struct TransformProperty : Property {
 
         return Ok(makeRc<TransformProperty>(try$(parseValue<Transform>(c))));
     }
-
-    struct Registration : LonghandRegistration {
-        Registration()
-            : LonghandRegistration(Properties::TRANSFORM, FLAGS) {}
-    };
 
     Transform _value;
 

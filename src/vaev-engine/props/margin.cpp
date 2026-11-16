@@ -31,10 +31,6 @@ export struct MarginTopProperty : Property {
         return Ok(makeRc<MarginTopProperty>(try$(parseValue<Value>(c))));
     }
 
-    struct Registration : LonghandRegistration {
-        Registration() : LonghandRegistration(Properties::MARGIN_TOP) {}
-    };
-
     Value _value;
 
     MarginTopProperty(Value value)
@@ -70,10 +66,6 @@ export struct MarginRightProperty : Property {
     static Res<Rc<Property>> parse(Cursor<Css::Sst>& c, ParsingMode) {
         return Ok(makeRc<MarginRightProperty>(try$(parseValue<Value>(c))));
     }
-
-    struct Registration : LonghandRegistration {
-        Registration() : LonghandRegistration(Properties::MARGIN_RIGHT) {}
-    };
 
     Value _value;
 
@@ -111,10 +103,6 @@ export struct MarginBottomProperty : Property {
         return Ok(makeRc<MarginBottomProperty>(try$(parseValue<Value>(c))));
     }
 
-    struct Registration : LonghandRegistration {
-        Registration() : LonghandRegistration(Properties::MARGIN_BOTTOM) {}
-    };
-
     Value _value;
 
     MarginBottomProperty(Value value)
@@ -151,10 +139,6 @@ export struct MarginLeftProperty : Property {
         return Ok(makeRc<MarginLeftProperty>(try$(parseValue<Value>(c))));
     }
 
-    struct Registration : LonghandRegistration {
-        Registration() : LonghandRegistration(Properties::MARGIN_LEFT) {}
-    };
-
     Value _value;
 
     MarginLeftProperty(Value value)
@@ -175,66 +159,61 @@ export struct MarginLeftProperty : Property {
 
 // https://drafts.csswg.org/css-box-4/#margin-shorthand
 export struct MarginShorthand {
-    struct Registration : ShorthandRegistration {
-        Slice<Symbol> longhands() const override {
-            static Array LONGHANDS = {
-                Properties::FONT_STYLE,
-                Properties::FONT_WEIGHT,
-                Properties::FONT_WIDTH,
-                Properties::FONT_SIZE,
-                Properties::LINE_HEIGHT,
-                Properties::FONT_FAMILY,
-            };
-            return LONGHANDS;
-        }
+    static constexpr auto ID = ShorthandId::MARGIN;
 
-        Res<> parse(Cursor<Css::Sst>& c, Vec<Rc<Property>>& stylesheet) const override {
-            auto first = try$(parseValue<MarginTopProperty::Value>(c));
+    static constexpr auto SHORTHANDS = Array{
+        LonghandId::MARGIN_TOP,
+        LonghandId::MARGIN_RIGHT,
+        LonghandId::MARGIN_BOTTOM,
+        LonghandId::MARGIN_LEFT,
+    };
 
-            auto second = parseValue<MarginTopProperty::Value>(c);
+    static Res<> parse(Cursor<Css::Sst>& c, Vec<Rc<Property>>& stylesheet) {
+        auto first = try$(parseValue<MarginTopProperty::Value>(c));
 
-            // If there is only one component value, it applies to all sides.
-            if (not second) {
-                stylesheet.pushBack(makeRc<MarginTopProperty>(first));
-                stylesheet.pushBack(makeRc<MarginBottomProperty>(first));
-                stylesheet.pushBack(makeRc<MarginLeftProperty>(first));
-                stylesheet.pushBack(makeRc<MarginRightProperty>(std::move(first)));
-                return Ok();
-            }
+        auto second = parseValue<MarginTopProperty::Value>(c);
 
-            auto third = parseValue<MarginTopProperty::Value>(c);
-
-            // If there are two values, the top and bottom margins are set to the first value and
-            // the right and left margins are set to the second.
-            if (not third) {
-                stylesheet.pushBack(makeRc<MarginTopProperty>(first));
-                stylesheet.pushBack(makeRc<MarginBottomProperty>(std::move(first)));
-                stylesheet.pushBack(makeRc<MarginLeftProperty>(second.expect()));
-                stylesheet.pushBack(makeRc<MarginRightProperty>(second.take()));
-                return Ok();
-            }
-
-            auto fourth = parseValue<MarginTopProperty::Value>(c);
-
-            // If there are three values, the top is set to the first value, the left and right are set to the second,
-            // and the bottom is set to the third.
-            if (not fourth) {
-                stylesheet.pushBack(makeRc<MarginTopProperty>(std::move(first)));
-                stylesheet.pushBack(makeRc<MarginRightProperty>(second.expect()));
-                stylesheet.pushBack(makeRc<MarginBottomProperty>(third.take()));
-                stylesheet.pushBack(makeRc<MarginLeftProperty>(second.take()));
-                return Ok();
-            }
-
-            // If there are four values they apply to the top, right, bottom, and left, respectively.
-            stylesheet.pushBack(makeRc<MarginTopProperty>(std::move(first)));
-            stylesheet.pushBack(makeRc<MarginRightProperty>(fourth.take()));
-            stylesheet.pushBack(makeRc<MarginBottomProperty>(second.take()));
-            stylesheet.pushBack(makeRc<MarginLeftProperty>(third.take()));
-
+        // If there is only one component value, it applies to all sides.
+        if (not second) {
+            stylesheet.pushBack(makeRc<MarginTopProperty>(first));
+            stylesheet.pushBack(makeRc<MarginBottomProperty>(first));
+            stylesheet.pushBack(makeRc<MarginLeftProperty>(first));
+            stylesheet.pushBack(makeRc<MarginRightProperty>(std::move(first)));
             return Ok();
         }
-    };
+
+        auto third = parseValue<MarginTopProperty::Value>(c);
+
+        // If there are two values, the top and bottom margins are set to the first value and
+        // the right and left margins are set to the second.
+        if (not third) {
+            stylesheet.pushBack(makeRc<MarginTopProperty>(first));
+            stylesheet.pushBack(makeRc<MarginBottomProperty>(std::move(first)));
+            stylesheet.pushBack(makeRc<MarginLeftProperty>(second.expect()));
+            stylesheet.pushBack(makeRc<MarginRightProperty>(second.take()));
+            return Ok();
+        }
+
+        auto fourth = parseValue<MarginTopProperty::Value>(c);
+
+        // If there are three values, the top is set to the first value, the left and right are set to the second,
+        // and the bottom is set to the third.
+        if (not fourth) {
+            stylesheet.pushBack(makeRc<MarginTopProperty>(std::move(first)));
+            stylesheet.pushBack(makeRc<MarginRightProperty>(second.expect()));
+            stylesheet.pushBack(makeRc<MarginBottomProperty>(third.take()));
+            stylesheet.pushBack(makeRc<MarginLeftProperty>(second.take()));
+            return Ok();
+        }
+
+        // If there are four values they apply to the top, right, bottom, and left, respectively.
+        stylesheet.pushBack(makeRc<MarginTopProperty>(std::move(first)));
+        stylesheet.pushBack(makeRc<MarginRightProperty>(fourth.take()));
+        stylesheet.pushBack(makeRc<MarginBottomProperty>(second.take()));
+        stylesheet.pushBack(makeRc<MarginLeftProperty>(third.take()));
+
+        return Ok();
+    }
 };
 
 // // https://drafts.csswg.org/css-box-4/#margin-shorthand
@@ -295,10 +274,6 @@ export struct MarginInlineStartProperty : Property {
         return Ok(makeRc<MarginInlineStartProperty>(try$(parseValue<Value>(c))));
     }
 
-    struct Registration : LonghandRegistration {
-        Registration() : LonghandRegistration(Properties::MARGIN_INLINE_START) {}
-    };
-
     Value _value;
 
     MarginInlineStartProperty(Value value)
@@ -338,10 +313,6 @@ export struct MarginInlineEndProperty : Property {
     static Res<Rc<Property>> parse(Cursor<Css::Sst>& c, ParsingMode) {
         return Ok(makeRc<MarginInlineEndProperty>(try$(parseValue<Value>(c))));
     }
-
-    struct Registration : LonghandRegistration {
-        Registration() : LonghandRegistration(Properties::MARGIN_INLINE_END) {}
-    };
 
     Value _value;
 
@@ -421,10 +392,6 @@ export struct MarginBlockStartProperty : Property {
         return Ok(makeRc<MarginBlockStartProperty>(try$(parseValue<Value>(c))));
     }
 
-    struct Registration : LonghandRegistration {
-        Registration() : LonghandRegistration(Properties::MARGIN_BLOCK_START) {}
-    };
-
     Value _value;
 
     MarginBlockStartProperty(Value value)
@@ -464,10 +431,6 @@ export struct MarginBlockEndProperty : Property {
     static Res<Rc<Property>> parse(Cursor<Css::Sst>& c, ParsingMode) {
         return Ok(makeRc<MarginBlockEndProperty>(try$(parseValue<Value>(c))));
     }
-
-    struct Registration : LonghandRegistration {
-        Registration() : LonghandRegistration(Properties::MARGIN_BLOCK_END) {}
-    };
 
     Union<Keywords::Auto, Calc<PercentOr<Length>>> _value;
 

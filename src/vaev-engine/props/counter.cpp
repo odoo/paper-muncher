@@ -30,10 +30,6 @@ export struct CounterResetProperty : Property {
         return Ok(makeRc<CounterResetProperty>(value));
     }
 
-    struct Registration : LonghandRegistration {
-        Registration() : LonghandRegistration(Properties::COUNTER_RESET) {}
-    };
-
     Vec<CounterProps::Reset> _value;
 
     CounterResetProperty(Vec<CounterProps::Reset> value)
@@ -67,10 +63,6 @@ export struct CounterIncrementProperty : Property {
         return Ok(makeRc<CounterIncrementProperty>(value));
     }
 
-    struct Registration : LonghandRegistration {
-        Registration() : LonghandRegistration(Properties::COUNTER_INCREMENT) {}
-    };
-
     Vec<CounterProps::Increment> _value;
 
     CounterIncrementProperty(Vec<CounterProps::Increment> value)
@@ -103,10 +95,6 @@ export struct CounterSetProperty : Property {
         auto value = try$(parseValue<Vec<CounterProps::Set>>(c));
         return Ok(makeRc<CounterSetProperty>(value));
     }
-
-    struct Registration : LonghandRegistration {
-        Registration() : LonghandRegistration(Properties::COUNTER_SET) {}
-    };
 
     Vec<CounterProps::Set> _value;
 

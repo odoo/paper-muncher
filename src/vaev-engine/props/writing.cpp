@@ -34,11 +34,6 @@ export struct WritingModeProperty : Property {
         child.writingMode = parent.writingMode;
     }
 
-    struct Registration : LonghandRegistration {
-        Registration()
-            : LonghandRegistration(Properties::WRITING_MODE, FLAGS) {}
-    };
-
     WritingMode _value;
 
     WritingModeProperty(WritingMode value)
@@ -77,11 +72,6 @@ export struct DirectionProperty : Property {
     static void inherit(ComputedValues const& parent, ComputedValues& child) {
         child.direction = parent.direction;
     }
-
-    struct Registration : LonghandRegistration {
-        Registration()
-            : LonghandRegistration(Properties::DIRECTION, FLAGS) {}
-    };
 
     Direction _value;
 

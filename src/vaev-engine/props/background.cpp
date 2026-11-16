@@ -34,10 +34,6 @@ export struct BackgroundColorProperty : Property {
         return Ok(makeRc<BackgroundColorProperty>(try$(parseValue<Color>(c))));
     }
 
-    struct Registration : LonghandRegistration {
-        Registration() : LonghandRegistration(Properties::BACKGROUND_COLOR) {}
-    };
-
     Color _value;
 
     BackgroundColorProperty(Color value)
@@ -84,10 +80,6 @@ export struct BackgroundAttachmentProperty : Property {
         return Ok(makeRc<BackgroundAttachmentProperty>(std::move(value)));
     }
 
-    struct Registration : LonghandRegistration {
-        Registration() : LonghandRegistration(Properties::BACKGROUND_ATTACHMENT) {}
-    };
-
     Vec<BackgroundAttachment> _value;
 
     BackgroundAttachmentProperty(Vec<BackgroundAttachment> value)
@@ -122,10 +114,6 @@ export struct BackgroundImageProperty : Property {
         return Ok(makeRc<BackgroundImageProperty>(Vec<Image>{}));
     }
 
-    struct Registration : LonghandRegistration {
-        Registration() : LonghandRegistration(Properties::BACKGROUND_IMAGE) {}
-    };
-
     Vec<Image> _value;
 
     BackgroundImageProperty(Vec<Image> value)
@@ -156,10 +144,6 @@ export struct BackgroundPositionProperty : Property {
         // TODO
         return Ok(makeRc<BackgroundPositionProperty>(Vec<BackgroundPosition>{}));
     }
-
-    struct Registration : LonghandRegistration {
-        Registration() : LonghandRegistration(Properties::BACKGROUND_POSITION) {}
-    };
 
     Vec<BackgroundPosition> _value;
 
@@ -192,10 +176,6 @@ export struct BackgroundRepeatProperty : Property {
         // TODO
         return Ok(makeRc<BackgroundRepeatProperty>(Vec<BackgroundRepeat>{}));
     }
-
-    struct Registration : LonghandRegistration {
-        Registration() : LonghandRegistration(Properties::BACKGROUND_REPEAT) {}
-    };
 
     Vec<BackgroundRepeat> _value;
 
@@ -272,11 +252,6 @@ export struct ColorProperty : Property {
     static void inherit(ComputedValues const& parent, ComputedValues& child) {
         child.color = parent.color;
     }
-
-    struct Registration : LonghandRegistration {
-        Registration()
-            : LonghandRegistration(Properties::COLOR, FLAGS) {}
-    };
 
     Color _value;
 

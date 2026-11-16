@@ -31,10 +31,6 @@ export struct OutlineWidthProperty : Property {
         return Ok(makeRc<OutlineWidthProperty>(try$(parseValue<LineWidth>(c))));
     }
 
-    struct Registration : LonghandRegistration {
-        Registration() : LonghandRegistration(Properties::OUTLINE_WIDTH) {}
-    };
-
     LineWidth _value;
 
     OutlineWidthProperty(LineWidth value)
@@ -70,10 +66,6 @@ export struct OutlineStyleProperty : Property {
     static Res<Rc<Property>> parse(Cursor<Css::Sst>& c, ParsingMode) {
         return Ok(makeRc<OutlineStyleProperty>(try$(parseValue<Value>(c))));
     }
-
-    struct Registration : LonghandRegistration {
-        Registration() : LonghandRegistration(Properties::OUTLINE_STYLE) {}
-    };
 
     Value _value;
 
@@ -112,10 +104,6 @@ export struct OutlineColorProperty : Property {
     static Res<Rc<Property>> parse(Cursor<Css::Sst>& c, ParsingMode) {
         return Ok(makeRc<OutlineColorProperty>(try$(parseValue<Value>(c))));
     }
-
-    struct Registration : LonghandRegistration {
-        Registration() : LonghandRegistration(Properties::OUTLINE_COLOR) {}
-    };
 
     Value _value;
 
@@ -162,10 +150,6 @@ export struct OutlineOffsetProperty : Property {
     static Res<Rc<Property>> parse(Cursor<Css::Sst>& c, ParsingMode) {
         return Ok(makeRc<OutlineOffsetProperty>(try$(parseValue<Calc<Length>>(c))));
     }
-
-    struct Registration : LonghandRegistration {
-        Registration() : LonghandRegistration(Properties::OUTLINE_OFFSET) {}
-    };
 
     Calc<Length> _value;
 

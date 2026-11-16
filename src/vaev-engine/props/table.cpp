@@ -29,10 +29,6 @@ export struct TableLayoutProperty : Property {
         return Ok(makeRc<TableLayoutProperty>(try$(parseValue<TableLayout>(c))));
     }
 
-    struct Registration : LonghandRegistration {
-        Registration() : LonghandRegistration(Properties::TABLE_LAYOUT) {}
-    };
-
     TableLayout _value;
 
     TableLayoutProperty(TableLayout value)
@@ -67,11 +63,6 @@ export struct CaptionSideProperty : Property {
     static Res<Rc<Property>> parse(Cursor<Css::Sst>& c, ParsingMode) {
         return Ok(makeRc<CaptionSideProperty>(try$(parseValue<CaptionSide>(c))));
     }
-
-    struct Registration : LonghandRegistration {
-        Registration()
-            : LonghandRegistration(Properties::CAPTION_SIDE, FLAGS) {}
-    };
 
     CaptionSide _value;
 

@@ -32,11 +32,6 @@ export struct SvgXProperty : Property {
         return Ok(makeRc<SvgXProperty>(try$(parseValueWithUnitlessLength<PercentOr<Length>>(c, mode))));
     }
 
-    struct Registration : LonghandRegistration {
-        Registration()
-            : LonghandRegistration(Properties::X, FLAGS) {}
-    };
-
     PercentOr<Length> _value;
 
     SvgXProperty(PercentOr<Length> value)
@@ -71,11 +66,6 @@ export struct SvgYProperty : Property {
     static Res<Rc<Property>> parse(Cursor<Css::Sst>& c, ParsingMode mode) {
         return Ok(makeRc<SvgYProperty>(try$(parseValueWithUnitlessLength<PercentOr<Length>>(c, mode))));
     }
-
-    struct Registration : LonghandRegistration {
-        Registration()
-            : LonghandRegistration(Properties::Y, FLAGS) {}
-    };
 
     PercentOr<Length> _value;
 
@@ -112,11 +102,6 @@ export struct SvgCXProperty : Property {
         return Ok(makeRc<SvgCXProperty>(try$(parseValueWithUnitlessLength<PercentOr<Length>>(c, mode))));
     }
 
-    struct Registration : LonghandRegistration {
-        Registration()
-            : LonghandRegistration(Properties::CX, FLAGS) {}
-    };
-
     PercentOr<Length> _value;
 
     SvgCXProperty(PercentOr<Length> value)
@@ -152,11 +137,6 @@ export struct SvgCYProperty : Property {
         return Ok(makeRc<SvgCYProperty>(try$(parseValueWithUnitlessLength<PercentOr<Length>>(c, mode))));
     }
 
-    struct Registration : LonghandRegistration {
-        Registration()
-            : LonghandRegistration(Properties::CY, FLAGS) {}
-    };
-
     PercentOr<Length> _value;
 
     SvgCYProperty(PercentOr<Length> value)
@@ -191,11 +171,6 @@ export struct SvgRProperty : Property {
     static Res<Rc<Property>> parse(Cursor<Css::Sst>& c, ParsingMode mode) {
         return Ok(makeRc<SvgRProperty>(try$(parseValueWithUnitlessLength<PercentOr<Length>>(c, mode))));
     }
-
-    struct Registration : LonghandRegistration {
-        Registration()
-            : LonghandRegistration(Properties::R, FLAGS) {}
-    };
 
     PercentOr<Length> _value;
 
@@ -233,11 +208,6 @@ export struct SvgRxProperty : Property {
         return Ok(makeRc<SvgRxProperty>(try$(parseValueWithUnitlessLength<Union<Keywords::Auto, PercentOr<Length>>>(c, mode))));
     }
 
-    struct Registration : LonghandRegistration {
-        Registration()
-            : LonghandRegistration(Properties::RX, FLAGS) {}
-    };
-
     Union<Keywords::Auto, PercentOr<Length>> _value;
 
     SvgRxProperty(Union<Keywords::Auto, PercentOr<Length>> value)
@@ -274,11 +244,6 @@ export struct SvgRyProperty : Property {
         return Ok(makeRc<SvgRyProperty>(try$(parseValueWithUnitlessLength<Union<Keywords::Auto, PercentOr<Length>>>(c, mode))));
     }
 
-    struct Registration : LonghandRegistration {
-        Registration()
-            : LonghandRegistration(Properties::RY, FLAGS) {}
-    };
-
     Union<Keywords::Auto, PercentOr<Length>> _value;
 
     SvgRyProperty(Union<Keywords::Auto, PercentOr<Length>> value)
@@ -313,11 +278,6 @@ export struct SvgFillProperty : Property {
     static Res<Rc<Property>> parse(Cursor<Css::Sst>& c, ParsingMode) {
         return Ok(makeRc<SvgFillProperty>(try$(parseValue<SvgPaint>(c))));
     }
-
-    struct Registration : LonghandRegistration {
-        Registration()
-            : LonghandRegistration(Properties::FILL, FLAGS) {}
-    };
 
     SvgPaint _value;
 
@@ -385,11 +345,6 @@ export struct SvgDProperty : Property {
         return Ok(makeRc<SvgDProperty>(try$(parseValue<String>(scanPath))));
     }
 
-    struct Registration : LonghandRegistration {
-        Registration()
-            : LonghandRegistration(Properties::D, FLAGS) {}
-    };
-
     Union<String, None> _value;
 
     SvgDProperty(Union<String, None> value)
@@ -449,11 +404,6 @@ export struct SvgViewBoxProperty : Property {
         return Ok(makeRc<SvgViewBoxProperty>(Some(std::move(viewBox))));
     }
 
-    struct Registration : LonghandRegistration {
-        Registration()
-            : LonghandRegistration(Properties::VIEWBOX, FLAGS) {}
-    };
-
     Opt<SvgViewBox> _value;
 
     SvgViewBoxProperty(Opt<SvgViewBox> value)
@@ -492,11 +442,6 @@ export struct SvgStrokeProperty : Property {
     static Res<Rc<Property>> parse(Cursor<Css::Sst>& c, ParsingMode) {
         return Ok(makeRc<SvgStrokeProperty>(try$(parseValue<SvgPaint>(c))));
     }
-
-    struct Registration : LonghandRegistration {
-        Registration()
-            : LonghandRegistration(Properties::STROKE, FLAGS) {}
-    };
 
     SvgPaint _value;
 
@@ -538,11 +483,6 @@ export struct SvgStrokeOpacityProperty : Property {
         }
     }
 
-    struct Registration : LonghandRegistration {
-        Registration()
-            : LonghandRegistration(Properties::STROKE_OPACITY, FLAGS) {}
-    };
-
     Number _value;
 
     SvgStrokeOpacityProperty(Number value)
@@ -583,11 +523,6 @@ export struct FillOpacityProperty : Property {
         }
     }
 
-    struct Registration : LonghandRegistration {
-        Registration()
-            : LonghandRegistration(Properties::FILL_OPACITY, FLAGS) {}
-    };
-
     Number _value;
 
     FillOpacityProperty(Number value)
@@ -625,11 +560,6 @@ export struct StrokeWidthProperty : Property {
             return Ok(makeRc<StrokeWidthProperty>(PercentOr<Length>{Length::fromPx(number.take())}));
         return Ok(makeRc<StrokeWidthProperty>(try$(parseValue<PercentOr<Length>>(c))));
     }
-
-    struct Registration : LonghandRegistration {
-        Registration()
-            : LonghandRegistration(Properties::STROKE_WIDTH, FLAGS) {}
-    };
 
     PercentOr<Length> _value;
 

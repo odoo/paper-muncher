@@ -31,10 +31,6 @@ export struct PositionProperty : Property {
         return Ok(makeRc<PositionProperty>(try$(parseValue<Position>(c))));
     }
 
-    struct Registration : LonghandRegistration {
-        Registration() : LonghandRegistration(Properties::POSITION) {}
-    };
-
     Position _value;
 
     PositionProperty(Position value)
@@ -66,10 +62,6 @@ export struct TopProperty : Property {
     static Res<Rc<Property>> parse(Cursor<Css::Sst>& c, ParsingMode) {
         return Ok(makeRc<TopProperty>(try$(parseValue<Value>(c))));
     }
-
-    struct Registration : LonghandRegistration {
-        Registration() : LonghandRegistration(Properties::TOP) {}
-    };
 
     Value _value;
 
@@ -107,10 +99,6 @@ export struct RightProperty : Property {
         return Ok(makeRc<RightProperty>(try$(parseValue<Value>(c))));
     }
 
-    struct Registration : LonghandRegistration {
-        Registration() : LonghandRegistration(Properties::RIGHT) {}
-    };
-
     Value _value;
 
     RightProperty(Value value)
@@ -146,10 +134,6 @@ export struct BottomProperty : Property {
     static Res<Rc<Property>> parse(Cursor<Css::Sst>& c, ParsingMode) {
         return Ok(makeRc<BottomProperty>(try$(parseValue<Value>(c))));
     }
-
-    struct Registration : LonghandRegistration {
-        Registration() : LonghandRegistration(Properties::BOTTOM) {}
-    };
 
     Union<Keywords::Auto, Calc<PercentOr<Length>>> _value;
 
@@ -187,10 +171,6 @@ export struct LeftProperty : Property {
         return Ok(makeRc<LeftProperty>(try$(parseValue<Value>(c))));
     }
 
-    struct Registration : LonghandRegistration {
-        Registration() : LonghandRegistration(Properties::LEFT) {}
-    };
-
     Value _value;
 
     LeftProperty(Value value)
@@ -224,10 +204,6 @@ export struct ZIndexProperty : Property {
     static Res<Rc<Property>> parse(Cursor<Css::Sst>& c, ParsingMode) {
         return Ok(makeRc<ZIndexProperty>(try$(parseValue<ZIndex>(c))));
     }
-
-    struct Registration : LonghandRegistration {
-        Registration() : LonghandRegistration(Properties::Z_INDEX) {}
-    };
 
     ZIndex _value;
 

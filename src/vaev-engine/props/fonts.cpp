@@ -48,11 +48,6 @@ export struct FontFamilyProperty : Property {
         child.font.cow().families = parent.font->families;
     }
 
-    struct Registration : LonghandRegistration {
-        Registration()
-            : LonghandRegistration(Properties::FONT_FAMILY, FLAGS) {}
-    };
-
     Vec<FontFamily> _value;
 
     FontFamilyProperty(Vec<FontFamily> value)
@@ -105,11 +100,6 @@ export struct FontWeightProperty : Property {
         child.font.cow().weight = parent.font->weight;
     }
 
-    struct Registration : LonghandRegistration {
-        Registration()
-            : LonghandRegistration(Properties::FONT_WEIGHT, FLAGS) {}
-    };
-
     FontWeight _value;
 
     FontWeightProperty(FontWeight value)
@@ -152,11 +142,6 @@ export struct FontWidthProperty : Property {
         child.font.cow().width = parent.font->width;
     }
 
-    struct Registration : LonghandRegistration {
-        Registration()
-            : LonghandRegistration(Properties::FONT_WIDTH, FLAGS) {}
-    };
-
     FontWidth _value;
 
     FontWidthProperty(FontWidth value)
@@ -197,11 +182,6 @@ export struct FontStyleProperty : Property {
         child.font.cow().style = parent.font->style;
     }
 
-    struct Registration : LonghandRegistration {
-        Registration()
-            : LonghandRegistration(Properties::FONT_STYLE, FLAGS) {}
-    };
-
     FontStyle _value;
 
     FontStyleProperty(FontStyle value)
@@ -241,11 +221,6 @@ export struct FontSizeProperty : Property {
     static void inherit(ComputedValues const& parent, ComputedValues& child) {
         child.font.cow().size = parent.font->size;
     }
-
-    struct Registration : LonghandRegistration {
-        Registration()
-            : LonghandRegistration(Properties::FONT_SIZE, FLAGS) {}
-    };
 
     FontSize _value;
 

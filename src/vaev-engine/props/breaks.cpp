@@ -31,10 +31,6 @@ export struct BreakAfterProperty : Property {
         return Ok(makeRc<BreakAfterProperty>(try$(parseValue<BreakBetween>(c))));
     }
 
-    struct Registration : LonghandRegistration {
-        Registration() : LonghandRegistration(Properties::BREAK_AFTER) {}
-    };
-
     BreakBetween _value;
 
     BreakAfterProperty(BreakBetween value)
@@ -69,10 +65,6 @@ export struct BreakBeforeProperty : Property {
         return Ok(makeRc<BreakBeforeProperty>(try$(parseValue<BreakBetween>(c))));
     }
 
-    struct Registration : LonghandRegistration {
-        Registration() : LonghandRegistration(Properties::BREAK_BEFORE) {}
-    };
-
     BreakBetween _value;
 
     BreakBeforeProperty(BreakBetween value)
@@ -106,10 +98,6 @@ export struct BreakInsideProperty : Property {
     static Res<Rc<Property>> parse(Cursor<Css::Sst>& c, ParsingMode) {
         return Ok(makeRc<BreakInsideProperty>(try$(parseValue<BreakInside>(c))));
     }
-
-    struct Registration : LonghandRegistration {
-        Registration() : LonghandRegistration(Properties::BREAK_INSIDE) {}
-    };
 
     BreakInside _value;
 

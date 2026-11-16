@@ -37,11 +37,6 @@ export struct ColumnWidthProperty : Property {
         return Ok(makeRc<ColumnWidthProperty>(try$(parseValue<ColumnWidth>(c))));
     }
 
-    struct Registration : LonghandRegistration {
-        Registration()
-            : LonghandRegistration(Properties::COLUMN_WIDTH) {}
-    };
-
     ColumnWidth _value;
 
     ColumnWidthProperty(ColumnWidth value)
@@ -93,11 +88,6 @@ export struct ColumnHeightProperty : Property {
         return Ok(makeRc<ColumnHeightProperty>(try$(parseValue<ColumnHeight>(c))));
     }
 
-    struct Registration : LonghandRegistration {
-        Registration()
-            : LonghandRegistration(Properties::COLUMN_HEIGHT) {}
-    };
-
     ColumnHeight _value;
 
     ColumnHeightProperty(ColumnHeight value)
@@ -140,11 +130,6 @@ export struct ColumnCountProperty : Property {
     static Res<Rc<Property>> parse(Cursor<Css::Sst>& c, ParsingMode) {
         return Ok(makeRc<ColumnCountProperty>(try$(parseValue<ColumnCount>(c))));
     }
-
-    struct Registration : LonghandRegistration {
-        Registration()
-            : LonghandRegistration(Properties::COLUMN_COUNT) {}
-    };
 
     ColumnCount _value;
 

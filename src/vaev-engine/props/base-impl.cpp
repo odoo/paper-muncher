@@ -1,3 +1,7 @@
+module;
+
+#include <karm/macros>
+
 module Vaev.Engine;
 
 import Karm.Core;
@@ -34,44 +38,63 @@ namespace Vaev::Style {
 
 // MARK: Procedure Tables -----------------------------------------------------
 
-using LonghandParseFn = Res<Rc<Property>>(Cursor<Css::Sst>&, ParsingMode);
-using LonghandInitialFn = Rc<Property>();
-using LonghandLoadFn = Rc<Property>(ComputedValues const&);
-using LonghandInheritFn = void(ComputedValues const& parent, ComputedValues& child);
+struct LonghandProcs {
+    using ParseFn = Res<Rc<Property>>(Cursor<Css::Sst>&, ParsingMode);
+    using InitialFn = Rc<Property>();
+    using LoadFn = Rc<Property>(ComputedValues const&);
+    using InheritFn = void(ComputedValues const& parent, ComputedValues& child);
 
-using ShorthandParseFn = Res<>(Cursor<Css::Sst>&, Vec<Rc<Property>>& longhands, ParsingMode);
+    ParseFn const& parse;
+    InitialFn const& initial;
+    LoadFn const& load;
+    Opt<InheritFn const&> inherit = NONE;
+};
+
+struct ShorthandProcs {
+    using ParseFn = Res<>(Cursor<Css::Sst>&, Vec<Rc<Property>>& longhands, ParsingMode);
+
+    ParseFn const& parse;
+};
 
 struct PropertyTables {
     static constexpr usize LONGHAND_LEN = enumLen<LonghandId>();
     static constexpr usize SHORTHAND_LEN = enumLen<ShorthandId>();
 
-    auto longhandParse = Array<Opt<LonghandParseFn const&>, LONGHAND_LEN>::fill(NONE);
-    auto longhandInitial = Array<Opt<LonghandInitialFn const&>, LONGHAND_LEN>::fill(NONE);
-    auto longhandLoad = Array<Opt<LonghandLoadFn const&>, LONGHAND_LEN>::fill(NONE);
-
-    auto longhandInherit = Array<Opt<LonghandInheritFn const&>, LONGHAND_LEN>::fill(NONE);
+    auto longhandProcs = Array<Opt<LonghandProcs>, LONGHAND_LEN>::fill(NONE);
+    auto shorthandProcs = Array<Opt<ShorthandProcs>, SHORTHAND_LEN>::fill(NONE);
 
     auto longhandPhase = Array<ComputationPhase, LONGHAND_LEN>::fill(ComputationPhase::NORMAL);
     auto longhandAliases = Array<Slice<Symbol>, LONGHAND_LEN>::fill(Slice<Symbol>{});
 
-    auto shorthandParse = Array<Opt<ShorthandParseFn const&>, SHORTHAND_LEN>::fill(NONE);
+    auto shorthandLonghands = Array<Slice<LonghandId>, SHORTHAND_LEN>::fill(Slice<LonghandId>{});
 
     template <typename T>
     constexpr void registerLonghand() {
         auto id = toUnderlyingType(T::ID);
 
-        longhandParse[id] = Some(T::parse);
-        longhandInitial[id] = Some(T::initial);
-        longhandLoad[id] = Some(T::load);
+        auto procs = LonghandProcs{
+            .parse = T::parse,
+            .initial = T::initial,
+            .load = T::load,
+        };
+
         if constexpr (requires { T::inherit; })
-            longhandInherit[id] = Some(T::inherit);
+            procs.inherit = Some(T::inherit);
+
+        longhandProcs[id] = Some(procs);
         longhandPhase[id] = Some(T::PHASE);
     }
 
     template <typename T>
     constexpr void registerShorthand() {
         auto id = toUnderlyingType(T::ID);
-        shorthandParse[id] = &T::parse;
+
+        auto procs = ShorthandProcs{
+            .parse = T::parse,
+        };
+
+        shorthandProcs[id] = Some(procs);
+        shorthandLonghands[id] = T::LONGHANDS;
     }
 };
 
@@ -201,7 +224,7 @@ static constexpr PropertyTables _propertyTables = [] {
     tables.registerLonghand<MarginRightProperty>();
     tables.registerLonghand<MarginBottomProperty>();
     tables.registerLonghand<MarginLeftProperty>();
-    // MarginShorthand: goes in ShorthandTables once it has a static ID and parse().
+    tables.registerShorthand<MarginShorthand>();
 
     tables.registerLonghand<MarginInlineStartProperty>();
     tables.registerLonghand<MarginInlineEndProperty>();
@@ -318,20 +341,143 @@ static Map<Symbol, PropertyId> const& _propertyIds() {
     return ids;
 }
 
-Opt<PropertyId> lookupProperty(Symbol name) {
+LonghandProcs const& _expectProcs(LonghandId id) {
+    _propertyTables.longhandProcs[toUnderlyingType(id)].expect("unimplemented property");
+}
+
+ShorthandProcs const& _expectProcs(ShorthandId id) {
+    _propertyTables.shorthandProcs[toUnderlyingType(id)].expect("unimplemented shorthand");
+}
+
+Slice<LonghandId> expandShorthand(LonghandId id) {
+    _propertyTables.shorthandLonghands[toUnderlyingType(id)];
+}
+
+Opt<PropertyId> lookupProperty(Symbol const& name) {
     return _propertyIds().lookup(name);
 }
 
 Rc<Property> initialProperty(LonghandId id) {
-    return _propertyTables.longhandInitial[toUnderlyingType(id)].expect("unimplemented property")();
+    return _expectProcs(id).initial();
 }
 
 Rc<Property> loadProperty(LonghandId id, ComputedValues const& c) {
-    return _propertyTables.longhandLoad[toUnderlyingType(id)].expect("unimplemented property")(c);
+    return _expectProcs(id).load(c);
 }
 
-Res<Rc<Property>> parseProperty(LonghandId id, Cursor<Css::Sst>& c, ParsingMode mode) {
-    return _propertyTables.longhandParse[toUnderlyingType(id)].expect("unimplemented property")(c, mode);
+static Res<Default> _parseDefaulted(Cursor<Css::Sst>& c) {
+    Default value;
+    if (c.skip(Css::Token::ident("initial"))) {
+        return Ok(Default::INITIAL);
+    } else if (c.skip(Css::Token::ident("inherit"))) {
+        return Ok(Default::INHERIT);
+    } else if (c.skip(Css::Token::ident("unset"))) {
+        return Ok(Default::UNSET);
+    } else {
+        return Error::invalidData("unknown declaration");
+    }
+}
+
+static bool _containsVariable(Cursor<Css::Sst> c) {
+    while (not c.ended()) {
+        if (c.peek() == Css::Sst::FUNC) {
+            auto const& prefix = c.peek().prefix;
+            auto prefixToken = prefix.expect()->token;
+            if (prefixToken.data == "var(") {
+                return true;
+            }
+        }
+
+        c.next();
+    }
+
+    return false;
+}
+
+Res<> parseProperty(PropertyId id, Cursor<Css::Sst>& c, Vec<Rc<Property>>& stylesheet, ParsingMode mode, bool important) {
+    eatWhitespace(c);
+
+    return id.visit(
+        [&](LonghandId longhandId) -> Res<> {
+            Opt<LonghandProcs> procs = _propertyTables.longhandProcs[toUnderlyingType(longhandId)];
+
+            if (not procs)
+                return Error::notImplemented("unimplemented property");
+
+            if (auto defaultValue = _parseDefaulted(c)) {
+                eatWhitespace(c);
+                if (not c.ended())
+                    return Error::invalidData("unexpected tokens");
+
+                auto prop = makeRc<DefaultedProperty>(longhandId, defaultValue.expect());
+                prop->important = important;
+                stylesheet.pushBack(prop);
+                return Ok();
+            }
+
+            if (auto property = procs->parse(c, mode)) {
+                eatWhitespace(c);
+                if (not c.ended())
+                    return Error::invalidData("unexpected tokens");
+
+                (*property)->important = important;
+                stylesheet.pushBack(*property);
+                return Ok();
+            }
+
+            if (_containsVariable(c)) {
+                auto prop = makeRc<DeferredProperty>(longhandId, id, c);
+                prop->important = important;
+                stylesheet.pushBack(prop);
+                return Ok();
+            }
+
+            return Error::invalidData("invalid property");
+        },
+        [&](ShorthandId shorthandId) -> Res<> {
+            Opt<ShorthandProcs> procs = _propertyTables.shorthandProcs[toUnderlyingType(shorthandId)];
+
+            if (not procs)
+                return Error::notImplemented("unimplemented property");
+
+            if (auto defaultValue = _parseDefaulted(c)) {
+                eatWhitespace(c);
+                if (not c.ended())
+                    return Error::invalidData("unexpected tokens");
+
+                for (auto const& longhandId : expandShorthand(shorthandId)) {
+                    auto prop = makeRc<DefaultedProperty>(longhandId, defaultValue.expect());
+                    prop->important = important;
+                    stylesheet.pushBack(prop);
+                }
+                return Ok();
+            }
+
+            auto oldLen = stylesheet.len();
+            if (auto property = procs->parse(c, stylesheet, mode)) {
+                eatWhitespace(c);
+                if (not c.ended()) {
+                    stylesheet.trunc(oldLen);
+                    return Error::invalidData("unexpected tokens");
+                }
+
+                for (auto i = oldLen; i < stylesheet.len(); i++)
+                    stylesheet[i]->important = important;
+
+                return Ok();
+            }
+
+            if (_containsVariable(c)) {
+                for (auto const& longhandId : expandShorthand(shorthandId)) {
+                    auto prop = makeRc<DeferredProperty>(longhandId, id, c);
+                    prop->important = important;
+                    stylesheet.pushBack(prop);
+                }
+            }
+
+            return Error::invalidData("invalid property");
+        }
+    );
 }
 
 void inheritProperty(LonghandId id, ComputedValues const& parent, ComputedValues& child) {

@@ -40,10 +40,6 @@ export struct VisibilityProperty : Property {
         return Ok(makeRc<VisibilityProperty>(value));
     }
 
-    struct Registration : LonghandRegistration {
-        Registration() : LonghandRegistration(Properties::VISIBILITY) {}
-    };
-
     Visibility _value;
 
     VisibilityProperty(Visibility value)
@@ -82,10 +78,6 @@ export struct OpacityProperty : Property {
         return Ok(makeRc<OpacityProperty>(try$(parseValue<Number>(c))));
     }
 
-    struct Registration : LonghandRegistration {
-        Registration() : LonghandRegistration(Properties::OPACITY) {}
-    };
-
     Number _value;
 
     OpacityProperty(Number value)
@@ -123,10 +115,6 @@ export struct ClipPathProperty : Property {
     static Res<Rc<Property>> parse(Cursor<Css::Sst>& c, ParsingMode) {
         return Ok(makeRc<ClipPathProperty>(try$(parseValue<Value>(c))));
     }
-
-    struct Registration : LonghandRegistration {
-        Registration() : LonghandRegistration(Properties::CLIP_PATH) {}
-    };
 
     Value _value;
 

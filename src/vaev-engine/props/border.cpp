@@ -31,10 +31,6 @@ export struct BorderTopColorProperty : Property {
         return Ok(makeRc<BorderTopColorProperty>(try$(parseValue<Color>(c))));
     }
 
-    struct Registration : LonghandRegistration {
-        Registration() : LonghandRegistration(Properties::BORDER_TOP_COLOR) {}
-    };
-
     Color _value;
 
     BorderTopColorProperty(Color value)
@@ -68,10 +64,6 @@ export struct BorderRightColorProperty : Property {
     static Res<Rc<Property>> parse(Cursor<Css::Sst>& c, ParsingMode) {
         return Ok(makeRc<BorderRightColorProperty>(try$(parseValue<Color>(c))));
     }
-
-    struct Registration : LonghandRegistration {
-        Registration() : LonghandRegistration(Properties::BORDER_RIGHT_COLOR) {}
-    };
 
     Color _value;
 
@@ -107,10 +99,6 @@ export struct BorderBottomColorProperty : Property {
         return Ok(makeRc<BorderBottomColorProperty>(try$(parseValue<Color>(c))));
     }
 
-    struct Registration : LonghandRegistration {
-        Registration() : LonghandRegistration(Properties::BORDER_BOTTOM_COLOR) {}
-    };
-
     Color _value;
 
     BorderBottomColorProperty(Color value)
@@ -144,10 +132,6 @@ export struct BorderLeftColorProperty : Property {
     static Res<Rc<Property>> parse(Cursor<Css::Sst>& c, ParsingMode) {
         return Ok(makeRc<BorderLeftColorProperty>(try$(parseValue<Color>(c))));
     }
-
-    struct Registration : LonghandRegistration {
-        Registration() : LonghandRegistration(Properties::BORDER_LEFT_COLOR) {}
-    };
 
     Color _value;
 
@@ -229,10 +213,6 @@ export struct BorderLeftStyleProperty : Property {
         return Ok(makeRc<BorderLeftStyleProperty>(try$(parseValue<Gfx::BorderStyle>(c))));
     }
 
-    struct Registration : LonghandRegistration {
-        Registration() : LonghandRegistration(Properties::BORDER_LEFT_STYLE) {}
-    };
-
     Gfx::BorderStyle _value;
 
     BorderLeftStyleProperty(Gfx::BorderStyle value)
@@ -266,10 +246,6 @@ export struct BorderTopStyleProperty : Property {
     static Res<Rc<Property>> parse(Cursor<Css::Sst>& c, ParsingMode) {
         return Ok(makeRc<BorderTopStyleProperty>(try$(parseValue<Gfx::BorderStyle>(c))));
     }
-
-    struct Registration : LonghandRegistration {
-        Registration() : LonghandRegistration(Properties::BORDER_TOP_STYLE) {}
-    };
 
     Gfx::BorderStyle _value;
 
@@ -305,10 +281,6 @@ export struct BorderRightStyleProperty : Property {
         return Ok(makeRc<BorderRightStyleProperty>(try$(parseValue<Gfx::BorderStyle>(c))));
     }
 
-    struct Registration : LonghandRegistration {
-        Registration() : LonghandRegistration(Properties::BORDER_RIGHT_STYLE) {}
-    };
-
     Gfx::BorderStyle _value;
 
     BorderRightStyleProperty(Gfx::BorderStyle value)
@@ -342,10 +314,6 @@ export struct BorderBottomStyleProperty : Property {
     static Res<Rc<Property>> parse(Cursor<Css::Sst>& c, ParsingMode) {
         return Ok(makeRc<BorderBottomStyleProperty>(try$(parseValue<Gfx::BorderStyle>(c))));
     }
-
-    struct Registration : LonghandRegistration {
-        Registration() : LonghandRegistration(Properties::BORDER_BOTTOM_STYLE) {}
-    };
 
     Gfx::BorderStyle _value;
 
@@ -428,10 +396,6 @@ export struct BorderTopWidthProperty : Property {
         return Ok(makeRc<BorderTopWidthProperty>(try$(parseValue<LineWidth>(c))));
     }
 
-    struct Registration : LonghandRegistration {
-        Registration() : LonghandRegistration(Properties::BORDER_TOP_WIDTH) {}
-    };
-
     LineWidth _value;
 
     BorderTopWidthProperty(LineWidth value)
@@ -465,10 +429,6 @@ export struct BorderRightWidthProperty : Property {
     static Res<Rc<Property>> parse(Cursor<Css::Sst>& c, ParsingMode) {
         return Ok(makeRc<BorderRightWidthProperty>(try$(parseValue<LineWidth>(c))));
     }
-
-    struct Registration : LonghandRegistration {
-        Registration() : LonghandRegistration(Properties::BORDER_RIGHT_WIDTH) {}
-    };
 
     LineWidth _value;
 
@@ -504,10 +464,6 @@ export struct BorderBottomWidthProperty : Property {
         return Ok(makeRc<BorderBottomWidthProperty>(try$(parseValue<Calc<Length>>(c))));
     }
 
-    struct Registration : LonghandRegistration {
-        Registration() : LonghandRegistration(Properties::BORDER_BOTTOM_WIDTH) {}
-    };
-
     LineWidth _value;
 
     BorderBottomWidthProperty(LineWidth value)
@@ -541,10 +497,6 @@ export struct BorderLeftWidthProperty : Property {
     static Res<Rc<Property>> parse(Cursor<Css::Sst>& c, ParsingMode) {
         return Ok(makeRc<BorderLeftWidthProperty>(try$(parseValue<LineWidth>(c))));
     }
-
-    struct Registration : LonghandRegistration {
-        Registration() : LonghandRegistration(Properties::BORDER_LEFT_WIDTH) {}
-    };
 
     LineWidth _value;
 
@@ -586,10 +538,6 @@ export struct BorderTopRightRadiusProperty : Property {
             value[1] = try$(parseValue<Calc<PercentOr<Length>>>(c));
         return Ok(makeRc<BorderTopRightRadiusProperty>(value));
     }
-
-    struct Registration : LonghandRegistration {
-        Registration() : LonghandRegistration(Properties::BORDER_TOP_RIGHT_RADIUS) {}
-    };
 
     Array<Calc<PercentOr<Length>>, 2> _value;
 
@@ -634,10 +582,6 @@ export struct BorderTopLeftRadiusProperty : Property {
         return Ok(makeRc<BorderTopLeftRadiusProperty>(value));
     }
 
-    struct Registration : LonghandRegistration {
-        Registration() : LonghandRegistration(Properties::BORDER_TOP_LEFT_RADIUS) {}
-    };
-
     Array<Calc<PercentOr<Length>>, 2> _value;
 
     BorderTopLeftRadiusProperty(Array<Calc<PercentOr<Length>>, 2> value)
@@ -679,10 +623,6 @@ export struct BorderBottomRightRadiusProperty : Property {
             value[1] = try$(parseValue<Calc<PercentOr<Length>>>(c));
         return Ok(makeRc<BorderBottomRightRadiusProperty>(value));
     }
-
-    struct Registration : LonghandRegistration {
-        Registration() : LonghandRegistration(Properties::BORDER_BOTTOM_RIGHT_RADIUS) {}
-    };
 
     Array<Calc<PercentOr<Length>>, 2> _value;
 
@@ -726,10 +666,6 @@ export struct BorderBottomLeftRadiusProperty : Property {
             value[1] = try$(parseValue<Calc<PercentOr<Length>>>(c));
         return Ok(makeRc<BorderBottomLeftRadiusProperty>(value));
     }
-
-    struct Registration : LonghandRegistration {
-        Registration() : LonghandRegistration(Properties::BORDER_BOTTOM_LEFT_RADIUS) {}
-    };
 
     Array<Calc<PercentOr<Length>>, 2> _value;
 
@@ -1076,11 +1012,6 @@ export struct BorderCollapseProperty : Property {
         return Ok(makeRc<BorderCollapseProperty>(try$(parseValue<BorderCollapse>(c))));
     }
 
-    struct Registration : LonghandRegistration {
-        Registration()
-            : LonghandRegistration(Properties::BORDER_COLLAPSE, FLAGS) {}
-    };
-
     BorderCollapse _value;
 
     BorderCollapseProperty(BorderCollapse value)
@@ -1115,11 +1046,6 @@ export struct BorderSpacingProperty : Property {
     static Res<Rc<Property>> parse(Cursor<Css::Sst>& c, ParsingMode) {
         return Ok(makeRc<BorderSpacingProperty>(try$(parseValue<BorderSpacing>(c))));
     }
-
-    struct Registration : LonghandRegistration {
-        Registration()
-            : LonghandRegistration(Properties::BORDER_SPACING, FLAGS) {}
-    };
 
     BorderSpacing _value;
 
