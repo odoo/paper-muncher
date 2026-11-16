@@ -11,40 +11,71 @@ namespace Vaev::Xml::Tests {
 
 test$("parse-empty-document") {
     Gc::Heap gc;
+    XmlParser p{gc};
+
     auto s = Io::SScan(""s);
-    Xml::XmlParser p{gc};
-    assert$(not p._parseElement(s, Some(Html::NAMESPACE))); // An empty document is invalid
+    auto dom = Dom::Document::create(gc, Ref::Url(), Ref::Uti::PUBLIC_XHTML);
+    assert$(not p.parse(s, Some(Html::NAMESPACE), *dom)); // An empty document is invalid
+    assert$(not dom->hasChildren());
+
+    return Ok();
+}
+
+test$("parse-error-leaves-no-root") {
+    Gc::Heap gc;
+    XmlParser p{gc};
+
+    // The root is only attached once it's closed, a document that fails
+    // to parse shouldn't end up with half a tree in it.
+    auto s = Io::SScan("<html><div>text</html>");
+    auto dom = Dom::Document::create(gc, Ref::Url(), Ref::Uti::PUBLIC_XHTML);
+    assert$(not p.parse(s, Some(Html::NAMESPACE), *dom));
+    assert$(not dom->hasChildren());
+
     return Ok();
 }
 
 test$("parse-open-close-tag") {
     Gc::Heap gc;
-    Xml::XmlParser p{gc};
-    auto s = Io::SScan("<html></html>");
-    auto root = try$(p._parseElement(s, Some(Html::NAMESPACE)));
+    XmlParser p{gc};
 
-    auto el = root->as<Dom::Element>();
+    auto s = Io::SScan("<html></html>");
+    auto dom = Dom::Document::create(gc, Ref::Url(), Ref::Uti::PUBLIC_XHTML);
+    try$(p.parse(s, Some(Html::NAMESPACE), *dom));
+
+    auto el = dom->firstChild()->as<Dom::Element>();
     assertNe$(el, nullptr);
     assert$(el->qualifiedName == Html::HTML_TAG);
+    assert$(not el->hasChildren());
 
     return Ok();
 }
 
 test$("parse-empty-tag") {
     Gc::Heap gc;
-    Xml::XmlParser p{gc};
+    XmlParser p{gc};
+
     auto s = Io::SScan("<html/>");
-    try$(p._parseElement(s, Some(Html::NAMESPACE)));
+    auto dom = Dom::Document::create(gc, Ref::Url(), Ref::Uti::PUBLIC_XHTML);
+    try$(p.parse(s, Some(Html::NAMESPACE), *dom));
+
+    auto el = dom->firstChild()->as<Dom::Element>();
+    assertNe$(el, nullptr);
+    assert$(el->qualifiedName == Html::HTML_TAG);
+    assert$(not el->hasChildren());
+
     return Ok();
 }
 
 test$("parse-attr") {
     Gc::Heap gc;
-    Xml::XmlParser p{gc};
-    auto s = Io::SScan("<html lang=\"en\"/>");
-    auto root = try$(p._parseElement(s, Some(Html::NAMESPACE)));
+    XmlParser p{gc};
 
-    auto el = root->as<Dom::Element>();
+    auto s = Io::SScan("<html lang=\"en\"/>");
+    auto dom = Dom::Document::create(gc, Ref::Url(), Ref::Uti::PUBLIC_XHTML);
+    try$(p.parse(s, Some(Html::NAMESPACE), *dom));
+
+    auto el = dom->firstChild()->as<Dom::Element>();
     assertNe$(el, nullptr);
     assert$(el->hasAttribute(Html::LANG_ATTR));
     assert$(el->getAttribute(Html::LANG_ATTR) == "en");
@@ -54,11 +85,13 @@ test$("parse-attr") {
 
 test$("parse-attr-whitespace-around-eq") {
     Gc::Heap gc;
-    Xml::XmlParser p{gc};
-    auto s = Io::SScan("<html lang = \"en\" dir =\"ltr\"/>");
-    auto root = try$(p._parseElement(s, Some(Html::NAMESPACE)));
+    XmlParser p{gc};
 
-    auto el = root->as<Dom::Element>();
+    auto s = Io::SScan("<html lang = \"en\" dir =\"ltr\"/>");
+    auto dom = Dom::Document::create(gc, Ref::Url(), Ref::Uti::PUBLIC_XHTML);
+    try$(p.parse(s, Some(Html::NAMESPACE), *dom));
+
+    auto el = dom->firstChild()->as<Dom::Element>();
     assertNe$(el, nullptr);
     assert$(el->getAttribute(Html::LANG_ATTR) == "en");
     assert$(el->getAttribute(Html::DIR_ATTR) == "ltr");
@@ -68,12 +101,13 @@ test$("parse-attr-whitespace-around-eq") {
 
 test$("parse-text") {
     Gc::Heap gc;
-    Xml::XmlParser p{gc};
+    XmlParser p{gc};
 
     auto s = Io::SScan("<html>text</html>");
-    auto root = try$(p._parseElement(s, Some(Html::NAMESPACE)));
+    auto dom = Dom::Document::create(gc, Ref::Url(), Ref::Uti::PUBLIC_XHTML);
+    try$(p.parse(s, Some(Html::NAMESPACE), *dom));
 
-    auto el = root->as<Dom::Element>();
+    auto el = dom->firstChild()->as<Dom::Element>();
     assertNe$(el, nullptr);
     assert$(el->hasChildren());
 
@@ -86,12 +120,13 @@ test$("parse-text") {
 
 test$("parse-text-before-tag") {
     Gc::Heap gc;
-    Xml::XmlParser p{gc};
+    XmlParser p{gc};
 
     auto s = Io::SScan("<html>text<div/></html>");
-    auto root = try$(p._parseElement(s, Some(Html::NAMESPACE)));
+    auto dom = Dom::Document::create(gc, Ref::Url(), Ref::Uti::PUBLIC_XHTML);
+    try$(p.parse(s, Some(Html::NAMESPACE), *dom));
 
-    auto el = root->as<Dom::Element>();
+    auto el = dom->firstChild()->as<Dom::Element>();
     assertNe$(el, nullptr);
     assert$(el->hasChildren());
 
@@ -100,6 +135,7 @@ test$("parse-text-before-tag") {
     assert$(text->data() == "text");
 
     auto div = text->nextSibling()->as<Dom::Element>();
+    assertNe$(div, nullptr);
     assert$(div->nodeType() == Dom::NodeType::ELEMENT);
     assert$(div->qualifiedName == Html::DIV_TAG);
 
@@ -108,12 +144,13 @@ test$("parse-text-before-tag") {
 
 test$("parse-text-after-tag") {
     Gc::Heap gc;
-    Xml::XmlParser p{gc};
+    XmlParser p{gc};
 
     auto s = Io::SScan("<html><div/>text</html>");
-    auto root = try$(p._parseElement(s, Some(Html::NAMESPACE)));
+    auto dom = Dom::Document::create(gc, Ref::Url(), Ref::Uti::PUBLIC_XHTML);
+    try$(p.parse(s, Some(Html::NAMESPACE), *dom));
 
-    auto el = root->as<Dom::Element>();
+    auto el = dom->firstChild()->as<Dom::Element>();
     assertNe$(el, nullptr);
     assert$(el->hasChildren());
 
@@ -130,12 +167,13 @@ test$("parse-text-after-tag") {
 
 test$("parse-text-between-tags") {
     Gc::Heap gc;
-    Xml::XmlParser p{gc};
+    XmlParser p{gc};
 
     auto s = Io::SScan("<html><div/>text<div/></html>");
-    auto root = try$(p._parseElement(s, Some(Html::NAMESPACE)));
+    auto dom = Dom::Document::create(gc, Ref::Url(), Ref::Uti::PUBLIC_XHTML);
+    try$(p.parse(s, Some(Html::NAMESPACE), *dom));
 
-    auto el = root->as<Dom::Element>();
+    auto el = dom->firstChild()->as<Dom::Element>();
     assertNe$(el, nullptr);
     assert$(el->hasChildren());
 
@@ -159,11 +197,13 @@ test$("parse-text-between-tags") {
 
 test$("parse-text-between-tags-and-before") {
     Gc::Heap gc;
-    Xml::XmlParser p{gc};
+    XmlParser p{gc};
 
     auto s = Io::SScan("<html>test2<div>text</div></html>");
-    auto root = try$(p._parseElement(s, Some(Html::NAMESPACE)));
-    auto el = root->as<Dom::Element>();
+    auto dom = Dom::Document::create(gc, Ref::Url(), Ref::Uti::PUBLIC_XHTML);
+    try$(p.parse(s, Some(Html::NAMESPACE), *dom));
+
+    auto el = dom->firstChild()->as<Dom::Element>();
     assertNe$(el, nullptr);
     assert$(el->hasChildren());
 
@@ -187,12 +227,13 @@ test$("parse-text-between-tags-and-before") {
 
 test$("parse-nested-tags") {
     Gc::Heap gc;
-    Xml::XmlParser p{gc};
+    XmlParser p{gc};
 
     auto s = Io::SScan("<html><head></head><body></body></html>");
-    auto root = try$(p._parseElement(s, Some(Html::NAMESPACE)));
+    auto dom = Dom::Document::create(gc, Ref::Url(), Ref::Uti::PUBLIC_XHTML);
+    try$(p.parse(s, Some(Html::NAMESPACE), *dom));
 
-    auto el = root->as<Dom::Element>();
+    auto el = dom->firstChild()->as<Dom::Element>();
     assertNe$(el, nullptr);
     assert$(el->hasChildren());
 
@@ -211,12 +252,13 @@ test$("parse-nested-tags") {
 
 test$("parse-comment") {
     Gc::Heap gc;
-    Xml::XmlParser p{gc};
+    XmlParser p{gc};
 
     auto s = Io::SScan("<html><!-- comment --></html>");
-    auto root = try$(p._parseElement(s, Some(Html::NAMESPACE)));
+    auto dom = Dom::Document::create(gc, Ref::Url(), Ref::Uti::PUBLIC_XHTML);
+    try$(p.parse(s, Some(Html::NAMESPACE), *dom));
 
-    auto el = root->as<Dom::Element>();
+    auto el = dom->firstChild()->as<Dom::Element>();
     assertNe$(el, nullptr);
     assert$(el->hasChildren());
 
@@ -230,7 +272,7 @@ test$("parse-comment") {
 
 test$("parse-doctype") {
     Gc::Heap gc;
-    Xml::XmlParser p{gc};
+    XmlParser p{gc};
 
     auto s = Io::SScan("<!DOCTYPE html><html></html>");
 
@@ -242,12 +284,16 @@ test$("parse-doctype") {
     assertNe$(doctype, nullptr);
     assert$(doctype->name == "html"s);
 
+    auto el = doctype->nextSibling()->as<Dom::Element>();
+    assertNe$(el, nullptr);
+    assert$(el->qualifiedName == Html::HTML_TAG);
+
     return Ok();
 }
 
 test$("parse-title") {
     Gc::Heap gc;
-    Xml::XmlParser p{gc};
+    XmlParser p{gc};
 
     auto s = Io::SScan("<title>the title</title>");
     auto dom = Dom::Document::create(gc, Ref::Url(), Ref::Uti::PUBLIC_XHTML);
@@ -258,7 +304,7 @@ test$("parse-title") {
 
 test$("parse-comment-with-gt-symb") {
     Gc::Heap gc;
-    Xml::XmlParser p{gc};
+    XmlParser p{gc};
 
     auto s = Io::SScan(
         "<title>im a title!</title>"
@@ -284,7 +330,7 @@ test$("parse-comment-with-gt-symb") {
 
 test$("parse-xml-decl") {
     Gc::Heap gc;
-    Xml::XmlParser p{gc};
+    XmlParser p{gc};
 
     auto s = Io::SScan("<?xml version='1.0' encoding='UTF-8'?><html></html>");
     auto dom = Dom::Document::create(gc, Ref::Url(), Ref::Uti::PUBLIC_XHTML);
@@ -297,7 +343,7 @@ test$("parse-xml-decl") {
 
 test$("parse-xml-different-namespace") {
     Gc::Heap gc;
-    Xml::XmlParser p{gc};
+    XmlParser p{gc};
 
     auto s = Io::SScan(
         "<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 0 0\">"
@@ -322,7 +368,7 @@ test$("parse-xml-different-namespace") {
 
 test$("parse-xml-prefixed-names") {
     Gc::Heap gc;
-    Xml::XmlParser p{gc};
+    XmlParser p{gc};
 
     auto s = Io::SScan(
         "<root xmlns:a=\"http://www.example.org/a\">"
