@@ -61,12 +61,12 @@ struct PropertyTables {
     static constexpr usize SHORTHAND_LEN = enumLen<ShorthandId>();
 
     Array<Opt<LonghandProcs>, LONGHAND_LEN> longhandProcs = Array<Opt<LonghandProcs>, LONGHAND_LEN>::fill(Opt<LonghandProcs>{});
-    Array<Opt<ShorthandProcs>, SHORTHAND_LEN> shorthandProcs = Array<Opt<ShorthandProcs>, SHORTHAND_LEN>::fill(Opt<ShorthandProcs>{});
-
     Array<ComputationPhase, LONGHAND_LEN> longhandPhase = Array<ComputationPhase, LONGHAND_LEN>::fill(ComputationPhase::NORMAL);
     Array<Slice<Str>, LONGHAND_LEN> longhandAliases = Array<Slice<Str>, LONGHAND_LEN>::fill(Slice<Str>{});
 
+    Array<Opt<ShorthandProcs>, SHORTHAND_LEN> shorthandProcs = Array<Opt<ShorthandProcs>, SHORTHAND_LEN>::fill(Opt<ShorthandProcs>{});
     Array<Slice<LonghandId>, SHORTHAND_LEN> shorthandLonghands = Array<Slice<LonghandId>, SHORTHAND_LEN>::fill(Slice<LonghandId>{});
+    Array<Slice<Str>, SHORTHAND_LEN> shorthandAliases = Array<Slice<Str>, SHORTHAND_LEN>::fill(Slice<Str>{});
 
     template <typename T>
     constexpr void registerLonghand() {
@@ -102,6 +102,9 @@ struct PropertyTables {
 
         shorthandProcs[id] = Some(procs);
         shorthandLonghands[id] = T::LONGHANDS;
+
+        if constexpr (requires { T::LEGACY_NAME_ALIASES; })
+            shorthandAliases[id] = T::LEGACY_NAME_ALIASES;
     }
 };
 
@@ -119,13 +122,14 @@ static constexpr PropertyTables _propertyTables = [] {
     // Gaps
     tables.registerLonghand<RowGapProperty>();
     tables.registerLonghand<ColumnGapProperty>();
+    tables.registerShorthand<GapShorthand>();
 
     // Baseline
     tables.registerLonghand<DominantBaselineProperty>();
     tables.registerLonghand<BaselineSourceProperty>();
     tables.registerLonghand<AlignmentBaselineProperty>();
     tables.registerLonghand<BaselineShiftProperty>();
-    // VerticalAlignProperty: shorthand
+    tables.registerShorthand<VerticalAlignShorthand>();
 
     // Background
     tables.registerLonghand<BackgroundAttachmentProperty>();
@@ -133,7 +137,7 @@ static constexpr PropertyTables _propertyTables = [] {
     tables.registerLonghand<BackgroundImageProperty>();
     tables.registerLonghand<BackgroundPositionProperty>();
     tables.registerLonghand<BackgroundRepeatProperty>();
-    // BackgroundProperty: shorthand
+    tables.registerShorthand<BackgroundShorthand>();
     tables.registerLonghand<ColorProperty>();
     tables.registerLonghand<DisplayProperty>();
     tables.registerLonghand<TableLayoutProperty>();
@@ -152,7 +156,7 @@ static constexpr PropertyTables _propertyTables = [] {
     tables.registerLonghand<BorderRightColorProperty>();
     tables.registerLonghand<BorderBottomColorProperty>();
     tables.registerLonghand<BorderLeftColorProperty>();
-    // BorderColorProperty: shorthand
+    tables.registerShorthand<BorderColorShorthand>();
 
     // Borders – Widths
     tables.registerLonghand<BorderTopWidthProperty>();
@@ -161,7 +165,7 @@ static constexpr PropertyTables _propertyTables = [] {
     tables.registerLonghand<BorderLeftWidthProperty>();
 
     // Borders – Styles
-    // BorderStyleProperty: shorthand
+    tables.registerShorthand<BorderStyleShorthand>();
     tables.registerLonghand<BorderTopStyleProperty>();
     tables.registerLonghand<BorderRightStyleProperty>();
     tables.registerLonghand<BorderBottomStyleProperty>();
@@ -172,16 +176,15 @@ static constexpr PropertyTables _propertyTables = [] {
     tables.registerLonghand<BorderTopLeftRadiusProperty>();
     tables.registerLonghand<BorderBottomRightRadiusProperty>();
     tables.registerLonghand<BorderBottomLeftRadiusProperty>();
-    // BorderRadiusProperty: shorthand
+    tables.registerShorthand<BorderRadiusShorthand>();
 
     // Borders – Shorthand
-    // BorderTopProperty: shorthand
-    // BorderRightProperty: shorthand
-    // BorderBottomProperty: shorthand
-    // BorderLeftProperty: shorthand
-    // BorderProperty: shorthand
-
-    // BorderWidthProperty: shorthand
+    tables.registerShorthand<BorderTopShorthand>();
+    tables.registerShorthand<BorderRightShorthand>();
+    tables.registerShorthand<BorderBottomShorthand>();
+    tables.registerShorthand<BorderLeftShorthand>();
+    tables.registerShorthand<BorderShorthand>();
+    tables.registerShorthand<BorderWidthShorthand>();
 
     // Table Borders
     tables.registerLonghand<BorderCollapseProperty>();
@@ -197,9 +200,9 @@ static constexpr PropertyTables _propertyTables = [] {
     tables.registerLonghand<BreakAfterProperty>();
     tables.registerLonghand<BreakBeforeProperty>();
     tables.registerLonghand<BreakInsideProperty>();
-    // PageBreakAfterProperty: shorthand
-    // PageBreakBeforeProperty: shorthand
-    // PageBreakInsideProperty: shorthand
+    tables.registerShorthand<PageBreakAfterShorthand>();
+    tables.registerShorthand<PageBreakBeforeShorthand>();
+    tables.registerShorthand<PageBreakInsideShorthand>();
 
     // Flex
     tables.registerLonghand<FlexBasisProperty>();
@@ -207,8 +210,8 @@ static constexpr PropertyTables _propertyTables = [] {
     tables.registerLonghand<FlexGrowProperty>();
     tables.registerLonghand<FlexShrinkProperty>();
     tables.registerLonghand<FlexWrapProperty>();
-    // FlexFlowProperty: shorthand
-    // FlexProperty: shorthand
+    tables.registerShorthand<FlexFlowShorthand>();
+    tables.registerShorthand<FlexShorthand>();
 
     // Float & Clear
     tables.registerLonghand<FloatProperty>();
@@ -221,7 +224,7 @@ static constexpr PropertyTables _propertyTables = [] {
 
     tables.registerLonghand<FontStyleProperty>();
     tables.registerLonghand<FontSizeProperty>();
-    // FontProperty: shorthand
+    tables.registerShorthand<FontShorthand>();
 
     // Line
     tables.registerLonghand<LineHeightProperty>();
@@ -235,14 +238,14 @@ static constexpr PropertyTables _propertyTables = [] {
 
     tables.registerLonghand<MarginInlineStartProperty>();
     tables.registerLonghand<MarginInlineEndProperty>();
-    // MarginInlineProperty: shorthand
+    tables.registerShorthand<MarginInlineShorthand>();
 
     tables.registerLonghand<MarginBlockStartProperty>();
     tables.registerLonghand<MarginBlockEndProperty>();
-    // MarginBlockProperty: shorthand
+    tables.registerShorthand<MarginBlockShorthand>();
 
     // Outline
-    // OutlineProperty: shorthand
+    tables.registerShorthand<OutlineShorthand>();
     tables.registerLonghand<OutlineColorProperty>();
     tables.registerLonghand<OutlineOffsetProperty>();
     tables.registerLonghand<OutlineStyleProperty>();
@@ -253,7 +256,7 @@ static constexpr PropertyTables _propertyTables = [] {
     tables.registerLonghand<OverflowYProperty>();
     tables.registerLonghand<OverflowBlockProperty>();
     tables.registerLonghand<OverflowInlineProperty>();
-    // OverflowProperty: shorthand
+    tables.registerShorthand<OverflowShorthand>();
 
     tables.registerLonghand<OpacityProperty>();
 
@@ -264,7 +267,7 @@ static constexpr PropertyTables _propertyTables = [] {
     tables.registerLonghand<PaddingLeftProperty>();
     tables.registerLonghand<PaddingInlineStartProperty>();
     tables.registerLonghand<PaddingInlineEndProperty>();
-    // PaddingProperty: shorthand
+    tables.registerShorthand<PaddingShorthand>();
 
     // Positioning
     tables.registerLonghand<PositionProperty>();
@@ -315,7 +318,7 @@ static constexpr PropertyTables _propertyTables = [] {
     tables.registerLonghand<ListStyleImageProperty>();
     tables.registerLonghand<ListStyleTypeProperty>();
     tables.registerLonghand<ListStylePositionProperty>();
-    // ListStyleProperty: shorthand
+    tables.registerShorthand<ListStyleShorthand>();
     tables.registerLonghand<MarkerSideProperty>();
 
     // Writing
@@ -326,9 +329,8 @@ static constexpr PropertyTables _propertyTables = [] {
     tables.registerLonghand<ColumnWidthProperty>();
     tables.registerLonghand<ColumnHeightProperty>();
     tables.registerLonghand<ColumnCountProperty>();
-    // ColumnsProperty: shorthand
+    tables.registerShorthand<ColumnsShorthand>();
 
-    // FIXME: Shorthands are registered here once they have a static ID and parse().
 
     return tables;
 }();
@@ -341,8 +343,11 @@ static Map<Symbol, PropertyId> const& _propertyIds() {
             for (auto alias : _propertyTables.longhandAliases[i])
                 ids.put(Symbol::from(alias), PropertyId{LonghandId(i)});
         }
-        for (usize i = 0; i < enumLen<ShorthandId>(); i++)
+        for (usize i = 0; i < enumLen<ShorthandId>(); i++) {
             ids.put(Symbol::from(_shorthandNames[i]), PropertyId{ShorthandId(i)});
+            for (auto alias : _propertyTables.shorthandAliases[i])
+                ids.put(Symbol::from(alias), PropertyId{ShorthandId(i)});
+        }
         return ids;
     }();
     return ids;
@@ -436,7 +441,9 @@ Res<Rc<Property>> mustParseLonghand(LonghandId id, Cursor<Css::Sst>& c, ParsingM
 }
 
 Res<> parseProperty(Symbol name, Cursor<Css::Sst>& c, Vec<Rc<Property>>& stylesheet, ParsingMode mode, bool important) {
-    if (startWith(name.str(), "--"s) == Match::YES) {
+    // NOTE: PARTIAL excludes "--" itself, which is reserved.
+    //       https://drafts.csswg.org/css-variables/#defining-variables
+    if (startWith(name.str(), "--"s) == Match::PARTIAL) {
         auto prop = makeRc<CustomProperty>(CustomProperty::Value{name, c});
         prop->important = important;
         stylesheet.pushBack(prop);

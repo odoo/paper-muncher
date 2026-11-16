@@ -117,134 +117,72 @@ export struct BreakInsideProperty : Property {
     }
 };
 
-// MARK: Page Break Aliases --------------------------------------------------
-//
-// // https://www.w3.org/TR/css-break-3/#page-break-properties
-// static Res<BreakBetween> _parseLegacyPageBreak(Cursor<Css::Sst>& c) {
-//     if (c.skip(Css::Token::ident("auto")))
-//         return Ok(BreakBetween::AUTO);
-//     if (c.skip(Css::Token::ident("always")))
-//         return Ok(BreakBetween::PAGE);
-//     if (c.skip(Css::Token::ident("avoid")))
-//         return Ok(BreakBetween::AVOID);
-//     if (c.skip(Css::Token::ident("left")))
-//         return Ok(BreakBetween::LEFT);
-//     if (c.skip(Css::Token::ident("right")))
-//         return Ok(BreakBetween::RIGHT);
-//     return Error::invalidData("expected auto, always, avoid, left or right");
-// }
-//
-// static void _reprLegacyPageBreak(Io::Emit& e, BreakBetween value) {
-//     if (value == BreakBetween::PAGE)
-//         e("always");
-//     else
-//         e("{}", value);
-// }
+// MARK: Page Break Aliases ----------------------------------------------------
 
-// // https://www.w3.org/TR/css-break-3/#page-break-properties
-// export struct PageBreakAfterProperty : Property {
-//     struct Registration : Property::Registration {
-//         Registration() : Property::Registration(Properties::PAGE_BREAK_AFTER, SHORTHAND) {}
-//
-//         Rc<Property> initial() const override {
-//             return makeRc<PageBreakAfterProperty>(self(), BreakBetween::AUTO);
-//         }
-//
-//         Rc<Property> load(ComputedValues const& c) const override {
-//             return makeRc<PageBreakAfterProperty>(self(), c.break_->after);
-//         }
-//
-//         Res<Rc<Property>> parse(Cursor<Css::Sst>& c) const override {
-//             return Ok(makeRc<PageBreakAfterProperty>(self(), try$(_parseLegacyPageBreak(c))));
-//         }
-//     };
-//
-//     BreakBetween _value;
-//
-//     PageBreakAfterProperty(Rc<Property::Registration> registration, BreakBetween value)
-//         : Property(registration), _value(value) {}
-//
-//     Longhands expand(RegisteredPropertySet& registry, ComputedValues const&, ComputedValues&) const override {
-//         return {
-//             makeRc<BreakAfterProperty>(registry.resolveRegistration(Properties::BREAK_AFTER, {}).expect(), _value),
-//         };
-//     }
-//
-//     void repr(Io::Emit& e) const override {
-//         _reprLegacyPageBreak(e, _value);
-//     }
-// };
+// https://www.w3.org/TR/css-break-3/#page-break-properties
+static Res<BreakBetween> _parseLegacyPageBreak(Cursor<Css::Sst>& c) {
+    if (c.skip(Css::Token::ident("auto")))
+        return Ok(BreakBetween::AUTO);
+    if (c.skip(Css::Token::ident("always")))
+        return Ok(BreakBetween::PAGE);
+    if (c.skip(Css::Token::ident("avoid")))
+        return Ok(BreakBetween::AVOID);
+    if (c.skip(Css::Token::ident("left")))
+        return Ok(BreakBetween::LEFT);
+    if (c.skip(Css::Token::ident("right")))
+        return Ok(BreakBetween::RIGHT);
+    return Error::invalidData("expected auto, always, avoid, left or right");
+}
 
-// // https://www.w3.org/TR/css-break-3/#page-break-properties
-// export struct PageBreakBeforeProperty : Property {
-//     struct Registration : Property::Registration {
-//         Registration() : Property::Registration(Properties::PAGE_BREAK_BEFORE, SHORTHAND) {}
-//
-//         Rc<Property> initial() const override {
-//             return makeRc<PageBreakBeforeProperty>(self(), BreakBetween::AUTO);
-//         }
-//
-//         Rc<Property> load(ComputedValues const& c) const override {
-//             return makeRc<PageBreakBeforeProperty>(self(), c.break_->before);
-//         }
-//
-//         Res<Rc<Property>> parse(Cursor<Css::Sst>& c) const override {
-//             return Ok(makeRc<PageBreakBeforeProperty>(self(), try$(_parseLegacyPageBreak(c))));
-//         }
-//     };
-//
-//     BreakBetween _value;
-//
-//     PageBreakBeforeProperty(Rc<Property::Registration> registration, BreakBetween value)
-//         : Property(registration), _value(value) {}
-//
-//     Longhands expand(RegisteredPropertySet& registry, ComputedValues const&, ComputedValues&) const override {
-//         return {
-//             makeRc<BreakBeforeProperty>(registry.resolveRegistration(Properties::BREAK_BEFORE, {}).expect(), _value),
-//         };
-//     }
-//
-//     void repr(Io::Emit& e) const override {
-//         _reprLegacyPageBreak(e, _value);
-//     }
-// };
+// https://www.w3.org/TR/css-break-3/#page-break-properties
+export struct PageBreakAfterShorthand {
+    static constexpr auto ID = ShorthandId::PAGE_BREAK_AFTER;
 
-// // https://www.w3.org/TR/css-break-3/#page-break-properties
-// export struct PageBreakInsideProperty : Property {
-//     struct Registration : Property::Registration {
-//         Registration() : Property::Registration(Properties::PAGE_BREAK_INSIDE, SHORTHAND) {}
-//
-//         Rc<Property> initial() const override {
-//             return makeRc<PageBreakInsideProperty>(self(), BreakInside::AUTO);
-//         }
-//
-//         Rc<Property> load(ComputedValues const& c) const override {
-//             return makeRc<PageBreakInsideProperty>(self(), c.break_->inside);
-//         }
-//
-//         Res<Rc<Property>> parse(Cursor<Css::Sst>& c) const override {
-//             if (c.skip(Css::Token::ident("auto")))
-//                 return Ok(makeRc<PageBreakInsideProperty>(self(), BreakInside::AUTO));
-//             if (c.skip(Css::Token::ident("avoid")))
-//                 return Ok(makeRc<PageBreakInsideProperty>(self(), BreakInside::AVOID));
-//             return Error::invalidData("expected auto or avoid");
-//         }
-//     };
-//
-//     BreakInside _value;
-//
-//     PageBreakInsideProperty(Rc<Property::Registration> registration, BreakInside value)
-//         : Property(registration), _value(value) {}
-//
-//     Longhands expand(RegisteredPropertySet& registry, ComputedValues const&, ComputedValues&) const override {
-//         return {
-//             makeRc<BreakInsideProperty>(registry.resolveRegistration(Properties::BREAK_INSIDE, {}).expect(), _value),
-//         };
-//     }
-//
-//     void repr(Io::Emit& e) const override {
-//         e("{}", _value);
-//     }
-// };
+    static constexpr auto LONGHANDS = Array{
+        LonghandId::BREAK_AFTER,
+    };
+
+    static Res<> parse(Cursor<Css::Sst>& c, Vec<Rc<Property>>& stylesheet, ParsingMode) {
+        stylesheet.pushBack(makeRc<BreakAfterProperty>(try$(_parseLegacyPageBreak(c))));
+        return Ok();
+    }
+};
+
+// https://www.w3.org/TR/css-break-3/#page-break-properties
+export struct PageBreakBeforeShorthand {
+    static constexpr auto ID = ShorthandId::PAGE_BREAK_BEFORE;
+
+    static constexpr auto LONGHANDS = Array{
+        LonghandId::BREAK_BEFORE,
+    };
+
+    static Res<> parse(Cursor<Css::Sst>& c, Vec<Rc<Property>>& stylesheet, ParsingMode) {
+        stylesheet.pushBack(makeRc<BreakBeforeProperty>(try$(_parseLegacyPageBreak(c))));
+        return Ok();
+    }
+};
+
+// https://www.w3.org/TR/css-break-3/#page-break-properties
+export struct PageBreakInsideShorthand {
+    static constexpr auto ID = ShorthandId::PAGE_BREAK_INSIDE;
+
+    static constexpr auto LONGHANDS = Array{
+        LonghandId::BREAK_INSIDE,
+    };
+
+    static Res<> parse(Cursor<Css::Sst>& c, Vec<Rc<Property>>& stylesheet, ParsingMode) {
+        if (c.skip(Css::Token::ident("auto"))) {
+            stylesheet.pushBack(makeRc<BreakInsideProperty>(BreakInside::AUTO));
+            return Ok();
+        }
+
+        if (c.skip(Css::Token::ident("avoid"))) {
+            stylesheet.pushBack(makeRc<BreakInsideProperty>(BreakInside::AVOID));
+            return Ok();
+        }
+
+        return Error::invalidData("expected auto or avoid");
+    }
+};
 
 } // namespace Vaev::Style

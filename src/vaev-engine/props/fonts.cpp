@@ -34,6 +34,9 @@ export struct FontFamilyProperty : Property {
     static Res<Rc<Property>> parse(Cursor<Css::Sst>& c, ParsingMode) {
         Vec<FontFamily> value{};
         eatWhitespace(c);
+        if (c.ended())
+            return Error::invalidData("expected font family");
+
         while (not c.ended()) {
             value.pushBack(try$(parseValue<FontFamily>(c)));
 
@@ -240,112 +243,108 @@ export struct FontSizeProperty : Property {
     }
 };
 
-// // https://www.w3.org/TR/css-fonts-4/#font-prop
-// export struct FontProperty : Property {
-//     struct Value {
-//         Vec<FontFamily> families = {"sans-serif"_sym};
-//         Opt<FontWeight> weight;
-//         FontWidth width = FontWidth::NORMAL;
-//         FontStyle style = FontStyle::NORMAL;
-//         FontSize size = Keywords::MEDIUM;
-//         LineHeight lineHeight = Keywords::NORMAL;
-//
-//         void repr(Io::Emit& e) const {
-//             e("(font");
-//             e(" families={}", families);
-//             e(" weight={}", weight);
-//             e(" width={}", width);
-//             e(" style={}", style);
-//             e(" size={}", size);
-//             e(")");
-//         }
-//     };
-//
-//     struct Registration : Property::Registration {
-//         Registration()
-//             : Property::Registration(Properties::FONT, SHORTHAND) {}
-//
-//         Rc<Property> initial() const override {
-//             return makeRc<FontProperty>(self(), Value{});
-//         }
-//
-//         Rc<Property> load(ComputedValues const& c) const override {
-//             auto const& font = *c.font;
-//             return makeRc<FontProperty>(
-//                 self(),
-//                 Value{
-//                     font.families,
-//                     Some(font.weight),
-//                     font.width,
-//                     font.style,
-//                     Length{font.size},
-//                 }
-//             );
-//         }
-//
-//         Res<Rc<Property>> parse(Cursor<Css::Sst>& c) const override {
-//             // TODO: system family name
-//             FontProperty::Value value;
-//
-//             while (true) {
-//                 auto fontStyle = parseValue<FontStyle>(c);
-//                 if (fontStyle) {
-//                     value.style = fontStyle.expect();
-//                     continue;
-//                 }
-//
-//                 auto fontWeight = parseValue<FontWeight>(c);
-//                 if (fontWeight) {
-//                     value.weight = Some(fontWeight.expect());
-//                     continue;
-//                 }
-//
-//                 // TODO: font variant https://www.w3.org/TR/css-fonts-4/#font-variant-css21-values
-//
-//                 auto fontWidth = parseValue<FontWidth>(c);
-//                 if (fontWidth) {
-//                     value.width = fontWidth.expect();
-//                     continue;
-//                 }
-//
-//                 auto fontSize = parseValue<FontSize>(c);
-//                 if (fontSize) {
-//                     value.size = fontSize.expect();
-//                     break;
-//                 }
-//
-//                 return Error::invalidData("expected font-style, font-weight, font-width or font-size");
-//             }
-//
-//             if (c.skip(Css::Token::delim("/")))
-//                 value.lineHeight = try$(parseValue<LineHeight>(c));
-//
-//             value.families = {try$(parseValue<FontFamily>(c))};
-//
-//             return Ok(makeRc<FontProperty>(self(), std::move(value)));
-//         }
-//     };
-//
-//     Value _value;
-//
-//     FontProperty(Rc<Property::Registration> registration, Value value)
-//         : Property(registration), _value(std::move(value)) {}
-//
-//     Longhands expand(RegisteredPropertySet& registry, ComputedValues const&, ComputedValues&) const override {
-//         Longhands result;
-//         result.pushBack(makeRc<FontStyleProperty>(registry.resolveRegistration(Properties::FONT_STYLE, {}).expect(), _value.style));
-//         result.pushBack(makeRc<FontWidthProperty>(registry.resolveRegistration(Properties::FONT_WIDTH, {}).expect(), _value.width));
-//         result.pushBack(makeRc<FontSizeProperty>(registry.resolveRegistration(Properties::FONT_SIZE, {}).expect(), _value.size));
-//         result.pushBack(makeRc<FontFamilyProperty>(registry.resolveRegistration(Properties::FONT_FAMILY, {}).expect(), _value.families));
-//         result.pushBack(makeRc<LineHeightProperty>(registry.resolveRegistration(Properties::LINE_HEIGHT, {}).expect(), _value.lineHeight));
-//         if (_value.weight)
-//             result.pushBack(makeRc<FontWeightProperty>(registry.resolveRegistration(Properties::FONT_WEIGHT, {}).expect(), *_value.weight));
-//         return result;
-//     }
-//
-//     void repr(Io::Emit& e) const override {
-//         e("{}", _value);
-//     }
-// };
+// https://www.w3.org/TR/css-fonts-4/#font-prop
+export struct FontShorthand {
+    static constexpr auto ID = ShorthandId::FONT;
+
+    // FIXME: The font shorthand also resets font-variant, font-size-adjust,
+    //        font-kerning, font-feature-settings, font-optical-sizing,
+    //        font-variation-settings and font-language-override,
+    //        which are not implemented yet.
+    static constexpr auto LONGHANDS = Array{
+        LonghandId::FONT_STYLE,
+        LonghandId::FONT_WEIGHT,
+        LonghandId::FONT_WIDTH,
+        LonghandId::FONT_SIZE,
+        LonghandId::LINE_HEIGHT,
+        LonghandId::FONT_FAMILY,
+    };
+
+    // [ [ <'font-style'> || <font-variant-css2> || <'font-weight'> || <font-width-css3> ]?
+    //   <'font-size'> [ / <'line-height'> ]? <'font-family'># ] | <system-family-name>
+    static Res<> parse(Cursor<Css::Sst>& c, Vec<Rc<Property>>& stylesheet, ParsingMode mode) {
+        // TODO: <system-family-name>
+        Opt<FontStyle> style;
+        Opt<FontWeight> weight;
+        Opt<FontWidth> width;
+        bool variant = false;
+
+        while (true) {
+            eatWhitespace(c);
+            if (c.ended())
+                return Error::invalidData("expected font-size");
+
+            if (not style) {
+                if (auto maybeStyle = parseValue<FontStyle>(c)) {
+                    style = Some(maybeStyle.take());
+                    continue;
+                }
+            }
+
+            if (not weight) {
+                if (auto maybeWeight = parseValue<FontWeight>(c)) {
+                    weight = Some(maybeWeight.take());
+                    continue;
+                }
+            }
+
+            // <font-width-css3> only accepts keywords, a percentage here is the font-size.
+            if (not width and c.peek() == Css::Token::IDENT) {
+                if (auto maybeWidth = parseValue<FontWidth>(c)) {
+                    width = Some(maybeWidth.take());
+                    continue;
+                }
+            }
+
+            // <font-variant-css2> = normal | small-caps
+            // NOTE: Tried last, so that normal is first given to the other properties.
+            // FIXME: font-variant is not implemented, small-caps is ignored.
+            if (not variant and (c.skip(Css::Token::ident("normal")) or c.skip(Css::Token::ident("small-caps")))) {
+                variant = true;
+                continue;
+            }
+
+            break;
+        }
+
+        auto size = try$(parseValue<FontSize>(c));
+
+        Opt<Rc<Property>> lineHeight;
+        eatWhitespace(c);
+        if (c.skip(Css::Token::delim("/"))) {
+            eatWhitespace(c);
+            lineHeight = Some(try$(LineHeightProperty::parse(c, mode)));
+        }
+
+        auto family = try$(FontFamilyProperty::parse(c, mode));
+
+        // NOTE: Omitted values are reset to their initial value.
+        if (style)
+            stylesheet.pushBack(makeRc<FontStyleProperty>(*style));
+        else
+            stylesheet.pushBack(initialProperty(LonghandId::FONT_STYLE));
+
+        if (weight)
+            stylesheet.pushBack(makeRc<FontWeightProperty>(*weight));
+        else
+            stylesheet.pushBack(initialProperty(LonghandId::FONT_WEIGHT));
+
+        if (width)
+            stylesheet.pushBack(makeRc<FontWidthProperty>(*width));
+        else
+            stylesheet.pushBack(initialProperty(LonghandId::FONT_WIDTH));
+
+        stylesheet.pushBack(makeRc<FontSizeProperty>(std::move(size)));
+
+        if (lineHeight)
+            stylesheet.pushBack(*lineHeight);
+        else
+            stylesheet.pushBack(initialProperty(LonghandId::LINE_HEIGHT));
+
+        stylesheet.pushBack(family);
+
+        return Ok();
+    }
+};
 
 } // namespace Vaev::Style

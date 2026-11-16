@@ -151,51 +151,26 @@ export struct BorderLeftColorProperty : Property {
     }
 };
 
-// export struct BorderColorProperty : Property {
-//     struct Registration : Property::Registration {
-//         Registration()
-//             : Property::Registration(Properties::BORDER_COLOR, SHORTHAND) {}
-//
-//         Rc<Property> initial() const override {
-//             return makeRc<BorderColorProperty>(self(), Math::Insets<Color>{BLACK});
-//         }
-//
-//         Rc<Property> load(ComputedValues const& c) const override {
-//             return makeRc<BorderColorProperty>(
-//                 self(),
-//                 Math::Insets{
-//                     c.borders->start.color,
-//                     c.borders->end.color,
-//                     c.borders->top.color,
-//                     c.borders->bottom.color,
-//                 }
-//                     .cast<Color>()
-//             );
-//         }
-//
-//         Res<Rc<Property>> parse(Cursor<Css::Sst>& c) const override {
-//             return Ok(makeRc<BorderColorProperty>(self(), try$(parseValue<Math::Insets<Color>>(c))));
-//         }
-//     };
-//
-//     Math::Insets<Color> _value;
-//
-//     BorderColorProperty(Rc<Property::Registration> registration, Math::Insets<Color> value)
-//         : Property(registration), _value(value) {}
-//
-//     Longhands expand(RegisteredPropertySet& registry, ComputedValues const&, ComputedValues&) const override {
-//         return {
-//             makeRc<BorderTopColorProperty>(registry.resolveRegistration(Properties::BORDER_TOP_COLOR, {}).expect(), _value.top),
-//             makeRc<BorderRightColorProperty>(registry.resolveRegistration(Properties::BORDER_RIGHT_COLOR, {}).expect(), _value.end),
-//             makeRc<BorderBottomColorProperty>(registry.resolveRegistration(Properties::BORDER_BOTTOM_COLOR, {}).expect(), _value.bottom),
-//             makeRc<BorderLeftColorProperty>(registry.resolveRegistration(Properties::BORDER_LEFT_COLOR, {}).expect(), _value.start),
-//         };
-//     }
-//
-//     void repr(Io::Emit& e) const override {
-//         e("{}", _value);
-//     }
-// };
+// https://drafts.csswg.org/css-backgrounds-3/#border-color
+export struct BorderColorShorthand {
+    static constexpr auto ID = ShorthandId::BORDER_COLOR;
+
+    static constexpr auto LONGHANDS = Array{
+        LonghandId::BORDER_TOP_COLOR,
+        LonghandId::BORDER_RIGHT_COLOR,
+        LonghandId::BORDER_BOTTOM_COLOR,
+        LonghandId::BORDER_LEFT_COLOR,
+    };
+
+    static Res<> parse(Cursor<Css::Sst>& c, Vec<Rc<Property>>& stylesheet, ParsingMode) {
+        auto value = try$(parseValue<Math::Insets<Color>>(c));
+        stylesheet.pushBack(makeRc<BorderTopColorProperty>(value.top));
+        stylesheet.pushBack(makeRc<BorderRightColorProperty>(value.end));
+        stylesheet.pushBack(makeRc<BorderBottomColorProperty>(value.bottom));
+        stylesheet.pushBack(makeRc<BorderLeftColorProperty>(value.start));
+        return Ok();
+    }
+};
 
 // https://www.w3.org/TR/CSS22/box.html#border-style-properties
 export struct BorderLeftStyleProperty : Property {
@@ -334,51 +309,25 @@ export struct BorderBottomStyleProperty : Property {
 };
 
 // https://www.w3.org/TR/CSS22/box.html#border-style-properties
+export struct BorderStyleShorthand {
+    static constexpr auto ID = ShorthandId::BORDER_STYLE;
 
-// export struct BorderStyleProperty : Property {
-//     struct Registration : Property::Registration {
-//         Registration()
-//             : Property::Registration(Properties::BORDER_STYLE, SHORTHAND) {}
-//
-//         Rc<Property> initial() const override {
-//             return makeRc<BorderStyleProperty>(self(), Math::Insets{Gfx::BorderStyle::NONE});
-//         }
-//
-//         Rc<Property> load(ComputedValues const& c) const override {
-//             return makeRc<BorderStyleProperty>(
-//                 self(),
-//                 Math::Insets{
-//                     c.borders->start.style,
-//                     c.borders->end.style,
-//                     c.borders->top.style,
-//                     c.borders->bottom.style,
-//                 }
-//             );
-//         }
-//
-//         Res<Rc<Property>> parse(Cursor<Css::Sst>& c) const override {
-//             return Ok(makeRc<BorderStyleProperty>(self(), try$(parseValue<Math::Insets<Gfx::BorderStyle>>(c))));
-//         }
-//     };
-//
-//     Math::Insets<Gfx::BorderStyle> _value;
-//
-//     BorderStyleProperty(Rc<Property::Registration> registration, Math::Insets<Gfx::BorderStyle> value)
-//         : Property(registration), _value(value) {}
-//
-//     Longhands expand(RegisteredPropertySet& registry, ComputedValues const&, ComputedValues&) const override {
-//         return {
-//             makeRc<BorderTopStyleProperty>(registry.resolveRegistration(Properties::BORDER_TOP_STYLE, {}).expect(), _value.top),
-//             makeRc<BorderRightStyleProperty>(registry.resolveRegistration(Properties::BORDER_RIGHT_STYLE, {}).expect(), _value.end),
-//             makeRc<BorderBottomStyleProperty>(registry.resolveRegistration(Properties::BORDER_BOTTOM_STYLE, {}).expect(), _value.bottom),
-//             makeRc<BorderLeftStyleProperty>(registry.resolveRegistration(Properties::BORDER_LEFT_STYLE, {}).expect(), _value.start),
-//         };
-//     }
-//
-//     void repr(Io::Emit& e) const override {
-//         e("{}", _value);
-//     }
-// };
+    static constexpr auto LONGHANDS = Array{
+        LonghandId::BORDER_TOP_STYLE,
+        LonghandId::BORDER_RIGHT_STYLE,
+        LonghandId::BORDER_BOTTOM_STYLE,
+        LonghandId::BORDER_LEFT_STYLE,
+    };
+
+    static Res<> parse(Cursor<Css::Sst>& c, Vec<Rc<Property>>& stylesheet, ParsingMode) {
+        auto value = try$(parseValue<Math::Insets<Gfx::BorderStyle>>(c));
+        stylesheet.pushBack(makeRc<BorderTopStyleProperty>(value.top));
+        stylesheet.pushBack(makeRc<BorderRightStyleProperty>(value.end));
+        stylesheet.pushBack(makeRc<BorderBottomStyleProperty>(value.bottom));
+        stylesheet.pushBack(makeRc<BorderLeftStyleProperty>(value.start));
+        return Ok();
+    }
+};
 
 // https://www.w3.org/TR/css-backgrounds-3/#border-width
 export struct BorderTopWidthProperty : Property {
@@ -686,312 +635,174 @@ export struct BorderBottomLeftRadiusProperty : Property {
     }
 };
 
-// // https://drafts.csswg.org/css-backgrounds/#the-border-radius
-// export struct BorderRadiusProperty : Property {
-//     struct Registration : Property::Registration {
-//         Registration() : Property::Registration(Properties::BORDER_RADIUS, SHORTHAND) {}
-//
-//         Rc<Property> initial() const override {
-//             return makeRc<BorderRadiusProperty>(self(), Math::Radii{Calc<PercentOr<Length>>(Length{})});
-//         }
-//
-//         Rc<Property> load(ComputedValues const& c) const override {
-//             return makeRc<BorderRadiusProperty>(self(), c.borders->radii);
-//         }
-//
-//         Res<Rc<Property>> parse(Cursor<Css::Sst>& c) const override {
-//             auto radii = try$(parseValue<Math::Radii<Calc<PercentOr<Length>>>>(c));
-//             return Ok(makeRc<BorderRadiusProperty>(self(), radii));
-//         }
-//     };
-//
-//     Math::Radii<Calc<PercentOr<Length>>> _value;
-//
-//     BorderRadiusProperty(Rc<Property::Registration> registration, Math::Radii<Calc<PercentOr<Length>>> value)
-//         : Property(registration), _value(value) {}
-//
-//     void apply([[maybe_unused]] ComputedValues const& parent, ComputedValues& c, [[maybe_unused]] ComputationContext const& cx) const override {
-//         c.borders.cow().radii = _value;
-//     }
-//
-//     Longhands expand(RegisteredPropertySet& registry, ComputedValues const&, ComputedValues&) const override {
-//         return {
-//             makeRc<BorderTopLeftRadiusProperty>(registry.resolveRegistration(Properties::BORDER_TOP_LEFT_RADIUS, {}).expect(), Array{_value.a, _value.b}),
-//             makeRc<BorderTopRightRadiusProperty>(registry.resolveRegistration(Properties::BORDER_TOP_RIGHT_RADIUS, {}).expect(), Array{_value.c, _value.d}),
-//             makeRc<BorderBottomRightRadiusProperty>(registry.resolveRegistration(Properties::BORDER_BOTTOM_RIGHT_RADIUS, {}).expect(), Array{_value.e, _value.f}),
-//             makeRc<BorderBottomLeftRadiusProperty>(registry.resolveRegistration(Properties::BORDER_BOTTOM_LEFT_RADIUS, {}).expect(), Array{_value.g, _value.h}),
-//         };
-//     }
-//
-//     void repr(Io::Emit& e) const override {
-//         e("{}", _value);
-//     }
-// };
+// https://drafts.csswg.org/css-backgrounds/#the-border-radius
+export struct BorderRadiusShorthand {
+    static constexpr auto ID = ShorthandId::BORDER_RADIUS;
 
-// // https://www.w3.org/TR/css-backgrounds-3/#border-shorthands
-// export struct BorderTopProperty : Property {
-//     struct Registration : Property::Registration {
-//         Registration()
-//             : Property::Registration(Properties::BORDER_TOP, SHORTHAND) {}
-//
-//         Rc<Property> initial() const override {
-//             return makeRc<BorderTopProperty>(self(), SpecifiedBorder{});
-//         }
-//
-//         Rc<Property> load(ComputedValues const& c) const override {
-//             return makeRc<BorderTopProperty>(self(), c.borders->top);
-//         }
-//
-//         Res<Rc<Property>> parse(Cursor<Css::Sst>& c) const override {
-//             SpecifiedBorder value;
-//             while (not c.ended()) {
-//                 auto width = parseValue<Calc<Length>>(c);
-//                 if (width) {
-//                     value.width = width.expect();
-//                     continue;
-//                 }
-//
-//                 auto color = parseValue<Color>(c);
-//                 if (color) {
-//                     value.color = color.expect();
-//                     continue;
-//                 }
-//
-//                 auto style = parseValue<Gfx::BorderStyle>(c);
-//                 if (style) {
-//                     value.style = style.expect();
-//                     continue;
-//                 }
-//
-//                 break;
-//             }
-//             return Ok(makeRc<BorderTopProperty>(self(), value));
-//         }
-//     };
-//
-//     SpecifiedBorder _value;
-//
-//     BorderTopProperty(Rc<Property::Registration> registration, SpecifiedBorder value)
-//         : Property(registration), _value(value) {}
-//
-//     Longhands expand(RegisteredPropertySet& registry, ComputedValues const&, ComputedValues&) const override {
-//         return {
-//             makeRc<BorderTopWidthProperty>(registry.resolveRegistration(Properties::BORDER_TOP_WIDTH, {}).expect(), _value.width),
-//             makeRc<BorderTopStyleProperty>(registry.resolveRegistration(Properties::BORDER_TOP_STYLE, {}).expect(), _value.style),
-//             makeRc<BorderTopColorProperty>(registry.resolveRegistration(Properties::BORDER_TOP_COLOR, {}).expect(), _value.color),
-//         };
-//     }
-//
-//     void repr(Io::Emit& e) const override {
-//         e("{}", _value);
-//     }
-// };
+    static constexpr auto LONGHANDS = Array{
+        LonghandId::BORDER_TOP_LEFT_RADIUS,
+        LonghandId::BORDER_TOP_RIGHT_RADIUS,
+        LonghandId::BORDER_BOTTOM_RIGHT_RADIUS,
+        LonghandId::BORDER_BOTTOM_LEFT_RADIUS,
+    };
 
-// // https://www.w3.org/TR/css-backgrounds-3/#border-shorthands
-// export struct BorderRightProperty : Property {
-//     struct Registration : Property::Registration {
-//         Registration()
-//             : Property::Registration(Properties::BORDER_RIGHT, SHORTHAND) {}
-//
-//         Rc<Property> initial() const override {
-//             return makeRc<BorderRightProperty>(self(), SpecifiedBorder{});
-//         }
-//
-//         Rc<Property> load(ComputedValues const& c) const override {
-//             return makeRc<BorderRightProperty>(self(), c.borders->end);
-//         }
-//
-//         Res<Rc<Property>> parse(Cursor<Css::Sst>& c) const override {
-//             return Ok(makeRc<BorderRightProperty>(self(), try$(parseValue<SpecifiedBorder>(c))));
-//         }
-//     };
-//
-//     SpecifiedBorder _value;
-//
-//     BorderRightProperty(Rc<Property::Registration> registration, SpecifiedBorder value)
-//         : Property(registration), _value(value) {}
-//
-//     Longhands expand(RegisteredPropertySet& registry, ComputedValues const&, ComputedValues&) const override {
-//         return {
-//             makeRc<BorderRightWidthProperty>(registry.resolveRegistration(Properties::BORDER_RIGHT_WIDTH, {}).expect(), _value.width),
-//             makeRc<BorderRightStyleProperty>(registry.resolveRegistration(Properties::BORDER_RIGHT_STYLE, {}).expect(), _value.style),
-//             makeRc<BorderRightColorProperty>(registry.resolveRegistration(Properties::BORDER_RIGHT_COLOR, {}).expect(), _value.color),
-//         };
-//     }
-//
-//     void repr(Io::Emit& e) const override {
-//         e("{}", _value);
-//     }
-// };
+    static Res<> parse(Cursor<Css::Sst>& c, Vec<Rc<Property>>& stylesheet, ParsingMode) {
+        auto radii = try$(parseValue<Math::Radii<Calc<PercentOr<Length>>>>(c));
+        stylesheet.pushBack(makeRc<BorderTopLeftRadiusProperty>(Array{radii.a, radii.b}));
+        stylesheet.pushBack(makeRc<BorderTopRightRadiusProperty>(Array{radii.c, radii.d}));
+        stylesheet.pushBack(makeRc<BorderBottomRightRadiusProperty>(Array{radii.e, radii.f}));
+        stylesheet.pushBack(makeRc<BorderBottomLeftRadiusProperty>(Array{radii.g, radii.h}));
+        return Ok();
+    }
+};
 
-// // https://www.w3.org/TR/css-backgrounds-3/#border-shorthands
-// export struct BorderBottomProperty : Property {
-//     struct Registration : Property::Registration {
-//         Registration()
-//             : Property::Registration(Properties::BORDER_BOTTOM, SHORTHAND) {}
-//
-//         Rc<Property> initial() const override {
-//             return makeRc<BorderBottomProperty>(self(), SpecifiedBorder{});
-//         }
-//
-//         Rc<Property> load(ComputedValues const& c) const override {
-//             return makeRc<BorderBottomProperty>(self(), c.borders->bottom);
-//         }
-//
-//         Res<Rc<Property>> parse(Cursor<Css::Sst>& c) const override {
-//             return Ok(makeRc<BorderBottomProperty>(self(), try$(parseValue<SpecifiedBorder>(c))));
-//         }
-//     };
-//
-//     SpecifiedBorder _value;
-//
-//     BorderBottomProperty(Rc<Property::Registration> registration, SpecifiedBorder value)
-//         : Property(registration), _value(value) {}
-//
-//     Longhands expand(RegisteredPropertySet& registry, ComputedValues const&, ComputedValues&) const override {
-//         return {
-//             makeRc<BorderBottomWidthProperty>(registry.resolveRegistration(Properties::BORDER_BOTTOM_WIDTH, {}).expect(), _value.width),
-//             makeRc<BorderBottomStyleProperty>(registry.resolveRegistration(Properties::BORDER_BOTTOM_STYLE, {}).expect(), _value.style),
-//             makeRc<BorderBottomColorProperty>(registry.resolveRegistration(Properties::BORDER_BOTTOM_COLOR, {}).expect(), _value.color),
-//         };
-//     }
-//
-//     void repr(Io::Emit& e) const override {
-//         e("{}", _value);
-//     }
-// };
+// https://www.w3.org/TR/css-backgrounds-3/#border-shorthands
+export struct BorderTopShorthand {
+    static constexpr auto ID = ShorthandId::BORDER_TOP;
 
-// // https://www.w3.org/TR/css-backgrounds-3/#border-shorthands
-// export struct BorderLeftProperty : Property {
-//     struct Registration : Property::Registration {
-//         Registration()
-//             : Property::Registration(Properties::BORDER_LEFT, SHORTHAND) {}
-//
-//         Rc<Property> initial() const override {
-//             return makeRc<BorderLeftProperty>(self(), SpecifiedBorder{});
-//         }
-//
-//         Rc<Property> load(ComputedValues const& c) const override {
-//             return makeRc<BorderLeftProperty>(self(), c.borders->start);
-//         }
-//
-//         Res<Rc<Property>> parse(Cursor<Css::Sst>& c) const override {
-//             return Ok(makeRc<BorderLeftProperty>(self(), try$(parseValue<SpecifiedBorder>(c))));
-//         }
-//     };
-//
-//     SpecifiedBorder _value;
-//
-//     BorderLeftProperty(Rc<Property::Registration> registration, SpecifiedBorder value)
-//         : Property(registration), _value(value) {}
-//
-//     Longhands expand(RegisteredPropertySet& registry, ComputedValues const&, ComputedValues&) const override {
-//         return {
-//             makeRc<BorderLeftWidthProperty>(registry.resolveRegistration(Properties::BORDER_LEFT_WIDTH, {}).expect(), _value.width),
-//             makeRc<BorderLeftStyleProperty>(registry.resolveRegistration(Properties::BORDER_LEFT_STYLE, {}).expect(), _value.style),
-//             makeRc<BorderLeftColorProperty>(registry.resolveRegistration(Properties::BORDER_LEFT_COLOR, {}).expect(), _value.color),
-//         };
-//     }
-//
-//     void repr(Io::Emit& e) const override {
-//         e("{}", _value);
-//     }
-// };
+    static constexpr auto LONGHANDS = Array{
+        LonghandId::BORDER_TOP_WIDTH,
+        LonghandId::BORDER_TOP_STYLE,
+        LonghandId::BORDER_TOP_COLOR,
+    };
 
-// // https://www.w3.org/TR/css-backgrounds-3/#border-shorthands
-// export struct BorderProperty : Property {
-//     struct Registration : Property::Registration {
-//         Registration()
-//             : Property::Registration(Properties::BORDER, SHORTHAND) {}
-//
-//         Rc<Property> initial() const override {
-//             return makeRc<BorderProperty>(self(), SpecifiedBorder{});
-//         }
-//
-//         Rc<Property> load(ComputedValues const& c) const override {
-//             return makeRc<BorderProperty>(self(), c.borders->top);
-//         }
-//
-//         Res<Rc<Property>> parse(Cursor<Css::Sst>& c) const override {
-//             return Ok(makeRc<BorderProperty>(self(), try$(parseValue<SpecifiedBorder>(c))));
-//         }
-//     };
-//
-//     SpecifiedBorder _value;
-//
-//     BorderProperty(Rc<Property::Registration> registration, SpecifiedBorder value)
-//         : Property(registration), _value(value) {}
-//
-//     Longhands expand(RegisteredPropertySet& registry, ComputedValues const&, ComputedValues&) const override {
-//         return {
-//             makeRc<BorderTopWidthProperty>(registry.resolveRegistration(Properties::BORDER_TOP_WIDTH, {}).expect(), _value.width),
-//             makeRc<BorderTopStyleProperty>(registry.resolveRegistration(Properties::BORDER_TOP_STYLE, {}).expect(), _value.style),
-//             makeRc<BorderTopColorProperty>(registry.resolveRegistration(Properties::BORDER_TOP_COLOR, {}).expect(), _value.color),
-//
-//             makeRc<BorderRightWidthProperty>(registry.resolveRegistration(Properties::BORDER_RIGHT_WIDTH, {}).expect(), _value.width),
-//             makeRc<BorderRightStyleProperty>(registry.resolveRegistration(Properties::BORDER_RIGHT_STYLE, {}).expect(), _value.style),
-//             makeRc<BorderRightColorProperty>(registry.resolveRegistration(Properties::BORDER_RIGHT_COLOR, {}).expect(), _value.color),
-//
-//             makeRc<BorderBottomWidthProperty>(registry.resolveRegistration(Properties::BORDER_BOTTOM_WIDTH, {}).expect(), _value.width),
-//             makeRc<BorderBottomStyleProperty>(registry.resolveRegistration(Properties::BORDER_BOTTOM_STYLE, {}).expect(), _value.style),
-//             makeRc<BorderBottomColorProperty>(registry.resolveRegistration(Properties::BORDER_BOTTOM_COLOR, {}).expect(), _value.color),
-//
-//             makeRc<BorderLeftWidthProperty>(registry.resolveRegistration(Properties::BORDER_LEFT_WIDTH, {}).expect(), _value.width),
-//             makeRc<BorderLeftStyleProperty>(registry.resolveRegistration(Properties::BORDER_LEFT_STYLE, {}).expect(), _value.style),
-//             makeRc<BorderLeftColorProperty>(registry.resolveRegistration(Properties::BORDER_LEFT_COLOR, {}).expect(), _value.color),
-//         };
-//     }
-//
-//     void repr(Io::Emit& e) const override {
-//         e("{}", _value);
-//     }
-// };
+    static Res<> parse(Cursor<Css::Sst>& c, Vec<Rc<Property>>& stylesheet, ParsingMode) {
+        // NOTE: Omitted components are reset to their initial value,
+        //       which is the default of SpecifiedBorder.
+        auto border = try$(parseValue<SpecifiedBorder>(c));
+        stylesheet.pushBack(makeRc<BorderTopWidthProperty>(border.width));
+        stylesheet.pushBack(makeRc<BorderTopStyleProperty>(border.style));
+        stylesheet.pushBack(makeRc<BorderTopColorProperty>(border.color));
+        return Ok();
+    }
+};
 
-// // https://www.w3.org/TR/css-backgrounds-3/#border-width
-// export struct BorderWidthProperty : Property {
-//     struct Registration : Property::Registration {
-//         Registration()
-//             : Property::Registration(Properties::BORDER_WIDTH, SHORTHAND) {}
-//
-//         Rc<Property> initial() const override {
-//             return makeRc<BorderWidthProperty>(self(), Math::Insets{LineWidth{Keywords::MEDIUM}});
-//         }
-//
-//         Rc<Property> load(ComputedValues const& c) const override {
-//             return makeRc<BorderWidthProperty>(
-//                 self(),
-//                 Math::Insets{
-//                     c.borders->start.width,
-//                     c.borders->end.width,
-//                     c.borders->top.width,
-//                     c.borders->bottom.width,
-//                 }
-//             );
-//         }
-//
-//         Res<Rc<Property>> parse(Cursor<Css::Sst>& c) const override {
-//             return Ok(makeRc<BorderWidthProperty>(self(), try$(parseValue<Math::Insets<LineWidth>>(c))));
-//         }
-//     };
-//
-//     Math::Insets<LineWidth> _value;
-//
-//     BorderWidthProperty(Rc<Property::Registration> registration, Math::Insets<LineWidth> value)
-//         : Property(registration), _value(value) {}
-//
-//     Longhands expand(RegisteredPropertySet& registry, ComputedValues const&, ComputedValues&) const override {
-//         return {
-//             makeRc<BorderTopWidthProperty>(registry.resolveRegistration(Properties::BORDER_TOP_WIDTH, {}).expect(), _value.top),
-//             makeRc<BorderRightWidthProperty>(registry.resolveRegistration(Properties::BORDER_RIGHT_WIDTH, {}).expect(), _value.end),
-//             makeRc<BorderBottomWidthProperty>(registry.resolveRegistration(Properties::BORDER_BOTTOM_WIDTH, {}).expect(), _value.bottom),
-//             makeRc<BorderLeftWidthProperty>(registry.resolveRegistration(Properties::BORDER_LEFT_WIDTH, {}).expect(), _value.start),
-//         };
-//     }
-//
-//     void repr(Io::Emit& e) const override {
-//         e("{}", _value);
-//     }
-// };
+// https://www.w3.org/TR/css-backgrounds-3/#border-shorthands
+export struct BorderRightShorthand {
+    static constexpr auto ID = ShorthandId::BORDER_RIGHT;
+
+    static constexpr auto LONGHANDS = Array{
+        LonghandId::BORDER_RIGHT_WIDTH,
+        LonghandId::BORDER_RIGHT_STYLE,
+        LonghandId::BORDER_RIGHT_COLOR,
+    };
+
+    static Res<> parse(Cursor<Css::Sst>& c, Vec<Rc<Property>>& stylesheet, ParsingMode) {
+        // NOTE: Omitted components are reset to their initial value,
+        //       which is the default of SpecifiedBorder.
+        auto border = try$(parseValue<SpecifiedBorder>(c));
+        stylesheet.pushBack(makeRc<BorderRightWidthProperty>(border.width));
+        stylesheet.pushBack(makeRc<BorderRightStyleProperty>(border.style));
+        stylesheet.pushBack(makeRc<BorderRightColorProperty>(border.color));
+        return Ok();
+    }
+};
+
+// https://www.w3.org/TR/css-backgrounds-3/#border-shorthands
+export struct BorderBottomShorthand {
+    static constexpr auto ID = ShorthandId::BORDER_BOTTOM;
+
+    static constexpr auto LONGHANDS = Array{
+        LonghandId::BORDER_BOTTOM_WIDTH,
+        LonghandId::BORDER_BOTTOM_STYLE,
+        LonghandId::BORDER_BOTTOM_COLOR,
+    };
+
+    static Res<> parse(Cursor<Css::Sst>& c, Vec<Rc<Property>>& stylesheet, ParsingMode) {
+        // NOTE: Omitted components are reset to their initial value,
+        //       which is the default of SpecifiedBorder.
+        auto border = try$(parseValue<SpecifiedBorder>(c));
+        stylesheet.pushBack(makeRc<BorderBottomWidthProperty>(border.width));
+        stylesheet.pushBack(makeRc<BorderBottomStyleProperty>(border.style));
+        stylesheet.pushBack(makeRc<BorderBottomColorProperty>(border.color));
+        return Ok();
+    }
+};
+
+// https://www.w3.org/TR/css-backgrounds-3/#border-shorthands
+export struct BorderLeftShorthand {
+    static constexpr auto ID = ShorthandId::BORDER_LEFT;
+
+    static constexpr auto LONGHANDS = Array{
+        LonghandId::BORDER_LEFT_WIDTH,
+        LonghandId::BORDER_LEFT_STYLE,
+        LonghandId::BORDER_LEFT_COLOR,
+    };
+
+    static Res<> parse(Cursor<Css::Sst>& c, Vec<Rc<Property>>& stylesheet, ParsingMode) {
+        // NOTE: Omitted components are reset to their initial value,
+        //       which is the default of SpecifiedBorder.
+        auto border = try$(parseValue<SpecifiedBorder>(c));
+        stylesheet.pushBack(makeRc<BorderLeftWidthProperty>(border.width));
+        stylesheet.pushBack(makeRc<BorderLeftStyleProperty>(border.style));
+        stylesheet.pushBack(makeRc<BorderLeftColorProperty>(border.color));
+        return Ok();
+    }
+};
+
+// https://www.w3.org/TR/css-backgrounds-3/#border-shorthands
+export struct BorderShorthand {
+    static constexpr auto ID = ShorthandId::BORDER;
+
+    // FIXME: The border shorthand also resets border-image to its initial value.
+    static constexpr auto LONGHANDS = Array{
+        LonghandId::BORDER_TOP_WIDTH,
+        LonghandId::BORDER_TOP_STYLE,
+        LonghandId::BORDER_TOP_COLOR,
+        LonghandId::BORDER_RIGHT_WIDTH,
+        LonghandId::BORDER_RIGHT_STYLE,
+        LonghandId::BORDER_RIGHT_COLOR,
+        LonghandId::BORDER_BOTTOM_WIDTH,
+        LonghandId::BORDER_BOTTOM_STYLE,
+        LonghandId::BORDER_BOTTOM_COLOR,
+        LonghandId::BORDER_LEFT_WIDTH,
+        LonghandId::BORDER_LEFT_STYLE,
+        LonghandId::BORDER_LEFT_COLOR,
+    };
+
+    static Res<> parse(Cursor<Css::Sst>& c, Vec<Rc<Property>>& stylesheet, ParsingMode) {
+        auto border = try$(parseValue<SpecifiedBorder>(c));
+
+        stylesheet.pushBack(makeRc<BorderTopWidthProperty>(border.width));
+        stylesheet.pushBack(makeRc<BorderTopStyleProperty>(border.style));
+        stylesheet.pushBack(makeRc<BorderTopColorProperty>(border.color));
+
+        stylesheet.pushBack(makeRc<BorderRightWidthProperty>(border.width));
+        stylesheet.pushBack(makeRc<BorderRightStyleProperty>(border.style));
+        stylesheet.pushBack(makeRc<BorderRightColorProperty>(border.color));
+
+        stylesheet.pushBack(makeRc<BorderBottomWidthProperty>(border.width));
+        stylesheet.pushBack(makeRc<BorderBottomStyleProperty>(border.style));
+        stylesheet.pushBack(makeRc<BorderBottomColorProperty>(border.color));
+
+        stylesheet.pushBack(makeRc<BorderLeftWidthProperty>(border.width));
+        stylesheet.pushBack(makeRc<BorderLeftStyleProperty>(border.style));
+        stylesheet.pushBack(makeRc<BorderLeftColorProperty>(border.color));
+
+        return Ok();
+    }
+};
+
+// https://www.w3.org/TR/css-backgrounds-3/#border-width
+export struct BorderWidthShorthand {
+    static constexpr auto ID = ShorthandId::BORDER_WIDTH;
+
+    static constexpr auto LONGHANDS = Array{
+        LonghandId::BORDER_TOP_WIDTH,
+        LonghandId::BORDER_RIGHT_WIDTH,
+        LonghandId::BORDER_BOTTOM_WIDTH,
+        LonghandId::BORDER_LEFT_WIDTH,
+    };
+
+    static Res<> parse(Cursor<Css::Sst>& c, Vec<Rc<Property>>& stylesheet, ParsingMode) {
+        auto value = try$(parseValue<Math::Insets<LineWidth>>(c));
+        stylesheet.pushBack(makeRc<BorderTopWidthProperty>(value.top));
+        stylesheet.pushBack(makeRc<BorderRightWidthProperty>(value.end));
+        stylesheet.pushBack(makeRc<BorderBottomWidthProperty>(value.bottom));
+        stylesheet.pushBack(makeRc<BorderLeftWidthProperty>(value.start));
+        return Ok();
+    }
+};
 
 // MARK: Borders - Table -------------------------------------------------------
 

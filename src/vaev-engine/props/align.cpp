@@ -293,53 +293,33 @@ export struct ColumnGapProperty : Property {
     }
 };
 
-// export struct GapProperty : Property {
-//     struct Registration : LonghandRegistration {
-//         Registration() : LonghandRegistration(Properties::GAP) {}
-//
-//         // https://drafts.csswg.org/css-align-3/#gap-legacy
-//         SmallVec<Symbol, 1> legacyNameAlias() const override {
-//             return {"grid-gap"_sym};
-//         }
-//
-//         Rc<Property> initial() const override {
-//             return makeRc<GapProperty>(Gaps{
-//                     Keywords::NORMAL,
-//                     Keywords::NORMAL,
-//                 }
-//             );
-//         }
-//
-//         Rc<Property> load(ComputedValues const& c) const override {
-//             return makeRc<GapProperty>(*c.gaps);
-//         }
-//
-//         Res<Rc<Property>> parse(Cursor<Css::Sst>& c) const override {
-//             auto rowGap = try$(parseValue<Gap>(c));
-//             eatWhitespace(c);
-//             auto colGap = parseValue<Gap>(c);
-//
-//             if (not colGap)
-//                 return Ok(makeRc<GapProperty>(Gaps{rowGap, rowGap}));
-//             return Ok(makeRc<GapProperty>(Gaps{rowGap, colGap.take()}));
-//         }
-//     };
-//
-//     Gaps _value;
-//
-//     GapProperty(Gaps value)
-//         : Property(registrationOf<GapProperty>()), _value(value) {}
-//
-//     Longhands expand(RegisteredPropertySet& registry, ComputedValues const&, ComputedValues&) const override {
-//         return {
-//             makeRc<RowGapProperty>(registry.resolveRegistration(Properties::MARGIN_TOP, {}).expect(), _value.row),
-//             makeRc<ColumnGapProperty>(registry.resolveRegistration(Properties::MARGIN_TOP, {}).expect(), _value.col),
-//         };
-//     }
-//
-//     void repr(Io::Emit& e) const override {
-//         e("{}", _value);
-//     }
-// };
+// https://drafts.csswg.org/css-gaps-1/#gap-shorthand
+export struct GapShorthand {
+    static constexpr auto ID = ShorthandId::GAP;
+
+    static constexpr auto LONGHANDS = Array{
+        LonghandId::ROW_GAP,
+        LonghandId::COLUMN_GAP,
+    };
+
+    static constexpr auto LEGACY_NAME_ALIASES = Array{"grid-gap"s};
+
+    static Res<> parse(Cursor<Css::Sst>& c, Vec<Rc<Property>>& stylesheet, ParsingMode) {
+        auto rowGap = try$(parseValue<Gap>(c));
+
+        eatWhitespace(c);
+        auto colGap = parseValue<Gap>(c);
+
+        if (colGap) {
+            stylesheet.pushBack(makeRc<RowGapProperty>(std::move(rowGap)));
+            stylesheet.pushBack(makeRc<ColumnGapProperty>(colGap.take()));
+        } else {
+            stylesheet.pushBack(makeRc<RowGapProperty>(rowGap));
+            stylesheet.pushBack(makeRc<ColumnGapProperty>(std::move(rowGap)));
+        }
+
+        return Ok();
+    }
+};
 
 } // namespace Vaev::Style

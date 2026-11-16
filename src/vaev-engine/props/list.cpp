@@ -120,87 +120,95 @@ struct ListStylePositionProperty : Property {
     }
 };
 
-// // https://www.w3.org/TR/css-lists-3/#propdef-list-style
-// struct ListStyleProperty : Property {
-//     struct Value {
-//         ListImage image = Keywords::NONE;
-//         ListType type = CustomIdent{"disc"_sym};
-//         ListPosition position = Keywords::OUTSIDE;
-//
-//         void repr(Io::Emit& e) const {
-//             e("(list-style {} {} {})", image, type, position);
-//         }
-//     };
-//
-//     struct Registration : Property::Registration {
-//         Registration()
-//             : Property::Registration(Properties::LIST_STYLE, SHORTHAND) {}
-//
-//         Rc<Property> initial() const override {
-//             return makeRc<ListStyleProperty>(self(), Value{});
-//         }
-//
-//         Rc<Property> load(ComputedValues const& c) const override {
-//             return makeRc<ListStyleProperty>(
-//                 self(),
-//                 Value{
-//                     c.list->image,
-//                     c.list->type,
-//                     c.list->position,
-//                 }
-//             );
-//         }
-//
-//         Res<Rc<Property>> parse(Cursor<Css::Sst>& c) const override {
-//             Value value;
-//             while (not c.ended()) {
-//                 // None is ambiguous, as none is a valid value for both list-style-image and list-style-type.
-//                 // FIXME: There is a thing about setting only the one that was
-//                 //        not set yet, but we need better parseValue infra for that.
-//                 if (parseValue<Keywords::None>(c)) {
-//                     value.type = Keywords::NONE;
-//                     value.image = Keywords::NONE;
-//                     continue;
-//                 }
-//
-//                 if (auto image = parseValue<ListImage>(c)) {
-//                     value.image = image.take();
-//                     continue;
-//                 }
-//
-//                 if (auto type = parseValue<ListType>(c)) {
-//                     value.type = type.take();
-//                     continue;
-//                 }
-//
-//                 if (auto position = parseValue<ListPosition>(c)) {
-//                     value.position = position.take();
-//                     continue;
-//                 }
-//
-//                 return Error::invalidData("unexpected token");
-//             }
-//             return Ok(makeRc<ListStyleProperty>(self(), std::move(value)));
-//         }
-//     };
-//
-//     Value _value;
-//
-//     ListStyleProperty(Rc<Property::Registration> registration, Value value)
-//         : Property(registration), _value(value) {}
-//
-//     Longhands expand(RegisteredPropertySet& registry, ComputedValues const&, ComputedValues&) const override {
-//         return {
-//             makeRc<ListStyleImageProperty>(registry.resolveRegistration(Properties::LIST_STYLE_IMAGE, {}).expect(), _value.image),
-//             makeRc<ListStyleTypeProperty>(registry.resolveRegistration(Properties::LIST_STYLE_TYPE, {}).expect(), _value.type),
-//             makeRc<ListStylePositionProperty>(registry.resolveRegistration(Properties::LIST_STYLE_POSITION, {}).expect(), _value.position),
-//         };
-//     }
-//
-//     void repr(Io::Emit& e) const override {
-//         e("{}", _value);
-//     }
-// };
+// https://www.w3.org/TR/css-lists-3/#propdef-list-style
+export struct ListStyleShorthand {
+    static constexpr auto ID = ShorthandId::LIST_STYLE;
+
+    static constexpr Array LONGHANDS = {
+        LonghandId::LIST_STYLE_POSITION,
+        LonghandId::LIST_STYLE_IMAGE,
+        LonghandId::LIST_STYLE_TYPE,
+    };
+
+    // <'list-style-position'> || <'list-style-image'> || <'list-style-type'>
+    static Res<> parse(Cursor<Css::Sst>& c, Vec<Rc<Property>>& stylesheet, ParsingMode) {
+        Opt<ListPosition> position;
+        Opt<ListImage> image;
+        Opt<ListType> type;
+        usize nones = 0;
+
+        while (true) {
+            eatWhitespace(c);
+            if (c.ended())
+                break;
+
+            // none is valid for both list-style-image and list-style-type,
+            // it is applied to whichever of the two isn't otherwise set.
+            if (c.skip(Css::Token::ident("none"))) {
+                nones++;
+                continue;
+            }
+
+            if (not position) {
+                if (auto maybePosition = parseValue<ListPosition>(c)) {
+                    position = Some(maybePosition.take());
+                    continue;
+                }
+            }
+
+            if (not image) {
+                if (auto maybeImage = parseValue<ListImage>(c)) {
+                    image = Some(maybeImage.take());
+                    continue;
+                }
+            }
+
+            // NOTE: Tried last, as <counter-style> accepts any identifier.
+            if (not type) {
+                if (auto maybeType = parseValue<ListType>(c)) {
+                    type = Some(maybeType.take());
+                    continue;
+                }
+            }
+
+            break;
+        }
+
+        if (not position and not image and not type and nones == 0)
+            return Error::invalidData("expected list-style-position, list-style-image or list-style-type");
+
+        if (not image and nones > 0) {
+            image = Some<ListImage>(Keywords::NONE);
+            nones--;
+        }
+
+        if (not type and nones > 0) {
+            type = Some<ListType>(Keywords::NONE);
+            nones--;
+        }
+
+        if (nones > 0)
+            return Error::invalidData("too many none values");
+
+        // NOTE: Omitted values are reset to their initial value.
+        if (position)
+            stylesheet.pushBack(makeRc<ListStylePositionProperty>(*position));
+        else
+            stylesheet.pushBack(initialProperty(LonghandId::LIST_STYLE_POSITION));
+
+        if (image)
+            stylesheet.pushBack(makeRc<ListStyleImageProperty>(*image));
+        else
+            stylesheet.pushBack(initialProperty(LonghandId::LIST_STYLE_IMAGE));
+
+        if (type)
+            stylesheet.pushBack(makeRc<ListStyleTypeProperty>(*type));
+        else
+            stylesheet.pushBack(initialProperty(LonghandId::LIST_STYLE_TYPE));
+
+        return Ok();
+    }
+};
 
 // https://www.w3.org/TR/css-lists-3/#propdef-marker-side
 struct MarkerSideProperty : Property {

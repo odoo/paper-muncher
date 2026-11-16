@@ -169,73 +169,74 @@ export struct OutlineOffsetProperty : Property {
     }
 };
 
-// // https://drafts.csswg.org/css-ui/#outline
-// export struct OutlineProperty : Property {
-//     struct Registration : Property::Registration {
-//         Registration()
-//             : Property::Registration(Properties::OUTLINE, SHORTHAND) {}
-//
-//         Rc<Property> initial() const override {
-//             return makeRc<OutlineProperty>(self(), SpecifiedOutline{});
-//         }
-//
-//         Rc<Property> load(ComputedValues const& c) const override {
-//             return makeRc<OutlineProperty>(self(), *c.outline);
-//         }
-//
-//         Res<Rc<Property>> parse(Cursor<Css::Sst>& c) const override {
-//             SpecifiedOutline value;
-//             bool styleSet = false;
-//             while (not c.ended()) {
-//                 auto width = parseValue<Calc<Length>>(c);
-//                 if (width) {
-//                     value.width = width.expect();
-//                     continue;
-//                 }
-//
-//                 auto color = parseValue<Color>(c);
-//                 if (color) {
-//                     value.color = color.expect();
-//                     continue;
-//                 }
-//
-//                 auto style = parseValue<Gfx::BorderStyle>(c);
-//                 if (style) {
-//                     value.style = style.expect();
-//                     styleSet = true;
-//                     continue;
-//                 }
-//
-//                 if (c.skip(Css::Token::ident("auto"))) {
-//                     if (not styleSet)
-//                         value.style = Keywords::AUTO;
-//                     value.color = Keywords::AUTO;
-//                     continue;
-//                 }
-//
-//                 break;
-//             }
-//
-//             return Ok(makeRc<OutlineProperty>(self(), value));
-//         }
-//     };
-//
-//     SpecifiedOutline _value;
-//
-//     OutlineProperty(Rc<Property::Registration> registration, SpecifiedOutline value)
-//         : Property(registration), _value(value) {}
-//
-//     Longhands expand(RegisteredPropertySet& registry, ComputedValues const&, ComputedValues&) const override {
-//         return {
-//             makeRc<OutlineWidthProperty>(registry.resolveRegistration(Properties::OUTLINE_WIDTH, {}).expect(), _value.width),
-//             makeRc<OutlineStyleProperty>(registry.resolveRegistration(Properties::OUTLINE_STYLE, {}).expect(), _value.style),
-//             makeRc<OutlineColorProperty>(registry.resolveRegistration(Properties::OUTLINE_COLOR, {}).expect(), _value.color),
-//         };
-//     }
-//
-//     void repr(Io::Emit& e) const override {
-//         e("{}", _value);
-//     }
-// };
+// https://drafts.csswg.org/css-ui/#outline
+export struct OutlineShorthand {
+    static constexpr auto ID = ShorthandId::OUTLINE;
+
+    static constexpr Array LONGHANDS = {
+        LonghandId::OUTLINE_WIDTH,
+        LonghandId::OUTLINE_STYLE,
+        LonghandId::OUTLINE_COLOR,
+    };
+
+    // <'outline-width'> || <'outline-style'> || <'outline-color'>
+    static Res<> parse(Cursor<Css::Sst>& c, Vec<Rc<Property>>& stylesheet, ParsingMode) {
+        Opt<LineWidth> width;
+        Opt<OutlineStyleProperty::Value> style;
+        Opt<OutlineColorProperty::Value> color;
+
+        // NOTE: auto is valid for both outline-style and outline-color,
+        //       it goes to the first one that is not set yet.
+        while (true) {
+            eatWhitespace(c);
+            if (c.ended())
+                break;
+
+            if (not width) {
+                if (auto maybeWidth = parseValue<LineWidth>(c)) {
+                    width = Some(maybeWidth.take());
+                    continue;
+                }
+            }
+
+            if (not style) {
+                if (auto maybeStyle = parseValue<OutlineStyleProperty::Value>(c)) {
+                    style = Some(maybeStyle.take());
+                    continue;
+                }
+            }
+
+            if (not color) {
+                if (auto maybeColor = parseValue<OutlineColorProperty::Value>(c)) {
+                    color = Some(maybeColor.take());
+                    continue;
+                }
+            }
+
+            break;
+        }
+
+        if (not width and not style and not color)
+            return Error::invalidData("expected outline-width, outline-style or outline-color");
+
+        // NOTE: Omitted values are reset to their initial value.
+        if (width)
+            stylesheet.pushBack(makeRc<OutlineWidthProperty>(*width));
+        else
+            stylesheet.pushBack(initialProperty(LonghandId::OUTLINE_WIDTH));
+
+        if (style)
+            stylesheet.pushBack(makeRc<OutlineStyleProperty>(*style));
+        else
+            stylesheet.pushBack(initialProperty(LonghandId::OUTLINE_STYLE));
+
+        if (color)
+            stylesheet.pushBack(makeRc<OutlineColorProperty>(*color));
+        else
+            stylesheet.pushBack(initialProperty(LonghandId::OUTLINE_COLOR));
+
+        return Ok();
+    }
+};
 
 } // namespace Vaev::Style

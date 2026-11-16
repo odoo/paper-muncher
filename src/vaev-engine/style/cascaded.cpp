@@ -39,21 +39,23 @@ export struct CascadedValues {
         }
     };
 
-    Map<Symbol, Entry> _entries;
+    Vec<Opt<Entry>> _normalProperties = Vec<Opt<Entry>>::filled(enumLen<LonghandId>(), NONE);
+    Map<Symbol, Entry> _customProperties;
     usize _nextAttributeOrder = 0;
 
-    static Symbol _nameOf(Property const& property) {
-        if (property.id == LonghandId::CUSTOM)
-            return static_cast<CustomProperty const&>(property)._value.name;
-        return Symbol::from(propertyName(property.id));
-    }
-
     void _putLonghand(Rc<Property> property, Origin origin, usize layerOrder, Specificity specificity, bool important, usize ruleOrder, usize declarationOrder) {
-        auto name = _nameOf(*property);
         Entry entry{specificity, property, ruleOrder, declarationOrder, important, origin, layerOrder};
-        auto& existing = _entries.lookupOrPutDefault(name, entry);
-        if (entry >= existing)
-            existing = entry;
+
+        if (property->id == LonghandId::CUSTOM) {
+            auto name = property.is<CustomProperty>()->_value.name;
+            auto existing = _customProperties.lookupOrPutDefault(name, entry);
+            if (entry >= existing)
+                existing = entry;
+        } else {
+            auto& existing = _normalProperties[toUnderlyingType(property->id)];
+            if (not existing or entry >= *existing)
+                existing = Some(entry);
+        }
     }
 
     void putStyleRule(StyleRule const& rule, usize layerOrder, Specificity specificity, usize ruleOrder) {
@@ -75,42 +77,26 @@ export struct CascadedValues {
 
     void clear() {
         _nextAttributeOrder = 0;
-        _entries.clear();
+        _customProperties.clear();
+        for (auto& entry : _normalProperties)
+            entry = NONE;
     }
 
-    // TODO: Replaced by pending-substitution values, resolved when applying each longhand.
-    // void expands(ComputedValues const& parent, ComputedValues& child, RegisteredPropertySet& registeredPropertySet) {
-    //     Vec<Entry> shorthandEntries;
-    //     for (auto const& entry : _entries.iterValue()) {
-    //         if (entry.property->isShorthandProperty())
-    //             shorthandEntries.pushBack(entry);
-    //     }
-    //
-    //     for (auto& entry : shorthandEntries) {
-    //         auto& prop = entry.property;
-    //         _entries.remove(prop->registration->name).expect();
-    //         for (auto& longhandProperty : prop->expand(registeredPropertySet, parent, child)) {
-    //             _putLonghand(longhandProperty, entry.origin, entry.layerOrder, entry.specificity, prop->important, entry.ruleOrder, entry.declarationOrder);
-    //         }
-    //     }
-    // }
-
-    void applyCustomProperties(ComputedValues const& parent, Cow<ComputedValues>& child, ComputationContext const& cx) {
-        for (auto& entry : _entries.iterValue()) {
+    void applyCustomProperties(ComputedValues const& parent, Cow<ComputedValues>& child, ComputationContext const& cx) const {
+        for (auto& entry : _customProperties.iterValue()) {
             auto& prop = entry.property;
-
-            if (prop->id != LonghandId::CUSTOM)
-                continue;
-
             prop->apply(parent, child.cow(), cx);
         }
     }
 
-    void apply(ComputationPhase phase, ComputedValues const& parent, Cow<ComputedValues>& child, ComputationContext const& cx) {
-        for (auto& entry : _entries.iterValue()) {
-            auto& prop = entry.property;
+    void apply(ComputationPhase phase, ComputedValues const& parent, Cow<ComputedValues>& child, ComputationContext const& cx) const {
+        for (auto& entry : _normalProperties) {
+            if (not entry)
+                continue;
 
-            if (prop->id == LonghandId::CUSTOM or computationPhase(prop->id) != phase)
+            auto& prop = entry->property;
+
+            if (computationPhase(prop->id) != phase)
                 continue;
 
             prop->apply(parent, child.cow(), cx);

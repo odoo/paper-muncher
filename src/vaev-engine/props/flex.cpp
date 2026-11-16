@@ -185,145 +185,91 @@ export struct FlexWrapProperty : Property {
     }
 };
 
-// // https://www.w3.org/TR/css-flexbox-1/#propdef-flex-flow
-// export struct FlexFlowProperty : Property {
-//     struct Registration : Property::Registration {
-//         Registration()
-//             : Property::Registration(Properties::FLEX_FLOW, SHORTHAND) {}
-//
-//         Rc<Property> initial() const override {
-//             return makeRc<FlexFlowProperty>(self(), Tuple{FlexDirection::ROW, FlexWrap::NOWRAP});
-//         }
-//
-//         Rc<Property> load(ComputedValues const& c) const override {
-//             return makeRc<FlexFlowProperty>(self(), Tuple{c.flex->direction, c.flex->wrap});
-//         }
-//
-//         Res<Rc<Property>> parse(Cursor<Css::Sst>& c) const override {
-//             if (c.ended())
-//                 return Error::invalidData("unexpected end of input");
-//
-//             Tuple value{FlexDirection::ROW, FlexWrap::NOWRAP};
-//
-//             auto direction = parseValue<FlexDirection>(c);
-//             if (direction) {
-//                 value.v0 = direction.expect();
-//
-//                 auto wrap = parseValue<FlexWrap>(c);
-//                 if (wrap)
-//                     value.v1 = wrap.expect();
-//             } else {
-//                 auto wrap = parseValue<FlexWrap>(c);
-//                 if (not wrap)
-//                     return Error::invalidData("expected flex direction or wrap");
-//                 value.v1 = wrap.expect();
-//
-//                 direction = parseValue<FlexDirection>(c);
-//                 if (direction)
-//                     value.v0 = direction.expect();
-//             }
-//
-//             return Ok(makeRc<FlexFlowProperty>(self(), value));
-//         }
-//     };
-//
-//     Tuple<FlexDirection, FlexWrap> _value;
-//
-//     FlexFlowProperty(Rc<Property::Registration> registration, Tuple<FlexDirection, FlexWrap> value)
-//         : Property(registration), _value(value) {}
-//
-//     Longhands expand(RegisteredPropertySet& registry, ComputedValues const&, ComputedValues&) const override {
-//         return {
-//             makeRc<FlexDirectionProperty>(registry.resolveRegistration(Properties::FLEX_DIRECTION, {}).expect(), _value.v0),
-//             makeRc<FlexWrapProperty>(registry.resolveRegistration(Properties::FLEX_WRAP, {}).expect(), _value.v1),
-//         };
-//     }
-//
-//     void repr(Io::Emit& e) const override {
-//         e("{} {}", _value.v0, _value.v1);
-//     }
-// };
+// https://www.w3.org/TR/css-flexbox-1/#propdef-flex-flow
+export struct FlexFlowShorthand {
+    static constexpr auto ID = ShorthandId::FLEX_FLOW;
 
-// // https://www.w3.org/TR/css-flexbox-1/#propdef-flex
-// export struct FlexProperty : Property {
-//     struct Registration : Property::Registration {
-//         Registration()
-//             : Property::Registration(Properties::FLEX, SHORTHAND) {}
-//
-//         Rc<Property> initial() const override {
-//             return makeRc<FlexProperty>(self(), FlexItemProps{Keywords::AUTO, 0, 1});
-//         }
-//
-//         Rc<Property> load(ComputedValues const& c) const override {
-//             return makeRc<FlexProperty>(self(), FlexItemProps{c.flex->basis, c.flex->grow, c.flex->shrink});
-//         }
-//
-//         Res<Rc<Property>> parse(Cursor<Css::Sst>& c) const override {
-//             if (c.ended())
-//                 return Error::invalidData("unexpected end of input");
-//
-//             FlexItemProps value{Keywords::AUTO, 0, 1};
-//
-//             if (c.skip(Css::Token::ident("none"))) {
-//                 value = {Keywords::AUTO, 0, 0};
-//                 return Ok(makeRc<FlexProperty>(self(), value));
-//             } else if (c.skip(Css::Token::ident("initial"))) {
-//                 value = {Keywords::AUTO, 0, 1};
-//                 return Ok(makeRc<FlexProperty>(self(), value));
-//             }
-//
-//             // default values if these parameters are omitted
-//             value.flexGrow = value.flexShrink = 1;
-//             value.flexBasis = Calc<PercentOr<Length>>(Length{});
-//
-//             auto parseGrowShrink = [](Cursor<Css::Sst>& c, FlexItemProps& value) -> Res<> {
-//                 auto grow = parseValue<Number>(c);
-//                 if (not grow)
-//                     return Error::invalidData("expected flex item grow");
-//
-//                 value.flexGrow = grow.expect();
-//
-//                 auto shrink = parseValue<Number>(c);
-//                 if (shrink)
-//                     value.flexShrink = shrink.expect();
-//
-//                 return Ok();
-//             };
-//
-//             auto parsedGrowAndMaybeShrink = parseGrowShrink(c, value);
-//             if (parsedGrowAndMaybeShrink) {
-//                 auto basis = parseValue<FlexBasis>(c);
-//                 if (basis)
-//                     value.flexBasis = basis.expect();
-//             } else {
-//                 auto basis = parseValue<FlexBasis>(c);
-//                 if (basis)
-//                     value.flexBasis = basis.expect();
-//                 else
-//                     return Error::invalidData("expected flex item grow or basis");
-//
-//                 auto parsedGrowAndMaybeShrink = parseGrowShrink(c, value);
-//             }
-//             return Ok(makeRc<FlexProperty>(self(), value));
-//         }
-//     };
-//
-//     FlexItemProps _value;
-//
-//     FlexProperty(Rc<Property::Registration> registration, FlexItemProps value)
-//         : Property(registration), _value(value) {}
-//
-//     Longhands expand(RegisteredPropertySet& registry, ComputedValues const&, ComputedValues&) const override {
-//         return {
-//             makeRc<FlexBasisProperty>(registry.resolveRegistration(Properties::FLEX_BASIS, {}).expect(), _value.flexBasis),
-//             makeRc<FlexGrowProperty>(registry.resolveRegistration(Properties::FLEX_GROW, {}).expect(), _value.flexGrow),
-//             makeRc<FlexShrinkProperty>(registry.resolveRegistration(Properties::FLEX_SHRINK, {}).expect(), _value.flexShrink),
-//         };
-//     }
-//
-//     void repr(Io::Emit& e) const override {
-//         e("{} {} {}", _value.flexGrow, _value.flexShrink, _value.flexBasis);
-//     }
-// };
+    static constexpr auto LONGHANDS = Array{
+        LonghandId::FLEX_DIRECTION,
+        LonghandId::FLEX_WRAP,
+    };
+
+    static Res<> parse(Cursor<Css::Sst>& c, Vec<Rc<Property>>& stylesheet, ParsingMode) {
+        if (c.ended())
+            return Error::invalidData("unexpected end of input");
+
+        // NOTE: Omitted values are set to their initial value.
+        FlexDirection direction = FlexDirection::ROW;
+        FlexWrap wrap = FlexWrap::NOWRAP;
+
+        if (auto maybeDirection = parseValue<FlexDirection>(c)) {
+            direction = maybeDirection.take();
+            if (auto maybeWrap = parseValue<FlexWrap>(c))
+                wrap = maybeWrap.take();
+        } else {
+            wrap = try$(parseValue<FlexWrap>(c));
+            if (auto maybeDirection = parseValue<FlexDirection>(c))
+                direction = maybeDirection.take();
+        }
+
+        stylesheet.pushBack(makeRc<FlexDirectionProperty>(direction));
+        stylesheet.pushBack(makeRc<FlexWrapProperty>(wrap));
+        return Ok();
+    }
+};
+
+// https://www.w3.org/TR/css-flexbox-1/#propdef-flex
+export struct FlexShorthand {
+    static constexpr auto ID = ShorthandId::FLEX;
+
+    static constexpr auto LONGHANDS = Array{
+        LonghandId::FLEX_GROW,
+        LonghandId::FLEX_SHRINK,
+        LonghandId::FLEX_BASIS,
+    };
+
+    static void _push(Vec<Rc<Property>>& stylesheet, Number grow, Number shrink, FlexBasis basis) {
+        stylesheet.pushBack(makeRc<FlexGrowProperty>(grow));
+        stylesheet.pushBack(makeRc<FlexShrinkProperty>(shrink));
+        stylesheet.pushBack(makeRc<FlexBasisProperty>(std::move(basis)));
+    }
+
+    // <'flex-grow'> <'flex-shrink'>?
+    static Res<> _parseGrowShrink(Cursor<Css::Sst>& c, Number& grow, Number& shrink) {
+        grow = try$(parseValue<Number>(c));
+        if (auto maybeShrink = parseValue<Number>(c))
+            shrink = maybeShrink.take();
+        return Ok();
+    }
+
+    // none | [ <'flex-grow'> <'flex-shrink'>? || <'flex-basis'> ]
+    static Res<> parse(Cursor<Css::Sst>& c, Vec<Rc<Property>>& stylesheet, ParsingMode) {
+        if (c.ended())
+            return Error::invalidData("unexpected end of input");
+
+        // The keyword none expands to 0 0 auto.
+        if (c.skip(Css::Token::ident("none"))) {
+            _push(stylesheet, 0, 0, Keywords::AUTO);
+            return Ok();
+        }
+
+        // When omitted from the flex shorthand, flex-grow and flex-shrink
+        // are set to 1, and flex-basis to 0.
+        Number grow = 1;
+        Number shrink = 1;
+        FlexBasis basis = Calc<PercentOr<Length>>(Length{});
+
+        if (_parseGrowShrink(c, grow, shrink)) {
+            if (auto maybeBasis = parseValue<FlexBasis>(c))
+                basis = maybeBasis.take();
+        } else {
+            basis = try$(parseValue<FlexBasis>(c));
+            (void)_parseGrowShrink(c, grow, shrink);
+        }
+
+        _push(stylesheet, grow, shrink, std::move(basis));
+        return Ok();
+    }
+};
 
 } // namespace Vaev::Style

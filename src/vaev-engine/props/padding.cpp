@@ -223,41 +223,26 @@ export struct PaddingInlineEndProperty : Property {
     }
 };
 
-// export struct PaddingProperty : Property {
-//     struct Registration : Property::Registration {
-//         Registration()
-//             : Property::Registration(Properties::PADDING, SHORTHAND) {}
-//
-//         Rc<Property> initial() const override {
-//             return makeRc<PaddingProperty>(self(), Math::Insets<Calc<PercentOr<Length>>>{Length{}});
-//         }
-//
-//         Rc<Property> load(ComputedValues const& c) const override {
-//             return makeRc<PaddingProperty>(self(), *c.padding);
-//         }
-//
-//         Res<Rc<Property>> parse(Cursor<Css::Sst>& c) const override {
-//             return Ok(makeRc<PaddingProperty>(self(), try$(parseValue<Math::Insets<Calc<PercentOr<Length>>>>(c))));
-//         }
-//     };
-//
-//     Math::Insets<Calc<PercentOr<Length>>> _value;
-//
-//     PaddingProperty(Rc<Property::Registration> registration, Math::Insets<Calc<PercentOr<Length>>> value)
-//         : Property(registration), _value(value) {}
-//
-//     Longhands expand(RegisteredPropertySet& registry, ComputedValues const&, ComputedValues&) const override {
-//         return {
-//             makeRc<PaddingTopProperty>(registry.resolveRegistration(Properties::PADDING_TOP, {}).expect(), _value.top),
-//             makeRc<PaddingRightProperty>(registry.resolveRegistration(Properties::PADDING_RIGHT, {}).expect(), _value.end),
-//             makeRc<PaddingBottomProperty>(registry.resolveRegistration(Properties::PADDING_BOTTOM, {}).expect(), _value.bottom),
-//             makeRc<PaddingLeftProperty>(registry.resolveRegistration(Properties::PADDING_LEFT, {}).expect(), _value.start),
-//         };
-//     }
-//
-//     void repr(Io::Emit& e) const override {
-//         e("{}", _value);
-//     }
-// };
+// https://drafts.csswg.org/css-box-4/#padding-shorthand
+export struct PaddingShorthand {
+    static constexpr auto ID = ShorthandId::PADDING;
+
+    static constexpr Array LONGHANDS = {
+        LonghandId::PADDING_TOP,
+        LonghandId::PADDING_RIGHT,
+        LonghandId::PADDING_BOTTOM,
+        LonghandId::PADDING_LEFT,
+    };
+
+    // <'padding-top'>{1,4}
+    static Res<> parse(Cursor<Css::Sst>& c, Vec<Rc<Property>>& stylesheet, ParsingMode) {
+        auto value = try$(parseValue<Math::Insets<Calc<PercentOr<Length>>>>(c));
+        stylesheet.pushBack(makeRc<PaddingTopProperty>(value.top));
+        stylesheet.pushBack(makeRc<PaddingRightProperty>(value.end));
+        stylesheet.pushBack(makeRc<PaddingBottomProperty>(value.bottom));
+        stylesheet.pushBack(makeRc<PaddingLeftProperty>(value.start));
+        return Ok();
+    }
+};
 
 } // namespace Vaev::Style

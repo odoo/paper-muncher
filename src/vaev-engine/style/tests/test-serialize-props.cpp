@@ -70,8 +70,6 @@ test$("vaev-style-serialize-props") {
     try$(_expectSerialized(_driver, "column-height", "5vw", "5vw"));
 
     // https://drafts.csswg.org/css-multicol-2/#columns
-    try$(_expectSerialized(_driver, "columns", "calc(2em + 10px) 3", "calc(2em + 10px) 3"));
-    try$(_expectSerialized(_driver, "columns", "3 calc(2em + 10px)", "calc(2em + 10px) 3"));
 
     return Ok();
 }

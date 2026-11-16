@@ -151,54 +151,26 @@ export struct OverflowInlineProperty : Property {
     }
 };
 
-// // https://www.w3.org/TR/css-overflow-3/#propdef-overflow
-// export struct OverflowProperty : Property {
-//     struct Registration : Property::Registration {
-//         Registration()
-//             : Property::Registration(Properties::OVERFLOW, SHORTHAND) {}
-//
-//         Rc<Property> initial() const override {
-//             return makeRc<OverflowProperty>(self(), Pair{Overflow::VISIBLE, Overflow::VISIBLE});
-//         }
-//
-//         Rc<Property> load(ComputedValues const& c) const override {
-//             return makeRc<OverflowProperty>(self(), Pair{c.overflows.x, c.overflows.y});
-//         }
-//
-//         Res<Rc<Property>> parse(Cursor<Css::Sst>& c) const override {
-//             eatWhitespace(c);
-//             if (c.ended())
-//                 return Error::invalidData("unexpected end of input");
-//
-//             Pair<Overflow> value;
-//             value.v0 = try$(parseValue<Overflow>(c));
-//
-//             eatWhitespace(c);
-//             if (c.ended()) {
-//                 value.v1 = value.v0;
-//             } else {
-//                 value.v1 = try$(parseValue<Overflow>(c));
-//             }
-//
-//             return Ok(makeRc<OverflowProperty>(self(), value));
-//         }
-//     };
-//
-//     Pair<Overflow> _value;
-//
-//     OverflowProperty(Rc<Property::Registration> registration, Pair<Overflow> value)
-//         : Property(registration), _value(value) {}
-//
-//     Longhands expand(RegisteredPropertySet& registry, ComputedValues const&, ComputedValues&) const override {
-//         return {
-//             makeRc<OverflowXProperty>(registry.resolveRegistration(Properties::OVERFLOW_X, {}).expect(), _value.v0),
-//             makeRc<OverflowYProperty>(registry.resolveRegistration(Properties::OVERFLOW_Y, {}).expect(), _value.v1),
-//         };
-//     }
-//
-//     void repr(Io::Emit& e) const override {
-//         e("{} {}", _value.v0, _value.v1);
-//     }
-// };
+// https://www.w3.org/TR/css-overflow-3/#propdef-overflow
+export struct OverflowShorthand {
+    static constexpr auto ID = ShorthandId::OVERFLOW;
+
+    static constexpr Array LONGHANDS = {
+        LonghandId::OVERFLOW_X,
+        LonghandId::OVERFLOW_Y,
+    };
+
+    // <'overflow-x'>{1,2}
+    static Res<> parse(Cursor<Css::Sst>& c, Vec<Rc<Property>>& stylesheet, ParsingMode) {
+        auto x = try$(parseValue<Overflow>(c));
+
+        // If the second value is omitted, it is set to the same as the first.
+        auto y = parseValue<Overflow>(c).unwrapOr(x);
+
+        stylesheet.pushBack(makeRc<OverflowXProperty>(x));
+        stylesheet.pushBack(makeRc<OverflowYProperty>(y));
+        return Ok();
+    }
+};
 
 } // namespace Vaev::Style

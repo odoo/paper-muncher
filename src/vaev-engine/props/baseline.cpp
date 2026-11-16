@@ -188,126 +188,81 @@ export struct BaselineShiftProperty : Property {
     }
 };
 
-// // https://drafts.csswg.org/css-inline/#transverse-alignment
-// export struct VerticalAlignProperty : Property {
-//     struct Value {
-//         Opt<BaselineSource> baselineSource = NONE;
-//         Opt<AlignmentBaseline> alignmentBaseline = NONE;
-//         Opt<BaselineShift> baselineShift = NONE;
-//     };
-//
-//     struct Registration : Property::Registration {
-//         Registration()
-//             : Property::Registration(Properties::VERTICAL_ALIGN, SHORTHAND) {}
-//
-//         Rc<Property> initial() const override {
-//             return makeRc<VerticalAlignProperty>(self(), Value{.alignmentBaseline = Some(Keywords::BASELINE)});
-//         }
-//
-//         Rc<Property> load(ComputedValues const& c) const override {
-//             return makeRc<VerticalAlignProperty>(
-//                 self(),
-//                 Value{
-//                     Some(c.inline_->baselineSource),
-//                     Some(c.inline_->alignmentBaseline),
-//                     Some(c.inline_->baselineShift),
-//                 }
-//             );
-//         }
-//
-//         Res<Rc<Property>> parse(Cursor<Css::Sst>& c) const override {
-//             if (c.ended())
-//                 return Error::invalidData("unexpected end of input");
-//
-//             auto value = Value{};
-//
-//             while (not c.ended()) {
-//                 auto maybeFirstOrLast = parseValue<Union<Keywords::First, Keywords::Last>>(c);
-//                 if (maybeFirstOrLast) {
-//                     if (not value.baselineSource) {
-//                         value.baselineSource = Some(maybeFirstOrLast.expect().visit(
-//                             [](auto& v) -> BaselineSource {
-//                                 return v;
-//                             }
-//                         ));
-//                         continue;
-//                     }
-//
-//                     return Error::invalidData("duplicated value type");
-//                 }
-//
-//                 auto maybeAlignmentBaseline = parseValue<AlignmentBaseline>(c);
-//                 if (maybeAlignmentBaseline) {
-//                     if (not value.alignmentBaseline) {
-//                         value.alignmentBaseline = Some(maybeAlignmentBaseline.expect());
-//                         continue;
-//                     }
-//
-//                     return Error::invalidData("duplicated value type");
-//                 }
-//
-//                 auto maybeBaselineShift = parseValue<BaselineShift>(c);
-//                 if (maybeBaselineShift) {
-//                     if (not value.baselineShift) {
-//                         value.baselineShift = Some(maybeBaselineShift.expect());
-//                         continue;
-//                     }
-//
-//                     return Error::invalidData("duplicated value type");
-//                 }
-//
-//                 return Error::invalidData("unknown value");
-//             }
-//
-//             if (not value.alignmentBaseline and not value.baselineSource and not value.baselineShift) {
-//                 return Error::invalidData("missing value");
-//             }
-//
-//             return Ok(makeRc<VerticalAlignProperty>(self(), value));
-//         }
-//     };
-//
-//     Value _value;
-//
-//     VerticalAlignProperty(Rc<Property::Registration> registration, Value value)
-//         : Property(registration), _value(value) {}
-//
-//     Longhands expand(RegisteredPropertySet& registry, ComputedValues const&, ComputedValues&) const override {
-//         Longhands shorthands = {};
-//
-//         if (auto const& [baselineSource] = _value.baselineSource) {
-//             shorthands.pushBack(
-//                 makeRc<BaselineSourceProperty>(
-//                     registry.resolveRegistration(Properties::BASELINE_SOURCE, {}).take(),
-//                     baselineSource
-//                 )
-//             );
-//         }
-//
-//         if (auto const& [alignmentBaseline] = _value.alignmentBaseline) {
-//             shorthands.pushBack(
-//                 makeRc<AlignmentBaselineProperty>(
-//                     registry.resolveRegistration(Properties::ALIGNMENT_BASELINE, {}).take(),
-//                     alignmentBaseline
-//                 )
-//             );
-//         }
-//
-//         if (auto const& [baselineShift] = _value.baselineShift) {
-//             shorthands.pushBack(
-//                 makeRc<BaselineShiftProperty>(
-//                     registry.resolveRegistration(Properties::BASELINE_SHIFT, {}).take(),
-//                     baselineShift
-//                 )
-//             );
-//         }
-//
-//         return shorthands;
-//     }
-//
-//     void repr(Io::Emit& e) const override {
-//         e("baseline-source={} alignment-baseline={}", _value.baselineSource, _value.alignmentBaseline);
-//     }
-// };
+// https://drafts.csswg.org/css-inline/#transverse-alignment
+export struct VerticalAlignShorthand {
+    static constexpr auto ID = ShorthandId::VERTICAL_ALIGN;
+
+    static constexpr auto LONGHANDS = Array{
+        LonghandId::ALIGNMENT_BASELINE,
+        LonghandId::BASELINE_SOURCE,
+        LonghandId::BASELINE_SHIFT,
+    };
+
+    static Res<> parse(Cursor<Css::Sst>& c, Vec<Rc<Property>>& stylesheet, ParsingMode) {
+        Opt<BaselineSource> baselineSource;
+        Opt<BaselineShift> baselineShift;
+        Opt<AlignmentBaseline> alignmentBaseline;
+
+        while (not c.ended()) {
+            eatWhitespace(c);
+
+            auto maybeFirstOrLast = parseValue<Union<Keywords::First, Keywords::Last>>(c);
+            if (maybeFirstOrLast) {
+                if (not baselineSource) {
+                    baselineSource = Some(maybeFirstOrLast.expect().visit(
+                        [](auto& v) -> BaselineSource {
+                            return v;
+                        }
+                    ));
+                    continue;
+                }
+
+                return Error::invalidData("duplicated value type");
+            }
+
+            auto maybeAlignmentBaseline = parseValue<AlignmentBaseline>(c);
+            if (maybeAlignmentBaseline) {
+                if (not alignmentBaseline) {
+                    alignmentBaseline = Some(maybeAlignmentBaseline.expect());
+                    continue;
+                }
+
+                return Error::invalidData("duplicated value type");
+            }
+
+            auto maybeBaselineShift = parseValue<BaselineShift>(c);
+            if (maybeBaselineShift) {
+                if (not baselineShift) {
+                    baselineShift = Some(maybeBaselineShift.expect());
+                    continue;
+                }
+
+                return Error::invalidData("duplicated value type");
+            }
+
+            return Error::invalidData("unknown value");
+        }
+
+        if (not alignmentBaseline and not baselineSource and not baselineShift)
+            return Error::invalidData("missing value");
+
+        if (alignmentBaseline)
+            stylesheet.pushBack(makeRc<AlignmentBaselineProperty>(*alignmentBaseline));
+        else
+            stylesheet.pushBack(initialProperty(LonghandId::ALIGNMENT_BASELINE));
+
+        if (baselineSource)
+            stylesheet.pushBack(makeRc<BaselineSourceProperty>(*baselineSource));
+        else
+            stylesheet.pushBack(initialProperty(LonghandId::BASELINE_SOURCE));
+
+        if (baselineShift)
+            stylesheet.pushBack(makeRc<BaselineShiftProperty>(*baselineShift));
+        else
+            stylesheet.pushBack(initialProperty(LonghandId::BASELINE_SHIFT));
+
+        return Ok();
+    }
+};
 
 } // namespace Vaev::Style

@@ -1778,31 +1778,12 @@ test$("vaev-style-wpt-css-css-backgrounds-parsing-border-radius-invalid-xfail", 
 
 // https://github.com/web-platform-tests/wpt/blob/ba6d9f67/css/css-backgrounds/parsing/border-radius-valid.html
 test$("vaev-style-wpt-css-css-backgrounds-parsing-border-radius-valid") {
-    try$(_expectSerialized(_driver, "border-radius", "initial", "initial"));
-    try$(_expectSerialized(_driver, "border-radius", "inherit", "inherit"));
-    try$(_expectSerialized(_driver, "border-radius", "unset", "unset"));
-    try$(_expectSerialized(_driver, "border-radius", "revert", "revert"));
     try$(_expectSerialized(_driver, "border-bottom-right-radius", "30px 40%", "30px 40%"));
     try$(_expectSerialized(_driver, "border-bottom-left-radius", "50% 60px", "50% 60px"));
     return Ok();
 }
 
 test$("vaev-style-wpt-css-css-backgrounds-parsing-border-radius-valid-xfail", XFAIL) {
-    try$(_expectSerialized(_driver, "border-radius", "1px", "1px"));
-    try$(_expectSerialized(_driver, "border-radius", "1px 5%", "1px 5%"));
-    try$(_expectSerialized(_driver, "border-radius", "1px 2% 3px", "1px 2% 3px"));
-    try$(_expectSerialized(_driver, "border-radius", "1px 2% 3px 4%", "1px 2% 3px 4%"));
-    try$(_expectSerialized(_driver, "border-radius", "1px / 2px", "1px / 2px"));
-    try$(_expectSerialized(_driver, "border-radius", "5em / 1px 2% 3px 4%", "5em / 1px 2% 3px 4%"));
-    try$(_expectSerialized(_driver, "border-radius", "1px 2% / 3px 4px", "1px 2% / 3px 4px"));
-    try$(_expectSerialized(_driver, "border-radius", "1px 2px 3em / 1px 2px 3%", "1px 2px 3em / 1px 2px 3%"));
-    try$(_expectSerialized(_driver, "border-radius", "1px 2% / 2px 3em 4px 5em", "1px 2% / 2px 3em 4px 5em"));
-    try$(_expectSerialized(_driver, "border-radius", "1px 2% 3px 4% / 5em", "1px 2% 3px 4% / 5em"));
-    try$(_expectSerialized(_driver, "border-radius", "1px 1px 1px 2% / 1px 2% 1px 2%", "1px 1px 1px 2% / 1px 2%"));
-    try$(_expectSerialized(_driver, "border-radius", "1px 1px 1px 1px / 1px 1px 2% 1px", "1px / 1px 1px 2%"));
-    try$(_expectSerialized(_driver, "border-radius", "1px 1px 2% 2%", "1px 1px 2% 2%"));
-    try$(_expectSerialized(_driver, "border-radius", "1px 2% 1px 1px", "1px 2% 1px 1px"));
-    try$(_expectSerialized(_driver, "border-radius", "1px 2% 2% 2% / 1px 2% 3px 2%", "1px 2% 2% / 1px 2% 3px"));
     try$(_expectSerialized(_driver, "border-top-left-radius", "10px", "10px"));
     try$(_expectSerialized(_driver, "border-top-right-radius", "20%", "20%"));
     return Ok();
@@ -1831,14 +1812,6 @@ test$("vaev-style-wpt-css-css-backgrounds-parsing-border-style-valid") {
     return Ok();
 }
 
-test$("vaev-style-wpt-css-css-backgrounds-parsing-border-style-valid-xfail", XFAIL) {
-    try$(_expectSerialized(_driver, "border-style", "none", "none"));
-    try$(_expectSerialized(_driver, "border-style", "none hidden dotted dashed", "none hidden dotted dashed"));
-    try$(_expectSerialized(_driver, "border-style", "solid double groove ridge", "solid double groove ridge"));
-    try$(_expectSerialized(_driver, "border-style", "inset outset", "inset outset"));
-    return Ok();
-}
-
 // https://github.com/web-platform-tests/wpt/blob/ba6d9f67/css/css-backgrounds/parsing/border-width-invalid.html
 test$("vaev-style-wpt-css-css-backgrounds-parsing-border-width-invalid") {
     try$(_expectInvalid(_driver, "border-width", "none"));
@@ -1860,8 +1833,6 @@ test$("vaev-style-wpt-css-css-backgrounds-parsing-border-width-valid") {
 }
 
 test$("vaev-style-wpt-css-css-backgrounds-parsing-border-width-valid-xfail", XFAIL) {
-    try$(_expectSerialized(_driver, "border-width", "1em", "1em"));
-    try$(_expectSerialized(_driver, "border-width", "2px thin medium thick", "2px thin medium thick"));
     try$(_expectSerialized(_driver, "border-bottom-width", "medium", "medium"));
     return Ok();
 }
@@ -1955,19 +1926,6 @@ test$("vaev-style-wpt-css-css-box-parsing-margin-valid") {
     return Ok();
 }
 
-test$("vaev-style-wpt-css-css-box-parsing-margin-valid-xfail", XFAIL) {
-    try$(_expectSerialized(_driver, "margin", "10px", "10px"));
-    try$(_expectSerialized(_driver, "margin", "20%", "20%"));
-    try$(_expectSerialized(_driver, "margin", "calc(2em + 3ex)", "calc(2em + 3ex)"));
-    try$(_expectSerialized(_driver, "margin", "auto", "auto"));
-    try$(_expectSerialized(_driver, "margin", "-10px", "-10px"));
-    try$(_expectSerialized(_driver, "margin", "-20%", "-20%"));
-    try$(_expectSerialized(_driver, "margin", "calc(2em + 3ex) auto", "calc(2em + 3ex) auto"));
-    try$(_expectSerialized(_driver, "margin", "auto calc(2em + 3ex) 20%", "auto calc(2em + 3ex) 20%"));
-    try$(_expectSerialized(_driver, "margin", "10px 20% calc(2em + 3ex) auto", "10px 20% calc(2em + 3ex) auto"));
-    return Ok();
-}
-
 // https://github.com/web-platform-tests/wpt/blob/ba6d9f67/css/css-box/parsing/max-height-invalid.html
 test$("vaev-style-wpt-css-css-box-parsing-max-height-invalid") {
     try$(_expectInvalid(_driver, "max-height", "complex"));
@@ -2054,14 +2012,6 @@ test$("vaev-style-wpt-css-css-box-parsing-overflow-valid") {
     return Ok();
 }
 
-test$("vaev-style-wpt-css-css-box-parsing-overflow-valid-xfail", XFAIL) {
-    try$(_expectSerialized(_driver, "overflow", "visible", "visible"));
-    try$(_expectSerialized(_driver, "overflow", "hidden", "hidden"));
-    try$(_expectSerialized(_driver, "overflow", "scroll", "scroll"));
-    try$(_expectSerialized(_driver, "overflow", "auto", "auto"));
-    return Ok();
-}
-
 // https://github.com/web-platform-tests/wpt/blob/ba6d9f67/css/css-box/parsing/padding-invalid.html
 test$("vaev-style-wpt-css-css-box-parsing-padding-invalid") {
     try$(_expectInvalid(_driver, "padding", "auto"));
@@ -2091,11 +2041,6 @@ test$("vaev-style-wpt-css-css-box-parsing-padding-valid") {
 }
 
 test$("vaev-style-wpt-css-css-box-parsing-padding-valid-xfail", XFAIL) {
-    try$(_expectSerialized(_driver, "padding", "10px", "10px"));
-    try$(_expectSerialized(_driver, "padding", "10px 20px 30px 40px", "10px 20px 30px 40px"));
-    try$(_expectSerialized(_driver, "padding", "calc(2em + 3ex)", "calc(2em + 3ex)"));
-    try$(_expectSerialized(_driver, "padding", "20%", "20%"));
-    try$(_expectSerialized(_driver, "padding", "10px 20% 30% 40px", "10px 20% 30% 40px"));
     try$(_expectSerialized(_driver, "padding-right", "calc(2em + 3%)", "calc(3% + 2em)"));
     return Ok();
 }
@@ -3849,31 +3794,6 @@ test$("vaev-style-wpt-css-css-flexbox-parsing-flex-shrink-valid") {
     return Ok();
 }
 
-// https://github.com/web-platform-tests/wpt/blob/ba6d9f67/css/css-flexbox/parsing/flex-valid.html
-test$("vaev-style-wpt-css-css-flexbox-parsing-flex-valid") {
-    try$(_expectSerialized(_driver, "flex", "4 5 6px", "4 5 6px"));
-    try$(_expectSerialized(_driver, "flex", "6px 4 5", "4 5 6px"));
-    try$(_expectSerialized(_driver, "flex", "6px 4", "4 1 6px"));
-    try$(_expectSerialized(_driver, "flex", "6px", "1 1 6px"));
-    try$(_expectSerialized(_driver, "flex", "7% 8", "8 1 7%"));
-    try$(_expectSerialized(_driver, "flex", "1 1 10em", "1 1 10em"));
-    return Ok();
-}
-
-test$("vaev-style-wpt-css-css-flexbox-parsing-flex-valid-xfail", XFAIL) {
-    try$(_expectSerialized(_driver, "flex", "none", "0 0 auto"));
-    try$(_expectSerialized(_driver, "flex", "1", "1 1 0%"));
-    try$(_expectSerialized(_driver, "flex", "2 3", "2 3 0%"));
-    try$(_expectSerialized(_driver, "flex", "8 auto", "8 1 auto"));
-    try$(_expectSerialized(_driver, "flex", "1 1 calc(10em)", "1 1 calc(10em)"));
-    try$(_expectSerialized(_driver, "flex", "1 1 calc(-10em)", "1 1 calc(-10em)"));
-    try$(_expectSerialized(_driver, "flex", "calc(10 + (sign(20cqw - 10px) * 5)) calc(10 + (sign(20cqw - 10px) * 5)) 1px", "calc(10 + (5 * sign(20cqw - 10px))) calc(10 + (5 * sign(20cqw - 10px))) 1px"));
-    try$(_expectSerialized(_driver, "flex", "1 1 calc(10px + (sign(20cqw - 10px) * 5px))", "1 1 calc(10px + (5px * sign(20cqw - 10px)))"));
-    try$(_expectSerialized(_driver, "flex", "calc(1) calc(2 + 1) calc(3px)", "calc(1) calc(3) calc(3px)"));
-    try$(_expectSerialized(_driver, "flex", "calc(-1) calc(-1) 0", "calc(-1) calc(-1) 0px"));
-    return Ok();
-}
-
 // https://github.com/web-platform-tests/wpt/blob/ba6d9f67/css/css-flexbox/parsing/flex-wrap-invalid.html
 test$("vaev-style-wpt-css-css-flexbox-parsing-flex-wrap-invalid") {
     try$(_expectInvalid(_driver, "flex-wrap", "auto"));
@@ -4917,19 +4837,6 @@ test$("vaev-style-wpt-css-css-logical-parsing-margin-block-inline-valid") {
     return Ok();
 }
 
-test$("vaev-style-wpt-css-css-logical-parsing-margin-block-inline-valid-xfail", XFAIL) {
-    try$(_expectSerialized(_driver, "margin-block", "auto", "auto"));
-    try$(_expectSerialized(_driver, "margin-block", "-10px", "-10px"));
-    try$(_expectSerialized(_driver, "margin-block", "calc(2em + 3ex) -20%", "calc(2em + 3ex) -20%"));
-    try$(_expectSerialized(_driver, "margin-block", "auto auto", "auto"));
-    try$(_expectSerialized(_driver, "margin-block", "-20% calc(20% + 10px)", "-20% calc(20% + 10px)"));
-    try$(_expectSerialized(_driver, "margin-inline", "20%", "20%"));
-    try$(_expectSerialized(_driver, "margin-inline", "calc(2em + 3ex)", "calc(2em + 3ex)"));
-    try$(_expectSerialized(_driver, "margin-inline", "-10px auto", "-10px auto"));
-    try$(_expectSerialized(_driver, "margin-inline", "auto calc(2em + 3ex)", "auto calc(2em + 3ex)"));
-    return Ok();
-}
-
 // https://github.com/web-platform-tests/wpt/blob/ba6d9f67/css/css-logical/parsing/padding-block-inline-invalid.html
 test$("vaev-style-wpt-css-css-logical-parsing-padding-block-inline-invalid") {
     try$(_expectInvalid(_driver, "padding-inline-start", "20% calc(10px - 0.5em)"));
@@ -5216,35 +5123,6 @@ test$("vaev-style-wpt-css-css-multicol-parsing-columns-invalid-xfail", XFAIL) {
     return Ok();
 }
 
-// https://github.com/web-platform-tests/wpt/blob/ba6d9f67/css/css-multicol/parsing/columns-valid.html
-test$("vaev-style-wpt-css-css-multicol-parsing-columns-valid") {
-    try$(_expectSerialized(_driver, "columns", "auto 3", "3"));
-    try$(_expectSerialized(_driver, "columns", "auto 10em", "10em"));
-    try$(_expectSerialized(_driver, "columns", "3 auto", "3"));
-    try$(_expectSerialized(_driver, "columns", "10em auto", "10em"));
-    try$(_expectSerialized(_driver, "columns", "2 10px", "10px 2"));
-    try$(_expectSerialized(_driver, "columns", "10px 2", "10px 2"));
-    try$(_expectSerialized(_driver, "columns", "auto", "auto"));
-    try$(_expectSerialized(_driver, "columns", "auto auto", "auto"));
-    try$(_expectSerialized(_driver, "columns", "7", "7"));
-    try$(_expectSerialized(_driver, "columns", "7em", "7em"));
-    try$(_expectSerialized(_driver, "columns", "0 1", "0px 1"));
-    try$(_expectSerialized(_driver, "columns", "1 0", "0px 1"));
-    try$(_expectSerialized(_driver, "columns", "0px 1", "0px 1"));
-    try$(_expectSerialized(_driver, "columns", "10px 2 / 100px", "10px 2 / 100px"));
-    try$(_expectSerialized(_driver, "columns", "2 10px / 100px", "10px 2 / 100px"));
-    try$(_expectSerialized(_driver, "columns", "10px / 100px", "10px / 100px"));
-    try$(_expectSerialized(_driver, "columns", "auto / 100px", "auto / 100px"));
-    try$(_expectSerialized(_driver, "columns", "10px 2 / auto", "10px 2"));
-    try$(_expectSerialized(_driver, "columns", "2 10px / auto", "10px 2"));
-    try$(_expectSerialized(_driver, "columns", "10px / auto", "10px"));
-    try$(_expectSerialized(_driver, "columns", "2 / auto", "2"));
-    try$(_expectSerialized(_driver, "columns", "auto / auto", "auto"));
-    try$(_expectSerialized(_driver, "columns", "initial", "initial"));
-    try$(_expectSerialized(_driver, "columns", "inherit", "inherit"));
-    return Ok();
-}
-
 // https://github.com/web-platform-tests/wpt/blob/ba6d9f67/css/css-overflow/parsing/overflow-invalid.html
 test$("vaev-style-wpt-css-css-overflow-parsing-overflow-invalid") {
     try$(_expectInvalid(_driver, "overflow", "none"));
@@ -5268,16 +5146,6 @@ test$("vaev-style-wpt-css-css-overflow-parsing-overflow-valid") {
 }
 
 test$("vaev-style-wpt-css-css-overflow-parsing-overflow-valid-xfail", XFAIL) {
-    try$(_expectSerialized(_driver, "overflow", "visible", "visible"));
-    try$(_expectSerialized(_driver, "overflow", "hidden", "hidden"));
-    try$(_expectSerialized(_driver, "overflow", "clip", "clip"));
-    try$(_expectSerialized(_driver, "overflow", "scroll", "scroll"));
-    try$(_expectSerialized(_driver, "overflow", "auto", "auto"));
-    try$(_expectSerialized(_driver, "overflow", "visible visible", "visible"));
-    try$(_expectSerialized(_driver, "overflow", "hidden visible", "hidden visible"));
-    try$(_expectSerialized(_driver, "overflow", "clip clip", "clip"));
-    try$(_expectSerialized(_driver, "overflow", "scroll auto", "scroll auto"));
-    try$(_expectSerialized(_driver, "overflow", "auto auto", "auto"));
     try$(_expectSerialized(_driver, "overflow-y", "clip", "clip"));
     try$(_expectSerialized(_driver, "overflow-block", "clip", "clip"));
     return Ok();

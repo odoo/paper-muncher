@@ -192,45 +192,38 @@ export struct BackgroundRepeatProperty : Property {
     }
 };
 
-// // https://www.w3.org/TR/CSS22/colors.html#x10
-// export struct BackgroundProperty : Property {
-//     struct Registration : Property::Registration {
-//         Registration()
-//             : Property::Registration(Properties::BACKGROUND, SHORTHAND) {}
-//
-//         Rc<Property> initial() const override {
-//             return makeRc<BackgroundProperty>(self(), SpecifiedBackground{TRANSPARENT});
-//         }
-//
-//         Rc<Property> load(ComputedValues const& c) const override {
-//             return makeRc<BackgroundProperty>(self(), *c.backgrounds);
-//         }
-//
-//         Res<Rc<Property>> parse(Cursor<Css::Sst>& c) const override {
-//             SpecifiedBackground value;
-//             value.color = try$(parseValue<Color>(c));
-//             return Ok(makeRc<BackgroundProperty>(self(), std::move(value)));
-//         }
-//     };
-//
-//     SpecifiedBackground _value;
-//
-//     BackgroundProperty(Rc<Property::Registration> registration, SpecifiedBackground value)
-//         : Property(registration), _value(std::move(value)) {}
-//
-//     Longhands expand(RegisteredPropertySet& registry, ComputedValues const&, ComputedValues&) const override {
-//         return {
-//             makeRc<BackgroundColorProperty>(
-//                 registry.resolveRegistration(Properties::BACKGROUND_COLOR, {}).take(),
-//                 _value.color
-//             ),
-//         };
-//     }
-//
-//     void repr(Io::Emit& e) const override {
-//         e("{}", _value);
-//     }
-// };
+// https://drafts.csswg.org/css-backgrounds-3/#background
+export struct BackgroundShorthand {
+    static constexpr auto ID = ShorthandId::BACKGROUND;
+
+    // FIXME: background-size, background-origin and background-clip are not implemented yet.
+    static constexpr auto LONGHANDS = Array{
+        LonghandId::BACKGROUND_IMAGE,
+        LonghandId::BACKGROUND_POSITION,
+        // LonghandId::BACKGROUND_SIZE,
+        LonghandId::BACKGROUND_REPEAT,
+        // LonghandId::BACKGROUND_ORIGIN,
+        // LonghandId::BACKGROUND_CLIP,
+        LonghandId::BACKGROUND_ATTACHMENT,
+        LonghandId::BACKGROUND_COLOR,
+    };
+
+    static Res<> parse(Cursor<Css::Sst>& c, Vec<Rc<Property>>& stylesheet, ParsingMode) {
+        auto color = try$(parseValue<Color>(c));
+        stylesheet.pushBack(makeRc<BackgroundColorProperty>(color));
+
+        // TODO
+        stylesheet.pushBack(initialProperty(LonghandId::BACKGROUND_IMAGE));
+        stylesheet.pushBack(initialProperty(LonghandId::BACKGROUND_POSITION));
+        // stylesheet.pushBack(initialProperty(LonghandId::BACKGROUND_SIZE));
+        stylesheet.pushBack(initialProperty(LonghandId::BACKGROUND_REPEAT));
+        // stylesheet.pushBack(initialProperty(LonghandId::BACKGROUND_ORIGIN));
+        // stylesheet.pushBack(initialProperty(LonghandId::BACKGROUND_CLIP));
+        stylesheet.pushBack(initialProperty(LonghandId::BACKGROUND_ATTACHMENT));
+
+        return Ok();
+    }
+};
 
 // https://www.w3.org/TR/CSS22/colors.html#propdef-color
 export struct ColorProperty : Property {

@@ -158,6 +158,7 @@ export struct MarginLeftProperty : Property {
 };
 
 // https://drafts.csswg.org/css-box-4/#margin-shorthand
+// https://drafts.csswg.org/css-box-4/#margin-shorthand
 export struct MarginShorthand {
     static constexpr auto ID = ShorthandId::MARGIN;
 
@@ -168,93 +169,16 @@ export struct MarginShorthand {
         LonghandId::MARGIN_LEFT,
     };
 
+    // <'margin-top'>{1,4}
     static Res<> parse(Cursor<Css::Sst>& c, Vec<Rc<Property>>& stylesheet, ParsingMode) {
-        auto first = try$(parseValue<MarginTopProperty::Value>(c));
-
-        auto second = parseValue<MarginTopProperty::Value>(c);
-
-        // If there is only one component value, it applies to all sides.
-        if (not second) {
-            stylesheet.pushBack(makeRc<MarginTopProperty>(first));
-            stylesheet.pushBack(makeRc<MarginBottomProperty>(first));
-            stylesheet.pushBack(makeRc<MarginLeftProperty>(first));
-            stylesheet.pushBack(makeRc<MarginRightProperty>(std::move(first)));
-            return Ok();
-        }
-
-        auto third = parseValue<MarginTopProperty::Value>(c);
-
-        // If there are two values, the top and bottom margins are set to the first value and
-        // the right and left margins are set to the second.
-        if (not third) {
-            stylesheet.pushBack(makeRc<MarginTopProperty>(first));
-            stylesheet.pushBack(makeRc<MarginBottomProperty>(std::move(first)));
-            stylesheet.pushBack(makeRc<MarginLeftProperty>(second.expect()));
-            stylesheet.pushBack(makeRc<MarginRightProperty>(second.take()));
-            return Ok();
-        }
-
-        auto fourth = parseValue<MarginTopProperty::Value>(c);
-
-        // If there are three values, the top is set to the first value, the left and right are set to the second,
-        // and the bottom is set to the third.
-        if (not fourth) {
-            stylesheet.pushBack(makeRc<MarginTopProperty>(std::move(first)));
-            stylesheet.pushBack(makeRc<MarginRightProperty>(second.expect()));
-            stylesheet.pushBack(makeRc<MarginBottomProperty>(third.take()));
-            stylesheet.pushBack(makeRc<MarginLeftProperty>(second.take()));
-            return Ok();
-        }
-
-        // If there are four values they apply to the top, right, bottom, and left, respectively.
-        stylesheet.pushBack(makeRc<MarginTopProperty>(std::move(first)));
-        stylesheet.pushBack(makeRc<MarginRightProperty>(second.take()));
-        stylesheet.pushBack(makeRc<MarginBottomProperty>(third.take()));
-        stylesheet.pushBack(makeRc<MarginLeftProperty>(fourth.take()));
-
+        auto value = try$(parseValue<Math::Insets<MarginTopProperty::Value>>(c));
+        stylesheet.pushBack(makeRc<MarginTopProperty>(value.top));
+        stylesheet.pushBack(makeRc<MarginRightProperty>(value.end));
+        stylesheet.pushBack(makeRc<MarginBottomProperty>(value.bottom));
+        stylesheet.pushBack(makeRc<MarginLeftProperty>(value.start));
         return Ok();
     }
 };
-
-// // https://drafts.csswg.org/css-box-4/#margin-shorthand
-// export struct MarginProperty : Property {
-//     using Value = Math::Insets<MarginTopProperty::Value>;
-//
-//     struct Registration : Property::Registration {
-//         Registration()
-//             : Property::Registration(Properties::MARGIN, SHORTHAND) {}
-//
-//         Rc<Property> initial() const override {
-//             return makeRc<MarginProperty>(self(), Value{Calc<PercentOr<Length>>(Length{})});
-//         }
-//
-//         Rc<Property> load(ComputedValues const& c) const override {
-//             return makeRc<MarginProperty>(self(), *c.margin);
-//         }
-//
-//         Res<Rc<Property>> parse(Cursor<Css::Sst>& c) const override {
-//             return Ok(makeRc<MarginProperty>(self(), try$(parseValue<Value>(c))));
-//         }
-//     };
-//
-//     Value _value;
-//
-//     MarginProperty(Rc<Property::Registration> registration, Value value)
-//         : Property(registration), _value(value) {}
-//
-//     Longhands expand(RegisteredPropertySet& registry, ComputedValues const&, ComputedValues&) const override {
-//         return {
-//             makeRc<MarginTopProperty>(registry.resolveRegistration(Properties::MARGIN_TOP, {}).expect(), _value.top),
-//             makeRc<MarginBottomProperty>(registry.resolveRegistration(Properties::MARGIN_BOTTOM, {}).expect(), _value.bottom),
-//             makeRc<MarginLeftProperty>(registry.resolveRegistration(Properties::MARGIN_LEFT, {}).expect(), _value.start),
-//             makeRc<MarginRightProperty>(registry.resolveRegistration(Properties::MARGIN_RIGHT, {}).expect(), _value.end),
-//         };
-//     }
-//
-//     void repr(Io::Emit& e) const override {
-//         e("{}", _value);
-//     }
-// };
 
 // https://drafts.csswg.org/css-logical/#propdef-margin-inline-start
 export struct MarginInlineStartProperty : Property {
@@ -336,43 +260,27 @@ export struct MarginInlineEndProperty : Property {
     }
 };
 
-// // https://drafts.csswg.org/css-logical/#propdef-margin-inline
-// export struct MarginInlineProperty : Property {
-//     using Value = Math::Insets<MarginTopProperty::Value>;
-//
-//     struct Registration : Property::Registration {
-//         Registration() : Property::Registration(Properties::MARGIN_INLINE, LOGICAL) {}
-//
-//         Rc<Property> initial() const override {
-//             return makeRc<MarginInlineProperty>(self(), Value{Calc<PercentOr<Length>>(Length{})});
-//         }
-//
-//         Rc<Property> load(ComputedValues const& c) const override {
-//             return makeRc<MarginInlineProperty>(self(), Math::Insets{c.margin->start, c.margin->end});
-//         }
-//
-//         Res<Rc<Property>> parse(Cursor<Css::Sst>& c) const override {
-//             return Ok(makeRc<MarginInlineProperty>(self(), try$(parseValue<Value>(c))));
-//         }
-//     };
-//
-//     Value _value;
-//
-//     MarginInlineProperty(Rc<Property::Registration> registration, Value value)
-//         : Property(registration), _value(value) {}
-//
-//     // FIXME: Take writing mode into account
-//     Longhands expand(RegisteredPropertySet& registry, ComputedValues const&, ComputedValues&) const override {
-//         return {
-//             makeRc<MarginLeftProperty>(registry.resolveRegistration(Properties::MARGIN_LEFT, {}).expect(), _value.start),
-//             makeRc<MarginRightProperty>(registry.resolveRegistration(Properties::MARGIN_RIGHT, {}).expect(), _value.end),
-//         };
-//     }
-//
-//     void repr(Io::Emit& e) const override {
-//         e("{}", _value);
-//     }
-// };
+// https://drafts.csswg.org/css-logical/#propdef-margin-inline
+export struct MarginInlineShorthand {
+    static constexpr auto ID = ShorthandId::MARGIN_INLINE;
+
+    static constexpr Array LONGHANDS = {
+        LonghandId::MARGIN_INLINE_START,
+        LonghandId::MARGIN_INLINE_END,
+    };
+
+    // <'margin-top'>{1,2}
+    static Res<> parse(Cursor<Css::Sst>& c, Vec<Rc<Property>>& stylesheet, ParsingMode) {
+        auto start = try$(parseValue<MarginTopProperty::Value>(c));
+
+        // If the second value is omitted, it is set to the same as the first.
+        auto end = parseValue<MarginTopProperty::Value>(c).unwrapOr(start);
+
+        stylesheet.pushBack(makeRc<MarginInlineStartProperty>(std::move(start)));
+        stylesheet.pushBack(makeRc<MarginInlineEndProperty>(std::move(end)));
+        return Ok();
+    }
+};
 
 // https://drafts.csswg.org/css-logical/#propdef-margin-block-start
 export struct MarginBlockStartProperty : Property {
@@ -454,42 +362,26 @@ export struct MarginBlockEndProperty : Property {
     }
 };
 
-// // https://drafts.csswg.org/css-logical/#propdef-margin-block
-// export struct MarginBlockProperty : Property {
-//     using Value = Math::Insets<MarginTopProperty::Value>;
-//
-//     struct Registration : Property::Registration {
-//         Registration() : Property::Registration(Properties::MARGIN_BLOCK, LOGICAL) {}
-//
-//         Rc<Property> initial() const override {
-//             return makeRc<MarginBlockProperty>(self(), Value{Calc<PercentOr<Length>>(Length{})});
-//         }
-//
-//         Rc<Property> load(ComputedValues const& c) const override {
-//             return makeRc<MarginBlockProperty>(self(), Math::Insets{c.margin->top, c.margin->bottom});
-//         }
-//
-//         Res<Rc<Property>> parse(Cursor<Css::Sst>& c) const override {
-//             return Ok(makeRc<MarginBlockProperty>(self(), try$(parseValue<Value>(c))));
-//         }
-//     };
-//
-//     Value _value;
-//
-//     MarginBlockProperty(Rc<Property::Registration> registration, Value value)
-//         : Property(registration), _value(value) {}
-//
-//     // FIXME: Take writing mode into account
-//     Longhands expand(RegisteredPropertySet& registry, ComputedValues const&, ComputedValues&) const override {
-//         return {
-//             makeRc<MarginTopProperty>(registry.resolveRegistration(Properties::MARGIN_TOP, {}).expect(), _value.top),
-//             makeRc<MarginBottomProperty>(registry.resolveRegistration(Properties::MARGIN_BOTTOM, {}).expect(), _value.bottom),
-//         };
-//     }
-//
-//     void repr(Io::Emit& e) const override {
-//         e("{}", _value);
-//     }
-// };
+// https://drafts.csswg.org/css-logical/#propdef-margin-block
+export struct MarginBlockShorthand {
+    static constexpr auto ID = ShorthandId::MARGIN_BLOCK;
+
+    static constexpr Array LONGHANDS = {
+        LonghandId::MARGIN_BLOCK_START,
+        LonghandId::MARGIN_BLOCK_END,
+    };
+
+    // <'margin-top'>{1,2}
+    static Res<> parse(Cursor<Css::Sst>& c, Vec<Rc<Property>>& stylesheet, ParsingMode) {
+        auto start = try$(parseValue<MarginTopProperty::Value>(c));
+
+        // If the second value is omitted, it is set to the same as the first.
+        auto end = parseValue<MarginTopProperty::Value>(c).unwrapOr(start);
+
+        stylesheet.pushBack(makeRc<MarginBlockStartProperty>(std::move(start)));
+        stylesheet.pushBack(makeRc<MarginBlockEndProperty>(std::move(end)));
+        return Ok();
+    }
+};
 
 } // namespace Vaev::Style
