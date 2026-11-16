@@ -426,21 +426,24 @@ Ui::Child inspectStyleTabCascaded(InspectState const& s) {
            Kr::scaffoldContent();
 }
 
-Ui::Child inspectStyleTabComputed(Rc<WebView> webview, InspectState const& s, Ui::Action<InspectAction> send) {
+Ui::Child inspectStyleTabComputed([[maybe_unused]] Rc<WebView> webview, InspectState const& s, Ui::Action<InspectAction> send) {
     auto content = noNodeSelected();
 
     if (s.selectedNode)
         if (auto const el = s.selectedNode->as<Dom::Element>()) {
             Ui::Children children;
 
-            for (auto const& [name, registration] : webview->document()->registeredPropertySet.registrations().iterItems()) {
-                if (not s.showCustomProperties and startWith(name.str(), "--"s) != Match::NO)
+            // FIXME: Also list the custom properties when s.showCustomProperties is set.
+            for (usize i = 0; i < enumLen<Style::LonghandId>(); i++) {
+                auto id = static_cast<Style::LonghandId>(i);
+                if (not Style::isLonghandImplemented(id))
                     continue;
 
-                if (s.filter and startWith(name.str(), s.filter) == Match::NO)
+                auto name = Style::propertyName(id);
+                if (s.filter and startWith(name, s.filter) == Match::NO)
                     continue;
 
-                auto property = registration->load(*el->computedValues());
+                auto property = Style::loadProperty(id, *el->computedValues());
 
                 if (not s.showAllProperties and property->isInitial())
                     continue;
@@ -448,7 +451,7 @@ Ui::Child inspectStyleTabComputed(Rc<WebView> webview, InspectState const& s, Ui
                 auto style = Ui::TextStyles::codeSmall().withColor(Ui::ACCENT400);
 
                 auto prose = makeRc<Gfx::Prose>(style, style);
-                prose->append(name.str());
+                prose->append(name);
                 prose->pushSpan(prose->currentSpanStyle().withColor(Ui::GRAY300));
                 prose->append(": "s);
                 auto w = Io::StringWriter{};

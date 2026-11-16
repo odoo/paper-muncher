@@ -199,15 +199,14 @@ export struct PageAreaRule {
         return NONE;
     }
 
-    static Opt<PageAreaRule> parse(RegisteredPropertySet& propertyRegistry, Css::Sst const& sst) {
+    static Opt<PageAreaRule> parse(Css::Sst const& sst) {
         PageAreaRule res;
 
         res.area = try$(_parsePageArea(sst.token));
 
         for (auto const& item : sst.content) {
             if (item == Css::Sst::DECL) {
-                if (auto p = propertyRegistry.parseDeclaration(item, RegisteredPropertySet::TOP_LEVEL))
-                    res.props.pushBack(p.take());
+                (void)parseDeclaration(item, res.props);
             } else {
                 logWarnIf(DEBUG_PAGE, "unexpected item in style rule: {}", item);
             }
@@ -216,19 +215,12 @@ export struct PageAreaRule {
         return Some(res);
     }
 
-    void apply([[maybe_unused]] RegisteredPropertySet& registry, ComputedValues const& parent, ComputedValues& child) const {
+    void apply(ComputedValues const& parent, ComputedValues& child) const {
         ComputationContext cx;
         for (auto const& prop : props) {
             if (prop->isBogusProperty())
                 continue;
 
-            // TODO: Restore once shorthands are expanded at parse time.
-            // if (prop->isShorthandProperty()) {
-            //     for (auto& longhand : prop->expand(registry, parent, child)) {
-            //         longhand->apply(parent, child, cx);
-            //     }
-            //     continue;
-            // }
             prop->apply(parent, child, cx);
         }
     }

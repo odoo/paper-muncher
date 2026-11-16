@@ -39,9 +39,18 @@ using namespace Karm::Literals;
 
 namespace Vaev::Style::Tests {
 
-static Res<> _expectSerialized(Test::Driver& _driver, Str name, Str input, Str expected, Flags<RegisteredPropertySet::Options> options = {}) {
-    static auto registry = defaultRegistry();
-    auto prop = try$(registry.parseValue(Symbol::from(name), input, options));
+// FIXME: Shorthands expand to several longhands, serializing them back
+//        into a shorthand is not implemented yet.
+static Res<Rc<Property>> _parseLonghand(Str name, Str input) {
+    Vec<Rc<Property>> properties;
+    try$(parseProperty(Symbol::from(name), input, properties));
+    if (properties.len() != 1)
+        return Error::notImplemented("shorthand serialization");
+    return Ok(properties[0]);
+}
+
+static Res<> _expectSerialized(Test::Driver& _driver, Str name, Str input, Str expected) {
+    auto prop = try$(_parseLonghand(name, input));
     Io::StringWriter w;
     try$(prop->serialize(w));
     assertEq$(w.take(), expected);
@@ -49,8 +58,7 @@ static Res<> _expectSerialized(Test::Driver& _driver, Str name, Str input, Str e
 }
 
 static Res<> _expectSerializedOneOf(Test::Driver& _driver, Str name, Str input, Slice<Str> expected) {
-    static auto registry = defaultRegistry();
-    auto prop = try$(registry.parseValue(Symbol::from(name), input, {}));
+    auto prop = try$(_parseLonghand(name, input));
     Io::StringWriter w;
     try$(prop->serialize(w));
     auto actual = w.take();
@@ -61,8 +69,8 @@ static Res<> _expectSerializedOneOf(Test::Driver& _driver, Str name, Str input, 
 }
 
 static Res<> _expectInvalid(Test::Driver& _driver, Str name, Str input) {
-    static auto registry = defaultRegistry();
-    assert$(not registry.parseValue(Symbol::from(name), input, {}));
+    Vec<Rc<Property>> properties;
+    assert$(not parseProperty(Symbol::from(name), input, properties));
     return Ok();
 }
 
@@ -170,7 +178,7 @@ test$("vaev-style-wpt-css-CSS2-syntax-colors-007") {
     try$(_expectSerialized(_driver, "color", "rgb(99%, 0%, 0%)", "rgb(252, 0, 0)"));
     try$(_expectSerialized(_driver, "color", "rgb(99%, 99%, 99%)", "rgb(252, 252, 252)"));
     try$(_expectSerialized(_driver, "color", "rgb(0.0%, 100.0%, 0.0%)", "rgb(0, 255, 0)"));
-    try$(_expectSerialized(_driver, "color", "inherit", "inherit", RegisteredPropertySet::TOP_LEVEL));
+    try$(_expectSerialized(_driver, "color", "inherit", "inherit"));
     try$(_expectInvalid(_driver, "color", "#00000"));
     try$(_expectInvalid(_driver, "color", "#00"));
     try$(_expectInvalid(_driver, "color", "#1000000"));
@@ -277,7 +285,7 @@ test$("vaev-style-wpt-css-CSS2-syntax-colors-007") {
     try$(_expectSerialized(_driver, "background-color", "rgb(99%, 0%, 0%)", "rgb(252, 0, 0)"));
     try$(_expectSerialized(_driver, "background-color", "rgb(99%, 99%, 99%)", "rgb(252, 252, 252)"));
     try$(_expectSerialized(_driver, "background-color", "rgb(0.0%, 100.0%, 0.0%)", "rgb(0, 255, 0)"));
-    try$(_expectSerialized(_driver, "background-color", "inherit", "inherit", RegisteredPropertySet::TOP_LEVEL));
+    try$(_expectSerialized(_driver, "background-color", "inherit", "inherit"));
     try$(_expectInvalid(_driver, "background-color", "#00000"));
     try$(_expectInvalid(_driver, "background-color", "#00"));
     try$(_expectInvalid(_driver, "background-color", "#1000000"));
@@ -384,7 +392,7 @@ test$("vaev-style-wpt-css-CSS2-syntax-colors-007") {
     try$(_expectSerialized(_driver, "border-top-color", "rgb(99%, 0%, 0%)", "rgb(252, 0, 0)"));
     try$(_expectSerialized(_driver, "border-top-color", "rgb(99%, 99%, 99%)", "rgb(252, 252, 252)"));
     try$(_expectSerialized(_driver, "border-top-color", "rgb(0.0%, 100.0%, 0.0%)", "rgb(0, 255, 0)"));
-    try$(_expectSerialized(_driver, "border-top-color", "inherit", "inherit", RegisteredPropertySet::TOP_LEVEL));
+    try$(_expectSerialized(_driver, "border-top-color", "inherit", "inherit"));
     try$(_expectInvalid(_driver, "border-top-color", "#00000"));
     try$(_expectInvalid(_driver, "border-top-color", "#00"));
     try$(_expectInvalid(_driver, "border-top-color", "#1000000"));
@@ -491,7 +499,7 @@ test$("vaev-style-wpt-css-CSS2-syntax-colors-007") {
     try$(_expectSerialized(_driver, "border-bottom-color", "rgb(99%, 0%, 0%)", "rgb(252, 0, 0)"));
     try$(_expectSerialized(_driver, "border-bottom-color", "rgb(99%, 99%, 99%)", "rgb(252, 252, 252)"));
     try$(_expectSerialized(_driver, "border-bottom-color", "rgb(0.0%, 100.0%, 0.0%)", "rgb(0, 255, 0)"));
-    try$(_expectSerialized(_driver, "border-bottom-color", "inherit", "inherit", RegisteredPropertySet::TOP_LEVEL));
+    try$(_expectSerialized(_driver, "border-bottom-color", "inherit", "inherit"));
     try$(_expectInvalid(_driver, "border-bottom-color", "#00000"));
     try$(_expectInvalid(_driver, "border-bottom-color", "#00"));
     try$(_expectInvalid(_driver, "border-bottom-color", "#1000000"));
@@ -598,7 +606,7 @@ test$("vaev-style-wpt-css-CSS2-syntax-colors-007") {
     try$(_expectSerialized(_driver, "border-left-color", "rgb(99%, 0%, 0%)", "rgb(252, 0, 0)"));
     try$(_expectSerialized(_driver, "border-left-color", "rgb(99%, 99%, 99%)", "rgb(252, 252, 252)"));
     try$(_expectSerialized(_driver, "border-left-color", "rgb(0.0%, 100.0%, 0.0%)", "rgb(0, 255, 0)"));
-    try$(_expectSerialized(_driver, "border-left-color", "inherit", "inherit", RegisteredPropertySet::TOP_LEVEL));
+    try$(_expectSerialized(_driver, "border-left-color", "inherit", "inherit"));
     try$(_expectInvalid(_driver, "border-left-color", "#00000"));
     try$(_expectInvalid(_driver, "border-left-color", "#00"));
     try$(_expectInvalid(_driver, "border-left-color", "#1000000"));
@@ -705,7 +713,7 @@ test$("vaev-style-wpt-css-CSS2-syntax-colors-007") {
     try$(_expectSerialized(_driver, "border-right-color", "rgb(99%, 0%, 0%)", "rgb(252, 0, 0)"));
     try$(_expectSerialized(_driver, "border-right-color", "rgb(99%, 99%, 99%)", "rgb(252, 252, 252)"));
     try$(_expectSerialized(_driver, "border-right-color", "rgb(0.0%, 100.0%, 0.0%)", "rgb(0, 255, 0)"));
-    try$(_expectSerialized(_driver, "border-right-color", "inherit", "inherit", RegisteredPropertySet::TOP_LEVEL));
+    try$(_expectSerialized(_driver, "border-right-color", "inherit", "inherit"));
     try$(_expectInvalid(_driver, "border-right-color", "#00000"));
     try$(_expectInvalid(_driver, "border-right-color", "#00"));
     try$(_expectInvalid(_driver, "border-right-color", "#1000000"));
@@ -812,7 +820,7 @@ test$("vaev-style-wpt-css-CSS2-syntax-colors-007") {
     try$(_expectSerialized(_driver, "outline-color", "rgb(99%, 0%, 0%)", "rgb(252, 0, 0)"));
     try$(_expectSerialized(_driver, "outline-color", "rgb(99%, 99%, 99%)", "rgb(252, 252, 252)"));
     try$(_expectSerialized(_driver, "outline-color", "rgb(0.0%, 100.0%, 0.0%)", "rgb(0, 255, 0)"));
-    try$(_expectSerialized(_driver, "outline-color", "inherit", "inherit", RegisteredPropertySet::TOP_LEVEL));
+    try$(_expectSerialized(_driver, "outline-color", "inherit", "inherit"));
     try$(_expectInvalid(_driver, "outline-color", "#00000"));
     try$(_expectInvalid(_driver, "outline-color", "#00"));
     try$(_expectInvalid(_driver, "outline-color", "#1000000"));
@@ -1770,10 +1778,10 @@ test$("vaev-style-wpt-css-css-backgrounds-parsing-border-radius-invalid-xfail", 
 
 // https://github.com/web-platform-tests/wpt/blob/ba6d9f67/css/css-backgrounds/parsing/border-radius-valid.html
 test$("vaev-style-wpt-css-css-backgrounds-parsing-border-radius-valid") {
-    try$(_expectSerialized(_driver, "border-radius", "initial", "initial", RegisteredPropertySet::TOP_LEVEL));
-    try$(_expectSerialized(_driver, "border-radius", "inherit", "inherit", RegisteredPropertySet::TOP_LEVEL));
-    try$(_expectSerialized(_driver, "border-radius", "unset", "unset", RegisteredPropertySet::TOP_LEVEL));
-    try$(_expectSerialized(_driver, "border-radius", "revert", "revert", RegisteredPropertySet::TOP_LEVEL));
+    try$(_expectSerialized(_driver, "border-radius", "initial", "initial"));
+    try$(_expectSerialized(_driver, "border-radius", "inherit", "inherit"));
+    try$(_expectSerialized(_driver, "border-radius", "unset", "unset"));
+    try$(_expectSerialized(_driver, "border-radius", "revert", "revert"));
     try$(_expectSerialized(_driver, "border-bottom-right-radius", "30px 40%", "30px 40%"));
     try$(_expectSerialized(_driver, "border-bottom-left-radius", "50% 60px", "50% 60px"));
     return Ok();
@@ -2236,7 +2244,7 @@ test$("vaev-style-wpt-css-css-color-parsing-alpha-color-parsing-invalid") {
 
 // https://github.com/web-platform-tests/wpt/blob/ba6d9f67/css/css-color/parsing/alpha-color-parsing-valid.html
 test$("vaev-style-wpt-css-css-color-parsing-alpha-color-parsing-valid") {
-    try$(_expectSerialized(_driver, "color", "alpha(from red / var(--alpha))", "alpha(from red / var(--alpha))", RegisteredPropertySet::TOP_LEVEL));
+    try$(_expectSerialized(_driver, "color", "alpha(from red / var(--alpha))", "alpha(from red / var(--alpha))"));
     return Ok();
 }
 
@@ -5001,8 +5009,8 @@ test$("vaev-style-wpt-css-css-masking-parsing-clip-path-invalid-xfail", XFAIL) {
 
 // https://github.com/web-platform-tests/wpt/blob/ba6d9f67/css/css-masking/parsing/clip-path-shape-parsing.html
 test$("vaev-style-wpt-css-css-masking-parsing-clip-path-shape-parsing") {
-    try$(_expectSerialized(_driver, "clip-path", "shape(from 0 0,curve to 5% calc(5% * var(--s,1)) with 5% 5%, vline to 100%)", "shape(from 0 0,curve to 5% calc(5% * var(--s,1)) with 5% 5%, vline to 100%)", RegisteredPropertySet::TOP_LEVEL));
-    try$(_expectSerialized(_driver, "clip-path", "shape(from 0 0,curve to 5% var(--s,1) with 5% 5%, vline to 100%)", "shape(from 0 0,curve to 5% var(--s,1) with 5% 5%, vline to 100%)", RegisteredPropertySet::TOP_LEVEL));
+    try$(_expectSerialized(_driver, "clip-path", "shape(from 0 0,curve to 5% calc(5% * var(--s,1)) with 5% 5%, vline to 100%)", "shape(from 0 0,curve to 5% calc(5% * var(--s,1)) with 5% 5%, vline to 100%)"));
+    try$(_expectSerialized(_driver, "clip-path", "shape(from 0 0,curve to 5% var(--s,1) with 5% 5%, vline to 100%)", "shape(from 0 0,curve to 5% var(--s,1) with 5% 5%, vline to 100%)"));
     try$(_expectInvalid(_driver, "clip-path", "shape(from 10% 1rem, arc of 20% 1pt to 50px cw large rotate 25deg)"));
     try$(_expectInvalid(_driver, "clip-path", "shape(from 10% 1rem, arc cw to 50px of 20% 1pt large rotate 25deg)"));
     try$(_expectInvalid(_driver, "clip-path", "shape(from 10% 1rem, arc rotate 25deg to 50px 1pt of 20% cw large )"));
@@ -5078,8 +5086,8 @@ test$("vaev-style-wpt-css-css-mixins-functions-dashed-function-named-arg.tentati
 
 // https://github.com/web-platform-tests/wpt/blob/ba6d9f67/css/css-mixins/functions/dashed-function-parsing.html
 test$("vaev-style-wpt-css-css-mixins-functions-dashed-function-parsing") {
-    try$(_expectSerialized(_driver, "top", "--func(var(--x))", "--func(var(--x))", RegisteredPropertySet::TOP_LEVEL));
-    try$(_expectSerialized(_driver, "top", "--func(var(--x, auto))", "--func(var(--x, auto))", RegisteredPropertySet::TOP_LEVEL));
+    try$(_expectSerialized(_driver, "top", "--func(var(--x))", "--func(var(--x))"));
+    try$(_expectSerialized(_driver, "top", "--func(var(--x, auto))", "--func(var(--x, auto))"));
     try$(_expectInvalid(_driver, "top", "--func(!)"));
     try$(_expectInvalid(_driver, "top", "--func( !)"));
     try$(_expectInvalid(_driver, "top", "--func( ! )"));
@@ -5232,8 +5240,8 @@ test$("vaev-style-wpt-css-css-multicol-parsing-columns-valid") {
     try$(_expectSerialized(_driver, "columns", "10px / auto", "10px"));
     try$(_expectSerialized(_driver, "columns", "2 / auto", "2"));
     try$(_expectSerialized(_driver, "columns", "auto / auto", "auto"));
-    try$(_expectSerialized(_driver, "columns", "initial", "initial", RegisteredPropertySet::TOP_LEVEL));
-    try$(_expectSerialized(_driver, "columns", "inherit", "inherit", RegisteredPropertySet::TOP_LEVEL));
+    try$(_expectSerialized(_driver, "columns", "initial", "initial"));
+    try$(_expectSerialized(_driver, "columns", "inherit", "inherit"));
     return Ok();
 }
 
@@ -6780,7 +6788,7 @@ test$("vaev-style-wpt-css-css-values-random-item-invalid") {
 
 // https://github.com/web-platform-tests/wpt/blob/ba6d9f67/css/css-values/random-item-serialize.html
 test$("vaev-style-wpt-css-css-values-random-item-serialize") {
-    try$(_expectSerialized(_driver, "width", "random-item(--x, var(--a), var(--b))", "random-item(--x, var(--a), var(--b))", RegisteredPropertySet::TOP_LEVEL));
+    try$(_expectSerialized(_driver, "width", "random-item(--x, var(--a), var(--b))", "random-item(--x, var(--a), var(--b))"));
     return Ok();
 }
 
@@ -6804,7 +6812,7 @@ test$("vaev-style-wpt-css-css-values-random-item-serialize-xfail", XFAIL) {
 
 // https://github.com/web-platform-tests/wpt/blob/ba6d9f67/css/css-values/random-item-valid.html
 test$("vaev-style-wpt-css-css-values-random-item-valid") {
-    try$(_expectSerialized(_driver, "font-family", "random-item(var(--key), serif, sans-serif)", "random-item(var(--key), serif, sans-serif)", RegisteredPropertySet::TOP_LEVEL));
+    try$(_expectSerialized(_driver, "font-family", "random-item(var(--key), serif, sans-serif)", "random-item(var(--key), serif, sans-serif)"));
     return Ok();
 }
 
@@ -7164,17 +7172,17 @@ test$("vaev-style-wpt-css-css-values-viewport-units-parsing") {
 
 // https://github.com/web-platform-tests/wpt/blob/ba6d9f67/css/css-variables/var-parsing.html
 test$("vaev-style-wpt-css-css-variables-var-parsing") {
-    try$(_expectSerialized(_driver, "width", "var(--x)", "var(--x)", RegisteredPropertySet::TOP_LEVEL));
-    try$(_expectSerialized(_driver, "width", "var(--x,)", "var(--x,)", RegisteredPropertySet::TOP_LEVEL));
-    try$(_expectSerialized(_driver, "width", "var(--x, )", "var(--x, )", RegisteredPropertySet::TOP_LEVEL));
-    try$(_expectSerialized(_driver, "width", "var(--x ())", "var(--x ())", RegisteredPropertySet::TOP_LEVEL));
-    try$(_expectSerialized(_driver, "width", "var(--x () )", "var(--x () )", RegisteredPropertySet::TOP_LEVEL));
-    try$(_expectSerialized(_driver, "width", "var(--x() )", "var(--x() )", RegisteredPropertySet::TOP_LEVEL));
-    try$(_expectSerialized(_driver, "width", "var(--x (),)", "var(--x (),)", RegisteredPropertySet::TOP_LEVEL));
-    try$(_expectSerialized(_driver, "width", "var(--x(),)", "var(--x(),)", RegisteredPropertySet::TOP_LEVEL));
-    try$(_expectSerialized(_driver, "width", "var({--x})", "var({--x})", RegisteredPropertySet::TOP_LEVEL));
-    try$(_expectSerialized(_driver, "width", "var({--x}, 10px)", "var({--x}, 10px)", RegisteredPropertySet::TOP_LEVEL));
-    try$(_expectSerialized(_driver, "width", "var({--x, --y})", "var({--x, --y})", RegisteredPropertySet::TOP_LEVEL));
+    try$(_expectSerialized(_driver, "width", "var(--x)", "var(--x)"));
+    try$(_expectSerialized(_driver, "width", "var(--x,)", "var(--x,)"));
+    try$(_expectSerialized(_driver, "width", "var(--x, )", "var(--x, )"));
+    try$(_expectSerialized(_driver, "width", "var(--x ())", "var(--x ())"));
+    try$(_expectSerialized(_driver, "width", "var(--x () )", "var(--x () )"));
+    try$(_expectSerialized(_driver, "width", "var(--x() )", "var(--x() )"));
+    try$(_expectSerialized(_driver, "width", "var(--x (),)", "var(--x (),)"));
+    try$(_expectSerialized(_driver, "width", "var(--x(),)", "var(--x(),)"));
+    try$(_expectSerialized(_driver, "width", "var({--x})", "var({--x})"));
+    try$(_expectSerialized(_driver, "width", "var({--x}, 10px)", "var({--x}, 10px)"));
+    try$(_expectSerialized(_driver, "width", "var({--x, --y})", "var({--x, --y})"));
     try$(_expectInvalid(_driver, "width", "var(--x {--y})"));
     try$(_expectInvalid(_driver, "width", "var({--x} --y)"));
     try$(_expectInvalid(_driver, "width", "var(--x {--y}, 10px)"));

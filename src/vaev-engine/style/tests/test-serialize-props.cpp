@@ -7,9 +7,18 @@ using namespace Karm::Literals;
 
 namespace Vaev::Style::Tests {
 
-static Res<> _expectSerialized(Test::Driver& _driver, Str name, Str input, Str expected, Flags<RegisteredPropertySet::Options> options = {}) {
-    static auto registry = defaultRegistry();
-    auto prop = try$(registry.parseValue(Symbol::from(name), input, options));
+// FIXME: Shorthands expand to several longhands, serializing them back
+//        into a shorthand is not implemented yet.
+static Res<Rc<Property>> _parseLonghand(Str name, Str input) {
+    Vec<Rc<Property>> properties;
+    try$(parseProperty(Symbol::from(name), input, properties));
+    if (properties.len() != 1)
+        return Error::notImplemented("shorthand serialization");
+    return Ok(properties[0]);
+}
+
+static Res<> _expectSerialized(Test::Driver& _driver, Str name, Str input, Str expected) {
+    auto prop = try$(_parseLonghand(name, input));
     Io::StringWriter w;
     try$(prop->serialize(w));
     assertEq$(w.take(), expected);
@@ -69,8 +78,8 @@ test$("vaev-style-serialize-props") {
 
 test$("vaev-style-serialize-special-props") {
     // https://drafts.csswg.org/css-variables-1/#serializing-custom-props
-    try$(_expectSerialized(_driver, "--size", "10px", "10px", RegisteredPropertySet::TOP_LEVEL));
-    try$(_expectSerialized(_driver, "--size", "1.0px", "1.0px", RegisteredPropertySet::TOP_LEVEL));
+    try$(_expectSerialized(_driver, "--size", "10px", "10px"));
+    try$(_expectSerialized(_driver, "--size", "1.0px", "1.0px"));
 
     return Ok();
 }

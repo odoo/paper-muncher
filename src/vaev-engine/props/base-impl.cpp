@@ -44,53 +44,60 @@ struct LonghandProcs {
     using LoadFn = Rc<Property>(ComputedValues const&);
     using InheritFn = void(ComputedValues const& parent, ComputedValues& child);
 
-    ParseFn const& parse;
-    InitialFn const& initial;
-    LoadFn const& load;
-    Opt<InheritFn const&> inherit = NONE;
+    ParseFn* parse;
+    InitialFn* initial;
+    LoadFn* load;
+    InheritFn* inherit = nullptr;
 };
 
 struct ShorthandProcs {
     using ParseFn = Res<>(Cursor<Css::Sst>&, Vec<Rc<Property>>& longhands, ParsingMode);
 
-    ParseFn const& parse;
+    ParseFn* parse;
 };
 
 struct PropertyTables {
     static constexpr usize LONGHAND_LEN = enumLen<LonghandId>();
     static constexpr usize SHORTHAND_LEN = enumLen<ShorthandId>();
 
-    auto longhandProcs = Array<Opt<LonghandProcs>, LONGHAND_LEN>::fill(NONE);
-    auto shorthandProcs = Array<Opt<ShorthandProcs>, SHORTHAND_LEN>::fill(NONE);
+    Array<Opt<LonghandProcs>, LONGHAND_LEN> longhandProcs = Array<Opt<LonghandProcs>, LONGHAND_LEN>::fill(Opt<LonghandProcs>{});
+    Array<Opt<ShorthandProcs>, SHORTHAND_LEN> shorthandProcs = Array<Opt<ShorthandProcs>, SHORTHAND_LEN>::fill(Opt<ShorthandProcs>{});
 
-    auto longhandPhase = Array<ComputationPhase, LONGHAND_LEN>::fill(ComputationPhase::NORMAL);
-    auto longhandAliases = Array<Slice<Symbol>, LONGHAND_LEN>::fill(Slice<Symbol>{});
+    Array<ComputationPhase, LONGHAND_LEN> longhandPhase = Array<ComputationPhase, LONGHAND_LEN>::fill(ComputationPhase::NORMAL);
+    Array<Slice<Str>, LONGHAND_LEN> longhandAliases = Array<Slice<Str>, LONGHAND_LEN>::fill(Slice<Str>{});
 
-    auto shorthandLonghands = Array<Slice<LonghandId>, SHORTHAND_LEN>::fill(Slice<LonghandId>{});
+    Array<Slice<LonghandId>, SHORTHAND_LEN> shorthandLonghands = Array<Slice<LonghandId>, SHORTHAND_LEN>::fill(Slice<LonghandId>{});
 
     template <typename T>
     constexpr void registerLonghand() {
         auto id = toUnderlyingType(T::ID);
 
+        if (longhandProcs[id])
+            panic("longhand registered twice"); // Not a constant expression: fails the build.
+
         auto procs = LonghandProcs{
-            .parse = T::parse,
-            .initial = T::initial,
-            .load = T::load,
+            .parse = &T::parse,
+            .initial = &T::initial,
+            .load = &T::load,
         };
 
-        if constexpr (requires { T::inherit; })
-            procs.inherit = Some(T::inherit);
+        if constexpr (requires { &T::inherit; })
+            procs.inherit = &T::inherit;
 
         longhandProcs[id] = Some(procs);
-        longhandPhase[id] = Some(T::PHASE);
+        longhandPhase[id] = T::PHASE;
+        longhandAliases[id] = T::LEGACY_NAME_ALIASES;
     }
 
     template <typename T>
     constexpr void registerShorthand() {
         auto id = toUnderlyingType(T::ID);
 
+        if (shorthandProcs[id])
+            panic("shorthand registered twice"); // Not a constant expression: fails the build.
+
         auto procs = ShorthandProcs{
-            .parse = T::parse,
+            .parse = &T::parse,
         };
 
         shorthandProcs[id] = Some(procs);
@@ -329,7 +336,7 @@ static constexpr PropertyTables _propertyTables = [] {
 static Map<Symbol, PropertyId> const& _propertyIds() {
     static auto ids = [] {
         Map<Symbol, PropertyId> ids;
-        for (usize i = 0; i < enumLen<LonghandId>(); i++) {
+        for (usize i = 0; i < _longhandNames.len(); i++) {
             ids.put(Symbol::from(_longhandNames[i]), PropertyId{LonghandId(i)});
             for (auto alias : _propertyTables.longhandAliases[i])
                 ids.put(Symbol::from(alias), PropertyId{LonghandId(i)});
@@ -341,20 +348,28 @@ static Map<Symbol, PropertyId> const& _propertyIds() {
     return ids;
 }
 
-LonghandProcs const& _expectProcs(LonghandId id) {
-    _propertyTables.longhandProcs[toUnderlyingType(id)].expect("unimplemented property");
+static LonghandProcs const& _expectProcs(LonghandId id) {
+    return _propertyTables.longhandProcs[toUnderlyingType(id)].expect("unimplemented property");
 }
 
-ShorthandProcs const& _expectProcs(ShorthandId id) {
-    _propertyTables.shorthandProcs[toUnderlyingType(id)].expect("unimplemented shorthand");
+[[maybe_unused]] static ShorthandProcs const& _expectProcs(ShorthandId id) {
+    return _propertyTables.shorthandProcs[toUnderlyingType(id)].expect("unimplemented shorthand");
 }
 
-Slice<LonghandId> expandShorthand(LonghandId id) {
-    _propertyTables.shorthandLonghands[toUnderlyingType(id)];
+Slice<LonghandId> expandShorthand(ShorthandId id) {
+    return _propertyTables.shorthandLonghands[toUnderlyingType(id)];
 }
 
 Opt<PropertyId> lookupProperty(Symbol const& name) {
     return _propertyIds().lookup(name);
+}
+
+bool isLonghandImplemented(LonghandId id) {
+    return _propertyTables.longhandProcs[toUnderlyingType(id)].has();
+}
+
+ComputationPhase computationPhase(LonghandId id) {
+    return _propertyTables.longhandPhase[toUnderlyingType(id)];
 }
 
 Rc<Property> initialProperty(LonghandId id) {
@@ -366,7 +381,6 @@ Rc<Property> loadProperty(LonghandId id, ComputedValues const& c) {
 }
 
 static Res<Default> _parseDefaulted(Cursor<Css::Sst>& c) {
-    Default value;
     if (c.skip(Css::Token::ident("initial"))) {
         return Ok(Default::INITIAL);
     } else if (c.skip(Css::Token::ident("inherit"))) {
@@ -378,6 +392,7 @@ static Res<Default> _parseDefaulted(Cursor<Css::Sst>& c) {
     }
 }
 
+// https://drafts.csswg.org/css-variables/#using-variables
 static bool _containsVariable(Cursor<Css::Sst> c) {
     while (not c.ended()) {
         if (c.peek() == Css::Sst::FUNC) {
@@ -387,6 +402,10 @@ static bool _containsVariable(Cursor<Css::Sst> c) {
                 return true;
             }
         }
+
+        // The var() can be nested inside a function or a block.
+        if (_containsVariable(c.peek().content))
+            return true;
 
         c.next();
     }
@@ -416,15 +435,23 @@ Res<Rc<Property>> mustParseLonghand(LonghandId id, Cursor<Css::Sst>& c, ParsingM
     return Error::invalidData("invalid property");
 }
 
-Res<> parseProperty(PropertyId id, Cursor<Css::Sst>& c, Vec<Rc<Property>>& stylesheet, ParsingMode mode, bool important) {
-    eatWhitespace(c);
+Res<> parseProperty(Symbol name, Cursor<Css::Sst>& c, Vec<Rc<Property>>& stylesheet, ParsingMode mode, bool important) {
+    if (startWith(name.str(), "--"s) == Match::YES) {
+        auto prop = makeRc<CustomProperty>(CustomProperty::Value{name, c});
+        prop->important = important;
+        stylesheet.pushBack(prop);
+        return Ok();
+    }
 
+    auto id = try$(lookupProperty(name).okOr(Error::invalidData("unknown property")));
     return id.visit(
         [&](LonghandId longhandId) -> Res<> {
             Opt<LonghandProcs> procs = _propertyTables.longhandProcs[toUnderlyingType(longhandId)];
 
             if (not procs)
                 return Error::notImplemented("unimplemented property");
+
+            eatWhitespace(c);
 
             if (auto defaultValue = _parseDefaulted(c)) {
                 eatWhitespace(c);
@@ -437,15 +464,17 @@ Res<> parseProperty(PropertyId id, Cursor<Css::Sst>& c, Vec<Rc<Property>>& style
                 return Ok();
             }
 
+            auto start = c;
             if (auto property = procs->parse(c, mode)) {
                 eatWhitespace(c);
-                if (not c.ended())
-                    return Error::invalidData("unexpected tokens");
-
-                (*property)->important = important;
-                stylesheet.pushBack(*property);
-                return Ok();
+                if (c.ended()) {
+                    auto prop = property.take();
+                    prop->important = important;
+                    stylesheet.pushBack(prop);
+                    return Ok();
+                }
             }
+            c = start;
 
             if (_containsVariable(c)) {
                 auto prop = makeRc<DeferredProperty>(longhandId, NONE, c, mode);
@@ -462,6 +491,8 @@ Res<> parseProperty(PropertyId id, Cursor<Css::Sst>& c, Vec<Rc<Property>>& style
             if (not procs)
                 return Error::notImplemented("unimplemented property");
 
+            eatWhitespace(c);
+
             if (auto defaultValue = _parseDefaulted(c)) {
                 eatWhitespace(c);
                 if (not c.ended())
@@ -475,19 +506,18 @@ Res<> parseProperty(PropertyId id, Cursor<Css::Sst>& c, Vec<Rc<Property>>& style
                 return Ok();
             }
 
+            auto start = c;
             auto oldLen = stylesheet.len();
-            if (auto property = procs->parse(c, stylesheet, mode)) {
+            if (procs->parse(c, stylesheet, mode)) {
                 eatWhitespace(c);
-                if (not c.ended()) {
-                    stylesheet.trunc(oldLen);
-                    return Error::invalidData("unexpected tokens");
+                if (c.ended()) {
+                    for (auto i = oldLen; i < stylesheet.len(); i++)
+                        stylesheet[i]->important = important;
+                    return Ok();
                 }
-
-                for (auto i = oldLen; i < stylesheet.len(); i++)
-                    stylesheet[i]->important = important;
-
-                return Ok();
             }
+            stylesheet.trunc(oldLen);
+            c = start;
 
             if (_containsVariable(c)) {
                 for (auto const& longhandId : expandShorthand(shorthandId)) {
@@ -495,6 +525,7 @@ Res<> parseProperty(PropertyId id, Cursor<Css::Sst>& c, Vec<Rc<Property>>& style
                     prop->important = important;
                     stylesheet.pushBack(prop);
                 }
+                return Ok();
             }
 
             return Error::invalidData("invalid property");

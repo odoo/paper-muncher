@@ -103,14 +103,14 @@ Rc<typename T::Registration> const& registrationOf() {
     return registration;
 }
 
-enum struct ShorthandId {
+export enum struct ShorthandId {
 #define SHORTHAND(ID, NAME) ID,
 #include "defs/shorthands.inc"
 #undef SHORTHAND
     _LEN,
 };
 
-enum struct LonghandId {
+export enum struct LonghandId {
 #define LONGHAND(ID, NAME) ID,
 #include "defs/longhands.inc"
 #undef LONGHAND
@@ -118,7 +118,7 @@ enum struct LonghandId {
     _LEN,
 };
 
-export static constexpr Array _shorthandNames = {
+constexpr Array _shorthandNames = {
 #define SHORTHAND(ID, NAME) NAME ""s,
 #include "defs/shorthands.inc"
 #undef SHORTHAND
@@ -128,7 +128,7 @@ export constexpr Str propertyName(ShorthandId id) {
     return _shorthandNames[toUnderlyingType(id)];
 }
 
-export static constexpr Array _longhandNames = {
+constexpr Array _longhandNames = {
 #define LONGHAND(ID, NAME) NAME ""s,
 #include "defs/longhands.inc"
 #undef LONGHAND
@@ -138,7 +138,7 @@ export constexpr Str propertyName(LonghandId id) {
     return _longhandNames[toUnderlyingType(id)];
 }
 
-using PropertyId = Union<ShorthandId, LonghandId>;
+export using PropertyId = Union<ShorthandId, LonghandId>;
 
 /// How a property value is parsed, depending on where it comes from.
 export enum struct ParsingMode : u8 {
@@ -200,10 +200,12 @@ export struct ShorthandRegistration : Registration {
 
 Opt<PropertyId> lookupProperty(Symbol const& name);
 Slice<LonghandId> expandShorthand(ShorthandId id);
-Rc<Property> initialProperty(LonghandId id);
-Rc<Property> loadProperty(LonghandId id, ComputedValues const& c);
+export bool isLonghandImplemented(LonghandId id);
+export Rc<Property> initialProperty(LonghandId id);
+export Rc<Property> loadProperty(LonghandId id, ComputedValues const& c);
+ComputationPhase computationPhase(LonghandId id);
 void inheritProperty(LonghandId id, ComputedValues const& parent, ComputedValues& child);
-Res<> parseProperty(PropertyId id, Cursor<Css::Sst>& c, Vec<Rc<Property>>& stylesheet, ParsingMode = ParsingMode::STANDARD, bool important = false);
+Res<> parseProperty(Symbol name, Cursor<Css::Sst>& c, Vec<Rc<Property>>& stylesheet, ParsingMode mode, bool important);
 Res<Rc<Property>> mustParseLonghand(LonghandId id, Cursor<Css::Sst>& c, ParsingMode mode);
 
 export struct Property : Meta::NoCopy {
@@ -311,7 +313,7 @@ struct CustomProperty : Property {
     }
 
     void repr(Io::Emit& e) const override {
-        e("(custom {})", _value);
+        e("(custom {} {})", _value.name, _value.content);
     }
 };
 
@@ -471,7 +473,8 @@ struct DeferredProperty : Property {
         Cursor<Css::Sst> cursor = _value;
         Css::Content out;
 
-        if (auto [shorthandId] = _shorthand) {
+        if (_shorthand) {
+            auto shorthandId = *_shorthand;
             auto& entry = _cachedExpansion();
             if (shorthandId == entry.id and &child == entry.computedValues) {
                 for (auto const& longhand : entry.longhands) {
@@ -490,9 +493,12 @@ struct DeferredProperty : Property {
         // See: https://www.w3.org/TR/css-syntax-3/#parse-declaration
         eatWhitespace(cursor);
 
-        if (auto [shorthandId] = _shorthand) {
+        if (_shorthand) {
+            auto shorthandId = *_shorthand;
             Vec<Rc<Property>> longhands;
-            try$(parseProperty(shorthandId, cursor, longhands, _mode));
+
+            // FIXME: Really hacky.
+            try$(parseProperty(Symbol::from(nameOf(shorthandId)), cursor, longhands, _mode, false));
 
             _cachedExpansion() = ExpansionCacheEntry{
                 .id = shorthandId,
@@ -610,12 +616,15 @@ struct DefaultedProperty : Property {
 // https://www.w3.org/TR/css-cascade-4/#initial-values
 static Opt<Rc<ComputedValues>> _memoInitialComputedValues = NONE;
 
-static Rc<ComputedValues> initialComputedValues() {
+export Rc<ComputedValues> initialComputedValues() {
     ComputationContext cx{};
     if (not _memoInitialComputedValues) {
         auto initial = makeRc<ComputedValues>();
-        for (usize i = 0; i < enumLen<LonghandId>(); i++)
-            initialProperty(static_cast<LonghandId>(i))->apply( *initial, *initial, cx);
+        for (usize i = 0; i < enumLen<LonghandId>(); i++) {
+            auto id = static_cast<LonghandId>(i);
+            if (isLonghandImplemented(id))
+                initialProperty(id)->apply(*initial, *initial, cx);
+        }
 
         _memoInitialComputedValues = Some(initial);
     }
@@ -623,7 +632,7 @@ static Rc<ComputedValues> initialComputedValues() {
 }
 
 // https://www.w3.org/TR/css-cascade-4/#inheriting
-void inheritsComputedValues(ComputedValues const& parent, ComputedValues& child) {
+export void inheritsComputedValues(ComputedValues const& parent, ComputedValues& child) {
     // Apply defaulted inheritance fast path for property that supports it.
     child.customProps = parent.customProps;
     child.font = parent.font;
@@ -636,26 +645,22 @@ void inheritsComputedValues(ComputedValues const& parent, ComputedValues& child)
     // FIXME
 }
 
-Rc<ComputedValues> inheritsComputedValues(ComputedValues const& parent) {
+export Rc<ComputedValues> inheritsComputedValues(ComputedValues const& parent) {
     auto computedValues = initialComputedValues();
     inheritsComputedValues(parent, *computedValues);
     return computedValues;
 }
 
-Res<> parseProperty(Symbol const& propertyName, Str propertyValue, Vec<Rc<Property>>& stylesheet) {
+export Res<> parseProperty(Symbol const& propertyName, Str propertyValue, Vec<Rc<Property>>& stylesheet) {
     Css::Lexer lex{propertyValue};
     Diag::Collector diags = Diag::Collector::ignore();
     auto [content, _] = Css::consumeDeclarationValue(lex, diags);
 
-    if (auto [id] = lookupProperty(propertyName)) {
-        auto cursor = Cursor<Css::Sst>{content};
-        return parseProperty(id, cursor, stylesheet);
-    } else {
-        return Error::invalidData("unknown property");
-    }
+    auto c = Cursor<Css::Sst>{content};
+    return parseProperty(propertyName, c, stylesheet, ParsingMode::STANDARD, false);
 }
 
-Res<> parseDeclaration(Css::Sst const& sst, Vec<Rc<Property>>& stylesheet) {
+export Res<> parseDeclaration(Css::Sst const& sst, Vec<Rc<Property>>& stylesheet) {
     if (sst != Css::Sst::DECL)
         panic("expected declaration");
 
@@ -663,18 +668,13 @@ Res<> parseDeclaration(Css::Sst const& sst, Vec<Rc<Property>>& stylesheet) {
         panic("expected ident");
 
     auto propertyName = Symbol::from(sst.token.data);
-    Cursor<Css::Sst> content = sst.content;
 
-    if (auto [id] = lookupProperty(propertyName)) {
-        auto cursor = Cursor<Css::Sst>{sst.content};
-        bool important = sst.flags.has(Css::Sst::IMPORTANT);
-        return parseProperty(id, content, stylesheet, ParsingMode::STANDARD, important);
-    } else {
-        return Error::invalidData("unknown property");
-    }
+    Cursor<Css::Sst> c = sst.content;
+    bool important = sst.flags.has(Css::Sst::IMPORTANT);
+    return parseProperty(propertyName, c, stylesheet, ParsingMode::STANDARD, important);
 }
 
-void parseDeclarations(Css::Content const& sst, Vec<Rc<Property>>& stylesheet) {
+export void parseDeclarations(Css::Content const& sst, Vec<Rc<Property>>& stylesheet) {
     for (auto const& item : sst) {
         if (item != Css::Sst::DECL)
             continue;
@@ -683,18 +683,18 @@ void parseDeclarations(Css::Content const& sst, Vec<Rc<Property>>& stylesheet) {
     }
 }
 
-void parseDeclarations(Css::Sst const& sst, Vec<Rc<Property>>& stylesheet) {
+export void parseDeclarations(Css::Sst const& sst, Vec<Rc<Property>>& stylesheet) {
     return parseDeclarations(sst.content, stylesheet);
 }
 
-void parseDeclarations(Str style, Vec<Rc<Property>>& stylesheet) {
+export void parseDeclarations(Str style, Vec<Rc<Property>>& stylesheet) {
     Css::Lexer lex{style};
     auto diags = Diag::Collector::ignore();
     auto sst = Css::consumeDeclarationList(lex, diags, true);
     return parseDeclarations(sst, stylesheet);
 }
 
-Opt<Rc<Property>> parsePresentationAttribute(Symbol attrName, Str value, Vec<Rc<Property>>& stylesheet) {
+export Res<> parsePresentationAttribute([[maybe_unused]] Symbol attrName, [[maybe_unused]] Str value, [[maybe_unused]] Vec<Rc<Property>>& stylesheet) {
     // // FIXME: Could the caller call toLower ?
     // Symbol lower = Symbol::from(toLower(attrName.str()));
     // auto id = try$(lookupProperty(lower));
@@ -706,7 +706,7 @@ Opt<Rc<Property>> parsePresentationAttribute(Symbol attrName, Str value, Vec<Rc<
     //
     // return parseProperty(try$(id.is<LonghandId>()), cursor, ParsingMode::PRESENTATION_ATTRIBUTE).ok();
     // FIXME
-    return NONE;
+    return Error::notImplemented("presentation attributes");
 }
 
 

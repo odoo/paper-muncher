@@ -161,14 +161,14 @@ export struct MarginLeftProperty : Property {
 export struct MarginShorthand {
     static constexpr auto ID = ShorthandId::MARGIN;
 
-    static constexpr auto SHORTHANDS = Array{
+    static constexpr Array LONGHANDS = {
         LonghandId::MARGIN_TOP,
         LonghandId::MARGIN_RIGHT,
         LonghandId::MARGIN_BOTTOM,
         LonghandId::MARGIN_LEFT,
     };
 
-    static Res<> parse(Cursor<Css::Sst>& c, Vec<Rc<Property>>& stylesheet) {
+    static Res<> parse(Cursor<Css::Sst>& c, Vec<Rc<Property>>& stylesheet, ParsingMode) {
         auto first = try$(parseValue<MarginTopProperty::Value>(c));
 
         auto second = parseValue<MarginTopProperty::Value>(c);
@@ -208,9 +208,9 @@ export struct MarginShorthand {
 
         // If there are four values they apply to the top, right, bottom, and left, respectively.
         stylesheet.pushBack(makeRc<MarginTopProperty>(std::move(first)));
-        stylesheet.pushBack(makeRc<MarginRightProperty>(fourth.take()));
-        stylesheet.pushBack(makeRc<MarginBottomProperty>(second.take()));
-        stylesheet.pushBack(makeRc<MarginLeftProperty>(third.take()));
+        stylesheet.pushBack(makeRc<MarginRightProperty>(second.take()));
+        stylesheet.pushBack(makeRc<MarginBottomProperty>(third.take()));
+        stylesheet.pushBack(makeRc<MarginLeftProperty>(fourth.take()));
 
         return Ok();
     }

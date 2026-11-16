@@ -32,7 +32,7 @@ export struct StyleRule {
     Vec<Rc<Property>> props;
     Origin origin = Origin::AUTHOR;
 
-    static StyleRule parse(RegisteredPropertySet& propertyRegistry, Css::Sst const& sst, Origin origin, NamespaceScope& ns) {
+    static StyleRule parse(Css::Sst const& sst, Origin origin, NamespaceScope& ns) {
         if (sst != Css::Sst::RULE)
             panic("expected rule");
 
@@ -54,8 +54,7 @@ export struct StyleRule {
         // Parse the properties.
         for (auto const& item : sst.content) {
             if (item == Css::Sst::DECL) {
-                if (auto p = propertyRegistry.parseDeclaration(item, RegisteredPropertySet::TOP_LEVEL))
-                    res.props.pushBack(p.take());
+                (void)parseDeclaration(item, res.props);
             } else {
                 logWarnIf(debugRule, "unexpected item in style rule: {}", item);
             }
@@ -78,7 +77,10 @@ export struct StyleRule {
             e("props: [");
             e.indentNewline();
             for (auto const& prop : props) {
-                e("({} {})\n", prop->registration->name, prop);
+                if (prop->id == LonghandId::CUSTOM)
+                    e("{}\n", prop);
+                else
+                    e("({} {})\n", propertyName(prop->id), prop);
             }
             e.deindent();
             e("]\n");
@@ -106,7 +108,7 @@ export struct MediaRule {
     MediaQuery media;
     Vec<Rule> rules;
 
-    static MediaRule parse(RegisteredPropertySet& registry, Css::Sst const& sst, Origin origin, NamespaceScope& ns);
+    static MediaRule parse(Css::Sst const& sst, Origin origin, NamespaceScope& ns);
 
     bool match(Media const& m) const {
         return media.match(m);
@@ -146,7 +148,7 @@ export struct LayerBlockRule {
     Opt<LayerName> name;
     Vec<Rule> rules;
 
-    static Res<LayerBlockRule> parse(RegisteredPropertySet& registry, Css::Sst const& sst, Origin origin, NamespaceScope& ns);
+    static Res<LayerBlockRule> parse(Css::Sst const& sst, Origin origin, NamespaceScope& ns);
 
     void repr(Io::Emit& e) const;
 };
@@ -267,7 +269,7 @@ export struct PageRule {
     Vec<Rc<Property>> props;
     Vec<PageAreaRule> areas;
 
-    static PageRule parse(RegisteredPropertySet& registry, Css::Sst const& sst) {
+    static PageRule parse(Css::Sst const& sst) {
         if (sst != Css::Sst::RULE)
             panic("expected rule");
 
@@ -284,11 +286,9 @@ export struct PageRule {
         // Parse the properties.
         for (auto const& item : sst.content) {
             if (item == Css::Sst::DECL) {
-                auto prop = registry.parseDeclaration(item, RegisteredPropertySet::TOP_LEVEL);
-                if (prop)
-                    res.props.pushBack(prop.take());
+                (void)parseDeclaration(item, res.props);
             } else if (item == Css::Sst::RULE and item.token == Css::Token::AT_KEYWORD) {
-                auto rule = PageAreaRule::parse(registry, item);
+                auto rule = PageAreaRule::parse(item);
                 if (rule)
                     res.areas.pushBack(*rule);
             } else {
@@ -311,26 +311,18 @@ export struct PageRule {
         return false;
     }
 
-    void apply(RegisteredPropertySet& registry, PageComputedValues& c) const {
+    void apply(PageComputedValues& c) const {
         ComputationContext cx;
         for (auto const& prop : props) {
             if (prop->isBogusProperty())
                 continue;
-
-            // TODO: Restore once shorthands are expanded at parse time.
-            // if (prop->isShorthandProperty()) {
-            //     for (auto& longhand : prop->expand(registry, *c.style, *c.style)) {
-            //         longhand->apply(*c.style, *c.style, cx);
-            //     }
-            //     continue;
-            // }
 
             prop->apply(*c.style, *c.style, cx);
         }
 
         for (auto const& area : areas) {
             auto areaPseudoElement = c.area(area.area);
-            area.apply(registry, *c.style, *areaPseudoElement->_computedValues.expect("unstyled page area"));
+            area.apply(*c.style, *areaPseudoElement->_computedValues.expect("unstyled page area"));
         }
     }
 
@@ -354,13 +346,13 @@ using _Rule = Union<
 export struct Rule : _Rule {
     using _Rule::_Rule;
 
-    static Rule parse(RegisteredPropertySet& registry, Css::Sst const& sst, Origin origin, NamespaceScope& ns) {
+    static Rule parse(Css::Sst const& sst, Origin origin, NamespaceScope& ns) {
         if (sst != Css::Sst::RULE)
             panic("expected rule");
 
         auto tok = sst.token;
         if (tok.data == "@media")
-            return MediaRule::parse(registry, sst, origin, ns);
+            return MediaRule::parse(sst, origin, ns);
         else if (tok.data == "@import")
             return ImportRule::parse(sst);
         else if (tok.data == "@font-face")
@@ -368,21 +360,21 @@ export struct Rule : _Rule {
         else if (tok.data == "@counter-style")
             return CounterRule::parse(sst);
         else if (tok.data == "@page")
-            return PageRule::parse(registry, sst);
+            return PageRule::parse(sst);
         else if (tok.data == "@supports") {
             logWarnIf(debugRule, "cannot parse '@supports' at-rule");
             return StyleRule{};
         } else if (tok.data == "@namespace") {
             return NamespaceRule::parse(sst, ns);
         } else if (tok.data == "@layer") {
-            return _parseLayer(registry, sst, origin, ns);
+            return _parseLayer(sst, origin, ns);
         } else
-            return StyleRule::parse(registry, sst, origin, ns);
+            return StyleRule::parse(sst, origin, ns);
     }
 
-    static Rule _parseLayer(RegisteredPropertySet& registry, Css::Sst const& sst, Origin origin, NamespaceScope& ns) {
+    static Rule _parseLayer(Css::Sst const& sst, Origin origin, NamespaceScope& ns) {
         if (sst.flags.has(Css::Sst::WITH_BLOCK)) {
-            if (auto rule = LayerBlockRule::parse(registry, sst, origin, ns))
+            if (auto rule = LayerBlockRule::parse(sst, origin, ns))
                 return rule.take();
         } else {
             if (auto rule = LayerStatementRule::parse(sst))
@@ -400,7 +392,7 @@ export struct Rule : _Rule {
     }
 };
 
-Res<LayerBlockRule> LayerBlockRule::parse(RegisteredPropertySet& registry, Css::Sst const& sst, Origin origin, NamespaceScope& ns) {
+Res<LayerBlockRule> LayerBlockRule::parse(Css::Sst const& sst, Origin origin, NamespaceScope& ns) {
     if (sst.prefix != Css::Sst::LIST)
         panic("expected list");
 
@@ -418,7 +410,7 @@ Res<LayerBlockRule> LayerBlockRule::parse(RegisteredPropertySet& registry, Css::
 
     for (auto const& item : sst.content) {
         if (item == Css::Sst::RULE) {
-            res.rules.pushBack(Rule::parse(registry, item, origin, ns));
+            res.rules.pushBack(Rule::parse(item, origin, ns));
         } else {
             logWarnIf(debugRule, "unexpected item in layer rule: {}", item.type);
         }
@@ -445,7 +437,7 @@ void LayerBlockRule::repr(Io::Emit& e) const {
     e(")");
 }
 
-MediaRule MediaRule::parse(RegisteredPropertySet& registry, Css::Sst const& sst, Origin origin, NamespaceScope& ns) {
+MediaRule MediaRule::parse(Css::Sst const& sst, Origin origin, NamespaceScope& ns) {
     if (sst != Css::Sst::RULE)
         panic("expected rule");
 
@@ -462,7 +454,7 @@ MediaRule MediaRule::parse(RegisteredPropertySet& registry, Css::Sst const& sst,
     // Parse the rules.
     for (auto const& item : sst.content) {
         if (item == Css::Sst::RULE) {
-            res.rules.pushBack(Rule::parse(registry, item, origin, ns));
+            res.rules.pushBack(Rule::parse(item, origin, ns));
         } else {
             logWarnIf(debugRule, "unexpected item in media rule: {}", item.type);
         }

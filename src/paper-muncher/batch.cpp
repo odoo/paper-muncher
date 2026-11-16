@@ -210,7 +210,7 @@ Async::Task<Rc<Vaev::WebView>> _loadHeaderFooterWebViewAsync(Rc<Vaev::Loader::Re
     auto webview = Vaev::WebView::create(loader);
     co_trya$(webview->loadLocationAsync(url, Ref::Uti::PUBLIC_OPEN, ct));
 
-    auto sheet = co_trya$(loader->fetchStylesheetAsync(*webview->document(), "bundle://vaev-engine/wkhtmltopdf-polyfill.css"_url, Vaev::Style::Origin::USER_AGENT, ct));
+    auto sheet = co_trya$(loader->fetchStylesheetAsync("bundle://vaev-engine/wkhtmltopdf-polyfill.css"_url, Vaev::Style::Origin::USER_AGENT, ct));
     webview->document()->styleSheets->add(std::move(sheet));
 
     co_return Ok(webview);

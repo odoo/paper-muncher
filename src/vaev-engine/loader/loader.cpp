@@ -150,7 +150,7 @@ export struct ResourceLoader {
         return *_client;
     }
 
-    Async::Task<Rc<Style::StyleSheet>> fetchStylesheetAsync(Dom::Document& document, Ref::Url url, Style::Origin origin, Async::CancellationToken ct) {
+    Async::Task<Rc<Style::StyleSheet>> fetchStylesheetAsync(Ref::Url url, Style::Origin origin, Async::CancellationToken ct) {
         auto key = Io::format("{}:{}", toUnderlyingType(origin), url);
         if (auto cached = _stylesheets.lookup(key))
             co_return Ok(cached.take());
@@ -164,7 +164,7 @@ export struct ResourceLoader {
 
         Io::SScan s{buf};
         Diag::Collector diags;
-        auto stylesheet = Style::StyleSheet::parse(document.registeredPropertySet, s, diags, url, origin);
+        auto stylesheet = Style::StyleSheet::parse(s, diags, url, origin);
 
         if (diags.any()) {
             Diag::SimpleRenderer render{url};
@@ -237,7 +237,7 @@ Async::Task<> _fetchResourcesAsync(ResourceLoader& loader, Dom::Document& docume
         auto text = el->textContent();
         Io::SScan textScan{text};
         Diag::Collector diags;
-        auto sheet = Style::StyleSheet::parse(document.registeredPropertySet, textScan, diags, node->baseURI());
+        auto sheet = Style::StyleSheet::parse(textScan, diags, node->baseURI());
         if (diags.any()) {
             Diag::SimpleRenderer render{Io::format("{}:<style>", node->baseURI())};
             render.render(Sys::err(), diags);
@@ -253,7 +253,7 @@ Async::Task<> _fetchResourcesAsync(ResourceLoader& loader, Dom::Document& docume
             }
 
             auto url = Ref::Url::parse(*href, Some(node->baseURI()));
-            auto sheet = co_await loader.fetchStylesheetAsync(document, url, Style::Origin::AUTHOR, ct);
+            auto sheet = co_await loader.fetchStylesheetAsync(url, Style::Origin::AUTHOR, ct);
 
             if (not sheet) {
                 logWarn("failed to fetch stylesheet from {}: {}", url, sheet);
@@ -290,30 +290,30 @@ export Async::Task<Gc::Ref<Dom::Document>> fetchDocumentAsync(Gc::Heap& heap, Re
     auto response = co_trya$(loader.client().getAsync(resolvedUrl, ct));
     auto document = co_trya$(_loadDocumentAsync(heap, url, response, ct));
 
-    document->styleSheets->add((co_await loader.fetchStylesheetAsync(*document, "bundle://vaev-engine/html.css"_url, Style::Origin::USER_AGENT, ct))
+    document->styleSheets->add((co_await loader.fetchStylesheetAsync("bundle://vaev-engine/html.css"_url, Style::Origin::USER_AGENT, ct))
                                    .take("user agent stylesheet not available"));
 
-    document->styleSheets->add((co_await loader.fetchStylesheetAsync(*document, "bundle://vaev-engine/counters.css"_url, Style::Origin::USER_AGENT, ct))
+    document->styleSheets->add((co_await loader.fetchStylesheetAsync("bundle://vaev-engine/counters.css"_url, Style::Origin::USER_AGENT, ct))
                                    .take("user agent stylesheet not available"));
 
     if (document->quirkMode == Dom::QuirkMode::YES) {
         logWarn("quirky document, using quirky stylesheet");
-        document->styleSheets->add((co_await loader.fetchStylesheetAsync(*document, "bundle://vaev-engine/html-quirk.css"_url, Style::Origin::USER_AGENT, ct))
+        document->styleSheets->add((co_await loader.fetchStylesheetAsync("bundle://vaev-engine/html-quirk.css"_url, Style::Origin::USER_AGENT, ct))
                                        .take("user agent stylesheet not available"));
     }
 
     if (document->contentType() == Ref::Uti::PUBLIC_MARKDOWN) {
-        document->styleSheets->add((co_await loader.fetchStylesheetAsync(*document, "bundle://vaev-engine/markdown.css"_url, Style::Origin::USER_AGENT, ct))
+        document->styleSheets->add((co_await loader.fetchStylesheetAsync("bundle://vaev-engine/markdown.css"_url, Style::Origin::USER_AGENT, ct))
                                        .take("user agent stylesheet not available"));
     }
 
-    document->styleSheets->add((co_await loader.fetchStylesheetAsync(*document, "bundle://vaev-engine/print.css"_url, Style::Origin::USER_AGENT, ct))
+    document->styleSheets->add((co_await loader.fetchStylesheetAsync("bundle://vaev-engine/print.css"_url, Style::Origin::USER_AGENT, ct))
                                    .take("user agent stylesheet not available"));
 
-    document->styleSheets->add((co_await loader.fetchStylesheetAsync(*document, "bundle://vaev-engine/svg.css"_url, Style::Origin::USER_AGENT, ct))
+    document->styleSheets->add((co_await loader.fetchStylesheetAsync("bundle://vaev-engine/svg.css"_url, Style::Origin::USER_AGENT, ct))
                                    .take("user agent stylesheet not available"));
 
-    document->styleSheets->add((co_await loader.fetchStylesheetAsync(*document, "bundle://vaev-engine/math.css"_url, Style::Origin::USER_AGENT, ct))
+    document->styleSheets->add((co_await loader.fetchStylesheetAsync("bundle://vaev-engine/math.css"_url, Style::Origin::USER_AGENT, ct))
                                    .take("user agent stylesheet not available"));
 
     (void)co_await _fetchResourcesAsync(loader, *document, document, ct);

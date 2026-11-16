@@ -143,7 +143,6 @@ export struct WebView {
             _heap,
             _area,
             _prefs,
-            _document->registeredPropertySet,
             *_document->styleSheets,
             _document->fontDatabase,
         };

@@ -28,7 +28,6 @@ export struct Computer {
     Gc::Heap& _heap;
     DisplayArea _area;
     ViewerPrefs _prefs;
-    RegisteredPropertySet& _registeredPropertySet;
     StyleSheetList const& _stylesheets;
     Rc<Font::Database> _fontDatabase;
     Media _media = Media::from(_area, _prefs);
@@ -166,7 +165,7 @@ export struct Computer {
         rule.visit(
             [&](PageRule const& r) {
                 if (r.match(page))
-                    r.apply(_registeredPropertySet, c);
+                    r.apply(c);
             },
             [&](MediaRule const& r) {
                 if (r.match(_media))
@@ -218,6 +217,14 @@ export struct Computer {
         }
     }
 
+    static void _putPresentationalHint(CascadedValues& cascadedValues, Symbol name, Str value) {
+        Vec<Rc<Property>> properties;
+        if (not parseProperty(name, value, properties))
+            return;
+        for (auto& property : properties)
+            cascadedValues.putStyleAttribute(property, Origin::AUTHOR_PRESENTATIONAL_HINT, PRESENTATION_HINT_SPEC);
+    }
+
     // https://www.w3.org/TR/css-cascade-4/#author-presentational-hint-origin
     void _considerHtmlPresentationalHint(Gc::Ref<Dom::Element> el, CascadedValues& cascadedValues) {
         if (el->namespaceUri() != Html::NAMESPACE)
@@ -225,52 +232,35 @@ export struct Computer {
 
         // https://html.spec.whatwg.org/multipage/obsolete.html#dom-document-fgcolor
         if (auto const& [fgcolor] = el->getAttribute(Html::FGCOLOR_ATTR)) {
-            if (auto property = _registeredPropertySet.parseValue(
-                    Properties::COLOR, fgcolor, {}
-                ))
-                cascadedValues.putStyleAttribute(property.take(), Origin::AUTHOR_PRESENTATIONAL_HINT, PRESENTATION_HINT_SPEC);
+            _putPresentationalHint(cascadedValues, Properties::COLOR, fgcolor);
         }
 
         // https://html.spec.whatwg.org/multipage/obsolete.html#dom-document-bgcolor
         if (auto const& [bgcolor] = el->getAttribute(Html::BGCOLOR_ATTR)) {
-            if (auto property = _registeredPropertySet.parseValue(
-                    Properties::BACKGROUND_COLOR, bgcolor, {}
-                ))
-                cascadedValues.putStyleAttribute(property.take(), Origin::AUTHOR_PRESENTATIONAL_HINT, PRESENTATION_HINT_SPEC);
+            _putPresentationalHint(cascadedValues, Properties::BACKGROUND_COLOR, bgcolor);
         }
 
         // https://html.spec.whatwg.org/multipage/images.html#sizes-attributes
         if (auto const& [width] = el->getAttribute(Html::WIDTH_ATTR)) {
-            if (auto property = _registeredPropertySet.parseValue(
-                    Properties::WIDTH, width, {}
-                ))
-                cascadedValues.putStyleAttribute(property.take(), Origin::AUTHOR_PRESENTATIONAL_HINT, PRESENTATION_HINT_SPEC);
+            _putPresentationalHint(cascadedValues, Properties::WIDTH, width);
         }
 
         // https://html.spec.whatwg.org/multipage/images.html#sizes-attributes
         if (auto const& [height] = el->getAttribute(Html::HEIGHT_ATTR)) {
-            if (auto property = _registeredPropertySet.parseValue(
-                    Properties::HEIGHT, height, {}
-                ))
-                cascadedValues.putStyleAttribute(property.take(), Origin::AUTHOR_PRESENTATIONAL_HINT, PRESENTATION_HINT_SPEC);
+            _putPresentationalHint(cascadedValues, Properties::HEIGHT, height);
         }
 
         // https://html.spec.whatwg.org/multipage/input.html#the-size-attribute
         if (auto const& [size] = el->getAttribute(Html::SIZE_ATTR)) {
-            if (auto property = _registeredPropertySet.parseValue(
-                    Properties::WIDTH, Io::format("{}ch", size), {}
-                ))
-                cascadedValues.putStyleAttribute(property.take(), Origin::AUTHOR_PRESENTATIONAL_HINT, PRESENTATION_HINT_SPEC);
+            _putPresentationalHint(cascadedValues, Properties::WIDTH, Io::format("{}ch", size));
         }
     }
 
     void _considerInlineStyleAttribute(Gc::Ref<Dom::Element> el, CascadedValues& cascadedValues) {
         auto styleAttr = el->style();
 
-        auto declarations = _registeredPropertySet.parseDeclarations(
-            styleAttr ? *styleAttr : "",
-            RegisteredPropertySet::TOP_LEVEL
-        );
+        Vec<Rc<Property>> declarations;
+        parseDeclarations(styleAttr ? *styleAttr : "", declarations);
         for (auto& decl : declarations)
             cascadedValues.putStyleAttribute(decl, Origin::INLINE, INLINE_SPEC);
     }
@@ -305,16 +295,10 @@ export struct Computer {
                 return;
 
             if (not svgEl->hasAttribute(Svg::WIDTH_ATTR))
-                cascadedValues.putStyleAttribute(
-                    _registeredPropertySet.parseValue(Properties::WIDTH, "300px", {}).expect(),
-                    Origin::AUTHOR_PRESENTATIONAL_HINT, PRESENTATION_HINT_SPEC
-                );
+                _putPresentationalHint(cascadedValues, Properties::WIDTH, "300px"s);
 
             if (not svgEl->hasAttribute(Svg::HEIGHT_ATTR))
-                cascadedValues.putStyleAttribute(
-                    _registeredPropertySet.parseValue(Properties::HEIGHT, "150px", {}).expect(),
-                    Origin::AUTHOR_PRESENTATIONAL_HINT, PRESENTATION_HINT_SPEC
-                );
+                _putPresentationalHint(cascadedValues, Properties::HEIGHT, "150px"s);
         }
     }
 
@@ -326,9 +310,11 @@ export struct Computer {
         if (el->qualifiedName.ns != Svg::NAMESPACE)
             return;
 
+        Vec<Rc<Property>> properties;
         for (auto const& attr : el->attributes)
-            if (auto const& [property] = _registeredPropertySet.parsePresentationAttribute(attr.qualifiedName.name, attr.value))
-                cascadedValues.putStyleAttribute(property, Origin::AUTHOR_PRESENTATIONAL_HINT, PRESENTATION_HINT_SPEC);
+            (void)parsePresentationAttribute(attr.qualifiedName.name, attr.value, properties);
+        for (auto& property : properties)
+            cascadedValues.putStyleAttribute(property, Origin::AUTHOR_PRESENTATIONAL_HINT, PRESENTATION_HINT_SPEC);
 
         if (el->qualifiedName == Svg::SVG_TAG)
             _applySvgElementSizingRules(el, cascadedValues);
@@ -348,7 +334,7 @@ export struct Computer {
             cached = _mpc.lookup(parent, matchingRules);
 
         Cow<ComputedValues> values = cached.unwrapOrElse([&] {
-            auto v = _registeredPropertySet.inheritsComputedValues(parent);
+            auto v = inheritsComputedValues(parent);
 
             for (auto const& [styleRule, specificity, order, layer] : matchingRules)
                 cascadedValues.putStyleRule(styleRule, _layers.rank(layer), specificity, order);
@@ -374,12 +360,10 @@ export struct Computer {
             cx.populateUsingParentComputedValues(parent);
             cx.populateUsingOwnComputedValues(parent);
 
-            cascadedValues.apply(LonghandRegistration::ComputationPhase::CUSTOM_PROPERTY, parent, values, cx);
-            // TODO: Replaced by pending-substitution values, resolved when applying each longhand.
-            // cascadedValues.expands(parent, values.cow(), _registeredPropertySet);
+            cascadedValues.applyCustomProperties(parent, values, cx);
 
-            cascadedValues.apply(LonghandRegistration::ComputationPhase::PRE_FONT, parent, values, cx);
-            cascadedValues.apply(LonghandRegistration::ComputationPhase::FONT, parent, values, cx);
+            cascadedValues.apply(ComputationPhase::PRE_FONT, parent, values, cx);
+            cascadedValues.apply(ComputationPhase::FONT, parent, values, cx);
 
             _updateFontface(parent, values);
 
@@ -390,8 +374,8 @@ export struct Computer {
             }
             cx.populateUsingOwnComputedValues(*values);
 
-            cascadedValues.apply(LonghandRegistration::ComputationPhase::NORMAL, parent, values, cx);
-            cascadedValues.apply(LonghandRegistration::ComputationPhase::LATE, parent, values, cx);
+            cascadedValues.apply(ComputationPhase::NORMAL, parent, values, cx);
+            cascadedValues.apply(ComputationPhase::LATE, parent, values, cx);
 
             if (cacheEligible)
                 _mpc.put(parent, matchingRules, values);

@@ -11,10 +11,9 @@ using namespace Karm::Ref::Literals;
 namespace Vaev::Style::Tests {
 
 static StyleSheet _parseSheet(Str css) {
-    RegisteredPropertySet registry = defaultRegistry();
     Io::SScan s{css};
     auto diags = Diag::Collector::ignore();
-    return StyleSheet::parse(registry, s, diags, ""_url);
+    return StyleSheet::parse(s, diags, ""_url);
 }
 
 test$("layer-rule-parse-statement") {

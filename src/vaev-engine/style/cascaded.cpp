@@ -42,8 +42,14 @@ export struct CascadedValues {
     Map<Symbol, Entry> _entries;
     usize _nextAttributeOrder = 0;
 
+    static Symbol _nameOf(Property const& property) {
+        if (property.id == LonghandId::CUSTOM)
+            return static_cast<CustomProperty const&>(property)._value.name;
+        return Symbol::from(propertyName(property.id));
+    }
+
     void _putLonghand(Rc<Property> property, Origin origin, usize layerOrder, Specificity specificity, bool important, usize ruleOrder, usize declarationOrder) {
-        auto name = property->registration->name;
+        auto name = _nameOf(*property);
         Entry entry{specificity, property, ruleOrder, declarationOrder, important, origin, layerOrder};
         auto& existing = _entries.lookupOrPutDefault(name, entry);
         if (entry >= existing)
@@ -89,11 +95,22 @@ export struct CascadedValues {
     //     }
     // }
 
-    void apply(LonghandRegistration::ComputationPhase computationPhase, ComputedValues const& parent, Cow<ComputedValues>& child, ComputationContext const& cx) {
+    void applyCustomProperties(ComputedValues const& parent, Cow<ComputedValues>& child, ComputationContext const& cx) {
         for (auto& entry : _entries.iterValue()) {
             auto& prop = entry.property;
 
-            if (prop->registration->computationPhase() != computationPhase)
+            if (prop->id != LonghandId::CUSTOM)
+                continue;
+
+            prop->apply(parent, child.cow(), cx);
+        }
+    }
+
+    void apply(ComputationPhase phase, ComputedValues const& parent, Cow<ComputedValues>& child, ComputationContext const& cx) {
+        for (auto& entry : _entries.iterValue()) {
+            auto& prop = entry.property;
+
+            if (prop->id == LonghandId::CUSTOM or computationPhase(prop->id) != phase)
                 continue;
 
             prop->apply(parent, child.cow(), cx);

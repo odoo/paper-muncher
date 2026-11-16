@@ -33,9 +33,6 @@ export struct Document : Node {
     // https://drafts.csswg.org/cssom/#dom-documentorshadowroot-stylesheets
     Gc::Ref<Style::StyleSheetList> styleSheets;
 
-    // https://drafts.css-houdini.org/css-properties-values-api/#dom-window-registeredpropertyset-slot
-    Style::RegisteredPropertySet registeredPropertySet = Style::defaultRegistry();
-
     Rc<Font::Database> fontDatabase;
     Style::CounterStyleSet counters = {};
 
@@ -107,7 +104,7 @@ export struct Document : Node {
     }
 
     Rc<Style::ComputedValues> initialComputedValues() const {
-        auto initialStyle = registeredPropertySet.initialComputedValues();
+        auto initialStyle = Style::initialComputedValues();
         initialStyle->setCustomProp("-vaev-url", {Css::Token::string(Io::format("\"{}\"", url()))});
         initialStyle->setCustomProp("-vaev-title", {Css::Token::string(Io::format("\"{}\"", title()))});
         initialStyle->setCustomProp("-vaev-datetime", {Css::Token::string(Io::format("\"{}\"", Sys::now()))});

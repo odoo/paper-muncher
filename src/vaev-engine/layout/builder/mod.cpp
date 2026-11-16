@@ -208,9 +208,7 @@ struct BuilderContext {
             return;
 
         // The root inline box inherits from its parent block container, but is otherwise unstyleable.
-        // HACK: Use we should be using the document's RegisteredPropertySet,
-        //       but it's too impractical to string it down to here
-        auto computedStyle = Style::defaultRegistry().inheritsComputedValues(*parentComputedValues);
+        auto computedStyle = Style::inheritsComputedValues(*parentComputedValues);
         computedStyle->display = Display{Display::Inside::FLOW, Display::Outside::BLOCK};
 
         auto newInlineBox = Box::fromInterruptedInlineBox(*_rootInlineBox);
@@ -577,20 +575,20 @@ struct AnonymousTableBoxWrapper {
 
     AnonymousTableBoxWrapper(BuilderContext& bc) : bc(bc) {}
 
-    void createRowIfNone(Style::RegisteredPropertySet& registeredPropertySet, Rc<Style::ComputedValues const> style) {
+    void createRowIfNone(Rc<Style::ComputedValues const> style) {
         if (rowBox)
             return;
 
-        auto rowStyle = registeredPropertySet.inheritsComputedValues(*style);
+        auto rowStyle = Style::inheritsComputedValues(*style);
         rowStyle->display = Display::Internal::TABLE_ROW;
         rowBox = Some(Box{rowStyle, NONE});
     }
 
-    void createCellIfNone(Style::RegisteredPropertySet& registeredPropertySet, Rc<Style::ComputedValues const> style) {
+    void createCellIfNone(Rc<Style::ComputedValues const> style) {
         if (cellBox)
             return;
 
-        auto cellStyle = registeredPropertySet.inheritsComputedValues(*style);
+        auto cellStyle = Style::inheritsComputedValues(*style);
         cellStyle->display = Display::Internal::TABLE_CELL;
 
         cellBox = Some(Box{cellStyle, NONE});
@@ -645,7 +643,6 @@ static void _buildCell(BuilderContext rowBuilderContext, Gc::Ref<Dom::Element> c
 
 static void _buildTableChildrenWhileWrappingIntoAnonymousBox(BuilderContext bc, Gc::Ref<Dom::Element> parentEl, Rc<Style::ComputedValues const> style, bool skipCaption, auto predForAccepted) {
     AnonymousTableBoxWrapper anonTableWrapper{bc};
-    auto& registeredPropertySet = parentEl->ownerDocument()->registeredPropertySet;
 
     for (auto child = parentEl->firstChild(); child; child = child->nextSibling()) {
         if (auto childEL = child->as<Dom::Element>()) {
@@ -668,17 +665,17 @@ static void _buildTableChildrenWhileWrappingIntoAnonymousBox(BuilderContext bc, 
                 // Unexpected display type for children, it will be wrapped by anonymous box
                 // First dispatching based on the parent's display type
                 if (bc.parentComputedValues->display == Display::Internal::TABLE_ROW) {
-                    anonTableWrapper.createCellIfNone(registeredPropertySet, style);
+                    anonTableWrapper.createCellIfNone(style);
                     _buildNodeWrappedByCell(anonTableWrapper.cellBuilderContext(), *childEL);
                 } else {
                     if (display == Display::Internal::TABLE_CELL) {
                         anonTableWrapper.finalizeAndResetCell();
-                        anonTableWrapper.createRowIfNone(registeredPropertySet, style);
+                        anonTableWrapper.createRowIfNone(style);
 
                         _buildCell(anonTableWrapper.rowBuilderContext(), *childEL);
                     } else {
-                        anonTableWrapper.createRowIfNone(registeredPropertySet, style);
-                        anonTableWrapper.createCellIfNone(registeredPropertySet, style);
+                        anonTableWrapper.createRowIfNone(style);
+                        anonTableWrapper.createCellIfNone(style);
 
                         _buildNodeWrappedByCell(anonTableWrapper.cellBuilderContext(), *childEL);
                     }
@@ -686,8 +683,8 @@ static void _buildTableChildrenWhileWrappingIntoAnonymousBox(BuilderContext bc, 
             }
         } else if (auto text = child->as<Dom::Text>()) {
             if (bc.parentComputedValues->display != Display::Internal::TABLE_ROW)
-                anonTableWrapper.createRowIfNone(registeredPropertySet, style);
-            anonTableWrapper.createCellIfNone(registeredPropertySet, style);
+                anonTableWrapper.createRowIfNone(style);
+            anonTableWrapper.createCellIfNone(style);
             _buildText(anonTableWrapper.cellBuilderContext(), text->data(), style);
         }
     }
@@ -795,9 +792,8 @@ static Box _createTableWrapperAndBuildTable(BuilderContext bc, Rc<Style::Compute
     // wrapper box and not the table box; all other values of non-inheritable
     // properties are used on the table box and not the table wrapper box.
     // https://www.w3.org/TR/CSS22/tables.html#model
-    auto& registeredPropertySet = tableBoxEl->ownerDocument()->registeredPropertySet;
 
-    auto wrapperStyle = registeredPropertySet.initialComputedValues();
+    auto wrapperStyle = Style::initialComputedValues();
     wrapperStyle->display = tableStyle->display;
 
     wrapperStyle->margin = tableStyle->margin;
@@ -812,7 +808,7 @@ static Box _createTableWrapperAndBuildTable(BuilderContext bc, Rc<Style::Compute
     // SPEC: The table wrapper box establishes a block formatting context.
     auto innerStyle = makeRc<Style::ComputedValues>(*tableStyle);
 
-    auto initial = registeredPropertySet.initialComputedValues();
+    auto initial = Style::initialComputedValues();
     innerStyle->display = Display::Internal::TABLE_BOX;
     innerStyle->margin = initial->margin;
     innerStyle->position = initial->position;
@@ -1097,7 +1093,7 @@ export Box buildElement(Gc::Ref<Dom::PseudoElement> el, usize pageNumber, Runnin
 export Box buildDocument(Gc::Ref<Dom::Document> doc) {
     auto el = doc->documentElement();
     if (!el)
-        return {doc->registeredPropertySet.initialComputedValues(), NONE};
+        return {Style::initialComputedValues(), NONE};
     auto root = buildElement(el.upgrade());
 
     logDebugIf(dumpBoxes, "boxes: {}", root);

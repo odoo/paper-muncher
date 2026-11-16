@@ -218,7 +218,6 @@ export Yield<Gfx::Snapshot> print(Gc::Heap& heap, Gc::Ref<Dom::Document> dom, Pr
         heap,
         area,
         prefs,
-        dom->registeredPropertySet,
         *dom->styleSheets,
         dom->fontDatabase,
     };
