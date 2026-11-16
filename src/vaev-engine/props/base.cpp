@@ -299,7 +299,7 @@ struct CustomProperty : Property {
             Css::Content content{c};
             c.next(c.rem());
             return Ok(makeRc<CustomProperty>(self(), std::move(content)));
-        };
+        }
     };
 
     Css::Content _value;
