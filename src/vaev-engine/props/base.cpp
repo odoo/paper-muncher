@@ -696,7 +696,7 @@ export struct RegisteredPropertySet {
             return Some(maybeRegistration.take());
 
         if (options.has(GENERATE_CUSTOM_PROPERTY)) {
-            if (startWith(propertyName.str(), "--"s) != Match::NO)
+            if (startWith(propertyName.str(), "--"s) == Match::PARTIAL)
                 return Some(registerCustomProperty(propertyName));
         }
 
