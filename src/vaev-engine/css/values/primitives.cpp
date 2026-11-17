@@ -272,7 +272,7 @@ struct ValueParser<Math::Insets<T>> {
         eatWhitespace(c);
         auto top = parseValue<T>(c);
         if (not top)
-            return top.none();
+            return top;
 
         eatWhitespace(c);
         auto right = parseValue<T>(c);
