@@ -17,9 +17,9 @@ export InsetsAu computePaddings(Box& box, Vec2Au containingBlock);
 
 export Math::Radii<Au> computeRadii(Box& box, Vec2Au size);
 
-export Opt<Au> computeSpecifiedBorderBoxWidth(Box& box, Style::Size size, Vec2Au containingBlock, Au horizontalBorderBox, Opt<Au> capmin = NONE);
+export Opt<Au> computeSpecifiedBorderBoxWidth(Box& box, Style::Size const& size, Vec2Au containingBlock, Au horizontalBorderBox, Opt<Au> capmin = NONE);
 
-export Opt<Au> computeSpecifiedBorderBoxHeight(Box& box, Style::Size size, Vec2Au containingBlock, Au verticalBorderBox);
+export Opt<Au> computeSpecifiedBorderBoxHeight(Box& box, Style::Size const& size, Vec2Au containingBlock, Au verticalBorderBox);
 
 export Vec2Au computeIntrinsicContentSize(Box& box, IntrinsicSize intrinsic, Opt<Au> capmin = NONE);
 
