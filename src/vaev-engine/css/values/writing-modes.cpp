@@ -6,8 +6,6 @@ import :css.values.keywords;
 
 using namespace Karm;
 
-// https://drafts.csswg.org/css-writing-modes-4/
-
 namespace Vaev::Css {
 
 // https://drafts.csswg.org/css-writing-modes-4/#propdef-writing-mode
