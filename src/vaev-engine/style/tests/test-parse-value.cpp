@@ -132,7 +132,7 @@ test$("vaev-css-build-margin") {
 }
 
 test$("vaev-css-build-logical-margin") {
-    auto testCase = [&]<typename P>(Symbol const& name, Str input, Css::LogicalMargins expected) -> Res<> {
+    auto testCase = [&]<typename P>(Symbol const& name, Str input, MarginInlineProperty::Value expected) -> Res<> {
         auto registry = defaultRegistry();
         auto res = registry.parseValue(name, input, {});
         assert$(res);

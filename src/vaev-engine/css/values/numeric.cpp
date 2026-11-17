@@ -69,27 +69,6 @@ struct TypedUnitValue {
         }
         _value.repr(e);
     }
-
-    // MARK: <length> ----------------------------------------------------------
-    // https://drafts.csswg.org/css-values/#lengths
-
-    // MARK: <angle> -----------------------------------------------------------
-    // https://drafts.csswg.org/css-values/#angles
-
-    constexpr f64 toDegree() const
-        requires(TYPE == NumericBaseType::ANGLE)
-    {
-        return _value.to(UnitValue::Unit::DEG);
-    }
-
-    // MARK: <resolution> ------------------------------------------------------
-    // https://drafts.csswg.org/css-values/#resolution
-
-    constexpr f64 toDppx() const
-        requires(TYPE == NumericBaseType::RESOLUTION)
-    {
-        return _value.to(UnitValue::Unit::DPPX);
-    }
 };
 
 // https://drafts.csswg.org/css-values/#numbers
@@ -117,8 +96,6 @@ export using PureResolution = TypedUnitValue<Some(NumericBaseType::RESOLUTION)>;
 export using PureFlex = TypedUnitValue<Some(NumericBaseType::FLEX)>;
 
 // MARK: Literal values --------------------------------------------------------
-// A value in a given unit, e.g. `Css::px(0)`, `Css::percent(50)`.
-// They widen to the calc-capable types that accept them (see TypedCalc).
 
 export constexpr PureNumber number(f64 value) {
     return PureNumber{UnitValue{value, UnitValue::Unit::NONE}};
@@ -205,6 +182,9 @@ export using Resolution = TypedCalc<Some(NumericBaseType::RESOLUTION)>;
 
 // https://drafts.csswg.org/css-values-4/#percentages
 export using Percentage = TypedCalc<Some(NumericBaseType::PERCENT)>;
+
+// https://drafts.csswg.org/css-grid-2/#typedef-flex
+export using Flex = TypedCalc<Some(NumericBaseType::FLEX)>;
 
 // https://drafts.csswg.org/css-values-4/#mixed-percentages
 export using LengthPercentage = TypedCalc<Some(NumericBaseType::LENGTH), AcceptsPercent::YES>;

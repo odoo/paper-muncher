@@ -12,7 +12,7 @@ using namespace Karm::Literals;
 
 namespace Vaev::Css {
 
-// https://www.w3.org/TR/css-gcpm-3/#funcdef-element
+// https://drafts.csswg.org/css-gcpm/#element-syntax
 export struct ElementFunc {
     enum struct Target {
         UNDEFINED,
@@ -67,6 +67,7 @@ struct ValueParser<ElementFunc> {
     }
 };
 
+// https://drafts.csswg.org/css-gcpm/#running-syntax
 export struct RunningPosition {
     CustomIdent customIdent;
 

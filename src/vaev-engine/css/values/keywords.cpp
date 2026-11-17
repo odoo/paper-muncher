@@ -12,6 +12,7 @@ using namespace Karm;
 
 namespace Vaev::Css {
 
+// https://drafts.csswg.org/css-values-4/#css-keyword
 export template <StrLit K>
 struct Keyword {
     void repr(Io::Emit& e) const {
@@ -23,16 +24,6 @@ struct Keyword {
         return K == L;
     }
 };
-
-namespace Keywords {
-
-#define KEYWORD(TYPE, VALUE, NAME)      \
-    export using TYPE = Keyword<VALUE>; \
-    export constexpr inline TYPE NAME{};
-#include "defs/keywords.inc"
-#undef KEYWORD
-
-} // namespace Keywords
 
 export template <StrLit K>
 struct ValueParser<Keyword<K>> {
@@ -57,5 +48,15 @@ struct ValueSerializer<Keyword<K>> {
         return w.writeStr(static_cast<Str>(K));
     }
 };
+
+namespace Keywords {
+
+#define KEYWORD(TYPE, VALUE, NAME)      \
+    export using TYPE = Keyword<VALUE>; \
+    export constexpr inline TYPE NAME{};
+#include "defs/keywords.inc"
+#undef KEYWORD
+
+} // namespace Keywords
 
 } // namespace Vaev::Css

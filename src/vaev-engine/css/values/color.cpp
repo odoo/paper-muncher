@@ -369,7 +369,7 @@ struct ValueParser<Color> {
         if (scan.skip(Token::ident("none")))
             hue = 0;
         else if (scan.peek() == Token::DIMENSION)
-            hue = try$(parseValue<PureAngle>(scan)).toDegree();
+            hue = try$(parseValue<PureAngle>(scan)).unitValue().to(UnitValue::Unit::DEG);
         else if (scan.peek() == Token::Type::NUMBER)
             hue = try$(parseValue<f64>(scan));
         else
@@ -405,7 +405,7 @@ struct ValueParser<Color> {
         if (scan.skip(Token::ident("none")))
             hue = 0;
         else if (scan.peek() == Token::DIMENSION)
-            hue = try$(parseValue<PureAngle>(scan)).toDegree();
+            hue = try$(parseValue<PureAngle>(scan)).unitValue().to(UnitValue::Unit::DEG);
         else if (scan.peek() == Token::Type::NUMBER)
             hue = try$(parseValue<f64>(scan));
         else

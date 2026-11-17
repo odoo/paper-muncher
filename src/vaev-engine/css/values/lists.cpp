@@ -17,25 +17,13 @@ using namespace Karm;
 
 namespace Vaev::Css {
 
-// https://drafts.csswg.org/css-lists/#auto-numbering
-// https://drafts.csswg.org/css-lists/#counter-functions
+// https://drafts.csswg.org/css-lists/#funcdef-counter
 export struct CounterFunc {
     CustomIdent name;
     Opt<CounterStyle> style = NONE;
 
     void repr(Io::Emit& e) const {
         e("(counter {})", name);
-    }
-};
-
-// https://www.w3.org/TR/css-lists-3/#funcdef-counters
-export struct CountersFunc {
-    CustomIdent name;
-    String join;
-    Opt<CounterStyle> style = NONE;
-
-    void repr(Io::Emit& e) const {
-        e("(counters {} {} {})", name, join, style);
     }
 };
 
@@ -57,6 +45,18 @@ struct ValueParser<CounterFunc> {
         return Ok(CounterFunc{name, maybeSymbols});
     }
 };
+
+// https://drafts.csswg.org/css-lists/#funcdef-counters
+export struct CountersFunc {
+    CustomIdent name;
+    String join;
+    Opt<CounterStyle> style = NONE;
+
+    void repr(Io::Emit& e) const {
+        e("(counters {} {} {})", name, join, style);
+    }
+};
+
 
 export template <>
 struct ValueParser<CountersFunc> {

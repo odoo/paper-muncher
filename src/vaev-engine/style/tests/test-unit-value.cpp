@@ -38,10 +38,10 @@ test$("vaev-css-unit-value-units") {
     assertEq$(length.unitValue().to(Css::UnitValue::Unit::PX), 96.0);
 
     auto angle = try$(_parse<Css::PureAngle>("1turn"));
-    assertEq$(angle.toDegree(), 360.0);
+    assertEq$(angle.unitValue().to(Css::UnitValue::Unit::DEG), 360.0);
 
     auto resolution = try$(_parse<Css::PureResolution>("192dpi"));
-    assertEq$(resolution.toDppx(), 2.0);
+    assertEq$(resolution.unitValue().to(Css::UnitValue::Unit::DPPX), 2.0);
 
     auto time = try$(_parse<Css::PureTime>("1500ms"));
     assertEq$(time.unitValue().to(Css::UnitValue::Unit::S), 1.5);
@@ -77,7 +77,7 @@ test$("vaev-css-unit-value-parsing") {
     assertNe$(try$(_parse<Css::PureLength>("1in")), try$(_parse<Css::PureLength>("96px")));
     assertEq$(try$(_parse<Css::PureLength>("1in")).unitValue().to(Css::UnitValue::Unit::PX), 96.0);
     assertGt$(try$(_parse<Css::PureLength>("1in")), try$(_parse<Css::PureLength>("95px")));
-    assertEq$(try$(_parse<Css::PureResolution>("96dpi")).toDppx(), 1.0);
+    assertEq$(try$(_parse<Css::PureResolution>("96dpi")).unitValue().to(Css::UnitValue::Unit::DPPX), 1.0);
 
     return Ok();
 }

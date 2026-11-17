@@ -16,7 +16,6 @@ export import :css.values.images;
 export import :css.values.inlineLayout;
 export import :css.values.keywords;
 export import :css.values.lists;
-export import :css.values.logical;
 export import :css.values.multicol;
 export import :css.values.numeric;
 export import :css.values.overflow;

@@ -6,8 +6,6 @@ import :css.values.keywords;
 
 using namespace Karm;
 
-// https://drafts.csswg.org/css-flexbox-1/
-
 namespace Vaev::Css {
 
 // https://drafts.csswg.org/css-flexbox-1/#flex-direction-property

@@ -11,26 +11,22 @@ import :css.values.keywords;
 import :css.values.primitives;
 import :css.values.numeric;
 
-// https://www.w3.org/TR/css-images-4/
-
 namespace Vaev::Css {
 
 export struct Image;
 
-// MARK: Linear Gradient -------------------------------------------------------
 // https://www.w3.org/TR/css-images-4/#linear-gradients
-
 export struct LinearGradient {
     struct Stop {
         Gfx::Color color;
-        PurePercentage position;
+        Percentage position;
 
         void repr(Io::Emit& e) const {
             e("({} {})", color, position);
         }
     };
 
-    PureAngle angle;
+    Angle angle;
     ColorSpace colorSpace = ColorSpace::SRGB;
     Vec<Stop> stops;
 
@@ -39,9 +35,7 @@ export struct LinearGradient {
     }
 };
 
-// MARK: Radial Gradient -------------------------------------------------------
 // https://www.w3.org/TR/css-images-4/#radial-gradients
-
 export struct RadialGradient {
     enum struct Shape {
         CIRCLE,
@@ -60,20 +54,18 @@ export struct RadialGradient {
     }
 };
 
-// MARK: Conic Gradient --------------------------------------------------------
 // https://www.w3.org/TR/css-images-4/#conic-gradients
-
 export struct ConicGradient {
     struct Stop {
         Gfx::Color color;
-        PureAngle angle;
+        Angle angle;
 
         void repr(Io::Emit& e) const {
             e("({} {})", color, angle);
         }
     };
 
-    PureAngle angle;
+    Angle angle;
     Math::Vec2f position;
     ColorSpace colorSpace = ColorSpace::SRGB;
     Vec<LinearGradient::Stop> stops;
@@ -83,13 +75,11 @@ export struct ConicGradient {
     }
 };
 
-// MARK: Cross Fade ------------------------------------------------------------
 // https://www.w3.org/TR/css-images-4/#cross-fade-function
-
 export struct CrossFade {
     struct Layer {
         Box<Image> image;
-        PurePercentage opacity;
+        Percentage opacity;
 
         void repr(Io::Emit& e) const {
             e("({} {})", image, opacity);
@@ -103,12 +93,10 @@ export struct CrossFade {
     }
 };
 
-// MARK: Stripes ---------------------------------------------------------------
-
 // https://www.w3.org/TR/css-images-4/#typedef-color-stripe
-export struct ColorStrip {
+export struct ColorStripe {
     Gfx::Color color;
-    Union<PurePercentage, PureFlex> thickness;
+    Union<Percentage, Flex> thickness;
 
     void repr(Io::Emit& e) const {
         e("({} {})", color, thickness);
@@ -117,16 +105,14 @@ export struct ColorStrip {
 
 // https://www.w3.org/TR/css-images-4/#stripes
 export struct Stripes {
-    Vec<ColorStrip> stripes;
+    Vec<ColorStripe> stripes;
 
     void repr(Io::Emit& e) const {
         e("(stripes {}", stripes);
     }
 };
 
-// MARK: Image -----------------------------------------------------------------
 // https://www.w3.org/TR/css-images-4/#typedef-image
-
 using _Image = Union<
     Color,
     LinearGradient,
