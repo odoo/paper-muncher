@@ -290,7 +290,6 @@ struct ValueParser<Rect> {
             return Error::invalidData("unexpected end of input");
 
         if (c->prefix == Token::function("rect(")) {
-            // NOTE: An auto value makes the edge of the box coincide with the corresponding edge of the reference box.
             Rect result{
                 {percent(0), percent(100), percent(100), percent(0)},
                 {percent(0)},
