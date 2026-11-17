@@ -5,7 +5,6 @@ module;
 export module Vaev.Engine:css.values.shapes;
 
 import Karm.Core;
-import Karm.Gfx;
 import Karm.Math;
 
 import :css.lexer;
