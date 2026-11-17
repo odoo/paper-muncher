@@ -379,14 +379,13 @@ export struct FontSizeProperty : Property {
 
 // https://drafts.csswg.org/css-fonts-4/#font-prop
 export struct FontProperty : Property {
-    // Value: [ [ <'font-style'> || <font-variant-css2> || <'font-weight'> || <font-width-css3> ]? <'font-
-    //        size'> [ / <'line-height'> ]? <'font-family'># ] | <system-font-family-name>
-    // FIXME: Implement <font-variant-css2>, <font-width-css3> and <system-font-family-name>.
-    using Value = Css::All<
-        Opt<Css::Any<FontStyleProperty::Value, FontWeightProperty::Value>>,
-        FontSizeProperty::Value,
-        Opt<Css::All<Css::Slash, LineHeightProperty::Value>>,
-        Css::CommaSeparated<Css::FontFamily>>;
+    struct Value {
+        Opt<FontStyleProperty::Value> fontStyle;
+        Opt<FontWeightProperty::Value> fontWeight;
+        FontSizeProperty::Value fontSize;
+        Opt<LineHeightProperty::Value> lineHeight;
+        Vec<Css::FontFamily> fontFamily;
+    };
 
     struct Registration : Property::Registration {
         Registration()
