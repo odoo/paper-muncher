@@ -17,10 +17,45 @@ namespace Vaev::Style {
 // https://drafts.csswg.org/css-masking/#typedef-geometry-box
 export using ShapeBox = Css::ShapeBox;
 export using GeometryBox = Css::GeometryBox;
-export using FillRule = Css::FillRule;
+
+// https://www.w3.org/TR/SVG2/painting.html#FillRuleProperty
+export using FillRule = Gfx::FillRule;
+
+export FillRule toComputed(Css::FillRule const& value) {
+    return value.visit(
+        [](Keywords::Nonzero) {
+            return FillRule::NONZERO;
+        },
+        [](Keywords::Evenodd) {
+            return FillRule::EVENODD;
+        }
+    );
+}
+
+export Css::FillRule toSpecified(FillRule value) {
+    if (value == FillRule::EVENODD)
+        return Keywords::EVENODD;
+    return Keywords::NONZERO;
+}
 
 // https://drafts.csswg.org/css-shapes/#funcdef-basic-shape-path
-export using Path = Css::Path;
+// https://www.w3.org/TR/css-shapes-1/#funcdef-basic-shape-path
+export struct Path {
+    Math::Path path;
+    FillRule fillRule = FillRule::NONZERO;
+
+    void repr(Io::Emit& e) const {
+        e("(path {} {})", fillRule, path);
+    }
+};
+
+export Path toComputed(Css::Path const& value) {
+    return {value.path, toComputed(value.fillRule)};
+}
+
+export Css::Path toSpecified(Path const& value) {
+    return {value.path, toSpecified(value.fillRule)};
+}
 
 export using ShapeRadius = Union<
     PxPercent,
@@ -80,7 +115,7 @@ export Css::Inset toSpecified(Inset const& value) {
 }
 
 export struct Polygon {
-    Gfx::FillRule fillRule = Gfx::FillRule::NONZERO;
+    FillRule fillRule = FillRule::NONZERO;
     Vec<Pair<PxPercent>> points;
 
     void repr(Io::Emit& e) const {
@@ -89,14 +124,14 @@ export struct Polygon {
 };
 
 export Polygon toComputed(Css::Polygon const& value, LengthContext auto const& ctx) {
-    Polygon result{value.fillRule, {}};
+    Polygon result{toComputed(value.fillRule), {}};
     for (auto const& [x, y] : value.points)
         result.points.emplaceBack(toComputed(x, ctx), toComputed(y, ctx));
     return result;
 }
 
 export Css::Polygon toSpecified(Polygon const& value) {
-    Css::Polygon result{value.fillRule, {}};
+    Css::Polygon result{toSpecified(value.fillRule), {}};
     for (auto const& [x, y] : value.points)
         result.points.emplaceBack(toSpecified(x), toSpecified(y));
     return result;
@@ -167,8 +202,8 @@ export BasicShape toComputed(Css::BasicShape const& value, LengthContext auto co
     return {
         value.shape.map([&](Css::BasicShapeFunction const& shape) {
             return shape.visit(
-                [](Path const& path) -> BasicShapeFunction {
-                    return path;
+                [](Css::Path const& path) -> BasicShapeFunction {
+                    return toComputed(path);
                 },
                 [&](auto const& s) -> BasicShapeFunction {
                     return toComputed(s, ctx);
@@ -184,7 +219,7 @@ export Css::BasicShape toSpecified(BasicShape const& value) {
         value.shape.map([](BasicShapeFunction const& shape) {
             return shape.visit(
                 [](Path const& path) -> Css::BasicShapeFunction {
-                    return path;
+                    return toSpecified(path);
                 },
                 [](auto const& s) -> Css::BasicShapeFunction {
                     return toSpecified(s);

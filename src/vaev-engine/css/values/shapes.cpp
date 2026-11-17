@@ -42,17 +42,6 @@ export using FillRule = Union<
     Keywords::Nonzero,
     Keywords::Evenodd>;
 
-Gfx::FillRule fillRuleToGfx(FillRule rule) {
-    return rule.visit(
-        [](Keywords::Nonzero&) {
-            return Gfx::FillRule::NONZERO;
-        },
-        [](Keywords::Evenodd&) {
-            return Gfx::FillRule::EVENODD;
-        }
-    );
-}
-
 export using ShapeRadius = Union<
     LengthPercentage,
     Keywords::ClosestSide,
@@ -194,7 +183,7 @@ struct ValueParser<Inset> {
 // https://www.w3.org/TR/css-shapes-1/#funcdef-basic-shape-path
 export struct Path {
     Math::Path path;
-    Gfx::FillRule fillRule = Gfx::FillRule::NONZERO;
+    FillRule fillRule = Keywords::NONZERO;
 
     void repr(Io::Emit& e) const {
         e("(path {} {})", fillRule, path);
@@ -213,7 +202,7 @@ struct ValueParser<Path> {
 
             bool begin = true;
             if (auto fill = parseValue<FillRule>(scan)) {
-                result.fillRule = fillRuleToGfx(fill.expect());
+                result.fillRule = fill.take();
                 begin = false;
             }
 
@@ -240,7 +229,7 @@ struct ValueParser<Path> {
 
 // https://www.w3.org/TR/css-shapes-1/#funcdef-basic-shape-polygon
 export struct Polygon {
-    Gfx::FillRule fillRule = Gfx::FillRule::NONZERO;
+    FillRule fillRule = Keywords::NONZERO;
     Vec<Pair<LengthPercentage>> points;
 
     void repr(Io::Emit& e) const {
@@ -260,7 +249,7 @@ struct ValueParser<Polygon> {
 
             bool begin = true;
             if (auto fill = parseValue<FillRule>(scan)) {
-                result.fillRule = fillRuleToGfx(fill.expect());
+                result.fillRule = fill.take();
                 begin = false;
             }
 
