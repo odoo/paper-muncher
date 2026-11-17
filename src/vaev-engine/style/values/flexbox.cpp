@@ -12,8 +12,10 @@ using namespace Karm;
 
 namespace Vaev::Style {
 
+// https://drafts.csswg.org/css-flexbox-1/#flex-direction-property
 export using FlexDirection = Css::FlexDirection;
 
+// https://drafts.csswg.org/css-flexbox-1/#flex-wrap-property
 export using FlexWrap = Css::FlexWrap;
 
 export using FlexBasis = Union<

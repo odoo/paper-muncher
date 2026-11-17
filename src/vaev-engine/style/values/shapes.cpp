@@ -62,6 +62,7 @@ export using ShapeRadius = Union<
     Keywords::ClosestSide,
     Keywords::FarthestSide>;
 
+// https://www.w3.org/TR/css-shapes-1/#funcdef-basic-shape-circle
 export struct Circle {
     ShapeRadius radius = Keywords::CLOSEST_SIDE;
     Position position = Position::center();
@@ -79,6 +80,7 @@ export Css::Circle toSpecified(Circle const& value) {
     return {toSpecified(value.radius), toSpecified(value.position)};
 }
 
+// https://www.w3.org/TR/css-shapes-1/#funcdef-basic-shape-ellipse
 export struct Ellipse {
     ShapeRadius rx = Keywords::CLOSEST_SIDE;
     ShapeRadius ry = Keywords::CLOSEST_SIDE;
@@ -97,6 +99,7 @@ export Css::Ellipse toSpecified(Ellipse const& value) {
     return {toSpecified(value.rx), toSpecified(value.ry), toSpecified(value.position)};
 }
 
+// https://www.w3.org/TR/css-shapes-1/#funcdef-basic-shape-inset
 export struct Inset {
     Math::Insets<PxPercent> insets;
     Math::Radii<PxPercent> borderRadius;
@@ -114,6 +117,7 @@ export Css::Inset toSpecified(Inset const& value) {
     return {toSpecified(value.insets), toSpecified(value.borderRadius)};
 }
 
+// https://www.w3.org/TR/css-shapes-1/#funcdef-basic-shape-polygon
 export struct Polygon {
     FillRule fillRule = FillRule::NONZERO;
     Vec<Pair<PxPercent>> points;
@@ -137,6 +141,7 @@ export Css::Polygon toSpecified(Polygon const& value) {
     return result;
 }
 
+// https://www.w3.org/TR/css-shapes-1/#funcdef-basic-shape-rect
 export struct Rect {
     Math::Insets<PxPercent> insets;
     Math::Radii<PxPercent> borderRadius;
@@ -154,6 +159,7 @@ export Css::Rect toSpecified(Rect const& value) {
     return {toSpecified(value.insets), toSpecified(value.borderRadius)};
 }
 
+// https://www.w3.org/TR/css-shapes-1/#funcdef-basic-shape-xywh
 export struct Xywh {
     PxPercent x;
     PxPercent y;
@@ -186,6 +192,7 @@ export Css::Xywh toSpecified(Xywh const& value) {
     };
 }
 
+// https://drafts.csswg.org/css-shapes-1/#typedef-basic-shape
 export using BasicShapeFunction = Union<
     Circle, Ellipse, Inset, Path, Polygon, Rect, Xywh>;
 

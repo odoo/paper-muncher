@@ -93,6 +93,7 @@ constexpr Array<Gfx::Color, static_cast<usize>(Css::SystemColor::_LEN)> _SYSTEM_
 // MARK: Color -----------------------------------------------------------------
 // https://drafts.csswg.org/css-color-4/#resolving-color-values
 
+// https://drafts.csswg.org/css-color-4/#typedef-color
 // currentcolor computes to itself, so it inherits as a keyword,
 // every other color computes to a concrete color.
 export using Color = Union<Gfx::Color, Keywords::CurrentColor>;

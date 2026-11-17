@@ -18,10 +18,13 @@ namespace Vaev::Style {
 // https://svgwg.org/svg2-draft/coords.html#PreserveAspectRatioAttribute
 export using SvgAlignAxis = Css::SvgAlignAxis;
 
+// https://svgwg.org/svg2-draft/coords.html#PreserveAspectRatioAttribute
 export using SvgAlign = Css::SvgAlign;
 
+// https://svgwg.org/svg2-draft/coords.html#PreserveAspectRatioAttribute
 export using SvgMeetOrSlice = Css::SvgMeetOrSlice;
 
+// https://svgwg.org/svg2-draft/painting.html#SpecifyingPaint
 export using SvgPaint = Opt<Color>;
 
 export SvgPaint toComputed(Css::SvgPaint const& value, Gfx::Color currentColor) {

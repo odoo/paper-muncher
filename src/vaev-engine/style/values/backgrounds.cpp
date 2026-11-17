@@ -117,6 +117,7 @@ export Css::BackgroundPosition toSpecified(Position const& value) {
     return {toSpecified(value.x), toSpecified(value.y)};
 }
 
+// https://drafts.csswg.org/css-backgrounds/#typedef-bg-layer
 export struct BackgroundLayer {
     Opt<Css::Image> image;
     Css::BackgroundAttachment attachment = Keywords::FIXED;

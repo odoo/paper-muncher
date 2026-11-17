@@ -11,6 +11,7 @@ namespace Vaev::Style {
 // https://drafts.csswg.org/css-lists/#counter-functions
 export using CounterFunc = Css::CounterFunc;
 
+// https://drafts.csswg.org/css-lists/#funcdef-counters
 export using CountersFunc = Css::CountersFunc;
 
 // https://www.w3.org/TR/css-lists-3/#image-markers

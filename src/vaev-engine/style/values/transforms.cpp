@@ -14,6 +14,7 @@ using namespace Karm;
 
 namespace Vaev::Style {
 
+// https://www.w3.org/TR/css-transforms-1/#funcdef-transform-matrix
 export struct MatrixTransform {
     Array<f64, 6> values;
 
@@ -22,6 +23,7 @@ export struct MatrixTransform {
     }
 };
 
+// https://www.w3.org/TR/css-transforms-1/#funcdef-transform-translate
 export struct TranslateTransform {
     PxPercent x;
     PxPercent y;
@@ -31,6 +33,7 @@ export struct TranslateTransform {
     }
 };
 
+// https://www.w3.org/TR/css-transforms-1/#funcdef-transform-scale
 export struct ScaleTransform {
     f64 x;
     f64 y;
@@ -40,6 +43,7 @@ export struct ScaleTransform {
     }
 };
 
+// https://www.w3.org/TR/css-transforms-1/#funcdef-transform-rotate
 export struct RotateTransform {
     Deg value;
 
@@ -48,6 +52,7 @@ export struct RotateTransform {
     }
 };
 
+// https://www.w3.org/TR/css-transforms-1/#funcdef-transform-skew
 export struct SkewTransform {
     Deg x;
     Deg y;
@@ -57,6 +62,7 @@ export struct SkewTransform {
     }
 };
 
+// https://www.w3.org/TR/css-transforms-1/#funcdef-transform-skewx
 export struct SkewXTransform {
     Deg value;
 
@@ -65,6 +71,7 @@ export struct SkewXTransform {
     }
 };
 
+// https://www.w3.org/TR/css-transforms-1/#funcdef-transform-skewy
 export struct SkewYTransform {
     Deg value;
 

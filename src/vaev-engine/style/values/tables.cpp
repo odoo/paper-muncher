@@ -12,10 +12,13 @@ using namespace Vaev::Literals;
 
 namespace Vaev::Style {
 
+// https://drafts.csswg.org/css-tables-3/#table-layout-property
 export using TableLayout = Css::TableLayout;
 
+// https://drafts.csswg.org/css-tables-3/#caption-side-property
 export using CaptionSide = Css::CaptionSide;
 
+// https://drafts.csswg.org/css-tables-3/#border-collapse-property
 export using BorderCollapse = Css::BorderCollapse;
 
 // https://drafts.csswg.org/css-tables-3/#propdef-border-spacing

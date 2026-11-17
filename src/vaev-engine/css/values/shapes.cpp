@@ -386,7 +386,7 @@ struct ValueParser<Xywh> {
     }
 };
 
-// https://drafts.csswg.org/css-masking/#the-clip-path
+// https://drafts.csswg.org/css-shapes-1/#typedef-basic-shape
 export using BasicShapeFunction = Union<
     Circle, Ellipse, Inset, Path, Polygon, Rect, Xywh>;
 

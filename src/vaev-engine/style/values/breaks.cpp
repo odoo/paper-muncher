@@ -10,8 +10,10 @@ using namespace Karm;
 
 namespace Vaev::Style {
 
+// https://drafts.csswg.org/css-break/#break-between
 export using BreakBetween = Css::BreakBetween;
 
+// https://drafts.csswg.org/css-break/#break-within
 export using BreakInside = Css::BreakInside;
 
 } // namespace Vaev::Style

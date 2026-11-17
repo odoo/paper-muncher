@@ -11,6 +11,7 @@ namespace Vaev::Style {
 // https://www.w3.org/TR/css-gcpm-3/#funcdef-element
 export using ElementFunc = Css::ElementFunc;
 
+// https://drafts.csswg.org/css-gcpm/#running-syntax
 export using RunningPosition = Css::RunningPosition;
 
 } // namespace Vaev::Style

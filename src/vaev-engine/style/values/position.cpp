@@ -10,6 +10,7 @@ using namespace Karm;
 
 namespace Vaev::Style {
 
+// https://drafts.csswg.org/css2/#propdef-z-index
 export using ZIndex = Css::ZIndex;
 
 // https://www.w3.org/TR/CSS22/visuren.html#propdef-position

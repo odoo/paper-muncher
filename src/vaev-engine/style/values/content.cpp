@@ -10,6 +10,7 @@ using namespace Karm;
 
 namespace Vaev::Style {
 
+// https://drafts.csswg.org/css-content-3/#content-property
 export using ContentValue = Css::ContentValue;
 
 } // namespace Vaev::Style

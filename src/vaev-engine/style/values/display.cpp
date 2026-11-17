@@ -11,6 +11,7 @@ namespace Vaev::Style {
 // https://www.w3.org/TR/css-display-3/#the-display-properties
 export using Display = Css::Display;
 
+// https://drafts.csswg.org/css-display/#visibility
 export using Visibility = Css::Visibility;
 
 } // namespace Vaev::Style
