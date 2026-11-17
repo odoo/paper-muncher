@@ -202,8 +202,6 @@ export struct Outline {
 
 export using Paddings = Math::Insets<PxPercent>;
 
-export using BoxInsets = Math::Insets<Union<Keywords::Auto, PxPercent>>;
-
 export struct Sizing {
     Size width = Keywords::AUTO, height = Keywords::AUTO;
     Size minWidth = Keywords::AUTO, minHeight = Keywords::AUTO;

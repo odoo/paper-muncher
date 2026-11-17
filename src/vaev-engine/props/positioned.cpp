@@ -81,7 +81,7 @@ export struct PositionProperty : Property {
 
 // https://www.w3.org/TR/CSS22/visuren.html#propdef-top
 export struct TopProperty : Property {
-    using Value = Union<Keywords::Auto, Css::LengthPercentage>;
+    using Value = Css::BoxInset;
 
     struct Registration : Property::Registration {
         Registration() : Property::Registration(Properties::TOP) {}

@@ -244,7 +244,7 @@ export Output layoutAbsolutePositioned(Input const& input, Box& box, RectAu cont
 }
 
 // https://www.w3.org/TR/css-position-3/#relpos-insets
-Au _negotiateInsetsForRelativePositioning(Union<Keywords::Auto, Style::PxPercent> const& start, Union<Keywords::Auto, Style::PxPercent> const& end, Au relativeTo) {
+Au _negotiateInsetsForRelativePositioning(Style::BoxInset const& start, Style::BoxInset const& end, Au relativeTo) {
     bool startIsAuto = start.is<Keywords::Auto>().has();
     bool endIsAuto = end.is<Keywords::Auto>().has();
 
