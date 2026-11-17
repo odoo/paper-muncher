@@ -95,28 +95,6 @@ export using PureResolution = TypedUnitValue<Some(NumericBaseType::RESOLUTION)>;
 // https://drafts.csswg.org/css-grid/#typedef-flex
 export using PureFlex = TypedUnitValue<Some(NumericBaseType::FLEX)>;
 
-// MARK: Literal values --------------------------------------------------------
-
-export constexpr PureNumber number(f64 value) {
-    return PureNumber{UnitValue{value, UnitValue::Unit::NONE}};
-}
-
-export constexpr PurePercentage percent(f64 value) {
-    return PurePercentage{UnitValue{value, UnitValue::Unit::PERCENT}};
-}
-
-export constexpr PureLength px(f64 value) {
-    return PureLength{UnitValue{value, UnitValue::Unit::PX}};
-}
-
-export constexpr PureAngle deg(f64 value) {
-    return PureAngle{UnitValue{value, UnitValue::Unit::DEG}};
-}
-
-export constexpr PureResolution dppx(f64 value) {
-    return PureResolution{UnitValue{value, UnitValue::Unit::DPPX}};
-}
-
 export template <typename T>
     requires Meta::Derive<T, TypedUnitValue<T::BASE_TYPE, T::ACCEPTS_PERCENTS>>
 struct ValueParser<T> {
@@ -151,10 +129,22 @@ struct TypedCalc {
 
     TypedCalc(Unchecked, Calc calc) : _calc(std::move(calc)) {}
 
-    // A plain value of a type this accepts, e.g. `LengthPercentage start = Css::px(0);`
-    template <Opt<NumericBaseType> T>
-        requires(T == TYPE or (T == NumericBaseType::PERCENT and WITH_PERCENT == AcceptsPercent::YES))
-    TypedCalc(TypedUnitValue<T> value) : _calc(value.unitValue()) {}
+    // NOTE: Declared explicitly, the widening constructors below have the copy constructor's
+    //       signature when the type isn't mixed, which would otherwise suppress it.
+    TypedCalc(TypedCalc const&) = default;
+    TypedCalc(TypedCalc&&) = default;
+    TypedCalc& operator=(TypedCalc const&) = default;
+    TypedCalc& operator=(TypedCalc&&) = default;
+
+    // <length-percentage> = [ <length> | <percentage> ], and likewise for the other mixed types.
+    // https://drafts.csswg.org/css-values-4/#mixed-percentages
+    TypedCalc(TypedCalc<TYPE> const& value)
+        requires(WITH_PERCENT == AcceptsPercent::YES)
+        : _calc(value.calcTree()) {}
+
+    TypedCalc(TypedCalc<Some(NumericBaseType::PERCENT)> const& value)
+        requires(WITH_PERCENT == AcceptsPercent::YES and TYPE != NumericBaseType::PERCENT)
+        : _calc(value.calcTree()) {}
 
     Calc const& calcTree() const {
         return _calc;
@@ -191,6 +181,28 @@ export using LengthPercentage = TypedCalc<Some(NumericBaseType::LENGTH), Accepts
 export using FrequencyPercentage = TypedCalc<Some(NumericBaseType::FREQUENCY), AcceptsPercent::YES>;
 export using AnglePercentage = TypedCalc<Some(NumericBaseType::ANGLE), AcceptsPercent::YES>;
 export using TimePercentage = TypedCalc<Some(NumericBaseType::TIME), AcceptsPercent::YES>;
+
+// MARK: Literal values --------------------------------------------------------
+
+export Number number(f64 value) {
+    return {UNCHECKED, UnitValue{value, UnitValue::Unit::NONE}};
+}
+
+export Percentage percent(f64 value) {
+    return {UNCHECKED, UnitValue{value, UnitValue::Unit::PERCENT}};
+}
+
+export Length px(f64 value) {
+    return {UNCHECKED, UnitValue{value, UnitValue::Unit::PX}};
+}
+
+export Angle deg(f64 value) {
+    return {UNCHECKED, UnitValue{value, UnitValue::Unit::DEG}};
+}
+
+export Resolution dppx(f64 value) {
+    return {UNCHECKED, UnitValue{value, UnitValue::Unit::DPPX}};
+}
 
 template <Opt<NumericBaseType> TYPE, AcceptsPercent WITH_PERCENT>
 struct ValueParser<TypedCalc<TYPE, WITH_PERCENT>> {

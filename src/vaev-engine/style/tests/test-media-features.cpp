@@ -61,6 +61,21 @@ test$("feature-width") {
     return Ok();
 }
 
+// Viewport units resolve against the media being matched, not the first one ever matched.
+test$("feature-viewport-units-follow-media") {
+    auto vw = Css::parseValue<Css::Length>("100vw").take();
+
+    Media portrait = TEST_MEDIA;
+    portrait.width = 1080_px;
+    portrait.height = 1920_px;
+
+    // height <= 100vw holds in landscape, not in portrait.
+    assert$(HeightFeature::max(vw).match(TEST_MEDIA));
+    assert$(not HeightFeature::max(vw).match(portrait));
+
+    return Ok();
+}
+
 test$("feature-height") {
     assert$(HeightFeature::min(Css::px(1000)).match(TEST_MEDIA));
 
@@ -72,11 +87,11 @@ test$("feature-height") {
 }
 
 test$("feature-aspect-ratio") {
-    assert$(AspectRatioFeature::min(16.0 / 9.0).match(TEST_MEDIA));
+    assert$(AspectRatioFeature::min(Css::number(16.0 / 9.0)).match(TEST_MEDIA));
 
-    assert$(AspectRatioFeature::max(16.0 / 9.0).match(TEST_MEDIA));
+    assert$(AspectRatioFeature::max(Css::number(16.0 / 9.0)).match(TEST_MEDIA));
 
-    assert$(AspectRatioFeature::exact(16.0 / 9.0).match(TEST_MEDIA));
+    assert$(AspectRatioFeature::exact(Css::number(16.0 / 9.0)).match(TEST_MEDIA));
 
     return Ok();
 }
@@ -244,11 +259,11 @@ test$("feature-device-height") {
 }
 
 test$("feature-device-aspect-ratio") {
-    assert$(DeviceAspectRatioFeature::min(16.0 / 9.0).match(TEST_MEDIA));
+    assert$(DeviceAspectRatioFeature::min(Css::number(16.0 / 9.0)).match(TEST_MEDIA));
 
-    assert$(DeviceAspectRatioFeature::max(16.0 / 9.0).match(TEST_MEDIA));
+    assert$(DeviceAspectRatioFeature::max(Css::number(16.0 / 9.0)).match(TEST_MEDIA));
 
-    assert$(DeviceAspectRatioFeature::exact(16.0 / 9.0).match(TEST_MEDIA));
+    assert$(DeviceAspectRatioFeature::exact(Css::number(16.0 / 9.0)).match(TEST_MEDIA));
 
     return Ok();
 }

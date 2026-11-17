@@ -410,18 +410,19 @@ export struct Media {
 // https://drafts.csswg.org/mediaqueries-4/#units
 // Relative length units in media queries are based on the initial value,
 // which means that units are never based on results of declarations.
-static ComputationContext const& _initialComputationContext(Media const& media) {
-    static auto memo = [&] {
+static ComputationContext _initialComputationContext(Media const& media) {
+    static auto const initial = [] {
         auto initialStyle = defaultRegistry().initialComputedValues();
         auto cx = ComputationContext{};
         cx.populateUsingRootComputedValues(*initialStyle);
         cx.populateUsingParentComputedValues(*initialStyle);
         cx.populateUsingOwnComputedValues(*initialStyle);
-        cx.populateUsingViewport(Viewport{.small = {media.width, media.height}});
         return cx;
     }();
 
-    return memo;
+    auto cx = initial;
+    cx.populateUsingViewport(Viewport{.small = {media.width, media.height}});
+    return cx;
 }
 
 // MARK: Media Features --------------------------------------------------------
@@ -438,24 +439,17 @@ export enum struct RangePrefix {
 export template <typename T>
 struct RangeBound {
     enum Type : u8 {
-        NONE,
         INCLUSIVE,
         EXCLUSIVE,
 
         _LEN,
     };
 
-    T value = {};
-    Type type = NONE;
+    T value;
+    Type type;
 
     void repr(Io::Emit& e) const {
-        e(
-            "{}{}",
-            value,
-            type == INCLUSIVE   ? "i"
-            : type == EXCLUSIVE ? "e"
-                                : ""
-        );
+        e("{}{}", value, type == INCLUSIVE ? "i"s : "e"s);
     }
 };
 
@@ -464,8 +458,9 @@ struct RangeFeature {
     using Bound = RangeBound<T>;
     using Inner = T;
 
-    Bound lower{};
-    Bound upper{};
+    // NOTE: A feature in a boolean context has neither bound.
+    Opt<Bound> lower;
+    Opt<Bound> upper;
 
     static constexpr Str name() {
         return NAME;
@@ -484,22 +479,21 @@ struct RangeFeature {
 
     bool match(Media const& media) const {
         Actual actual = media.*F;
+
+        // https://drafts.csswg.org/mediaqueries-5/#mq-boolean-context
+        if (not lower and not upper)
+            return actual != Actual{};
+
         bool result = true;
 
-        if (lower.type == Bound::INCLUSIVE) {
-            result &= actual >= _computed(lower.value, media);
-        } else if (lower.type == Bound::EXCLUSIVE) {
-            result &= actual > _computed(lower.value, media);
+        if (lower) {
+            auto bound = _computed(lower->value, media);
+            result &= lower->type == Bound::INCLUSIVE ? actual >= bound : actual > bound;
         }
 
-        if (upper.type == Bound::INCLUSIVE) {
-            result &= actual <= _computed(upper.value, media);
-        } else if (upper.type == Bound::EXCLUSIVE) {
-            result &= actual < _computed(upper.value, media);
-        }
-
-        if (not lower.type and not upper.type) {
-            result = actual != Actual{};
+        if (upper) {
+            auto bound = _computed(upper->value, media);
+            result &= upper->type == Bound::INCLUSIVE ? actual <= bound : actual < bound;
         }
 
         return result;
@@ -507,20 +501,22 @@ struct RangeFeature {
 
     static RangeFeature min(T value) {
         return {
-            .lower = {value, Bound::INCLUSIVE},
+            .lower = Some(Bound{value, Bound::INCLUSIVE}),
+            .upper = NONE,
         };
     }
 
     static RangeFeature max(T value) {
         return {
-            .upper = {value, Bound::INCLUSIVE},
+            .lower = NONE,
+            .upper = Some(Bound{value, Bound::INCLUSIVE}),
         };
     }
 
     static RangeFeature exact(T value) {
         return {
-            .lower = {value, Bound::INCLUSIVE},
-            .upper = {value, Bound::INCLUSIVE},
+            .lower = Some(Bound{value, Bound::INCLUSIVE}),
+            .upper = Some(Bound{value, Bound::INCLUSIVE}),
         };
     }
 
@@ -528,7 +524,13 @@ struct RangeFeature {
         return {};
     }
 
-    static RangeFeature make(RangePrefix prefix, T value = {}) {
+    static RangeFeature make(RangePrefix prefix) {
+        if (prefix != RangePrefix::BOOL)
+            unreachable();
+        return boolean();
+    }
+
+    static RangeFeature make(RangePrefix prefix, T value) {
         switch (prefix) {
         case RangePrefix::MIN:
             return min(value);
@@ -536,8 +538,6 @@ struct RangeFeature {
             return max(value);
         case RangePrefix::EXACT:
             return exact(value);
-        case RangePrefix::BOOL:
-            return boolean();
 
         default:
             unreachable();
@@ -615,15 +615,16 @@ export using TypeFeature = DiscreteFeature<"type", MediaType, &Media::type>;
 
 /// 4.1. Width: the width feature
 /// https://drafts.csswg.org/mediaqueries/#width
-export using WidthFeature = RangeFeature<"width", Css::PureLength, &Media::width>;
+export using WidthFeature = RangeFeature<"width", Css::Length, &Media::width>;
 
 /// 4.2. Height: the height feature
 /// https://drafts.csswg.org/mediaqueries/#height
-export using HeightFeature = RangeFeature<"height", Css::PureLength, &Media::height>;
+export using HeightFeature = RangeFeature<"height", Css::Length, &Media::height>;
 
 /// 4.3. Aspect-Ratio: the aspect-ratio feature
 /// https://drafts.csswg.org/mediaqueries/#aspect-ratio
-export using AspectRatioFeature = RangeFeature<"aspect-ratio", f64, &Media::aspectRatio>;
+// FIXME: <ratio> is <number [0,∞]> [ / <number [0,∞]> ]?, only a single number is parsed.
+export using AspectRatioFeature = RangeFeature<"aspect-ratio", Css::Number, &Media::aspectRatio>;
 
 /// 4.4. Orientation: the orientation feature
 /// https://drafts.csswg.org/mediaqueries/#orientation
@@ -633,7 +634,7 @@ export using OrientationFeature = DiscreteFeature<"orientation", Orientation, &M
 
 /// 5.1. Resolution: the resolution feature
 /// https://drafts.csswg.org/mediaqueries/#resolution
-export using ResolutionFeature = RangeFeature<"resolution", Css::PureResolution, &Media::resolution>;
+export using ResolutionFeature = RangeFeature<"resolution", Css::Resolution, &Media::resolution>;
 
 /// 5.2. Scan: the scan feature
 /// https://drafts.csswg.org/mediaqueries/#orientation
@@ -664,14 +665,17 @@ export using OverflowInlineFeature = DiscreteFeature<"overflow-inline", Overflow
 
 // 6.1. Color: the color feature
 /// https://drafts.csswg.org/mediaqueries/#color
+// FIXME: <integer> accepts math functions, but there is no calc integer type yet.
 export using ColorFeature = RangeFeature<"color", Integer, &Media::color>;
 
 /// 6.2. Color Index: the color-index feature
 /// https://drafts.csswg.org/mediaqueries/#color-index
+// FIXME: <integer> accepts math functions, but there is no calc integer type yet.
 export using ColorIndexFeature = RangeFeature<"color-index", Integer, &Media::colorIndex>;
 
 /// 6.3. Monochrome: the monochrome feature
 /// https://drafts.csswg.org/mediaqueries/#monochrome
+// FIXME: <integer> accepts math functions, but there is no calc integer type yet.
 export using MonochromeFeature = RangeFeature<"monochrome", Integer, &Media::monochrome>;
 
 /// 6.4. Color Gamut: the color-gamut feature
@@ -730,9 +734,10 @@ export using PrefersColorSchemeFeature = DiscreteFeature<"prefers-color-scheme",
 export using PrefersReducedDataFeature = DiscreteFeature<"prefers-reduced-data", ReducedData, &Media::prefersReducedData>;
 
 // Appendix A: Deprecated Media Features
-export using DeviceWidthFeature = RangeFeature<"device-width", Css::PureLength, &Media::deviceWidth>;
-export using DeviceHeightFeature = RangeFeature<"device-height", Css::PureLength, &Media::deviceHeight>;
-export using DeviceAspectRatioFeature = RangeFeature<"device-aspect-ratio", f64, &Media::deviceAspectRatio>;
+export using DeviceWidthFeature = RangeFeature<"device-width", Css::Length, &Media::deviceWidth>;
+export using DeviceHeightFeature = RangeFeature<"device-height", Css::Length, &Media::deviceHeight>;
+// FIXME: <ratio> is <number [0,∞]> [ / <number [0,∞]> ]?, only a single number is parsed.
+export using DeviceAspectRatioFeature = RangeFeature<"device-aspect-ratio", Css::Number, &Media::deviceAspectRatio>;
 
 // MARK: Media Feature ---------------------------------------------------------
 

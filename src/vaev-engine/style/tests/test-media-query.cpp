@@ -96,4 +96,24 @@ test$("media-type-all") {
     return Ok();
 }
 
+static MediaQuery _parse(Str input) {
+    auto lex = Css::Lexer{input};
+    auto diags = Diag::Collector::ignore();
+    auto [val, _] = consumeDeclarationValue(lex, diags);
+    Cursor<Css::Sst> sst{val};
+    return parseMediaQuery(sst);
+}
+
+// https://drafts.csswg.org/css-values-4/#math
+// Math functions can be used wherever a <length>, <resolution> or <number> is valid,
+// including media feature values.
+test$("media-feature-calc") {
+    assert$(_parse("(min-width: calc(1000px + 920px))").match(TEST_MEDIA));
+    assert$(not _parse("(min-width: calc(1000px + 921px))").match(TEST_MEDIA));
+    assert$(_parse("(max-height: calc(100vw - 840px))").match(TEST_MEDIA));
+    assert$(_parse("(min-resolution: calc(0.5dppx * 2))").match(TEST_MEDIA));
+    assert$(_parse("(min-aspect-ratio: calc(16 / 9))").match(TEST_MEDIA));
+    return Ok();
+}
+
 } // namespace Vaev::Style::Tests
