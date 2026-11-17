@@ -6,7 +6,6 @@ import Karm.Gfx;
 import :css.values.fonts;
 import :css.values.keywords;
 import :css.values.numeric;
-import :css.values.syntax;
 import :style.values.numeric;
 
 using namespace Karm;

@@ -13,9 +13,6 @@ import :css.values.primitives;
 
 namespace Vaev::Css {
 
-// https://drafts.csswg.org/css-transforms
-// TODO: Add support for 3d transforms and perspective.
-
 // MARK: Transform Box ---------------------------------------------------------
 // https://drafts.csswg.org/css-transforms/#transform-box
 

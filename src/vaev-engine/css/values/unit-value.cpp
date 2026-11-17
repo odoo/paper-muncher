@@ -16,9 +16,7 @@ using namespace Karm;
 
 namespace Vaev::Css {
 
-// MARK: Numeric Base Type -----------------------------------------------------
 // https://drafts.css-houdini.org/css-typed-om-1/#enumdef-cssnumericbasetype
-
 export enum struct NumericBaseType : u8 {
     LENGTH,
     ANGLE,
@@ -31,9 +29,7 @@ export enum struct NumericBaseType : u8 {
     _LEN,
 };
 
-// MARK: Unit Value ------------------------------------------------------------
 // https://drafts.css-houdini.org/css-typed-om-1/#cssunitvalue
-
 constexpr Opt<NumericBaseType> _baseType(None) {
     return NONE;
 }
@@ -181,8 +177,6 @@ export struct UnitValue {
         e("{}{}", _value, nameOf(_unit));
     }
 };
-
-// MARK: Parsing ---------------------------------------------------------------
 
 export template <>
 struct ValueParser<UnitValue> {

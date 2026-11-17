@@ -13,7 +13,6 @@ using namespace Karm::Literals;
 
 namespace Vaev::Css {
 
-// MARK: PreserveAspectRatio
 // https://svgwg.org/svg2-draft/coords.html#PreserveAspectRatioAttribute
 export struct SvgAlignAxis {
     enum struct _AlignAxis {
@@ -28,6 +27,7 @@ export struct SvgAlignAxis {
     _AlignAxis y;
 };
 
+// https://svgwg.org/svg2-draft/coords.html#PreserveAspectRatioAttribute
 export using SvgAlign = Union<None, SvgAlignAxis>;
 
 // https://svgwg.org/svg2-draft/coords.html#PreserveAspectRatioAttribute
@@ -36,12 +36,9 @@ export enum struct SvgMeetOrSlice {
     SLICE
 };
 
-// MARK: Paint
-// TODO: still not complete type
 // https://svgwg.org/svg2-draft/painting.html#SpecifyingPaint
 export using SvgPaint = Opt<Color>;
 
-// MARK: Paint
 // https://svgwg.org/svg2-draft/painting.html#SpecifyingPaint
 export template <>
 struct ValueParser<SvgPaint> {

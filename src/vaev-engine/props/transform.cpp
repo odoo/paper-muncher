@@ -18,7 +18,7 @@ namespace Vaev::Style {
 // MARK: Transform -------------------------------------------------------------
 // https://drafts.csswg.org/css-transforms/#transform-property
 
-// https://drafts.csswg.org/css-transforms/#transform-origin-property
+// https://drafts.csswg.org/css-transforms/#propdef-transform-origin
 export struct TransformOriginProperty : Property {
     using Value = Css::TransformOrigin;
 
@@ -109,7 +109,7 @@ export struct TransformOriginProperty : Property {
     }
 };
 
-// https://drafts.csswg.org/css-transforms/#transform-box
+// https://drafts.csswg.org/css-transforms/#propdef-transform-box
 export struct TransformBoxProperty : Property {
     using Value = Css::TransformBox;
 

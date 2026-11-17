@@ -15,11 +15,7 @@ using namespace Karm::Literals;
 
 namespace Vaev::Style {
 
-// MARK: Text
-// https://drafts.csswg.org/css-text-4
-
-// https://drafts.csswg.org/css-text/#text-align-property
-
+// https://drafts.csswg.org/css-text-4/#propdef-text-align
 export struct TextAlignProperty : Property {
     using Value = Css::TextAlign;
 
@@ -70,8 +66,7 @@ export struct TextAlignProperty : Property {
     }
 };
 
-// https://drafts.csswg.org/css-text-4/#text-transform-property
-
+// https://drafts.csswg.org/css-text-4/#propdef-text-transform
 export struct TextTransformProperty : Property {
     using Value = Css::TextTransform;
 
@@ -117,8 +112,7 @@ export struct TextTransformProperty : Property {
     }
 };
 
-// https://drafts.csswg.org/css-text/#white-space-property
-
+// https://drafts.csswg.org/css-text-4/#propdef-white-space
 export struct WhiteSpaceProperty : Property {
     using Value = Css::WhiteSpace;
 

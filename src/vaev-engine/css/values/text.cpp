@@ -6,10 +6,9 @@ import :css.values.keywords;
 
 using namespace Karm;
 
-// https://drafts.csswg.org/css-text-3/
-
 namespace Vaev::Css {
 
+// https://drafts.csswg.org/css-text-4/#propdef-text-align
 export using TextAlign = Union<
     Keywords::Start,
     Keywords::End,
@@ -21,11 +20,13 @@ export using TextAlign = Union<
     Keywords::JustifyAll,
     Keywords::VaevBlockCenter>;
 
+// https://drafts.csswg.org/css-text-4/#propdef-text-transform
 export using TextTransform = Union<
     Keywords::None,
     Keywords::Uppercase,
     Keywords::Lowercase>;
 
+// https://drafts.csswg.org/css-text-4/#propdef-white-space
 export using WhiteSpace = Union<
     Keywords::Normal,
     Keywords::Pre,
