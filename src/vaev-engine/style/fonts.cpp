@@ -189,11 +189,6 @@ Res<_OneOrTwo<T>> _parseOneOrTwo(Cursor<Css::Sst>& c) {
     return Ok(_OneOrTwo<T>{start, Some(try$(parseValue<T>(c)))});
 }
 
-// <percentage [0,∞]>: math functions are clamped to the range.
-Percent _nonNegative(Css::Percentage const& value) {
-    return Percent{max(toComputed(value).value(), 0.0)};
-}
-
 // MARK: font-family
 // https://www.w3.org/TR/css-fonts-4/#font-family-desc
 export struct FontFamilyFontDescriptor {
@@ -578,7 +573,7 @@ export struct AscentOverrideFontDescriptor {
         // NOTE: normal is NONE
         f.ascentOverride = value.visit(
             [](Css::Keywords::Normal) -> Opt<Percent> { return NONE; },
-            [](Css::Percentage const& p) -> Opt<Percent> { return Some(_nonNegative(p)); }
+            [](Css::Percentage const& p) -> Opt<Percent> { return Some(toComputed(p)); }
         );
     }
 
@@ -604,7 +599,7 @@ export struct DescentOverrideStyleProp {
         // NOTE: normal is NONE
         f.descentOverride = value.visit(
             [](Css::Keywords::Normal) -> Opt<Percent> { return NONE; },
-            [](Css::Percentage const& p) -> Opt<Percent> { return Some(_nonNegative(p)); }
+            [](Css::Percentage const& p) -> Opt<Percent> { return Some(toComputed(p)); }
         );
     }
 
@@ -630,7 +625,7 @@ export struct LineGapOverrideFontDescriptor {
         // NOTE: normal is NONE
         f.lineGapOverride = value.visit(
             [](Css::Keywords::Normal) -> Opt<Percent> { return NONE; },
-            [](Css::Percentage const& p) -> Opt<Percent> { return Some(_nonNegative(p)); }
+            [](Css::Percentage const& p) -> Opt<Percent> { return Some(toComputed(p)); }
         );
     }
 
@@ -653,7 +648,7 @@ export struct SizeAdjustFontDescriptor {
     static Value initial() { return Css::percent(100); }
 
     void apply(FontFace& f) const {
-        f.sizeAdjust = Some(_nonNegative(value));
+        f.sizeAdjust = Some(toComputed(value));
     }
 
     Res<> parse(Cursor<Css::Sst>& c) {
