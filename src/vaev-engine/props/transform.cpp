@@ -20,20 +20,7 @@ namespace Vaev::Style {
 
 // https://drafts.csswg.org/css-transforms/#transform-origin-property
 export struct TransformOriginProperty : Property {
-    // https://drafts.csswg.org/css-transforms/#transform-origin-property
-    struct Value {
-        using OneValue = Union<Keywords::Left, Keywords::Center, Keywords::Right, Keywords::Top, Keywords::Bottom, Css::LengthPercentage>;
-
-        using XOffset = Union<Keywords::Left, Keywords::Center, Keywords::Right, Css::LengthPercentage>;
-        using YOffset = Union<Keywords::Top, Keywords::Center, Keywords::Bottom, Css::LengthPercentage>;
-
-        XOffset xOffset;
-        YOffset yOffset;
-
-        void repr(Io::Emit& e) const {
-            e("{} {}", xOffset, yOffset);
-        }
-    };
+    using Value = Css::TransformOrigin;
 
     struct Registration : Property::Registration {
         Registration()
@@ -58,79 +45,8 @@ export struct TransformOriginProperty : Property {
             );
         }
 
-        static Res<Value> _twoValues(Cursor<Css::Sst>& c) {
-            auto xoffset = try$(parseValue<Value::XOffset>(c));
-            if (c.ended())
-                return Error::invalidData("unexpected end of input after x-offset");
-
-            auto yoffset = try$(parseValue<Value::YOffset>(c));
-
-            return Ok(Value{
-                .xOffset = std::move(xoffset),
-                .yOffset = std::move(yoffset),
-            });
-        }
-
-        static Res<Value> _parse(Cursor<Css::Sst>& c) {
-            if (c.ended())
-                return Error::invalidData("unexpected end of input");
-
-            {
-                auto rollback = c.rollbackPoint();
-                auto maybeTwoValues = _twoValues(c);
-                if (maybeTwoValues) {
-                    rollback.disarm();
-                    return maybeTwoValues;
-                }
-            }
-
-            auto singleValue = try$(parseValue<Value::OneValue>(c));
-
-            return singleValue.visit(
-                [&](Keywords::Center) -> Res<Value> {
-                    return Ok(Value{
-                        .xOffset = Keywords::CENTER,
-                        .yOffset = Keywords::CENTER,
-                    });
-                },
-
-                [&](Keywords::Left) -> Res<Value> {
-                    return Ok(Value{
-                        .xOffset = Keywords::LEFT,
-                        .yOffset = Keywords::CENTER, // default y-offset
-                    });
-                },
-                [&](Keywords::Right) -> Res<Value> {
-                    return Ok(Value{
-                        .xOffset = Keywords::RIGHT,
-                        .yOffset = Keywords::CENTER, // default y-offset
-                    });
-                },
-
-                [&](Keywords::Top) -> Res<Value> {
-                    return Ok(Value{
-                        .xOffset = Keywords::CENTER, // default x-offset
-                        .yOffset = Keywords::TOP,
-                    });
-                },
-                [&](Keywords::Bottom) -> Res<Value> {
-                    return Ok(Value{
-                        .xOffset = Keywords::CENTER, // default x-offset
-                        .yOffset = Keywords::BOTTOM,
-                    });
-                },
-
-                [&](Css::LengthPercentage value) -> Res<Value> {
-                    return Ok(Value{
-                        .xOffset = std::move(value),
-                        .yOffset = Keywords::CENTER, // default y-offset
-                    });
-                }
-            );
-        }
-
         Res<Rc<Property>> parse(Cursor<Css::Sst>& c) const override {
-            return Ok(makeRc<TransformOriginProperty>(self(), try$(_parse(c))));
+            return Ok(makeRc<TransformOriginProperty>(self(), try$(parseValue<Value>(c))));
         }
     };
 
@@ -195,6 +111,8 @@ export struct TransformOriginProperty : Property {
 
 // https://drafts.csswg.org/css-transforms/#transform-box
 export struct TransformBoxProperty : Property {
+    using Value = Css::TransformBox;
+
     struct Registration : Property::Registration {
         Registration() : Property::Registration(Properties::TRANSFORM_BOX) {}
 
@@ -211,9 +129,9 @@ export struct TransformBoxProperty : Property {
         }
     };
 
-    Css::TransformBox _value;
+    Value _value;
 
-    TransformBoxProperty(Rc<Property::Registration> registration, Css::TransformBox value)
+    TransformBoxProperty(Rc<Property::Registration> registration, Value value)
         : Property(registration), _value(value) {}
 
     void apply([[maybe_unused]] ComputedValues const& parent, ComputedValues& c, [[maybe_unused]] ComputationContext const& cx) const override {

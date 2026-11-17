@@ -21,6 +21,8 @@ namespace Vaev::Style {
 // https://drafts.csswg.org/css-text/#text-align-property
 
 export struct TextAlignProperty : Property {
+    using Value = Css::TextAlign;
+
     struct Registration : Property::Registration {
         Registration()
             : Property::Registration(Properties::TEXT_ALIGN, {INHERITED, BULK_INHERITED}) {}
@@ -47,9 +49,9 @@ export struct TextAlignProperty : Property {
         }
     };
 
-    Css::TextAlign _value;
+    Value _value;
 
-    TextAlignProperty(Rc<Property::Registration> registration, Css::TextAlign value)
+    TextAlignProperty(Rc<Property::Registration> registration, Value value)
         : Property(registration), _value(value) {}
 
     void apply([[maybe_unused]] ComputedValues const& parent, ComputedValues& c, [[maybe_unused]] ComputationContext const& cx) const override {
@@ -71,6 +73,8 @@ export struct TextAlignProperty : Property {
 // https://drafts.csswg.org/css-text-4/#text-transform-property
 
 export struct TextTransformProperty : Property {
+    using Value = Css::TextTransform;
+
     struct Registration : Property::Registration {
         Registration()
             : Property::Registration(Properties::TEXT_TRANSFORM, {INHERITED, BULK_INHERITED}) {}
@@ -95,9 +99,9 @@ export struct TextTransformProperty : Property {
         }
     };
 
-    Css::TextTransform _value;
+    Value _value;
 
-    TextTransformProperty(Rc<Property::Registration> registration, Css::TextTransform value)
+    TextTransformProperty(Rc<Property::Registration> registration, Value value)
         : Property(registration), _value(value) {}
 
     void apply([[maybe_unused]] ComputedValues const& parent, ComputedValues& c, [[maybe_unused]] ComputationContext const& cx) const override {
@@ -116,6 +120,8 @@ export struct TextTransformProperty : Property {
 // https://drafts.csswg.org/css-text/#white-space-property
 
 export struct WhiteSpaceProperty : Property {
+    using Value = Css::WhiteSpace;
+
     struct Registration : Property::Registration {
         Registration()
             : Property::Registration(Properties::WHITE_SPACE, {INHERITED, BULK_INHERITED}) {}
@@ -137,9 +143,9 @@ export struct WhiteSpaceProperty : Property {
         }
     };
 
-    Css::WhiteSpace _value;
+    Value _value;
 
-    WhiteSpaceProperty(Rc<Property::Registration> registration, Css::WhiteSpace value)
+    WhiteSpaceProperty(Rc<Property::Registration> registration, Value value)
         : Property(registration), _value(value) {}
 
     void apply([[maybe_unused]] ComputedValues const& parent, ComputedValues& c, [[maybe_unused]] ComputationContext const& cx) const override {

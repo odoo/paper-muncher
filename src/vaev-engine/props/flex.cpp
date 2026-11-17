@@ -63,6 +63,8 @@ export struct FlexBasisProperty : Property {
 
 // https://www.w3.org/TR/css-flexbox-1/#propdef-flex-direction
 export struct FlexDirectionProperty : Property {
+    using Value = Css::FlexDirection;
+
     struct Registration : Property::Registration {
         Registration() : Property::Registration(Properties::FLEX_DIRECTION) {}
 
@@ -79,9 +81,9 @@ export struct FlexDirectionProperty : Property {
         }
     };
 
-    Css::FlexDirection _value;
+    Value _value;
 
-    FlexDirectionProperty(Rc<Property::Registration> registration, Css::FlexDirection value)
+    FlexDirectionProperty(Rc<Property::Registration> registration, Value value)
         : Property(registration), _value(value) {}
 
     void apply([[maybe_unused]] ComputedValues const& parent, ComputedValues& c, [[maybe_unused]] ComputationContext const& cx) const override {
@@ -99,6 +101,8 @@ export struct FlexDirectionProperty : Property {
 
 // https://www.w3.org/TR/css-flexbox-1/#flex-grow-property
 export struct FlexGrowProperty : Property {
+    using Value = f64;
+
     struct Registration : Property::Registration {
         Registration() : Property::Registration(Properties::FLEX_GROW) {}
 
@@ -115,9 +119,9 @@ export struct FlexGrowProperty : Property {
         }
     };
 
-    f64 _value;
+    Value _value;
 
-    FlexGrowProperty(Rc<Property::Registration> registration, f64 value)
+    FlexGrowProperty(Rc<Property::Registration> registration, Value value)
         : Property(registration), _value(value) {}
 
     void apply([[maybe_unused]] ComputedValues const& parent, ComputedValues& c, [[maybe_unused]] ComputationContext const& cx) const override {
@@ -135,6 +139,8 @@ export struct FlexGrowProperty : Property {
 
 // https://www.w3.org/TR/css-flexbox-1/#propdef-flex-shrink
 export struct FlexShrinkProperty : Property {
+    using Value = f64;
+
     struct Registration : Property::Registration {
         Registration() : Property::Registration(Properties::FLEX_SHRINK) {}
 
@@ -151,9 +157,9 @@ export struct FlexShrinkProperty : Property {
         }
     };
 
-    f64 _value;
+    Value _value;
 
-    FlexShrinkProperty(Rc<Property::Registration> registration, f64 value)
+    FlexShrinkProperty(Rc<Property::Registration> registration, Value value)
         : Property(registration), _value(value) {}
 
     void apply([[maybe_unused]] ComputedValues const& parent, ComputedValues& c, [[maybe_unused]] ComputationContext const& cx) const override {
@@ -171,6 +177,8 @@ export struct FlexShrinkProperty : Property {
 
 // https://www.w3.org/TR/css-flexbox-1/#propdef-flex-wrap
 export struct FlexWrapProperty : Property {
+    using Value = Css::FlexWrap;
+
     struct Registration : Property::Registration {
         Registration() : Property::Registration(Properties::FLEX_WRAP) {}
 
@@ -187,9 +195,9 @@ export struct FlexWrapProperty : Property {
         }
     };
 
-    Css::FlexWrap _value;
+    Value _value;
 
-    FlexWrapProperty(Rc<Property::Registration> registration, Css::FlexWrap value)
+    FlexWrapProperty(Rc<Property::Registration> registration, Value value)
         : Property(registration), _value(value) {}
 
     void apply([[maybe_unused]] ComputedValues const& parent, ComputedValues& c, [[maybe_unused]] ComputationContext const& cx) const override {
@@ -207,6 +215,8 @@ export struct FlexWrapProperty : Property {
 
 // https://www.w3.org/TR/css-flexbox-1/#propdef-flex-flow
 export struct FlexFlowProperty : Property {
+    using Value = Tuple<Css::FlexDirection, Css::FlexWrap>;
+
     struct Registration : Property::Registration {
         Registration()
             : Property::Registration(Properties::FLEX_FLOW, SHORTHAND) {}
@@ -247,9 +257,9 @@ export struct FlexFlowProperty : Property {
         }
     };
 
-    Tuple<Css::FlexDirection, Css::FlexWrap> _value;
+    Value _value;
 
-    FlexFlowProperty(Rc<Property::Registration> registration, Tuple<Css::FlexDirection, Css::FlexWrap> value)
+    FlexFlowProperty(Rc<Property::Registration> registration, Value value)
         : Property(registration), _value(value) {}
 
     Longhands expand(RegisteredPropertySet& registry, ComputedValues const&, ComputedValues&) const override {

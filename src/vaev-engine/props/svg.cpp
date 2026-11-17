@@ -18,6 +18,8 @@ namespace Vaev::Style {
 
 // https://svgwg.org/svg2-draft/geometry.html#XProperty
 export struct SvgXProperty : Property {
+    using Value = Css::LengthPercentage;
+
     struct Registration : Property::Registration {
         Registration()
             : Property::Registration(Properties::X, PRESENTATION_ATTRIBUTE) {}
@@ -39,9 +41,9 @@ export struct SvgXProperty : Property {
         }
     };
 
-    Css::LengthPercentage _value;
+    Value _value;
 
-    SvgXProperty(Rc<Property::Registration> registration, Css::LengthPercentage value)
+    SvgXProperty(Rc<Property::Registration> registration, Value value)
         : Property(registration), _value(value) {}
 
     void apply([[maybe_unused]] ComputedValues const& parent, ComputedValues& c, [[maybe_unused]] ComputationContext const& cx) const override {
@@ -59,6 +61,8 @@ export struct SvgXProperty : Property {
 
 // https://svgwg.org/svg2-draft/geometry.html#YProperty
 export struct SvgYProperty : Property {
+    using Value = Css::LengthPercentage;
+
     struct Registration : Property::Registration {
         Registration()
             : Property::Registration(Properties::Y, PRESENTATION_ATTRIBUTE) {}
@@ -80,9 +84,9 @@ export struct SvgYProperty : Property {
         }
     };
 
-    Css::LengthPercentage _value;
+    Value _value;
 
-    SvgYProperty(Rc<Property::Registration> registration, Css::LengthPercentage value)
+    SvgYProperty(Rc<Property::Registration> registration, Value value)
         : Property(registration), _value(value) {}
 
     void apply([[maybe_unused]] ComputedValues const& parent, ComputedValues& c, [[maybe_unused]] ComputationContext const& cx) const override {
@@ -100,6 +104,8 @@ export struct SvgYProperty : Property {
 
 // https://svgwg.org/svg2-draft/geometry.html#CXProperty
 export struct SvgCXProperty : Property {
+    using Value = Css::LengthPercentage;
+
     struct Registration : Property::Registration {
         Registration()
             : Property::Registration(Properties::CX, PRESENTATION_ATTRIBUTE) {}
@@ -121,9 +127,9 @@ export struct SvgCXProperty : Property {
         }
     };
 
-    Css::LengthPercentage _value;
+    Value _value;
 
-    SvgCXProperty(Rc<Property::Registration> registration, Css::LengthPercentage value)
+    SvgCXProperty(Rc<Property::Registration> registration, Value value)
         : Property(registration), _value(value) {}
 
     void apply([[maybe_unused]] ComputedValues const& parent, ComputedValues& c, [[maybe_unused]] ComputationContext const& cx) const override {
@@ -141,6 +147,8 @@ export struct SvgCXProperty : Property {
 
 // https://svgwg.org/svg2-draft/geometry.html#CYProperty
 export struct SvgCYProperty : Property {
+    using Value = Css::LengthPercentage;
+
     struct Registration : Property::Registration {
         Registration()
             : Property::Registration(Properties::CY, PRESENTATION_ATTRIBUTE) {}
@@ -162,9 +170,9 @@ export struct SvgCYProperty : Property {
         }
     };
 
-    Css::LengthPercentage _value;
+    Value _value;
 
-    SvgCYProperty(Rc<Property::Registration> registration, Css::LengthPercentage value)
+    SvgCYProperty(Rc<Property::Registration> registration, Value value)
         : Property(registration), _value(value) {}
 
     void apply([[maybe_unused]] ComputedValues const& parent, ComputedValues& c, [[maybe_unused]] ComputationContext const& cx) const override {
@@ -182,6 +190,8 @@ export struct SvgCYProperty : Property {
 
 // https://svgwg.org/svg2-draft/geometry.html#RProperty
 export struct SvgRProperty : Property {
+    using Value = Css::LengthPercentage;
+
     struct Registration : Property::Registration {
         Registration()
             : Property::Registration(Properties::R, PRESENTATION_ATTRIBUTE) {}
@@ -203,9 +213,9 @@ export struct SvgRProperty : Property {
         }
     };
 
-    Css::LengthPercentage _value;
+    Value _value;
 
-    SvgRProperty(Rc<Property::Registration> registration, Css::LengthPercentage value)
+    SvgRProperty(Rc<Property::Registration> registration, Value value)
         : Property(registration), _value(value) {}
 
     void apply([[maybe_unused]] ComputedValues const& parent, ComputedValues& c, [[maybe_unused]] ComputationContext const& cx) const override {
@@ -223,6 +233,8 @@ export struct SvgRProperty : Property {
 
 // https://svgwg.org/svg2-draft/painting.html#FillProperty
 export struct SvgFillProperty : Property {
+    using Value = Css::SvgPaint;
+
     struct Registration : Property::Registration {
         Registration()
             : Property::Registration(Properties::FILL, {PRESENTATION_ATTRIBUTE, INHERITED, BULK_INHERITED}) {}
@@ -240,9 +252,9 @@ export struct SvgFillProperty : Property {
         }
     };
 
-    Css::SvgPaint _value;
+    Value _value;
 
-    SvgFillProperty(Rc<Property::Registration> registration, Css::SvgPaint value)
+    SvgFillProperty(Rc<Property::Registration> registration, Value value)
         : Property(registration), _value(value) {}
 
     void apply([[maybe_unused]] ComputedValues const& parent, ComputedValues& c, [[maybe_unused]] ComputationContext const& cx) const override {
@@ -260,6 +272,8 @@ export struct SvgFillProperty : Property {
 
 // https://svgwg.org/svg2-draft/paths.html#TheDProperty
 export struct SvgDProperty : Property {
+    using Value = Union<String, None>;
+
     struct Registration : Property::Registration {
         Registration()
             : Property::Registration(Properties::D, PRESENTATION_ATTRIBUTE) {}
@@ -309,9 +323,9 @@ export struct SvgDProperty : Property {
         }
     };
 
-    Union<String, None> _value;
+    Value _value;
 
-    SvgDProperty(Rc<Property::Registration> registration, Union<String, None> value)
+    SvgDProperty(Rc<Property::Registration> registration, Value value)
         : Property(registration), _value(value) {}
 
     void apply([[maybe_unused]] ComputedValues const& parent, ComputedValues& c, [[maybe_unused]] ComputationContext const& cx) const override {
@@ -340,6 +354,8 @@ export struct SvgDProperty : Property {
 
 // https://svgwg.org/svg2-draft/coords.html#ViewBoxAttribute
 export struct SvgViewBoxProperty : Property {
+    using Value = Opt<Css::SvgViewBox>;
+
     struct Registration : Property::Registration {
         Registration()
             : Property::Registration(Properties::VIEWBOX, PRESENTATION_ATTRIBUTE) {}
@@ -373,9 +389,9 @@ export struct SvgViewBoxProperty : Property {
         }
     };
 
-    Opt<Css::SvgViewBox> _value;
+    Value _value;
 
-    SvgViewBoxProperty(Rc<Property::Registration> registration, Opt<Css::SvgViewBox> value)
+    SvgViewBoxProperty(Rc<Property::Registration> registration, Value value)
         : Property(registration), _value(std::move(value)) {}
 
     void apply([[maybe_unused]] ComputedValues const& parent, ComputedValues& c, [[maybe_unused]] ComputationContext const& cx) const override {
@@ -406,6 +422,8 @@ export struct SvgViewBoxProperty : Property {
 
 // https://svgwg.org/svg2-draft/painting.html#SpecifyingStrokePaint
 export struct SvgStrokeProperty : Property {
+    using Value = Css::SvgPaint;
+
     struct Registration : Property::Registration {
         Registration()
             : Property::Registration(Properties::STROKE, {PRESENTATION_ATTRIBUTE, INHERITED, BULK_INHERITED}) {}
@@ -423,9 +441,9 @@ export struct SvgStrokeProperty : Property {
         }
     };
 
-    Css::SvgPaint _value;
+    Value _value;
 
-    SvgStrokeProperty(Rc<Property::Registration> registration, Css::SvgPaint value)
+    SvgStrokeProperty(Rc<Property::Registration> registration, Value value)
         : Property(registration), _value(value) {}
 
     void apply([[maybe_unused]] ComputedValues const& parent, ComputedValues& c, [[maybe_unused]] ComputationContext const& cx) const override {
@@ -443,6 +461,8 @@ export struct SvgStrokeProperty : Property {
 
 // https://svgwg.org/svg2-draft/painting.html#StrokeOpacity
 export struct SvgStrokeOpacityProperty : Property {
+    using Value = f64;
+
     struct Registration : Property::Registration {
         Registration()
             : Property::Registration(Properties::STROKE_OPACITY, {INHERITED, BULK_INHERITED}) {}
@@ -465,9 +485,9 @@ export struct SvgStrokeOpacityProperty : Property {
         }
     };
 
-    f64 _value;
+    Value _value;
 
-    SvgStrokeOpacityProperty(Rc<Property::Registration> registration, f64 value)
+    SvgStrokeOpacityProperty(Rc<Property::Registration> registration, Value value)
         : Property(registration), _value(value) {}
 
     void apply([[maybe_unused]] ComputedValues const& parent, ComputedValues& c, [[maybe_unused]] ComputationContext const& cx) const override {
@@ -485,6 +505,8 @@ export struct SvgStrokeOpacityProperty : Property {
 
 // https://svgwg.org/svg2-draft/painting.html#FillOpacity
 export struct FillOpacityProperty : Property {
+    using Value = f64;
+
     struct Registration : Property::Registration {
         Registration()
             : Property::Registration(Properties::FILL_OPACITY, {PRESENTATION_ATTRIBUTE, INHERITED, BULK_INHERITED}) {}
@@ -507,9 +529,9 @@ export struct FillOpacityProperty : Property {
         }
     };
 
-    f64 _value;
+    Value _value;
 
-    FillOpacityProperty(Rc<Property::Registration> registration, f64 value)
+    FillOpacityProperty(Rc<Property::Registration> registration, Value value)
         : Property(registration), _value(value) {}
 
     void apply([[maybe_unused]] ComputedValues const& parent, ComputedValues& c, [[maybe_unused]] ComputationContext const& cx) const override {
@@ -527,6 +549,8 @@ export struct FillOpacityProperty : Property {
 
 // https://svgwg.org/svg2-draft/painting.html#StrokeWidth
 export struct StrokeWidthProperty : Property {
+    using Value = Css::LengthPercentage;
+
     struct Registration : Property::Registration {
         Registration()
             : Property::Registration(Properties::STROKE_WIDTH, {PRESENTATION_ATTRIBUTE, INHERITED, BULK_INHERITED}) {}
@@ -547,9 +571,9 @@ export struct StrokeWidthProperty : Property {
         }
     };
 
-    Css::LengthPercentage _value;
+    Value _value;
 
-    StrokeWidthProperty(Rc<Property::Registration> registration, Css::LengthPercentage value)
+    StrokeWidthProperty(Rc<Property::Registration> registration, Value value)
         : Property(registration), _value(value) {}
 
     void apply([[maybe_unused]] ComputedValues const& parent, ComputedValues& c, [[maybe_unused]] ComputationContext const& cx) const override {

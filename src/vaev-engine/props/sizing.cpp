@@ -20,6 +20,8 @@ namespace Vaev::Style {
 
 // https://www.w3.org/TR/css-sizing-3/#box-sizing
 export struct BoxSizingProperty : Property {
+    using Value = Css::BoxSizing;
+
     struct Registration : Property::Registration {
         Registration() : Property::Registration(Properties::BOX_SIZING) {}
 
@@ -36,9 +38,9 @@ export struct BoxSizingProperty : Property {
         }
     };
 
-    Css::BoxSizing _value;
+    Value _value;
 
-    BoxSizingProperty(Rc<Property::Registration> registration, Css::BoxSizing value)
+    BoxSizingProperty(Rc<Property::Registration> registration, Value value)
         : Property(registration), _value(value) {}
 
     void apply([[maybe_unused]] ComputedValues const& parent, ComputedValues& c, [[maybe_unused]] ComputationContext const& cx) const override {

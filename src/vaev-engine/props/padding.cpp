@@ -19,6 +19,8 @@ namespace Vaev::Style {
 // https://www.w3.org/TR/css-box-3/#propdef-padding
 
 export struct PaddingTopProperty : Property {
+    using Value = Css::LengthPercentage;
+
     struct Registration : Property::Registration {
         Registration() : Property::Registration(Properties::PADDING_TOP) {}
 
@@ -35,9 +37,9 @@ export struct PaddingTopProperty : Property {
         }
     };
 
-    Css::LengthPercentage _value;
+    Value _value;
 
-    PaddingTopProperty(Rc<Property::Registration> registration, Css::LengthPercentage value)
+    PaddingTopProperty(Rc<Property::Registration> registration, Value value)
         : Property(registration), _value(value) {}
 
     void apply([[maybe_unused]] ComputedValues const& parent, ComputedValues& c, [[maybe_unused]] ComputationContext const& cx) const override {
@@ -54,6 +56,8 @@ export struct PaddingTopProperty : Property {
 };
 
 export struct PaddingRightProperty : Property {
+    using Value = Css::LengthPercentage;
+
     struct Registration : Property::Registration {
         Registration() : Property::Registration(Properties::PADDING_RIGHT) {}
 
@@ -70,9 +74,9 @@ export struct PaddingRightProperty : Property {
         }
     };
 
-    Css::LengthPercentage _value;
+    Value _value;
 
-    PaddingRightProperty(Rc<Property::Registration> registration, Css::LengthPercentage value)
+    PaddingRightProperty(Rc<Property::Registration> registration, Value value)
         : Property(registration), _value(value) {}
 
     void apply([[maybe_unused]] ComputedValues const& parent, ComputedValues& c, [[maybe_unused]] ComputationContext const& cx) const override {
@@ -89,6 +93,8 @@ export struct PaddingRightProperty : Property {
 };
 
 export struct PaddingBottomProperty : Property {
+    using Value = Css::LengthPercentage;
+
     struct Registration : Property::Registration {
         Registration() : Property::Registration(Properties::PADDING_BOTTOM) {}
 
@@ -105,9 +111,9 @@ export struct PaddingBottomProperty : Property {
         }
     };
 
-    Css::LengthPercentage _value;
+    Value _value;
 
-    PaddingBottomProperty(Rc<Property::Registration> registration, Css::LengthPercentage value)
+    PaddingBottomProperty(Rc<Property::Registration> registration, Value value)
         : Property(registration), _value(value) {}
 
     void apply([[maybe_unused]] ComputedValues const& parent, ComputedValues& c, [[maybe_unused]] ComputationContext const& cx) const override {
@@ -124,6 +130,8 @@ export struct PaddingBottomProperty : Property {
 };
 
 export struct PaddingLeftProperty : Property {
+    using Value = Css::LengthPercentage;
+
     struct Registration : Property::Registration {
         Registration() : Property::Registration(Properties::PADDING_LEFT) {}
 
@@ -140,9 +148,9 @@ export struct PaddingLeftProperty : Property {
         }
     };
 
-    Css::LengthPercentage _value;
+    Value _value;
 
-    PaddingLeftProperty(Rc<Property::Registration> registration, Css::LengthPercentage value)
+    PaddingLeftProperty(Rc<Property::Registration> registration, Value value)
         : Property(registration), _value(value) {}
 
     void apply([[maybe_unused]] ComputedValues const& parent, ComputedValues& c, [[maybe_unused]] ComputationContext const& cx) const override {
@@ -159,6 +167,8 @@ export struct PaddingLeftProperty : Property {
 };
 
 export struct PaddingInlineStartProperty : Property {
+    using Value = Css::LengthPercentage;
+
     struct Registration : Property::Registration {
         Registration() : Property::Registration(Properties::PADDING_INLINE_START, LOGICAL) {}
 
@@ -175,9 +185,9 @@ export struct PaddingInlineStartProperty : Property {
         }
     };
 
-    Css::LengthPercentage _value;
+    Value _value;
 
-    PaddingInlineStartProperty(Rc<Property::Registration> registration, Css::LengthPercentage value)
+    PaddingInlineStartProperty(Rc<Property::Registration> registration, Value value)
         : Property(registration), _value(value) {}
 
     // FIXME: Take writing mode into account
@@ -197,6 +207,8 @@ export struct PaddingInlineStartProperty : Property {
 };
 
 export struct PaddingInlineEndProperty : Property {
+    using Value = Css::LengthPercentage;
+
     struct Registration : Property::Registration {
         Registration() : Property::Registration(Properties::PADDING_INLINE_END, LOGICAL) {}
 
@@ -213,9 +225,9 @@ export struct PaddingInlineEndProperty : Property {
         }
     };
 
-    Css::LengthPercentage _value;
+    Value _value;
 
-    PaddingInlineEndProperty(Rc<Property::Registration> registration, Css::LengthPercentage value)
+    PaddingInlineEndProperty(Rc<Property::Registration> registration, Value value)
         : Property(registration), _value(value) {}
 
     // FIXME: Take writing mode into account

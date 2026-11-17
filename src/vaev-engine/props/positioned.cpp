@@ -20,6 +20,8 @@ namespace Vaev::Style {
 
 // https://www.w3.org/TR/CSS22/visuren.html#positioning-scheme
 export struct PositionProperty : Property {
+    using Value = Css::PositionScheme;
+
     struct Registration : Property::Registration {
         Registration() : Property::Registration(Properties::POSITION) {}
 
@@ -63,9 +65,9 @@ export struct PositionProperty : Property {
         }
     };
 
-    Css::PositionScheme _value;
+    Value _value;
 
-    PositionProperty(Rc<Property::Registration> registration, Css::PositionScheme value)
+    PositionProperty(Rc<Property::Registration> registration, Value value)
         : Property(registration), _value(value) {}
 
     void apply([[maybe_unused]] ComputedValues const& parent, ComputedValues& c, [[maybe_unused]] ComputationContext const& cx) const override {
@@ -231,6 +233,8 @@ export struct LeftProperty : Property {
 
 // https://drafts.csswg.org/css2/#z-index
 export struct ZIndexProperty : Property {
+    using Value = Css::ZIndex;
+
     struct Registration : Property::Registration {
         Registration() : Property::Registration(Properties::Z_INDEX) {}
 
@@ -247,9 +251,9 @@ export struct ZIndexProperty : Property {
         }
     };
 
-    Css::ZIndex _value;
+    Value _value;
 
-    ZIndexProperty(Rc<Property::Registration> registration, Css::ZIndex value)
+    ZIndexProperty(Rc<Property::Registration> registration, Value value)
         : Property(registration), _value(value) {}
 
     void apply([[maybe_unused]] ComputedValues const& parent, ComputedValues& c, [[maybe_unused]] ComputationContext const& cx) const override {

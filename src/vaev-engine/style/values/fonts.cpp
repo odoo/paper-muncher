@@ -41,25 +41,28 @@ export f64 toComputed(Css::FontWeightAbsolute const& weight) {
 export struct FontStyle {
     Gfx::FontStyle val = Gfx::FontStyle::NORMAL;
     // The lack of an <angle> represents 14deg.
-    Deg obliqueAngle = Deg{14};
-
-    bool operator==(FontStyle const&) const = default;
-
-    void repr(Io::Emit& e) const {
-        e("{}", val);
-        if (val == Gfx::FontStyle::OBLIQUE)
-            e(" {}", obliqueAngle);
-    }
+    Deg obliqueAngle = Deg{14.0};
 };
 
-// NOTE: 14deg is what an omitted angle represents, so it isn't written back.
-export Union<
-    Css::Keywords::Normal,
-    Css::Keywords::Italic,
-    Css::Keywords::Left,
-    Css::Keywords::Right,
-    Css::All<Css::Keywords::Oblique, Opt<Css::Angle>>>
-toSpecified(FontStyle const& value) {
+export FontStyle toComputed(Css::FontStyle const& value) {
+    return value.visit(
+            [](Opt<Css::Angle> const& oblique) {
+                auto style = FontStyle{.val = Gfx::FontStyle::OBLIQUE};
+                if (auto const& [angle] = oblique)
+                    style.obliqueAngle = toComputed(angle);
+                return style;
+            },
+            [](Css::Keywords::Italic) {
+                return FontStyle{.val = Gfx::FontStyle::ITALIC};
+            },
+            // TODO: left and right
+            [](auto) {
+                return FontStyle{.val = Gfx::FontStyle::NORMAL};
+            }
+        );
+}
+
+Css::FontStyle toSpecified(FontStyle const& value) {
     if (value.val == Gfx::FontStyle::ITALIC)
         return Css::Keywords::ITALIC;
     if (value.val != Gfx::FontStyle::OBLIQUE)
@@ -68,7 +71,7 @@ toSpecified(FontStyle const& value) {
     Opt<Css::Angle> angle = NONE;
     if (value.obliqueAngle != Deg{14})
         angle = Some(toSpecified(value.obliqueAngle));
-    return Css::All{Css::Keywords::OBLIQUE, angle};
+    return angle;
 }
 
 // https://drafts.csswg.org/css-fonts-4/#font-width-prop
@@ -103,8 +106,7 @@ export Percent toComputed(Css::FontWidth const& value) {
             return Percent{200};
         },
         [](Css::Percentage const& percentage) {
-            // <percentage [0,∞]>: math functions are clamped to the range.
-            return Percent{max(toComputed(percentage).value(), 0.0)};
+            return toComputed(percentage);
         }
     );
 }

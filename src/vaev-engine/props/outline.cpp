@@ -19,6 +19,8 @@ namespace Vaev::Style {
 
 // https://drafts.csswg.org/css-ui/#outline-width
 export struct OutlineWidthProperty : Property {
+    using Value = Css::LineWidth;
+
     struct Registration : Property::Registration {
         Registration() : Property::Registration(Properties::OUTLINE_WIDTH) {}
 
@@ -35,9 +37,9 @@ export struct OutlineWidthProperty : Property {
         }
     };
 
-    Css::LineWidth _value;
+    Value _value;
 
-    OutlineWidthProperty(Rc<Property::Registration> registration, Css::LineWidth value)
+    OutlineWidthProperty(Rc<Property::Registration> registration, Value value)
         : Property(registration), _value(value) {}
 
     void apply([[maybe_unused]] ComputedValues const& parent, ComputedValues& c, [[maybe_unused]] ComputationContext const& cx) const override {
@@ -149,6 +151,8 @@ export struct OutlineColorProperty : Property {
 
 // https://drafts.csswg.org/css-ui/#outline-offset
 export struct OutlineOffsetProperty : Property {
+    using Value = Css::Length;
+
     struct Registration : Property::Registration {
         Registration() : Property::Registration(Properties::OUTLINE_OFFSET) {}
 
@@ -165,9 +169,9 @@ export struct OutlineOffsetProperty : Property {
         }
     };
 
-    Css::Length _value;
+    Value _value;
 
-    OutlineOffsetProperty(Rc<Property::Registration> registration, Css::Length value)
+    OutlineOffsetProperty(Rc<Property::Registration> registration, Value value)
         : Property(registration), _value(value) {}
 
     void apply([[maybe_unused]] ComputedValues const& parent, ComputedValues& c, [[maybe_unused]] ComputationContext const& cx) const override {

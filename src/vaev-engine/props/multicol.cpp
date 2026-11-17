@@ -139,6 +139,8 @@ export struct ColumnHeightProperty : Property {
 
 // https://drafts.csswg.org/css-multicol-2/#cc
 export struct ColumnCountProperty : Property {
+    using Value = Css::ColumnCount;
+
     struct Registration : Property::Registration {
         Registration()
             : Property::Registration(Properties::COLUMN_COUNT) {}
@@ -156,9 +158,9 @@ export struct ColumnCountProperty : Property {
         }
     };
 
-    Css::ColumnCount _value;
+    Value _value;
 
-    ColumnCountProperty(Rc<Property::Registration> registration, Css::ColumnCount value)
+    ColumnCountProperty(Rc<Property::Registration> registration, Value value)
         : Property(registration), _value(value) {}
 
     void apply([[maybe_unused]] ComputedValues const& parent, ComputedValues& c, [[maybe_unused]] ComputationContext const& cx) const override {
@@ -176,6 +178,8 @@ export struct ColumnCountProperty : Property {
 
 // https://drafts.csswg.org/css-multicol-2/#columns
 export struct ColumnsProperty : Property {
+    using Value = Tuple<ColumnWidthProperty::Value, Css::ColumnCount, ColumnHeightProperty::Value>;
+
     struct Registration : Property::Registration {
         Registration()
             : Property::Registration(Properties::COLUMNS, SHORTHAND) {}
@@ -253,9 +257,9 @@ export struct ColumnsProperty : Property {
         }
     };
 
-    Tuple<ColumnWidthProperty::Value, Css::ColumnCount, ColumnHeightProperty::Value> _value;
+    Value _value;
 
-    ColumnsProperty(Rc<Property::Registration> registration, Tuple<ColumnWidthProperty::Value, Css::ColumnCount, ColumnHeightProperty::Value> value)
+    ColumnsProperty(Rc<Property::Registration> registration, Value value)
         : Property(registration), _value(value) {}
 
     // FIXME: This property should also resets the column-wrap property to its initial value.

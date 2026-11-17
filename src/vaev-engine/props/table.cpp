@@ -17,6 +17,8 @@ namespace Vaev::Style {
 
 // https://www.w3.org/TR/CSS21/tables.html#propdef-table-layout
 export struct TableLayoutProperty : Property {
+    using Value = Css::TableLayout;
+
     struct Registration : Property::Registration {
         Registration() : Property::Registration(Properties::TABLE_LAYOUT) {}
 
@@ -33,9 +35,9 @@ export struct TableLayoutProperty : Property {
         }
     };
 
-    Css::TableLayout _value;
+    Value _value;
 
-    TableLayoutProperty(Rc<Property::Registration> registration, Css::TableLayout value)
+    TableLayoutProperty(Rc<Property::Registration> registration, Value value)
         : Property(registration), _value(value) {}
 
     void apply([[maybe_unused]] ComputedValues const& parent, ComputedValues& c, [[maybe_unused]] ComputationContext const& cx) const override {
@@ -53,6 +55,8 @@ export struct TableLayoutProperty : Property {
 
 // https://www.w3.org/TR/CSS21/tables.html#caption-position
 export struct CaptionSideProperty : Property {
+    using Value = Css::CaptionSide;
+
     struct Registration : Property::Registration {
         Registration()
             : Property::Registration(Properties::CAPTION_SIDE, {INHERITED, BULK_INHERITED}) {}
@@ -70,9 +74,9 @@ export struct CaptionSideProperty : Property {
         }
     };
 
-    Css::CaptionSide _value;
+    Value _value;
 
-    CaptionSideProperty(Rc<Property::Registration> registration, Css::CaptionSide value)
+    CaptionSideProperty(Rc<Property::Registration> registration, Value value)
         : Property(registration), _value(value) {}
 
     void apply([[maybe_unused]] ComputedValues const& parent, ComputedValues& c, [[maybe_unused]] ComputationContext const& cx) const override {

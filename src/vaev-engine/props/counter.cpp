@@ -61,6 +61,8 @@ static Vec<T> _parseItems(Cursor<Css::Sst>& c, Res<T> (*parseItem)(Cursor<Css::S
 
 // https://drafts.csswg.org/css-lists/#counter-reset
 export struct CounterResetProperty : Property {
+    using Value = Vec<Css::CounterReset>;
+
     struct Registration : Property::Registration {
         Registration() : Property::Registration(Properties::COUNTER_RESET) {}
 
@@ -80,9 +82,9 @@ export struct CounterResetProperty : Property {
         }
     };
 
-    Vec<Css::CounterReset> _value;
+    Value _value;
 
-    CounterResetProperty(Rc<Property::Registration> registration, Vec<Css::CounterReset> value)
+    CounterResetProperty(Rc<Property::Registration> registration, Value value)
         : Property(registration), _value(value) {}
 
     void apply(ComputedValues const&, ComputedValues& c, [[maybe_unused]] ComputationContext const& cx) const override {
@@ -96,6 +98,8 @@ export struct CounterResetProperty : Property {
 
 // https://drafts.csswg.org/css-lists/#propdef-counter-increment
 export struct CounterIncrementProperty : Property {
+    using Value = Vec<Css::CounterIncrement>;
+
     struct Registration : Property::Registration {
         Registration() : Property::Registration(Properties::COUNTER_INCREMENT) {}
 
@@ -115,9 +119,9 @@ export struct CounterIncrementProperty : Property {
         }
     };
 
-    Vec<Css::CounterIncrement> _value;
+    Value _value;
 
-    CounterIncrementProperty(Rc<Property::Registration> registration, Vec<Css::CounterIncrement> value)
+    CounterIncrementProperty(Rc<Property::Registration> registration, Value value)
         : Property(registration), _value(value) {}
 
     void apply(ComputedValues const&, ComputedValues& c, [[maybe_unused]] ComputationContext const& cx) const override {
@@ -131,6 +135,8 @@ export struct CounterIncrementProperty : Property {
 
 // https://drafts.csswg.org/css-lists/#propdef-counter-set
 export struct CounterSetProperty : Property {
+    using Value = Vec<Css::CounterIncrement>;
+
     struct Registration : Property::Registration {
         Registration() : Property::Registration(Properties::COUNTER_SET) {}
 
@@ -150,9 +156,9 @@ export struct CounterSetProperty : Property {
         }
     };
 
-    Vec<Css::CounterIncrement> _value;
+    Value _value;
 
-    CounterSetProperty(Rc<Property::Registration> registration, Vec<Css::CounterIncrement> value)
+    CounterSetProperty(Rc<Property::Registration> registration, Value value)
         : Property(registration), _value(value) {}
 
     void apply(ComputedValues const&, ComputedValues& c, [[maybe_unused]] ComputationContext const& cx) const override {

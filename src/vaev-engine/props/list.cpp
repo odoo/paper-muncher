@@ -14,6 +14,8 @@ namespace Vaev::Style {
 
 // https://www.w3.org/TR/css-lists-3/#propdef-list-style-image
 struct ListStyleImageProperty : Property {
+    using Value = Css::ListImage;
+
     struct Registration : Property::Registration {
         Registration()
             : Property::Registration(Properties::LIST_STYLE_IMAGE, {INHERITED, BULK_INHERITED}) {}
@@ -36,9 +38,9 @@ struct ListStyleImageProperty : Property {
         }
     };
 
-    Css::ListImage _value;
+    Value _value;
 
-    ListStyleImageProperty(Rc<Property::Registration> registration, Css::ListImage value)
+    ListStyleImageProperty(Rc<Property::Registration> registration, Value value)
         : Property(registration), _value(value) {}
 
     void apply(ComputedValues const&, ComputedValues& c, [[maybe_unused]] ComputationContext const& cx) const override {
@@ -52,6 +54,8 @@ struct ListStyleImageProperty : Property {
 
 // https://www.w3.org/TR/css-lists-3/#propdef-list-style-type
 struct ListStyleTypeProperty : Property {
+    using Value = Css::ListType;
+
     struct Registration : Property::Registration {
         Registration()
             : Property::Registration(Properties::LIST_STYLE_TYPE, {INHERITED, BULK_INHERITED}) {}
@@ -74,9 +78,9 @@ struct ListStyleTypeProperty : Property {
         }
     };
 
-    Css::ListType _value;
+    Value _value;
 
-    ListStyleTypeProperty(Rc<Property::Registration> registration, Css::ListType value)
+    ListStyleTypeProperty(Rc<Property::Registration> registration, Value value)
         : Property(registration), _value(value) {}
 
     void apply(ComputedValues const&, ComputedValues& c, [[maybe_unused]] ComputationContext const& cx) const override {
@@ -90,6 +94,8 @@ struct ListStyleTypeProperty : Property {
 
 // https://www.w3.org/TR/css-lists-3/#list-style-position-property
 struct ListStylePositionProperty : Property {
+    using Value = Css::ListPosition;
+
     struct Registration : Property::Registration {
         Registration()
             : Property::Registration(Properties::LIST_STYLE_POSITION, {INHERITED, BULK_INHERITED}) {}
@@ -112,9 +118,9 @@ struct ListStylePositionProperty : Property {
         }
     };
 
-    Css::ListPosition _value;
+    Value _value;
 
-    ListStylePositionProperty(Rc<Property::Registration> registration, Css::ListPosition value)
+    ListStylePositionProperty(Rc<Property::Registration> registration, Value value)
         : Property(registration), _value(value) {}
 
     void apply(ComputedValues const&, ComputedValues& c, [[maybe_unused]] ComputationContext const& cx) const override {
@@ -214,6 +220,8 @@ struct ListStyleProperty : Property {
 
 // https://www.w3.org/TR/css-lists-3/#propdef-marker-side
 struct MarkerSideProperty : Property {
+    using Value = Css::MarkerSide;
+
     struct Registration : Property::Registration {
         Registration()
             : Property::Registration(Properties::MARKER_SIDE, {INHERITED, BULK_INHERITED}) {}
@@ -236,9 +244,9 @@ struct MarkerSideProperty : Property {
         }
     };
 
-    Css::MarkerSide _value;
+    Value _value;
 
-    MarkerSideProperty(Rc<Property::Registration> registration, Css::MarkerSide value)
+    MarkerSideProperty(Rc<Property::Registration> registration, Value value)
         : Property(registration), _value(value) {}
 
     void apply(ComputedValues const&, ComputedValues& c, [[maybe_unused]] ComputationContext const& cx) const override {

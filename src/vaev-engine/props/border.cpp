@@ -19,6 +19,8 @@ namespace Vaev::Style {
 
 // https://drafts.csswg.org/css-backgrounds/#propdef-border-top-color
 export struct BorderTopColorProperty : Property {
+    using Value = Css::Color;
+
     struct Registration : Property::Registration {
         Registration() : Property::Registration(Properties::BORDER_TOP_COLOR) {}
 
@@ -35,9 +37,9 @@ export struct BorderTopColorProperty : Property {
         }
     };
 
-    Css::Color _value;
+    Value _value;
 
-    BorderTopColorProperty(Rc<Property::Registration> registration, Css::Color value)
+    BorderTopColorProperty(Rc<Property::Registration> registration, Value value)
         : Property(registration), _value(value) {}
 
     void apply([[maybe_unused]] ComputedValues const& parent, ComputedValues& c, [[maybe_unused]] ComputationContext const& cx) const override {
@@ -55,6 +57,8 @@ export struct BorderTopColorProperty : Property {
 
 // https://drafts.csswg.org/css-backgrounds/#propdef-border-right-color
 export struct BorderRightColorProperty : Property {
+    using Value = Css::Color;
+
     struct Registration : Property::Registration {
         Registration() : Property::Registration(Properties::BORDER_RIGHT_COLOR) {}
 
@@ -71,9 +75,9 @@ export struct BorderRightColorProperty : Property {
         }
     };
 
-    Css::Color _value;
+    Value _value;
 
-    BorderRightColorProperty(Rc<Property::Registration> registration, Css::Color value)
+    BorderRightColorProperty(Rc<Property::Registration> registration, Value value)
         : Property(registration), _value(value) {}
 
     void apply([[maybe_unused]] ComputedValues const& parent, ComputedValues& c, [[maybe_unused]] ComputationContext const& cx) const override {
@@ -91,6 +95,8 @@ export struct BorderRightColorProperty : Property {
 
 // https://drafts.csswg.org/css-backgrounds/#propdef-border-bottom-color
 export struct BorderBottomColorProperty : Property {
+    using Value = Css::Color;
+
     struct Registration : Property::Registration {
         Registration() : Property::Registration(Properties::BORDER_BOTTOM_COLOR) {}
 
@@ -107,9 +113,9 @@ export struct BorderBottomColorProperty : Property {
         }
     };
 
-    Css::Color _value;
+    Value _value;
 
-    BorderBottomColorProperty(Rc<Property::Registration> registration, Css::Color value)
+    BorderBottomColorProperty(Rc<Property::Registration> registration, Value value)
         : Property(registration), _value(value) {}
 
     void apply([[maybe_unused]] ComputedValues const& parent, ComputedValues& c, [[maybe_unused]] ComputationContext const& cx) const override {
@@ -127,6 +133,8 @@ export struct BorderBottomColorProperty : Property {
 
 // https://drafts.csswg.org/css-backgrounds/#propdef-border-left-color
 export struct BorderLeftColorProperty : Property {
+    using Value = Css::Color;
+
     struct Registration : Property::Registration {
         Registration() : Property::Registration(Properties::BORDER_LEFT_COLOR) {}
 
@@ -143,9 +151,9 @@ export struct BorderLeftColorProperty : Property {
         }
     };
 
-    Css::Color _value;
+    Value _value;
 
-    BorderLeftColorProperty(Rc<Property::Registration> registration, Css::Color value)
+    BorderLeftColorProperty(Rc<Property::Registration> registration, Value value)
         : Property(registration), _value(value) {}
 
     void apply([[maybe_unused]] ComputedValues const& parent, ComputedValues& c, [[maybe_unused]] ComputationContext const& cx) const override {
@@ -162,6 +170,8 @@ export struct BorderLeftColorProperty : Property {
 };
 
 export struct BorderColorProperty : Property {
+    using Value = Math::Insets<Css::Color>;
+
     struct Registration : Property::Registration {
         Registration()
             : Property::Registration(Properties::BORDER_COLOR, SHORTHAND) {}
@@ -187,9 +197,9 @@ export struct BorderColorProperty : Property {
         }
     };
 
-    Math::Insets<Css::Color> _value;
+    Value _value;
 
-    BorderColorProperty(Rc<Property::Registration> registration, Math::Insets<Css::Color> value)
+    BorderColorProperty(Rc<Property::Registration> registration, Value value)
         : Property(registration), _value(value) {}
 
     Longhands expand(RegisteredPropertySet& registry, ComputedValues const&, ComputedValues&) const override {
@@ -208,6 +218,8 @@ export struct BorderColorProperty : Property {
 
 // https://drafts.csswg.org/css-backgrounds/#propdef-border-left-style
 export struct BorderLeftStyleProperty : Property {
+    using Value = Gfx::BorderStyle;
+
     struct Registration : Property::Registration {
         Registration() : Property::Registration(Properties::BORDER_LEFT_STYLE) {}
 
@@ -224,9 +236,9 @@ export struct BorderLeftStyleProperty : Property {
         }
     };
 
-    Gfx::BorderStyle _value;
+    Value _value;
 
-    BorderLeftStyleProperty(Rc<Property::Registration> registration, Gfx::BorderStyle value)
+    BorderLeftStyleProperty(Rc<Property::Registration> registration, Value value)
         : Property(registration), _value(value) {}
 
     void apply([[maybe_unused]] ComputedValues const& parent, ComputedValues& c, [[maybe_unused]] ComputationContext const& cx) const override {
@@ -244,6 +256,8 @@ export struct BorderLeftStyleProperty : Property {
 
 // https://drafts.csswg.org/css-backgrounds/#propdef-border-top-style
 export struct BorderTopStyleProperty : Property {
+    using Value = Gfx::BorderStyle;
+
     struct Registration : Property::Registration {
         Registration() : Property::Registration(Properties::BORDER_TOP_STYLE) {}
 
@@ -260,9 +274,9 @@ export struct BorderTopStyleProperty : Property {
         }
     };
 
-    Gfx::BorderStyle _value;
+    Value _value;
 
-    BorderTopStyleProperty(Rc<Property::Registration> registration, Gfx::BorderStyle value)
+    BorderTopStyleProperty(Rc<Property::Registration> registration, Value value)
         : Property(registration), _value(value) {}
 
     void apply([[maybe_unused]] ComputedValues const& parent, ComputedValues& c, [[maybe_unused]] ComputationContext const& cx) const override {
@@ -280,6 +294,8 @@ export struct BorderTopStyleProperty : Property {
 
 // https://drafts.csswg.org/css-backgrounds/#propdef-border-right-style
 export struct BorderRightStyleProperty : Property {
+    using Value = Gfx::BorderStyle;
+
     struct Registration : Property::Registration {
         Registration() : Property::Registration(Properties::BORDER_RIGHT_STYLE) {}
 
@@ -296,9 +312,9 @@ export struct BorderRightStyleProperty : Property {
         }
     };
 
-    Gfx::BorderStyle _value;
+    Value _value;
 
-    BorderRightStyleProperty(Rc<Property::Registration> registration, Gfx::BorderStyle value)
+    BorderRightStyleProperty(Rc<Property::Registration> registration, Value value)
         : Property(registration), _value(value) {}
 
     void apply([[maybe_unused]] ComputedValues const& parent, ComputedValues& c, [[maybe_unused]] ComputationContext const& cx) const override {
@@ -316,6 +332,8 @@ export struct BorderRightStyleProperty : Property {
 
 // https://drafts.csswg.org/css-backgrounds/#propdef-border-bottom-style
 export struct BorderBottomStyleProperty : Property {
+    using Value = Gfx::BorderStyle;
+
     struct Registration : Property::Registration {
         Registration() : Property::Registration(Properties::BORDER_BOTTOM_STYLE) {}
 
@@ -332,9 +350,9 @@ export struct BorderBottomStyleProperty : Property {
         }
     };
 
-    Gfx::BorderStyle _value;
+    Value _value;
 
-    BorderBottomStyleProperty(Rc<Property::Registration> registration, Gfx::BorderStyle value)
+    BorderBottomStyleProperty(Rc<Property::Registration> registration, Value value)
         : Property(registration), _value(value) {}
 
     void apply([[maybe_unused]] ComputedValues const& parent, ComputedValues& c, [[maybe_unused]] ComputationContext const& cx) const override {
@@ -352,6 +370,8 @@ export struct BorderBottomStyleProperty : Property {
 
 // https://drafts.csswg.org/css-backgrounds/#propdef-border-style
 export struct BorderStyleProperty : Property {
+    using Value = Math::Insets<Gfx::BorderStyle>;
+
     struct Registration : Property::Registration {
         Registration()
             : Property::Registration(Properties::BORDER_STYLE, SHORTHAND) {}
@@ -377,9 +397,9 @@ export struct BorderStyleProperty : Property {
         }
     };
 
-    Math::Insets<Gfx::BorderStyle> _value;
+    Value _value;
 
-    BorderStyleProperty(Rc<Property::Registration> registration, Math::Insets<Gfx::BorderStyle> value)
+    BorderStyleProperty(Rc<Property::Registration> registration, Value value)
         : Property(registration), _value(value) {}
 
     Longhands expand(RegisteredPropertySet& registry, ComputedValues const&, ComputedValues&) const override {
@@ -397,6 +417,8 @@ export struct BorderStyleProperty : Property {
 };
 
 export struct BorderTopWidthProperty : Property {
+    using Value = Css::LineWidth;
+
     struct Registration : Property::Registration {
         Registration() : Property::Registration(Properties::BORDER_TOP_WIDTH) {}
 
@@ -413,9 +435,9 @@ export struct BorderTopWidthProperty : Property {
         }
     };
 
-    Css::LineWidth _value;
+    Value _value;
 
-    BorderTopWidthProperty(Rc<Property::Registration> registration, Css::LineWidth value)
+    BorderTopWidthProperty(Rc<Property::Registration> registration, Value value)
         : Property(registration), _value(value) {}
 
     void apply([[maybe_unused]] ComputedValues const& parent, ComputedValues& c, [[maybe_unused]] ComputationContext const& cx) const override {
@@ -433,6 +455,8 @@ export struct BorderTopWidthProperty : Property {
 
 // https://www.w3.org/TR/css-backgrounds-3/#border-width
 export struct BorderRightWidthProperty : Property {
+    using Value = Css::LineWidth;
+
     struct Registration : Property::Registration {
         Registration() : Property::Registration(Properties::BORDER_RIGHT_WIDTH) {}
 
@@ -449,9 +473,9 @@ export struct BorderRightWidthProperty : Property {
         }
     };
 
-    Css::LineWidth _value;
+    Value _value;
 
-    BorderRightWidthProperty(Rc<Property::Registration> registration, Css::LineWidth value)
+    BorderRightWidthProperty(Rc<Property::Registration> registration, Value value)
         : Property(registration), _value(value) {}
 
     void apply([[maybe_unused]] ComputedValues const& parent, ComputedValues& c, [[maybe_unused]] ComputationContext const& cx) const override {
@@ -469,6 +493,8 @@ export struct BorderRightWidthProperty : Property {
 
 // https://www.w3.org/TR/css-backgrounds-3/#border-width
 export struct BorderBottomWidthProperty : Property {
+    using Value = Css::LineWidth;
+
     struct Registration : Property::Registration {
         Registration() : Property::Registration(Properties::BORDER_BOTTOM_WIDTH) {}
 
@@ -485,9 +511,9 @@ export struct BorderBottomWidthProperty : Property {
         }
     };
 
-    Css::LineWidth _value;
+    Value _value;
 
-    BorderBottomWidthProperty(Rc<Property::Registration> registration, Css::LineWidth value)
+    BorderBottomWidthProperty(Rc<Property::Registration> registration, Value value)
         : Property(registration), _value(value) {}
 
     void apply([[maybe_unused]] ComputedValues const& parent, ComputedValues& c, [[maybe_unused]] ComputationContext const& cx) const override {
@@ -505,6 +531,8 @@ export struct BorderBottomWidthProperty : Property {
 
 // https://www.w3.org/TR/css-backgrounds-3/#border-width
 export struct BorderLeftWidthProperty : Property {
+    using Value = Css::LineWidth;
+
     struct Registration : Property::Registration {
         Registration() : Property::Registration(Properties::BORDER_LEFT_WIDTH) {}
 
@@ -521,9 +549,9 @@ export struct BorderLeftWidthProperty : Property {
         }
     };
 
-    Css::LineWidth _value;
+    Value _value;
 
-    BorderLeftWidthProperty(Rc<Property::Registration> registration, Css::LineWidth value)
+    BorderLeftWidthProperty(Rc<Property::Registration> registration, Value value)
         : Property(registration), _value(value) {}
 
     void apply([[maybe_unused]] ComputedValues const& parent, ComputedValues& c, [[maybe_unused]] ComputationContext const& cx) const override {
@@ -541,6 +569,8 @@ export struct BorderLeftWidthProperty : Property {
 
 // https://drafts.csswg.org/css-backgrounds/#the-border-radius
 export struct BorderTopRightRadiusProperty : Property {
+    using Value = Array<Css::LengthPercentage, 2>;
+
     struct Registration : Property::Registration {
         Registration() : Property::Registration(Properties::BORDER_TOP_RIGHT_RADIUS) {}
 
@@ -561,9 +591,9 @@ export struct BorderTopRightRadiusProperty : Property {
         }
     };
 
-    Array<Css::LengthPercentage, 2> _value;
+    Value _value;
 
-    BorderTopRightRadiusProperty(Rc<Property::Registration> registration, Array<Css::LengthPercentage, 2> value)
+    BorderTopRightRadiusProperty(Rc<Property::Registration> registration, Value value)
         : Property(registration), _value(value) {}
 
     void apply([[maybe_unused]] ComputedValues const& parent, ComputedValues& c, [[maybe_unused]] ComputationContext const& cx) const override {
@@ -582,6 +612,8 @@ export struct BorderTopRightRadiusProperty : Property {
 
 // https://drafts.csswg.org/css-backgrounds/#the-border-radius
 export struct BorderTopLeftRadiusProperty : Property {
+    using Value = Array<Css::LengthPercentage, 2>;
+
     struct Registration : Property::Registration {
         Registration() : Property::Registration(Properties::BORDER_TOP_LEFT_RADIUS) {}
 
@@ -605,9 +637,9 @@ export struct BorderTopLeftRadiusProperty : Property {
         }
     };
 
-    Array<Css::LengthPercentage, 2> _value;
+    Value _value;
 
-    BorderTopLeftRadiusProperty(Rc<Property::Registration> registration, Array<Css::LengthPercentage, 2> value)
+    BorderTopLeftRadiusProperty(Rc<Property::Registration> registration, Value value)
         : Property(registration), _value(value) {}
 
     void apply([[maybe_unused]] ComputedValues const& parent, ComputedValues& c, [[maybe_unused]] ComputationContext const& cx) const override {
@@ -626,6 +658,8 @@ export struct BorderTopLeftRadiusProperty : Property {
 
 // https://drafts.csswg.org/css-backgrounds/#the-border-radius
 export struct BorderBottomRightRadiusProperty : Property {
+    using Value = Array<Css::LengthPercentage, 2>;
+
     struct Registration : Property::Registration {
         Registration() : Property::Registration(Properties::BORDER_BOTTOM_RIGHT_RADIUS) {}
 
@@ -646,9 +680,9 @@ export struct BorderBottomRightRadiusProperty : Property {
         }
     };
 
-    Array<Css::LengthPercentage, 2> _value;
+    Value _value;
 
-    BorderBottomRightRadiusProperty(Rc<Property::Registration> registration, Array<Css::LengthPercentage, 2> value)
+    BorderBottomRightRadiusProperty(Rc<Property::Registration> registration, Value value)
         : Property(registration), _value(value) {}
 
     void apply([[maybe_unused]] ComputedValues const& parent, ComputedValues& c, [[maybe_unused]] ComputationContext const& cx) const override {
@@ -667,6 +701,8 @@ export struct BorderBottomRightRadiusProperty : Property {
 
 // https://drafts.csswg.org/css-backgrounds/#the-border-radius
 export struct BorderBottomLeftRadiusProperty : Property {
+    using Value = Array<Css::LengthPercentage, 2>;
+
     struct Registration : Property::Registration {
         Registration() : Property::Registration(Properties::BORDER_BOTTOM_LEFT_RADIUS) {}
 
@@ -690,9 +726,9 @@ export struct BorderBottomLeftRadiusProperty : Property {
         }
     };
 
-    Array<Css::LengthPercentage, 2> _value;
+    Value _value;
 
-    BorderBottomLeftRadiusProperty(Rc<Property::Registration> registration, Array<Css::LengthPercentage, 2> value)
+    BorderBottomLeftRadiusProperty(Rc<Property::Registration> registration, Value value)
         : Property(registration), _value(value) {}
 
     void apply([[maybe_unused]] ComputedValues const& parent, ComputedValues& c, [[maybe_unused]] ComputationContext const& cx) const override {
@@ -711,6 +747,8 @@ export struct BorderBottomLeftRadiusProperty : Property {
 
 // https://drafts.csswg.org/css-backgrounds/#the-border-radius
 export struct BorderRadiusProperty : Property {
+    using Value = Math::Radii<Css::LengthPercentage>;
+
     struct Registration : Property::Registration {
         Registration() : Property::Registration(Properties::BORDER_RADIUS, SHORTHAND) {}
 
@@ -728,9 +766,9 @@ export struct BorderRadiusProperty : Property {
         }
     };
 
-    Math::Radii<Css::LengthPercentage> _value;
+    Value _value;
 
-    BorderRadiusProperty(Rc<Property::Registration> registration, Math::Radii<Css::LengthPercentage> value)
+    BorderRadiusProperty(Rc<Property::Registration> registration, Value value)
         : Property(registration), _value(value) {}
 
     void apply([[maybe_unused]] ComputedValues const& parent, ComputedValues& c, [[maybe_unused]] ComputationContext const& cx) const override {
@@ -964,6 +1002,8 @@ export struct BorderProperty : Property {
 
 // https://www.w3.org/TR/css-backgrounds-3/#border-width
 export struct BorderWidthProperty : Property {
+    using Value = Math::Insets<Css::LineWidth>;
+
     struct Registration : Property::Registration {
         Registration()
             : Property::Registration(Properties::BORDER_WIDTH, SHORTHAND) {}
@@ -989,9 +1029,9 @@ export struct BorderWidthProperty : Property {
         }
     };
 
-    Math::Insets<Css::LineWidth> _value;
+    Value _value;
 
-    BorderWidthProperty(Rc<Property::Registration> registration, Math::Insets<Css::LineWidth> value)
+    BorderWidthProperty(Rc<Property::Registration> registration, Value value)
         : Property(registration), _value(value) {}
 
     Longhands expand(RegisteredPropertySet& registry, ComputedValues const&, ComputedValues&) const override {
@@ -1012,6 +1052,8 @@ export struct BorderWidthProperty : Property {
 
 // https://www.w3.org/TR/CSS22/tables.html#propdef-border-collapse
 export struct BorderCollapseProperty : Property {
+    using Value = Css::BorderCollapse;
+
     struct Registration : Property::Registration {
         Registration()
             : Property::Registration(Properties::BORDER_COLLAPSE, {INHERITED, BULK_INHERITED}) {}
@@ -1029,9 +1071,9 @@ export struct BorderCollapseProperty : Property {
         }
     };
 
-    Css::BorderCollapse _value;
+    Value _value;
 
-    BorderCollapseProperty(Rc<Property::Registration> registration, Css::BorderCollapse value)
+    BorderCollapseProperty(Rc<Property::Registration> registration, Value value)
         : Property(registration), _value(value) {}
 
     void apply([[maybe_unused]] ComputedValues const& parent, ComputedValues& c, [[maybe_unused]] ComputationContext const& cx) const override {

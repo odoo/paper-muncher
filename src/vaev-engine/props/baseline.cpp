@@ -72,6 +72,8 @@ export struct LineHeightProperty : Property {
 
 // https://www.w3.org/TR/css-inline-3/#dominant-baseline-property
 export struct DominantBaselineProperty : Property {
+    using Value = Css::DominantBaseline;
+
     struct Registration : Property::Registration {
         Registration() : Property::Registration(Properties::DOMINANT_BASELINE) {}
 
@@ -88,9 +90,9 @@ export struct DominantBaselineProperty : Property {
         }
     };
 
-    Css::DominantBaseline _value;
+    Value _value;
 
-    DominantBaselineProperty(Rc<Property::Registration> registration, Css::DominantBaseline value)
+    DominantBaselineProperty(Rc<Property::Registration> registration, Value value)
         : Property(registration), _value(value) {}
 
     void apply([[maybe_unused]] ComputedValues const& parent, ComputedValues& c, [[maybe_unused]] ComputationContext const& cx) const override {
@@ -108,6 +110,8 @@ export struct DominantBaselineProperty : Property {
 
 // https://www.w3.org/TR/css-inline-3/#baseline-source
 export struct BaselineSourceProperty : Property {
+    using Value = Css::BaselineSource;
+
     struct Registration : Property::Registration {
         Registration() : Property::Registration(Properties::BASELINE_SOURCE) {}
 
@@ -124,9 +128,9 @@ export struct BaselineSourceProperty : Property {
         }
     };
 
-    Css::BaselineSource _value;
+    Value _value;
 
-    BaselineSourceProperty(Rc<Property::Registration> registration, Css::BaselineSource value)
+    BaselineSourceProperty(Rc<Property::Registration> registration, Value value)
         : Property(registration), _value(value) {}
 
     void apply([[maybe_unused]] ComputedValues const& parent, ComputedValues& c, [[maybe_unused]] ComputationContext const& cx) const override {
@@ -144,6 +148,8 @@ export struct BaselineSourceProperty : Property {
 
 // https://www.w3.org/TR/css-inline-3/#alignment-baseline-property
 export struct AlignmentBaselineProperty : Property {
+    using Value = Css::AlignmentBaseline;
+
     struct Registration : Property::Registration {
         Registration() : Property::Registration(Properties::ALIGNMENT_BASELINE) {}
 
@@ -160,9 +166,9 @@ export struct AlignmentBaselineProperty : Property {
         }
     };
 
-    Css::AlignmentBaseline _value;
+    Value _value;
 
-    AlignmentBaselineProperty(Rc<Property::Registration> registration, Css::AlignmentBaseline value)
+    AlignmentBaselineProperty(Rc<Property::Registration> registration, Value value)
         : Property(registration), _value(value) {}
 
     void apply([[maybe_unused]] ComputedValues const& parent, ComputedValues& c, [[maybe_unused]] ComputationContext const& cx) const override {

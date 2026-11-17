@@ -17,6 +17,8 @@ namespace Vaev::Style {
 
 // https://drafts.csswg.org/css-display/#visibility
 export struct VisibilityProperty : Property {
+    using Value = Css::Visibility;
+
     struct Registration : Property::Registration {
         Registration() : Property::Registration(Properties::VISIBILITY) {}
 
@@ -33,9 +35,9 @@ export struct VisibilityProperty : Property {
         }
     };
 
-    Css::Visibility _value;
+    Value _value;
 
-    VisibilityProperty(Rc<Property::Registration> registration, Css::Visibility value)
+    VisibilityProperty(Rc<Property::Registration> registration, Value value)
         : Property(registration), _value(value) {}
 
     void apply([[maybe_unused]] ComputedValues const& parent, ComputedValues& c, [[maybe_unused]] ComputationContext const& cx) const override {
@@ -78,7 +80,7 @@ export struct OpacityProperty : Property {
         }
     };
 
-    Union<Css::Number, Css::Percentage> _value;
+    Value _value;
 
     OpacityProperty(Rc<Property::Registration> registration, Value const& value)
         : Property(registration), _value(std::move(value)) {}

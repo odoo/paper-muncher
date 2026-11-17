@@ -20,6 +20,8 @@ namespace Vaev::Style {
 
 // https://drafts.csswg.org/css-align-3/#propdef-align-content
 export struct AlignContentProperty : Property {
+    using Value = Css::Align;
+
     struct Registration : Property::Registration {
         Registration() : Property::Registration(Properties::ALIGN_CONTENT) {}
 
@@ -36,9 +38,9 @@ export struct AlignContentProperty : Property {
         }
     };
 
-    Css::Align _value;
+    Value _value;
 
-    AlignContentProperty(Rc<Property::Registration> registration, Css::Align value)
+    AlignContentProperty(Rc<Property::Registration> registration, Value value)
         : Property(registration), _value(value) {}
 
     void apply([[maybe_unused]] ComputedValues const& parent, ComputedValues& c, [[maybe_unused]] ComputationContext const& cx) const override {
@@ -56,6 +58,8 @@ export struct AlignContentProperty : Property {
 
 // https://drafts.csswg.org/css-align-3/#propdef-justify-content
 export struct JustifyContentProperty : Property {
+    using Value = Css::Align;
+
     struct Registration : Property::Registration {
         Registration() : Property::Registration(Properties::JUSTIFY_CONTENT) {}
 
@@ -72,9 +76,9 @@ export struct JustifyContentProperty : Property {
         }
     };
 
-    Css::Align _value;
+    Value _value;
 
-    JustifyContentProperty(Rc<Property::Registration> registration, Css::Align value)
+    JustifyContentProperty(Rc<Property::Registration> registration, Value value)
         : Property(registration), _value(value) {}
 
     void apply([[maybe_unused]] ComputedValues const& parent, ComputedValues& c, [[maybe_unused]] ComputationContext const& cx) const override {
@@ -92,6 +96,8 @@ export struct JustifyContentProperty : Property {
 
 // https://drafts.csswg.org/css-align-3/#propdef-justify-self
 export struct JustifySelfProperty : Property {
+    using Value = Css::Align;
+
     struct Registration : Property::Registration {
         Registration() : Property::Registration(Properties::JUSTIFY_SELF) {}
 
@@ -108,9 +114,9 @@ export struct JustifySelfProperty : Property {
         }
     };
 
-    Css::Align _value;
+    Value _value;
 
-    JustifySelfProperty(Rc<Property::Registration> registration, Css::Align value)
+    JustifySelfProperty(Rc<Property::Registration> registration, Value value)
         : Property(registration), _value(value) {}
 
     void apply([[maybe_unused]] ComputedValues const& parent, ComputedValues& c, [[maybe_unused]] ComputationContext const& cx) const override {
@@ -128,6 +134,8 @@ export struct JustifySelfProperty : Property {
 
 // https://drafts.csswg.org/css-align-3/#propdef-align-self
 export struct AlignSelfProperty : Property {
+    using Value = Css::Align;
+
     struct Registration : Property::Registration {
         Registration() : Property::Registration(Properties::ALIGN_SELF) {}
 
@@ -144,9 +152,9 @@ export struct AlignSelfProperty : Property {
         }
     };
 
-    Css::Align _value;
+    Value _value;
 
-    AlignSelfProperty(Rc<Property::Registration> registration, Css::Align value)
+    AlignSelfProperty(Rc<Property::Registration> registration, Value value)
         : Property(registration), _value(value) {}
 
     void apply([[maybe_unused]] ComputedValues const& parent, ComputedValues& c, [[maybe_unused]] ComputationContext const& cx) const override {
@@ -164,6 +172,8 @@ export struct AlignSelfProperty : Property {
 
 // https://drafts.csswg.org/css-align-3/#propdef-justify-items
 export struct JustifyItemsProperty : Property {
+    using Value = Css::Align;
+
     struct Registration : Property::Registration {
         Registration() : Property::Registration(Properties::JUSTIFY_ITEMS) {}
 
@@ -180,9 +190,9 @@ export struct JustifyItemsProperty : Property {
         }
     };
 
-    Css::Align _value;
+    Value _value;
 
-    JustifyItemsProperty(Rc<Property::Registration> registration, Css::Align value)
+    JustifyItemsProperty(Rc<Property::Registration> registration, Value value)
         : Property(registration), _value(value) {}
 
     void apply([[maybe_unused]] ComputedValues const& parent, ComputedValues& c, [[maybe_unused]] ComputationContext const& cx) const override {
@@ -200,6 +210,8 @@ export struct JustifyItemsProperty : Property {
 
 // https://drafts.csswg.org/css-align-3/#propdef-align-items
 export struct AlignItemsProperty : Property {
+    using Value = Css::Align;
+
     struct Registration : Property::Registration {
         Registration() : Property::Registration(Properties::ALIGN_ITEMS) {}
 
@@ -216,9 +228,9 @@ export struct AlignItemsProperty : Property {
         }
     };
 
-    Css::Align _value;
+    Value _value;
 
-    AlignItemsProperty(Rc<Property::Registration> registration, Css::Align value)
+    AlignItemsProperty(Rc<Property::Registration> registration, Value value)
         : Property(registration), _value(value) {}
 
     void apply([[maybe_unused]] ComputedValues const& parent, ComputedValues& c, [[maybe_unused]] ComputationContext const& cx) const override {

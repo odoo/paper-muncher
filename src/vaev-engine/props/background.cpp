@@ -23,6 +23,8 @@ namespace Vaev::Style {
 
 // https://www.w3.org/TR/CSS22/colors.html#propdef-background-color
 export struct BackgroundColorProperty : Property {
+    using Value = Css::Color;
+
     struct Registration : Property::Registration {
         Registration() : Property::Registration(Properties::BACKGROUND_COLOR) {}
 
@@ -39,9 +41,9 @@ export struct BackgroundColorProperty : Property {
         }
     };
 
-    Css::Color _value;
+    Value _value;
 
-    BackgroundColorProperty(Rc<Property::Registration> registration, Css::Color value)
+    BackgroundColorProperty(Rc<Property::Registration> registration, Value value)
         : Property(registration), _value(value) {}
 
     void apply([[maybe_unused]] ComputedValues const& parent, ComputedValues& c, [[maybe_unused]] ComputationContext const& cx) const override {
@@ -61,6 +63,8 @@ export struct BackgroundColorProperty : Property {
 
 // https://www.w3.org/TR/CSS22/colors.html#propdef-background-attachment
 export struct BackgroundAttachmentProperty : Property {
+    using Value = Vec<Css::BackgroundAttachment>;
+
     struct Registration : Property::Registration {
         Registration() : Property::Registration(Properties::BACKGROUND_ATTACHMENT) {}
 
@@ -87,9 +91,9 @@ export struct BackgroundAttachmentProperty : Property {
         }
     };
 
-    Vec<Css::BackgroundAttachment> _value;
+    Value _value;
 
-    BackgroundAttachmentProperty(Rc<Property::Registration> registration, Vec<Css::BackgroundAttachment> value)
+    BackgroundAttachmentProperty(Rc<Property::Registration> registration, Value value)
         : Property(registration), _value(std::move(value)) {}
 
     void apply([[maybe_unused]] ComputedValues const& parent, ComputedValues& c, [[maybe_unused]] ComputationContext const& cx) const override {
@@ -106,6 +110,8 @@ export struct BackgroundAttachmentProperty : Property {
 
 // https://www.w3.org/TR/CSS22/colors.html#propdef-background-image
 export struct BackgroundImageProperty : Property {
+    using Value = Vec<Css::Image>;
+
     struct Registration : Property::Registration {
         Registration() : Property::Registration(Properties::BACKGROUND_IMAGE) {}
 
@@ -128,9 +134,9 @@ export struct BackgroundImageProperty : Property {
         }
     };
 
-    Vec<Css::Image> _value;
+    Value _value;
 
-    BackgroundImageProperty(Rc<Property::Registration> registration, Vec<Css::Image> value)
+    BackgroundImageProperty(Rc<Property::Registration> registration, Value value)
         : Property(registration), _value(std::move(value)) {}
 
     void apply(ComputedValues const&, ComputedValues&, [[maybe_unused]] ComputationContext const& cx) const override {
@@ -144,6 +150,8 @@ export struct BackgroundImageProperty : Property {
 
 // https://www.w3.org/TR/CSS22/colors.html#propdef-background-position
 export struct BackgroundPositionProperty : Property {
+    using Value = Vec<Css::BackgroundPosition>;
+
     struct Registration : Property::Registration {
         Registration() : Property::Registration(Properties::BACKGROUND_POSITION) {}
 
@@ -166,9 +174,9 @@ export struct BackgroundPositionProperty : Property {
         }
     };
 
-    Vec<Css::BackgroundPosition> _value;
+    Value _value;
 
-    BackgroundPositionProperty(Rc<Property::Registration> registration, Vec<Css::BackgroundPosition> value)
+    BackgroundPositionProperty(Rc<Property::Registration> registration, Value value)
         : Property(registration), _value(std::move(value)) {}
 
     void apply(ComputedValues const&, ComputedValues&, [[maybe_unused]] ComputationContext const& cx) const override {
@@ -182,6 +190,8 @@ export struct BackgroundPositionProperty : Property {
 
 // https://www.w3.org/TR/CSS22/colors.html#propdef-background-repeat
 export struct BackgroundRepeatProperty : Property {
+    using Value = Vec<Css::BackgroundRepeat>;
+
     struct Registration : Property::Registration {
         Registration() : Property::Registration(Properties::BACKGROUND_REPEAT) {}
 
@@ -205,9 +215,9 @@ export struct BackgroundRepeatProperty : Property {
         }
     };
 
-    Vec<Css::BackgroundRepeat> _value;
+    Value _value;
 
-    BackgroundRepeatProperty(Rc<Property::Registration> registration, Vec<Css::BackgroundRepeat> value)
+    BackgroundRepeatProperty(Rc<Property::Registration> registration, Value value)
         : Property(registration),
           _value(std::move(value)) {}
 
@@ -279,6 +289,8 @@ export struct BackgroundProperty : Property {
 
 // https://drafts.csswg.org/css-color/#the-color-property
 export struct ColorProperty : Property {
+    using Value = Css::Color;
+
     struct Registration : Property::Registration {
         Registration()
             : Property::Registration(Properties::COLOR, INHERITED) {}
@@ -300,9 +312,9 @@ export struct ColorProperty : Property {
         }
     };
 
-    Css::Color _value;
+    Value _value;
 
-    ColorProperty(Rc<Property::Registration> registration, Css::Color value)
+    ColorProperty(Rc<Property::Registration> registration, Value value)
         : Property(registration), _value(value) {}
 
     void apply(ComputedValues const& parent, ComputedValues& c, [[maybe_unused]] ComputationContext const& cx) const override {

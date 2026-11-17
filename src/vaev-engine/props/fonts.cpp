@@ -20,6 +20,8 @@ namespace Vaev::Style {
 
 // https://www.w3.org/TR/css-fonts-4/#font-family-prop
 export struct FontFamilyProperty : Property {
+    using Value = Vec<Css::FontFamily>;
+
     struct Registration : Property::Registration {
         Registration()
             : Property::Registration(Properties::FONT_FAMILY, {INHERITED, BULK_INHERITED}) {}
@@ -55,9 +57,9 @@ export struct FontFamilyProperty : Property {
         }
     };
 
-    Vec<Css::FontFamily> _value;
+    Value _value;
 
-    FontFamilyProperty(Rc<Property::Registration> registration, Vec<Css::FontFamily> value)
+    FontFamilyProperty(Rc<Property::Registration> registration, Value value)
         : Property(registration), _value(std::move(value)) {}
 
     void apply([[maybe_unused]] ComputedValues const& parent, ComputedValues& c, [[maybe_unused]] ComputationContext const& cx) const override {
@@ -87,8 +89,7 @@ export struct FontFamilyProperty : Property {
 
 // https://www.w3.org/TR/css-fonts-4/#font-weight-prop
 export struct FontWeightProperty : Property {
-    // Value: <font-weight-absolute> | bolder | lighter
-    using Value = Union<Css::FontWeightAbsolute, Css::Keywords::Lighter, Css::Keywords::Bolder>;
+    using Value = Css::FontWeight;
 
     struct Registration : Property::Registration {
         Registration()
@@ -212,14 +213,7 @@ export struct FontWidthProperty : Property {
 
 // https://drafts.csswg.org/css-fonts-4/#font-style-prop
 export struct FontStyleProperty : Property {
-    // Value: normal | italic | left | right | oblique <angle [-90deg,90deg]>?
-    using Oblique = Css::All<Css::Keywords::Oblique, Opt<Css::Angle>>;
-    using Value = Union<
-        Css::Keywords::Normal,
-        Css::Keywords::Italic,
-        Css::Keywords::Left,
-        Css::Keywords::Right,
-        Oblique>;
+    using Value = Css::FontStyle;
 
     struct Registration : Property::Registration {
         Registration()
@@ -253,35 +247,7 @@ export struct FontStyleProperty : Property {
 
     // Computed value: the keyword specified, plus angle in degrees if specified
     void apply([[maybe_unused]] ComputedValues const& parent, ComputedValues& c, [[maybe_unused]] ComputationContext const& cx) const override {
-        c.font.cow().style = _value.visit(
-            [](Oblique const& oblique) {
-                auto style = FontStyle{.val = Gfx::FontStyle::OBLIQUE};
-                // <angle [-90deg,90deg]>: math functions are clamped to the range.
-                if (oblique.v1)
-                    style.obliqueAngle = Deg{clamp(toComputed(*oblique.v1).value(), -90.0, 90.0)};
-                return style;
-            },
-            [](Css::Keywords::Italic) {
-                return FontStyle{.val = Gfx::FontStyle::ITALIC};
-            },
-            // NOSPEC: left and right are treated as normal.
-            [](auto) {
-                return FontStyle{.val = Gfx::FontStyle::NORMAL};
-            }
-        );
-    }
-
-    Res<> serialize(Io::TextWriter& w) const override {
-        // https://drafts.csswg.org/cssom/#serialize-a-css-value
-        // If component values can be omitted or replaced with a shorter representation
-        // without changing the meaning of the value, omit/replace them.
-        // oblique 0deg is normal.
-        if (auto oblique = _value.is<Oblique>(); oblique and oblique->v1) {
-            auto plain = oblique->v1->calcTree().is<Css::UnitValue>();
-            if (plain and plain->to(Css::UnitValue::Unit::DEG) == 0.0)
-                return w.writeStr("normal"s);
-        }
-        return serializeValue(w, _value);
+        c.font.cow().style = toComputed(_value);
     }
 
     void repr(Io::Emit& e) const override {

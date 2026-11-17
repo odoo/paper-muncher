@@ -17,8 +17,6 @@ import :css.values.numeric;
 namespace Vaev::Css {
 
 // https://drafts.csswg.org/css-fonts-4/#font-width-prop
-// normal | <percentage [0,∞]> | ultra-condensed | extra-condensed | condensed | semi-condensed |
-// semi-expanded | expanded | extra-expanded | ultra-expanded
 export using FontWidth = Union<
     Keywords::Normal,
     Percentage,
@@ -31,8 +29,47 @@ export using FontWidth = Union<
     Keywords::ExtraExpanded,
     Keywords::UltraExpanded>;
 
+
+// https://drafts.csswg.org/css-fonts-4/#font-style-prop
+export using FontStyle = Union<
+    Keywords::Normal,
+    Keywords::Italic,
+    Keywords::Left,
+    Keywords::Right,
+    Opt<Angle>>;
+
+export template <>
+struct ValueParser<FontStyle> {
+    using FontStyleKeyword = Union<
+        Keywords::Normal,
+        Keywords::Italic,
+        Keywords::Left,
+        Keywords::Right,
+        Keywords::Left,
+        Keywords::Oblique>;
+
+    static Res<FontStyle> parse(Cursor<Sst>& c) {
+        if (c.ended())
+            return Error::invalidData("unexpected end of input");
+
+        auto keyword = try$(parseValue<FontStyleKeyword>(c));
+
+        return Ok(keyword.visit(
+            [&](Keywords::Oblique) -> FontStyle {
+                return parseValue<Angle>(c).ok();
+            },
+            [](auto const& other) -> FontStyle {
+                return other;
+            }
+        ));
+    }
+};
+
 // https://drafts.csswg.org/css-fonts-4/#font-weight-absolute-values
 export using FontWeightAbsolute = Union<Keywords::Normal, Keywords::Bold, Number>;
+
+// https://drafts.csswg.org/css-fonts-4/#propdef-font-weight
+using FontWeight = Union<FontWeightAbsolute, Keywords::Lighter, Keywords::Bolder>;
 
 // https://drafts.csswg.org/css-fonts/#font-family-name-value
 export struct FontFamily {

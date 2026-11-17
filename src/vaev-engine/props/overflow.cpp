@@ -19,6 +19,8 @@ namespace Vaev::Style {
 
 // https://www.w3.org/TR/css-overflow/#overflow-control
 export struct OverflowXProperty : Property {
+    using Value = Css::Overflow;
+
     struct Registration : Property::Registration {
         Registration() : Property::Registration(Properties::OVERFLOW_X) {}
 
@@ -35,9 +37,9 @@ export struct OverflowXProperty : Property {
         }
     };
 
-    Css::Overflow _value;
+    Value _value;
 
-    OverflowXProperty(Rc<Property::Registration> registration, Css::Overflow value)
+    OverflowXProperty(Rc<Property::Registration> registration, Value value)
         : Property(registration), _value(value) {}
 
     void apply([[maybe_unused]] ComputedValues const& parent, ComputedValues& c, [[maybe_unused]] ComputationContext const& cx) const override {
@@ -55,6 +57,8 @@ export struct OverflowXProperty : Property {
 
 // https://www.w3.org/TR/css-overflow/#overflow-control
 export struct OverflowYProperty : Property {
+    using Value = Css::Overflow;
+
     struct Registration : Property::Registration {
         Registration() : Property::Registration(Properties::OVERFLOW_Y) {}
 
@@ -71,9 +75,9 @@ export struct OverflowYProperty : Property {
         }
     };
 
-    Css::Overflow _value;
+    Value _value;
 
-    OverflowYProperty(Rc<Property::Registration> registration, Css::Overflow value)
+    OverflowYProperty(Rc<Property::Registration> registration, Value value)
         : Property(registration), _value(value) {}
 
     void apply([[maybe_unused]] ComputedValues const& parent, ComputedValues& c, [[maybe_unused]] ComputationContext const& cx) const override {
@@ -91,6 +95,8 @@ export struct OverflowYProperty : Property {
 
 // https://www.w3.org/TR/css-overflow/#overflow-block
 export struct OverflowBlockProperty : Property {
+    using Value = Css::Overflow;
+
     struct Registration : Property::Registration {
         Registration() : Property::Registration(Properties::OVERFLOW_BLOCK) {}
 
@@ -107,9 +113,9 @@ export struct OverflowBlockProperty : Property {
         }
     };
 
-    Css::Overflow _value;
+    Value _value;
 
-    OverflowBlockProperty(Rc<Property::Registration> registration, Css::Overflow value)
+    OverflowBlockProperty(Rc<Property::Registration> registration, Value value)
         : Property(registration), _value(value) {}
 
     void apply([[maybe_unused]] ComputedValues const& parent, ComputedValues& c, [[maybe_unused]] ComputationContext const& cx) const override {
@@ -127,6 +133,8 @@ export struct OverflowBlockProperty : Property {
 
 // https://www.w3.org/TR/css-overflow/#overflow-inline
 export struct OverflowInlineProperty : Property {
+    using Value = Css::Overflow;
+
     struct Registration : Property::Registration {
         Registration() : Property::Registration(Properties::OVERFLOW_INLINE) {}
 
@@ -143,9 +151,9 @@ export struct OverflowInlineProperty : Property {
         }
     };
 
-    Css::Overflow _value;
+    Value _value;
 
-    OverflowInlineProperty(Rc<Property::Registration> registration, Css::Overflow value)
+    OverflowInlineProperty(Rc<Property::Registration> registration, Value value)
         : Property(registration), _value(value) {}
 
     void apply([[maybe_unused]] ComputedValues const& parent, ComputedValues& c, [[maybe_unused]] ComputationContext const& cx) const override {
@@ -163,6 +171,8 @@ export struct OverflowInlineProperty : Property {
 
 // https://www.w3.org/TR/css-overflow-3/#propdef-overflow
 export struct OverflowProperty : Property {
+    using Value = Pair<Css::Overflow>;
+
     struct Registration : Property::Registration {
         Registration()
             : Property::Registration(Properties::OVERFLOW, SHORTHAND) {}
@@ -194,9 +204,9 @@ export struct OverflowProperty : Property {
         }
     };
 
-    Pair<Css::Overflow> _value;
+    Value _value;
 
-    OverflowProperty(Rc<Property::Registration> registration, Pair<Css::Overflow> value)
+    OverflowProperty(Rc<Property::Registration> registration, Value value)
         : Property(registration), _value(value) {}
 
     Longhands expand(RegisteredPropertySet& registry, ComputedValues const&, ComputedValues&) const override {

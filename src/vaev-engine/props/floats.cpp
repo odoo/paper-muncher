@@ -18,6 +18,8 @@ namespace Vaev::Style {
 // MARK: Float & Clear ---------------------------------------------------------
 
 export struct FloatProperty : Property {
+    using Value = Css::Float;
+
     struct Registration : Property::Registration {
         Registration() : Property::Registration(Properties::FLOAT) {}
 
@@ -34,9 +36,9 @@ export struct FloatProperty : Property {
         }
     };
 
-    Css::Float _value;
+    Value _value;
 
-    FloatProperty(Rc<Property::Registration> registration, Css::Float value)
+    FloatProperty(Rc<Property::Registration> registration, Value value)
         : Property(registration), _value(value) {}
 
     void apply([[maybe_unused]] ComputedValues const& parent, ComputedValues& c, [[maybe_unused]] ComputationContext const& cx) const override {
@@ -53,6 +55,8 @@ export struct FloatProperty : Property {
 };
 
 export struct ClearProperty : Property {
+    using Value = Css::Clear;
+
     struct Registration : Property::Registration {
         Registration() : Property::Registration(Properties::CLEAR) {}
 
@@ -69,9 +73,9 @@ export struct ClearProperty : Property {
         }
     };
 
-    Css::Clear _value;
+    Value _value;
 
-    ClearProperty(Rc<Property::Registration> registration, Css::Clear value)
+    ClearProperty(Rc<Property::Registration> registration, Value value)
         : Property(registration), _value(value) {}
 
     void apply([[maybe_unused]] ComputedValues const& parent, ComputedValues& c, [[maybe_unused]] ComputationContext const& cx) const override {

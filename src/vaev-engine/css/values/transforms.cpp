@@ -368,4 +368,93 @@ export using TransformBox = Union<
     Keywords::StrokeBox,
     Keywords::ViewBox>;
 
+// https://drafts.csswg.org/css-transforms/#transform-origin-property
+export struct TransformOrigin {
+    using OneValue = Union<Keywords::Left, Keywords::Center, Keywords::Right, Keywords::Top, Keywords::Bottom, LengthPercentage>;
+
+    using XOffset = Union<Keywords::Left, Keywords::Center, Keywords::Right, LengthPercentage>;
+    using YOffset = Union<Keywords::Top, Keywords::Center, Keywords::Bottom, LengthPercentage>;
+
+    XOffset xOffset;
+    YOffset yOffset;
+
+    void repr(Io::Emit& e) const {
+        e("{} {}", xOffset, yOffset);
+    }
+};
+
+export template <>
+struct ValueParser<TransformOrigin> {
+    static Res<TransformOrigin> _twoValues(Cursor<Sst>& c) {
+        auto xoffset = try$(parseValue<TransformOrigin::XOffset>(c));
+        if (c.ended())
+            return Error::invalidData("unexpected end of input after x-offset");
+
+        auto yoffset = try$(parseValue<TransformOrigin::YOffset>(c));
+
+        return Ok(TransformOrigin{
+            .xOffset = std::move(xoffset),
+            .yOffset = std::move(yoffset),
+        });
+    }
+
+    static Res<TransformOrigin> parse(Cursor<Sst>& c) {
+        if (c.ended())
+            return Error::invalidData("unexpected end of input");
+
+        {
+            auto rollback = c.rollbackPoint();
+            auto maybeTwoValues = _twoValues(c);
+            if (maybeTwoValues) {
+                rollback.disarm();
+                return maybeTwoValues;
+            }
+        }
+
+        auto singleValue = try$(parseValue<TransformOrigin::OneValue>(c));
+
+        return singleValue.visit(
+            [&](Keywords::Center) -> Res<TransformOrigin> {
+                return Ok(TransformOrigin{
+                    .xOffset = Keywords::CENTER,
+                    .yOffset = Keywords::CENTER,
+                });
+            },
+
+            [&](Keywords::Left) -> Res<TransformOrigin> {
+                return Ok(TransformOrigin{
+                    .xOffset = Keywords::LEFT,
+                    .yOffset = Keywords::CENTER, // default y-offset
+                });
+            },
+            [&](Keywords::Right) -> Res<TransformOrigin> {
+                return Ok(TransformOrigin{
+                    .xOffset = Keywords::RIGHT,
+                    .yOffset = Keywords::CENTER, // default y-offset
+                });
+            },
+
+            [&](Keywords::Top) -> Res<TransformOrigin> {
+                return Ok(TransformOrigin{
+                    .xOffset = Keywords::CENTER, // default x-offset
+                    .yOffset = Keywords::TOP,
+                });
+            },
+            [&](Keywords::Bottom) -> Res<TransformOrigin> {
+                return Ok(TransformOrigin{
+                    .xOffset = Keywords::CENTER, // default x-offset
+                    .yOffset = Keywords::BOTTOM,
+                });
+            },
+
+            [&](LengthPercentage value) -> Res<TransformOrigin> {
+                return Ok(TransformOrigin{
+                    .xOffset = std::move(value),
+                    .yOffset = Keywords::CENTER, // default y-offset
+                });
+            }
+        );
+    }
+};
+
 } // namespace Vaev::Css

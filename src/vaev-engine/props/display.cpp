@@ -17,6 +17,8 @@ namespace Vaev::Style {
 
 // https://drafts.csswg.org/css-display/#the-display-properties
 export struct DisplayProperty : Property {
+    using Value = Css::Display;
+
     struct Registration : Property::Registration {
         Registration() : Property::Registration(Properties::DISPLAY) {}
 
@@ -33,9 +35,9 @@ export struct DisplayProperty : Property {
         }
     };
 
-    Css::Display _value;
+    Value _value;
 
-    DisplayProperty(Rc<Property::Registration> registration, Css::Display value)
+    DisplayProperty(Rc<Property::Registration> registration, Value value)
         : Property(registration), _value(value) {}
 
     void apply([[maybe_unused]] ComputedValues const& parent, ComputedValues& c, [[maybe_unused]] ComputationContext const& cx) const override {
@@ -54,6 +56,8 @@ export struct DisplayProperty : Property {
 // https://www.w3.org/TR/css-gcpm-3/
 // https://drafts.csswg.org/css-content/#content-property
 export struct ContentProperty : Property {
+    using Value = Css::ContentValue;
+
     struct Registration : Property::Registration {
         Registration() : Property::Registration(Properties::CONTENT) {}
 
@@ -96,9 +100,9 @@ export struct ContentProperty : Property {
         }
     };
 
-    Css::ContentValue _value;
+    Value _value;
 
-    ContentProperty(Rc<Property::Registration> registration, Css::ContentValue value)
+    ContentProperty(Rc<Property::Registration> registration, Value value)
         : Property(registration), _value(value) {}
 
     void apply([[maybe_unused]] ComputedValues const& parent, ComputedValues& c, [[maybe_unused]] ComputationContext const& cx) const override {
@@ -112,6 +116,8 @@ export struct ContentProperty : Property {
 
 // https://www.w3.org/TR/css-display-3/#order-property
 export struct OrderProperty : Property {
+    using Value = Integer;
+
     struct Registration : Property::Registration {
         Registration() : Property::Registration(Properties::ORDER) {}
 
@@ -128,9 +134,9 @@ export struct OrderProperty : Property {
         }
     };
 
-    Integer _value;
+    Value _value;
 
-    OrderProperty(Rc<Property::Registration> registration, Integer value)
+    OrderProperty(Rc<Property::Registration> registration, Value value)
         : Property(registration), _value(value) {}
 
     void apply([[maybe_unused]] ComputedValues const& parent, ComputedValues& c, [[maybe_unused]] ComputationContext const& cx) const override {
