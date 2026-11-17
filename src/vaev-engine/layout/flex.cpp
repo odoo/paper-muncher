@@ -90,15 +90,15 @@ struct FlexAxis {
         return isRowOriented ? value.vertical() : value.horizontal();
     }
 
-    Style::Size mainAxis(Cow<Style::Sizing> sizing) const {
+    Style::Size const& mainAxis(Cow<Style::Sizing> sizing) const {
         return isRowOriented ? sizing->width : sizing->height;
     }
 
-    Style::Size crossAxis(Cow<Style::Sizing> sizing) const {
+    Style::Size const& crossAxis(Cow<Style::Sizing> sizing) const {
         return isRowOriented ? sizing->height : sizing->width;
     }
 
-    Style::MaxSize maxMainAxis(Cow<Style::Sizing> sizing) const {
+    Style::MaxSize const& maxMainAxis(Cow<Style::Sizing> sizing) const {
         return isRowOriented ? sizing->maxWidth : sizing->maxHeight;
     }
 
@@ -356,8 +356,8 @@ struct FlexItem {
     }
 
     Pair<Au> getMinMaxPrefferedSize(bool isWidth, Vec2Au containerSize) const {
-        Style::Size minSizeToResolve = isWidth ? box->style->sizing->minWidth : box->style->sizing->minHeight;
-        Style::MaxSize maxSizeToResolve = isWidth ? box->style->sizing->maxWidth : box->style->sizing->maxHeight;
+        Style::Size const& minSizeToResolve = isWidth ? box->style->sizing->minWidth : box->style->sizing->minHeight;
+        Style::MaxSize const& maxSizeToResolve = isWidth ? box->style->sizing->maxWidth : box->style->sizing->maxHeight;
 
         auto visitor = Visitor{
             [&](Style::PxPercent const& v) {
