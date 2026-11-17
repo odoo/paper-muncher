@@ -10,8 +10,8 @@ import :css.values.primitives;
 
 using namespace Karm;
 
-// NOTE: Keywords are part of the CSS vocabulary, not of a computation stage:
-//       a keyword is the same value specified, computed and used.
+// NOTE: Keywords are in the Vaev namespace as a convenience, since they get used all the way through the pipeline.
+
 namespace Vaev {
 
 // https://drafts.csswg.org/css-values-4/#css-keyword

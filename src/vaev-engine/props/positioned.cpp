@@ -20,7 +20,7 @@ namespace Vaev::Style {
 
 // https://www.w3.org/TR/CSS22/visuren.html#positioning-scheme
 export struct PositionProperty : Property {
-    using Value = Css::Position;
+    using Value = Css::PositionScheme;
 
     struct Registration : Property::Registration {
         Registration() : Property::Registration(Properties::POSITION) {}
@@ -35,7 +35,7 @@ export struct PositionProperty : Property {
 
         Res<Rc<Property>> parse(Cursor<Css::Sst>& c) const override {
             // https://drafts.csswg.org/css-position-3/#propdef-position
-            auto value = [&] -> Res<Css::Position> {
+            auto value = [&] -> Res<Css::PositionScheme> {
                 if (c.ended())
                     return Error::invalidData("unexpected end of input");
 

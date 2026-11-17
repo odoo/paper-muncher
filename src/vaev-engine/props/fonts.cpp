@@ -203,7 +203,7 @@ export struct FontWidthProperty : Property {
     }
 
     Res<> serialize(Io::TextWriter& w) const override {
-        return serializeValue(w, _value);
+        return Css::serializeValue(w, _value);
     }
 
     void repr(Io::Emit& e) const override {
@@ -265,10 +265,10 @@ export struct FontStyleProperty : Property {
                     return w.writeStr("normal"s);
 
                 try$(w.writeStr("oblique "s));
-                return serializeValue(w, *angle);
+                return Css::serializeValue(w, *angle);
             },
             [&](auto const& keyword) -> Res<> {
-                return serializeValue(w, keyword);
+                return Css::serializeValue(w, keyword);
             }
         );
     }
@@ -358,7 +358,7 @@ export struct FontSizeProperty : Property {
     }
 
     Res<> serialize(Io::TextWriter& w) const override {
-        return serializeValue(w, _value);
+        return Css::serializeValue(w, _value);
     }
 
     void repr(Io::Emit& e) const override {

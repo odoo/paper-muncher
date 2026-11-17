@@ -31,7 +31,7 @@ export FloatSide resolveFloatSide(Style::Float const& float_, Style::Direction c
         [&](Keywords::InlineEnd) {
             return rtl ? FloatSide::LEFT : FloatSide::RIGHT;
         },
-        [](Keywords::Left) {
+        [](auto) {
             return FloatSide::LEFT;
         }
     );
