@@ -15,7 +15,7 @@ using namespace Karm::Literals;
 
 namespace Vaev::Style {
 
-// https://www.w3.org/TR/CSS22/visuren.html#propdef-display
+// https://drafts.csswg.org/css-display/#the-display-properties
 export struct DisplayProperty : Property {
     struct Registration : Property::Registration {
         Registration() : Property::Registration(Properties::DISPLAY) {}
