@@ -263,12 +263,6 @@ struct ValueSerializer<S> {
     }
 };
 
-} // namespace Vaev::Css
-
-namespace Vaev::Css {
-
-// MARK: Position --------------------------------------------------------------
-
 export template <typename T>
 struct ValueParser<Math::Insets<T>> {
     static Res<Math::Insets<T>> parse(Cursor<Sst>& c) {

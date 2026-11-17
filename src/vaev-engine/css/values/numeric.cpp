@@ -16,7 +16,6 @@ import :css.values.unitValue;
 
 using namespace Karm;
 
-// Specified values of the CSS numeric data types.
 // https://drafts.csswg.org/css-values/#numeric-types
 
 namespace Vaev::Css {

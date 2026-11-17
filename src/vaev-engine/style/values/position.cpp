@@ -13,6 +13,6 @@ namespace Vaev::Style {
 export using ZIndex = Css::ZIndex;
 
 // https://www.w3.org/TR/CSS22/visuren.html#propdef-position
-export using PositionScheme = Css::PositionScheme;
+export using PositionScheme = Css::Position;
 
 } // namespace Vaev::Style

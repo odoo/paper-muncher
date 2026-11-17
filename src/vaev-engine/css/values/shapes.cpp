@@ -20,13 +20,14 @@ using namespace Karm;
 
 namespace Vaev::Css {
 
-// https://drafts.csswg.org/css-masking/#typedef-geometry-box
+// https://drafts.csswg.org/css-shapes-1/#typedef-shape-box
 export using ShapeBox = Union<
     Keywords::BorderBox,
     Keywords::PaddingBox,
     Keywords::ContentBox,
     Keywords::MarginBox>;
 
+// https://drafts.csswg.org/css-masking/#typedef-geometry-box
 export using GeometryBox = Union<
     Keywords::BorderBox,
     Keywords::PaddingBox,
@@ -36,6 +37,7 @@ export using GeometryBox = Union<
     Keywords::StrokeBox,
     Keywords::ViewBox>;
 
+// https://www.w3.org/TR/SVG2/painting.html#FillRuleProperty
 export using FillRule = Union<
     Keywords::Nonzero,
     Keywords::Evenodd>;
@@ -56,9 +58,7 @@ export using ShapeRadius = Union<
     Keywords::ClosestSide,
     Keywords::FarthestSide>;
 
-// MARK: Circle ----------------------------------------------------------------
 // https://www.w3.org/TR/css-shapes-1/#funcdef-basic-shape-circle
-
 export struct Circle {
     ShapeRadius radius = Keywords::CLOSEST_SIDE;
     BackgroundPosition position = BackgroundPosition::center();
@@ -67,7 +67,6 @@ export struct Circle {
         e("(circle {} {})", radius, position);
     }
 };
-
 
 export template <>
 struct ValueParser<Circle> {
@@ -102,9 +101,7 @@ struct ValueParser<Circle> {
     }
 };
 
-// MARK: Ellipse ---------------------------------------------------------------
 // https://www.w3.org/TR/css-shapes-1/#funcdef-basic-shape-ellipse
-
 export struct Ellipse {
     ShapeRadius rx = Keywords::CLOSEST_SIDE;
     ShapeRadius ry = Keywords::CLOSEST_SIDE;
@@ -114,7 +111,6 @@ export struct Ellipse {
         e("(ellipse {} {} {})", rx, ry, position);
     }
 };
-
 
 export template <>
 struct ValueParser<Ellipse> {
@@ -151,9 +147,7 @@ struct ValueParser<Ellipse> {
     }
 };
 
-// MARK: Inset -----------------------------------------------------------------
 // https://www.w3.org/TR/css-shapes-1/#funcdef-basic-shape-inset
-
 export struct Inset {
     Math::Insets<LengthPercentage> insets;
     Math::Radii<LengthPercentage> borderRadius;
@@ -162,7 +156,6 @@ export struct Inset {
         e("(inset {} {})", insets, borderRadius);
     }
 };
-
 
 export template <>
 struct ValueParser<Inset> {
@@ -198,9 +191,7 @@ struct ValueParser<Inset> {
     }
 };
 
-// MARK: Path ------------------------------------------------------------------
 // https://www.w3.org/TR/css-shapes-1/#funcdef-basic-shape-path
-
 export struct Path {
     Math::Path path;
     Gfx::FillRule fillRule = Gfx::FillRule::NONZERO;
@@ -247,9 +238,7 @@ struct ValueParser<Path> {
     }
 };
 
-// MARK: Polygon ---------------------------------------------------------------
 // https://www.w3.org/TR/css-shapes-1/#funcdef-basic-shape-polygon
-
 export struct Polygon {
     Gfx::FillRule fillRule = Gfx::FillRule::NONZERO;
     Vec<Pair<LengthPercentage>> points;
@@ -258,7 +247,6 @@ export struct Polygon {
         e("(polygon {} {})", fillRule, points);
     }
 };
-
 
 export template <>
 struct ValueParser<Polygon> {
@@ -297,9 +285,7 @@ struct ValueParser<Polygon> {
     }
 };
 
-// MARK: Rect ------------------------------------------------------------------
 // https://www.w3.org/TR/css-shapes-1/#funcdef-basic-shape-rect
-
 export struct Rect {
     Math::Insets<LengthPercentage> insets;
     Math::Radii<LengthPercentage> borderRadius;
@@ -308,7 +294,6 @@ export struct Rect {
         e("(rect {} {})", insets, borderRadius);
     }
 };
-
 
 export template <>
 struct ValueParser<Rect> {
@@ -358,9 +343,7 @@ struct ValueParser<Rect> {
     }
 };
 
-// MARK: Xywh ------------------------------------------------------------------
 // https://www.w3.org/TR/css-shapes-1/#funcdef-basic-shape-xywh
-
 export struct Xywh {
     LengthPercentage x;
     LengthPercentage y;
@@ -416,10 +399,7 @@ struct ValueParser<Xywh> {
     }
 };
 
-// MARK: Basic Shape -----------------------------------------------------------
 // https://drafts.csswg.org/css-masking/#the-clip-path
-//  [ <basic-shape> || <geometry-box> ]
-
 export using BasicShapeFunction = Union<
     Circle, Ellipse, Inset, Path, Polygon, Rect, Xywh>;
 
@@ -431,7 +411,6 @@ export struct BasicShape {
         e("(basic-shape {} {})", shape, referenceBox);
     }
 };
-
 
 export template <>
 struct ValueParser<BasicShape> {

@@ -6,10 +6,9 @@ import :css.values.keywords;
 
 using namespace Karm;
 
-// https://drafts.csswg.org/css-page-floats-3/
-
 namespace Vaev::Css {
 
+// https://drafts.csswg.org/css-page-floats-3/#propdef-float
 export using Float = Union<
     Keywords::None,
     Keywords::InlineStart,
@@ -17,6 +16,7 @@ export using Float = Union<
     Keywords::Left,
     Keywords::Right>;
 
+// https://drafts.csswg.org/css-page-floats-3/#propdef-clear
 export using Clear = Union<
     Keywords::None,
     Keywords::Left,

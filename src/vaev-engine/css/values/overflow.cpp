@@ -6,8 +6,6 @@ import :css.values.keywords;
 
 using namespace Karm;
 
-// https://drafts.csswg.org/css-overflow-3/
-
 namespace Vaev::Css {
 
 // https://www.w3.org/TR/css-overflow/#overflow-control

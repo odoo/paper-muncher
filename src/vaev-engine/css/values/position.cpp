@@ -8,13 +8,12 @@ import :css.values.primitives;
 
 using namespace Karm;
 
-// https://drafts.csswg.org/css-position-3/
-
 namespace Vaev::Css {
 
+// https://drafts.csswg.org/css2/#propdef-z-index
 export using ZIndex = Union<Keywords::Auto, Integer>;
 
-// https://www.w3.org/TR/CSS22/visuren.html#propdef-position
+// https://drafts.csswg.org/css-position-3/#propdef-position
 export using PositionScheme = Union<Keywords::Static, Keywords::Relative, Keywords::Absolute, Keywords::Fixed, Keywords::Sticky, RunningPosition>;
 
 } // namespace Vaev::Css
