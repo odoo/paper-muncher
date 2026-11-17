@@ -33,7 +33,7 @@ export struct OutlineWidthProperty : Property {
         }
 
         Res<Rc<Property>> parse(Cursor<Css::Sst>& c) const override {
-            return Ok(makeRc<OutlineWidthProperty>(self(), try$(parseValue<Css::LineWidth>(c))));
+            return Ok(makeRc<OutlineWidthProperty>(self(), try$(parseValue<Value>(c))));
         }
     };
 
@@ -165,7 +165,7 @@ export struct OutlineOffsetProperty : Property {
         }
 
         Res<Rc<Property>> parse(Cursor<Css::Sst>& c) const override {
-            return Ok(makeRc<OutlineOffsetProperty>(self(), try$(parseValue<Css::Length>(c))));
+            return Ok(makeRc<OutlineOffsetProperty>(self(), try$(parseValue<Value>(c))));
         }
     };
 

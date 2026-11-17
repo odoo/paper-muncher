@@ -31,7 +31,7 @@ export struct DisplayProperty : Property {
         }
 
         Res<Rc<Property>> parse(Cursor<Css::Sst>& c) const override {
-            return Ok(makeRc<DisplayProperty>(self(), try$(parseValue<Css::Display>(c))));
+            return Ok(makeRc<DisplayProperty>(self(), try$(parseValue<Value>(c))));
         }
     };
 
@@ -130,7 +130,7 @@ export struct OrderProperty : Property {
         }
 
         Res<Rc<Property>> parse(Cursor<Css::Sst>& c) const override {
-            return Ok(makeRc<OrderProperty>(self(), try$(parseValue<Css::Integer>(c))));
+            return Ok(makeRc<OrderProperty>(self(), try$(parseValue<Value>(c))));
         }
     };
 

@@ -33,7 +33,7 @@ export struct BreakAfterProperty : Property {
         }
 
         Res<Rc<Property>> parse(Cursor<Css::Sst>& c) const override {
-            return Ok(makeRc<BreakAfterProperty>(self(), try$(parseValue<Css::BreakBetween>(c))));
+            return Ok(makeRc<BreakAfterProperty>(self(), try$(parseValue<Value>(c))));
         }
     };
 
@@ -71,7 +71,7 @@ export struct BreakBeforeProperty : Property {
         }
 
         Res<Rc<Property>> parse(Cursor<Css::Sst>& c) const override {
-            return Ok(makeRc<BreakBeforeProperty>(self(), try$(parseValue<Css::BreakBetween>(c))));
+            return Ok(makeRc<BreakBeforeProperty>(self(), try$(parseValue<Value>(c))));
         }
     };
 
@@ -109,7 +109,7 @@ export struct BreakInsideProperty : Property {
         }
 
         Res<Rc<Property>> parse(Cursor<Css::Sst>& c) const override {
-            return Ok(makeRc<BreakInsideProperty>(self(), try$(parseValue<Css::BreakInside>(c))));
+            return Ok(makeRc<BreakInsideProperty>(self(), try$(parseValue<Value>(c))));
         }
     };
 

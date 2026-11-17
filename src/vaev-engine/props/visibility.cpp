@@ -36,7 +36,7 @@ export struct VisibilityProperty : Property {
         }
 
         Res<Rc<Property>> parse(Cursor<Css::Sst>& c) const override {
-            return Ok(makeRc<VisibilityProperty>(self(), try$(parseValue<Css::Visibility>(c))));
+            return Ok(makeRc<VisibilityProperty>(self(), try$(parseValue<Value>(c))));
         }
     };
 

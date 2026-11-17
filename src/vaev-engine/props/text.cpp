@@ -41,7 +41,7 @@ export struct TextAlignProperty : Property {
             if (c.skip(Css::Token::ident("-webkit-center")) or c.skip(Css::Token::ident("-moz-center")))
                 return Ok(makeRc<TextAlignProperty>(self(), Keywords::VAEV_BLOCK_CENTER));
 
-            return Ok(makeRc<TextAlignProperty>(self(), try$(parseValue<Css::TextAlign>(c))));
+            return Ok(makeRc<TextAlignProperty>(self(), try$(parseValue<Value>(c))));
         }
     };
 
@@ -90,7 +90,7 @@ export struct TextTransformProperty : Property {
             if (c.ended())
                 return Error::invalidData("unexpected end of input");
 
-            return Ok(makeRc<TextTransformProperty>(self(), try$(parseValue<Css::TextTransform>(c))));
+            return Ok(makeRc<TextTransformProperty>(self(), try$(parseValue<Value>(c))));
         }
     };
 
@@ -133,7 +133,7 @@ export struct WhiteSpaceProperty : Property {
         }
 
         Res<Rc<Property>> parse(Cursor<Css::Sst>& c) const override {
-            return Ok(makeRc<WhiteSpaceProperty>(self(), try$(parseValue<Css::WhiteSpace>(c))));
+            return Ok(makeRc<WhiteSpaceProperty>(self(), try$(parseValue<Value>(c))));
         }
     };
 

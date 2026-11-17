@@ -125,7 +125,7 @@ export struct TransformBoxProperty : Property {
         }
 
         Res<Rc<Property>> parse(Cursor<Css::Sst>& c) const override {
-            return Ok(makeRc<TransformBoxProperty>(self(), try$(parseValue<Css::TransformBox>(c))));
+            return Ok(makeRc<TransformBoxProperty>(self(), try$(parseValue<Value>(c))));
         }
     };
 

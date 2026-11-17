@@ -33,7 +33,7 @@ export struct BorderTopColorProperty : Property {
         }
 
         Res<Rc<Property>> parse(Cursor<Css::Sst>& c) const override {
-            return Ok(makeRc<BorderTopColorProperty>(self(), try$(parseValue<Css::Color>(c))));
+            return Ok(makeRc<BorderTopColorProperty>(self(), try$(parseValue<Value>(c))));
         }
     };
 
@@ -71,7 +71,7 @@ export struct BorderRightColorProperty : Property {
         }
 
         Res<Rc<Property>> parse(Cursor<Css::Sst>& c) const override {
-            return Ok(makeRc<BorderRightColorProperty>(self(), try$(parseValue<Css::Color>(c))));
+            return Ok(makeRc<BorderRightColorProperty>(self(), try$(parseValue<Value>(c))));
         }
     };
 
@@ -109,7 +109,7 @@ export struct BorderBottomColorProperty : Property {
         }
 
         Res<Rc<Property>> parse(Cursor<Css::Sst>& c) const override {
-            return Ok(makeRc<BorderBottomColorProperty>(self(), try$(parseValue<Css::Color>(c))));
+            return Ok(makeRc<BorderBottomColorProperty>(self(), try$(parseValue<Value>(c))));
         }
     };
 
@@ -147,7 +147,7 @@ export struct BorderLeftColorProperty : Property {
         }
 
         Res<Rc<Property>> parse(Cursor<Css::Sst>& c) const override {
-            return Ok(makeRc<BorderLeftColorProperty>(self(), try$(parseValue<Css::Color>(c))));
+            return Ok(makeRc<BorderLeftColorProperty>(self(), try$(parseValue<Value>(c))));
         }
     };
 
@@ -193,7 +193,7 @@ export struct BorderColorProperty : Property {
         }
 
         Res<Rc<Property>> parse(Cursor<Css::Sst>& c) const override {
-            return Ok(makeRc<BorderColorProperty>(self(), try$(parseValue<Math::Insets<Css::Color>>(c))));
+            return Ok(makeRc<BorderColorProperty>(self(), try$(parseValue<Value>(c))));
         }
     };
 
@@ -232,7 +232,7 @@ export struct BorderLeftStyleProperty : Property {
         }
 
         Res<Rc<Property>> parse(Cursor<Css::Sst>& c) const override {
-            return Ok(makeRc<BorderLeftStyleProperty>(self(), try$(parseValue<Gfx::BorderStyle>(c))));
+            return Ok(makeRc<BorderLeftStyleProperty>(self(), try$(parseValue<Value>(c))));
         }
     };
 
@@ -270,7 +270,7 @@ export struct BorderTopStyleProperty : Property {
         }
 
         Res<Rc<Property>> parse(Cursor<Css::Sst>& c) const override {
-            return Ok(makeRc<BorderTopStyleProperty>(self(), try$(parseValue<Gfx::BorderStyle>(c))));
+            return Ok(makeRc<BorderTopStyleProperty>(self(), try$(parseValue<Value>(c))));
         }
     };
 
@@ -308,7 +308,7 @@ export struct BorderRightStyleProperty : Property {
         }
 
         Res<Rc<Property>> parse(Cursor<Css::Sst>& c) const override {
-            return Ok(makeRc<BorderRightStyleProperty>(self(), try$(parseValue<Gfx::BorderStyle>(c))));
+            return Ok(makeRc<BorderRightStyleProperty>(self(), try$(parseValue<Value>(c))));
         }
     };
 
@@ -346,7 +346,7 @@ export struct BorderBottomStyleProperty : Property {
         }
 
         Res<Rc<Property>> parse(Cursor<Css::Sst>& c) const override {
-            return Ok(makeRc<BorderBottomStyleProperty>(self(), try$(parseValue<Gfx::BorderStyle>(c))));
+            return Ok(makeRc<BorderBottomStyleProperty>(self(), try$(parseValue<Value>(c))));
         }
     };
 
@@ -393,7 +393,7 @@ export struct BorderStyleProperty : Property {
         }
 
         Res<Rc<Property>> parse(Cursor<Css::Sst>& c) const override {
-            return Ok(makeRc<BorderStyleProperty>(self(), try$(parseValue<Math::Insets<Gfx::BorderStyle>>(c))));
+            return Ok(makeRc<BorderStyleProperty>(self(), try$(parseValue<Value>(c))));
         }
     };
 
@@ -431,7 +431,7 @@ export struct BorderTopWidthProperty : Property {
         }
 
         Res<Rc<Property>> parse(Cursor<Css::Sst>& c) const override {
-            return Ok(makeRc<BorderTopWidthProperty>(self(), try$(parseValue<Css::LineWidth>(c))));
+            return Ok(makeRc<BorderTopWidthProperty>(self(), try$(parseValue<Value>(c))));
         }
     };
 
@@ -469,7 +469,7 @@ export struct BorderRightWidthProperty : Property {
         }
 
         Res<Rc<Property>> parse(Cursor<Css::Sst>& c) const override {
-            return Ok(makeRc<BorderRightWidthProperty>(self(), try$(parseValue<Css::LineWidth>(c))));
+            return Ok(makeRc<BorderRightWidthProperty>(self(), try$(parseValue<Value>(c))));
         }
     };
 
@@ -507,7 +507,7 @@ export struct BorderBottomWidthProperty : Property {
         }
 
         Res<Rc<Property>> parse(Cursor<Css::Sst>& c) const override {
-            return Ok(makeRc<BorderBottomWidthProperty>(self(), try$(parseValue<Css::LineWidth>(c))));
+            return Ok(makeRc<BorderBottomWidthProperty>(self(), try$(parseValue<Value>(c))));
         }
     };
 
@@ -545,7 +545,7 @@ export struct BorderLeftWidthProperty : Property {
         }
 
         Res<Rc<Property>> parse(Cursor<Css::Sst>& c) const override {
-            return Ok(makeRc<BorderLeftWidthProperty>(self(), try$(parseValue<Css::LineWidth>(c))));
+            return Ok(makeRc<BorderLeftWidthProperty>(self(), try$(parseValue<Value>(c))));
         }
     };
 
@@ -1021,7 +1021,7 @@ export struct BorderWidthProperty : Property {
         }
 
         Res<Rc<Property>> parse(Cursor<Css::Sst>& c) const override {
-            return Ok(makeRc<BorderWidthProperty>(self(), try$(parseValue<Math::Insets<Css::LineWidth>>(c))));
+            return Ok(makeRc<BorderWidthProperty>(self(), try$(parseValue<Value>(c))));
         }
     };
 
@@ -1063,7 +1063,7 @@ export struct BorderCollapseProperty : Property {
         }
 
         Res<Rc<Property>> parse(Cursor<Css::Sst>& c) const override {
-            return Ok(makeRc<BorderCollapseProperty>(self(), try$(parseValue<Css::BorderCollapse>(c))));
+            return Ok(makeRc<BorderCollapseProperty>(self(), try$(parseValue<Value>(c))));
         }
     };
 

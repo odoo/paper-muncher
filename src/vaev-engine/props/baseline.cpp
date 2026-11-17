@@ -86,7 +86,7 @@ export struct DominantBaselineProperty : Property {
         }
 
         Res<Rc<Property>> parse(Cursor<Css::Sst>& c) const override {
-            return Ok(makeRc<DominantBaselineProperty>(self(), try$(parseValue<Css::DominantBaseline>(c))));
+            return Ok(makeRc<DominantBaselineProperty>(self(), try$(parseValue<Value>(c))));
         }
     };
 
@@ -124,7 +124,7 @@ export struct BaselineSourceProperty : Property {
         }
 
         Res<Rc<Property>> parse(Cursor<Css::Sst>& c) const override {
-            return Ok(makeRc<BaselineSourceProperty>(self(), try$(parseValue<Css::BaselineSource>(c))));
+            return Ok(makeRc<BaselineSourceProperty>(self(), try$(parseValue<Value>(c))));
         }
     };
 
@@ -162,7 +162,7 @@ export struct AlignmentBaselineProperty : Property {
         }
 
         Res<Rc<Property>> parse(Cursor<Css::Sst>& c) const override {
-            return Ok(makeRc<AlignmentBaselineProperty>(self(), try$(parseValue<Css::AlignmentBaseline>(c))));
+            return Ok(makeRc<AlignmentBaselineProperty>(self(), try$(parseValue<Value>(c))));
         }
     };
 

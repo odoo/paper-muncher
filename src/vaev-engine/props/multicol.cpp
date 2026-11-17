@@ -154,7 +154,7 @@ export struct ColumnCountProperty : Property {
         }
 
         Res<Rc<Property>> parse(Cursor<Css::Sst>& c) const override {
-            return Ok(makeRc<ColumnCountProperty>(self(), try$(parseValue<Css::ColumnCount>(c))));
+            return Ok(makeRc<ColumnCountProperty>(self(), try$(parseValue<Value>(c))));
         }
     };
 

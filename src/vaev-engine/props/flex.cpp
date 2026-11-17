@@ -77,7 +77,7 @@ export struct FlexDirectionProperty : Property {
         }
 
         Res<Rc<Property>> parse(Cursor<Css::Sst>& c) const override {
-            return Ok(makeRc<FlexDirectionProperty>(self(), try$(parseValue<Css::FlexDirection>(c))));
+            return Ok(makeRc<FlexDirectionProperty>(self(), try$(parseValue<Value>(c))));
         }
     };
 
@@ -115,7 +115,7 @@ export struct FlexGrowProperty : Property {
         }
 
         Res<Rc<Property>> parse(Cursor<Css::Sst>& c) const override {
-            return Ok(makeRc<FlexGrowProperty>(self(), try$(parseValue<f64>(c))));
+            return Ok(makeRc<FlexGrowProperty>(self(), try$(parseValue<Value>(c))));
         }
     };
 
@@ -153,7 +153,7 @@ export struct FlexShrinkProperty : Property {
         }
 
         Res<Rc<Property>> parse(Cursor<Css::Sst>& c) const override {
-            return Ok(makeRc<FlexShrinkProperty>(self(), try$(parseValue<f64>(c))));
+            return Ok(makeRc<FlexShrinkProperty>(self(), try$(parseValue<Value>(c))));
         }
     };
 
@@ -191,7 +191,7 @@ export struct FlexWrapProperty : Property {
         }
 
         Res<Rc<Property>> parse(Cursor<Css::Sst>& c) const override {
-            return Ok(makeRc<FlexWrapProperty>(self(), try$(parseValue<Css::FlexWrap>(c))));
+            return Ok(makeRc<FlexWrapProperty>(self(), try$(parseValue<Value>(c))));
         }
     };
 

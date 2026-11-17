@@ -32,7 +32,7 @@ export struct FloatProperty : Property {
         }
 
         Res<Rc<Property>> parse(Cursor<Css::Sst>& c) const override {
-            return Ok(makeRc<FloatProperty>(self(), try$(parseValue<Css::Float>(c))));
+            return Ok(makeRc<FloatProperty>(self(), try$(parseValue<Value>(c))));
         }
     };
 
@@ -69,7 +69,7 @@ export struct ClearProperty : Property {
         }
 
         Res<Rc<Property>> parse(Cursor<Css::Sst>& c) const override {
-            return Ok(makeRc<ClearProperty>(self(), try$(parseValue<Css::Clear>(c))));
+            return Ok(makeRc<ClearProperty>(self(), try$(parseValue<Value>(c))));
         }
     };
 

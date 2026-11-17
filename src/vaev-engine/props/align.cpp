@@ -34,7 +34,7 @@ export struct AlignContentProperty : Property {
         }
 
         Res<Rc<Property>> parse(Cursor<Css::Sst>& c) const override {
-            return Ok(makeRc<AlignContentProperty>(self(), try$(parseValue<Css::Align>(c))));
+            return Ok(makeRc<AlignContentProperty>(self(), try$(parseValue<Value>(c))));
         }
     };
 
@@ -72,7 +72,7 @@ export struct JustifyContentProperty : Property {
         }
 
         Res<Rc<Property>> parse(Cursor<Css::Sst>& c) const override {
-            return Ok(makeRc<JustifyContentProperty>(self(), try$(parseValue<Css::Align>(c))));
+            return Ok(makeRc<JustifyContentProperty>(self(), try$(parseValue<Value>(c))));
         }
     };
 
@@ -110,7 +110,7 @@ export struct JustifySelfProperty : Property {
         }
 
         Res<Rc<Property>> parse(Cursor<Css::Sst>& c) const override {
-            return Ok(makeRc<JustifySelfProperty>(self(), try$(parseValue<Css::Align>(c))));
+            return Ok(makeRc<JustifySelfProperty>(self(), try$(parseValue<Value>(c))));
         }
     };
 
@@ -148,7 +148,7 @@ export struct AlignSelfProperty : Property {
         }
 
         Res<Rc<Property>> parse(Cursor<Css::Sst>& c) const override {
-            return Ok(makeRc<AlignSelfProperty>(self(), try$(parseValue<Css::Align>(c))));
+            return Ok(makeRc<AlignSelfProperty>(self(), try$(parseValue<Value>(c))));
         }
     };
 
@@ -186,7 +186,7 @@ export struct JustifyItemsProperty : Property {
         }
 
         Res<Rc<Property>> parse(Cursor<Css::Sst>& c) const override {
-            return Ok(makeRc<JustifyItemsProperty>(self(), try$(parseValue<Css::Align>(c))));
+            return Ok(makeRc<JustifyItemsProperty>(self(), try$(parseValue<Value>(c))));
         }
     };
 
@@ -224,7 +224,7 @@ export struct AlignItemsProperty : Property {
         }
 
         Res<Rc<Property>> parse(Cursor<Css::Sst>& c) const override {
-            return Ok(makeRc<AlignItemsProperty>(self(), try$(parseValue<Css::Align>(c))));
+            return Ok(makeRc<AlignItemsProperty>(self(), try$(parseValue<Value>(c))));
         }
     };
 

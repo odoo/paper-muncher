@@ -37,7 +37,7 @@ export struct BackgroundColorProperty : Property {
         }
 
         Res<Rc<Property>> parse(Cursor<Css::Sst>& c) const override {
-            return Ok(makeRc<BackgroundColorProperty>(self(), try$(parseValue<Css::Color>(c))));
+            return Ok(makeRc<BackgroundColorProperty>(self(), try$(parseValue<Value>(c))));
         }
     };
 
@@ -308,7 +308,7 @@ export struct ColorProperty : Property {
         }
 
         Res<Rc<Property>> parse(Cursor<Css::Sst>& c) const override {
-            return Ok(makeRc<ColorProperty>(self(), try$(parseValue<Css::Color>(c))));
+            return Ok(makeRc<ColorProperty>(self(), try$(parseValue<Value>(c))));
         }
     };
 

@@ -247,7 +247,7 @@ export struct ZIndexProperty : Property {
         }
 
         Res<Rc<Property>> parse(Cursor<Css::Sst>& c) const override {
-            return Ok(makeRc<ZIndexProperty>(self(), try$(parseValue<Css::ZIndex>(c))));
+            return Ok(makeRc<ZIndexProperty>(self(), try$(parseValue<Value>(c))));
         }
     };
 

@@ -31,7 +31,7 @@ export struct TableLayoutProperty : Property {
         }
 
         Res<Rc<Property>> parse(Cursor<Css::Sst>& c) const override {
-            return Ok(makeRc<TableLayoutProperty>(self(), try$(parseValue<Css::TableLayout>(c))));
+            return Ok(makeRc<TableLayoutProperty>(self(), try$(parseValue<Value>(c))));
         }
     };
 
@@ -70,7 +70,7 @@ export struct CaptionSideProperty : Property {
         }
 
         Res<Rc<Property>> parse(Cursor<Css::Sst>& c) const override {
-            return Ok(makeRc<CaptionSideProperty>(self(), try$(parseValue<Css::CaptionSide>(c))));
+            return Ok(makeRc<CaptionSideProperty>(self(), try$(parseValue<Value>(c))));
         }
     };
 

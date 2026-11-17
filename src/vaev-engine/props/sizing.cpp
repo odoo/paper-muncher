@@ -34,7 +34,7 @@ export struct BoxSizingProperty : Property {
         }
 
         Res<Rc<Property>> parse(Cursor<Css::Sst>& c) const override {
-            return Ok(makeRc<BoxSizingProperty>(self(), try$(parseValue<Css::BoxSizing>(c))));
+            return Ok(makeRc<BoxSizingProperty>(self(), try$(parseValue<Value>(c))));
         }
     };
 

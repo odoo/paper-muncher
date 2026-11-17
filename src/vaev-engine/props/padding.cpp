@@ -33,7 +33,7 @@ export struct PaddingTopProperty : Property {
         }
 
         Res<Rc<Property>> parse(Cursor<Css::Sst>& c) const override {
-            return Ok(makeRc<PaddingTopProperty>(self(), try$(parseValue<Css::LengthPercentage>(c))));
+            return Ok(makeRc<PaddingTopProperty>(self(), try$(parseValue<Value>(c))));
         }
     };
 
@@ -70,7 +70,7 @@ export struct PaddingRightProperty : Property {
         }
 
         Res<Rc<Property>> parse(Cursor<Css::Sst>& c) const override {
-            return Ok(makeRc<PaddingRightProperty>(self(), try$(parseValue<Css::LengthPercentage>(c))));
+            return Ok(makeRc<PaddingRightProperty>(self(), try$(parseValue<Value>(c))));
         }
     };
 
@@ -107,7 +107,7 @@ export struct PaddingBottomProperty : Property {
         }
 
         Res<Rc<Property>> parse(Cursor<Css::Sst>& c) const override {
-            return Ok(makeRc<PaddingBottomProperty>(self(), try$(parseValue<Css::LengthPercentage>(c))));
+            return Ok(makeRc<PaddingBottomProperty>(self(), try$(parseValue<Value>(c))));
         }
     };
 
@@ -144,7 +144,7 @@ export struct PaddingLeftProperty : Property {
         }
 
         Res<Rc<Property>> parse(Cursor<Css::Sst>& c) const override {
-            return Ok(makeRc<PaddingLeftProperty>(self(), try$(parseValue<Css::LengthPercentage>(c))));
+            return Ok(makeRc<PaddingLeftProperty>(self(), try$(parseValue<Value>(c))));
         }
     };
 
@@ -181,7 +181,7 @@ export struct PaddingInlineStartProperty : Property {
         }
 
         Res<Rc<Property>> parse(Cursor<Css::Sst>& c) const override {
-            return Ok(makeRc<PaddingInlineStartProperty>(self(), try$(parseValue<Css::LengthPercentage>(c))));
+            return Ok(makeRc<PaddingInlineStartProperty>(self(), try$(parseValue<Value>(c))));
         }
     };
 
@@ -221,7 +221,7 @@ export struct PaddingInlineEndProperty : Property {
         }
 
         Res<Rc<Property>> parse(Cursor<Css::Sst>& c) const override {
-            return Ok(makeRc<PaddingInlineEndProperty>(self(), try$(parseValue<Css::LengthPercentage>(c))));
+            return Ok(makeRc<PaddingInlineEndProperty>(self(), try$(parseValue<Value>(c))));
         }
     };
 

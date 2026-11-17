@@ -37,7 +37,7 @@ export struct SvgXProperty : Property {
         }
 
         Res<Rc<Property>> parse(Cursor<Css::Sst>& c) const override {
-            return Ok(makeRc<SvgXProperty>(self(), try$(parseValue<Css::LengthPercentage>(c))));
+            return Ok(makeRc<SvgXProperty>(self(), try$(parseValue<Value>(c))));
         }
     };
 
@@ -80,7 +80,7 @@ export struct SvgYProperty : Property {
         }
 
         Res<Rc<Property>> parse(Cursor<Css::Sst>& c) const override {
-            return Ok(makeRc<SvgYProperty>(self(), try$(parseValue<Css::LengthPercentage>(c))));
+            return Ok(makeRc<SvgYProperty>(self(), try$(parseValue<Value>(c))));
         }
     };
 
@@ -123,7 +123,7 @@ export struct SvgCXProperty : Property {
         }
 
         Res<Rc<Property>> parse(Cursor<Css::Sst>& c) const override {
-            return Ok(makeRc<SvgCXProperty>(self(), try$(parseValue<Css::LengthPercentage>(c))));
+            return Ok(makeRc<SvgCXProperty>(self(), try$(parseValue<Value>(c))));
         }
     };
 
@@ -166,7 +166,7 @@ export struct SvgCYProperty : Property {
         }
 
         Res<Rc<Property>> parse(Cursor<Css::Sst>& c) const override {
-            return Ok(makeRc<SvgCYProperty>(self(), try$(parseValue<Css::LengthPercentage>(c))));
+            return Ok(makeRc<SvgCYProperty>(self(), try$(parseValue<Value>(c))));
         }
     };
 
@@ -209,7 +209,7 @@ export struct SvgRProperty : Property {
         }
 
         Res<Rc<Property>> parse(Cursor<Css::Sst>& c) const override {
-            return Ok(makeRc<SvgRProperty>(self(), try$(parseValue<Css::LengthPercentage>(c))));
+            return Ok(makeRc<SvgRProperty>(self(), try$(parseValue<Value>(c))));
         }
     };
 
@@ -374,7 +374,7 @@ export struct SvgFillProperty : Property {
         }
 
         Res<Rc<Property>> parse(Cursor<Css::Sst>& c) const override {
-            return Ok(makeRc<SvgFillProperty>(self(), try$(parseValue<Css::SvgPaint>(c))));
+            return Ok(makeRc<SvgFillProperty>(self(), try$(parseValue<Value>(c))));
         }
     };
 
@@ -563,7 +563,7 @@ export struct SvgStrokeProperty : Property {
         }
 
         Res<Rc<Property>> parse(Cursor<Css::Sst>& c) const override {
-            return Ok(makeRc<SvgStrokeProperty>(self(), try$(parseValue<Css::SvgPaint>(c))));
+            return Ok(makeRc<SvgStrokeProperty>(self(), try$(parseValue<Value>(c))));
         }
     };
 
@@ -606,7 +606,7 @@ export struct SvgStrokeOpacityProperty : Property {
             if (maybePercent) {
                 return Ok(makeRc<SvgStrokeOpacityProperty>(self(), maybePercent.expect().value() / 100));
             } else {
-                return Ok(makeRc<SvgStrokeOpacityProperty>(self(), try$(parseValue<f64>(c))));
+                return Ok(makeRc<SvgStrokeOpacityProperty>(self(), try$(parseValue<Value>(c))));
             }
         }
     };
@@ -650,7 +650,7 @@ export struct FillOpacityProperty : Property {
             if (maybePercent) {
                 return Ok(makeRc<FillOpacityProperty>(self(), maybePercent.expect().value() / 100));
             } else {
-                return Ok(makeRc<FillOpacityProperty>(self(), try$(parseValue<f64>(c))));
+                return Ok(makeRc<FillOpacityProperty>(self(), try$(parseValue<Value>(c))));
             }
         }
     };
@@ -693,7 +693,7 @@ export struct StrokeWidthProperty : Property {
         Res<Rc<Property>> parse(Cursor<Css::Sst>& c) const override {
             if (auto number = parseValue<f64>(c))
                 return Ok(makeRc<StrokeWidthProperty>(self(), Css::px(number.take())));
-            return Ok(makeRc<StrokeWidthProperty>(self(), try$(parseValue<Css::LengthPercentage>(c))));
+            return Ok(makeRc<StrokeWidthProperty>(self(), try$(parseValue<Value>(c))));
         }
     };
 

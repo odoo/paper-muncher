@@ -36,7 +36,7 @@ export struct WritingModeProperty : Property {
         }
 
         Res<Rc<Property>> parse(Cursor<Css::Sst>& c) const override {
-            return Ok(makeRc<WritingModeProperty>(self(), try$(parseValue<Css::WritingMode>(c))));
+            return Ok(makeRc<WritingModeProperty>(self(), try$(parseValue<Value>(c))));
         }
     };
 
@@ -79,7 +79,7 @@ export struct DirectionProperty : Property {
         }
 
         Res<Rc<Property>> parse(Cursor<Css::Sst>& c) const override {
-            return Ok(makeRc<DirectionProperty>(self(), try$(parseValue<Css::Direction>(c))));
+            return Ok(makeRc<DirectionProperty>(self(), try$(parseValue<Value>(c))));
         }
     };
 

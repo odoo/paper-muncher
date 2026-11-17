@@ -33,7 +33,7 @@ export struct OverflowXProperty : Property {
         }
 
         Res<Rc<Property>> parse(Cursor<Css::Sst>& c) const override {
-            return Ok(makeRc<OverflowXProperty>(self(), try$(parseValue<Css::Overflow>(c))));
+            return Ok(makeRc<OverflowXProperty>(self(), try$(parseValue<Value>(c))));
         }
     };
 
@@ -71,7 +71,7 @@ export struct OverflowYProperty : Property {
         }
 
         Res<Rc<Property>> parse(Cursor<Css::Sst>& c) const override {
-            return Ok(makeRc<OverflowYProperty>(self(), try$(parseValue<Css::Overflow>(c))));
+            return Ok(makeRc<OverflowYProperty>(self(), try$(parseValue<Value>(c))));
         }
     };
 
@@ -109,7 +109,7 @@ export struct OverflowBlockProperty : Property {
         }
 
         Res<Rc<Property>> parse(Cursor<Css::Sst>& c) const override {
-            return Ok(makeRc<OverflowBlockProperty>(self(), try$(parseValue<Css::Overflow>(c))));
+            return Ok(makeRc<OverflowBlockProperty>(self(), try$(parseValue<Value>(c))));
         }
     };
 
@@ -147,7 +147,7 @@ export struct OverflowInlineProperty : Property {
         }
 
         Res<Rc<Property>> parse(Cursor<Css::Sst>& c) const override {
-            return Ok(makeRc<OverflowInlineProperty>(self(), try$(parseValue<Css::Overflow>(c))));
+            return Ok(makeRc<OverflowInlineProperty>(self(), try$(parseValue<Value>(c))));
         }
     };
 
