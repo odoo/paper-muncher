@@ -59,10 +59,6 @@ export struct SvgPainting {
     SvgPaint stroke = NONE;
 };
 
-using Clip = Opt<BasicShape>;
-
-export struct Inherited {};
-
 export struct Aligns {
     // https://drafts.csswg.org/css-align-3/#propdef-align-content
     Align alignContent;
@@ -191,16 +187,12 @@ export struct List {
     MarkerSide markerSide = Keywords::MATCH_SELF;
 };
 
-export using Margins = Math::Insets<Union<Keywords::Auto, PxPercent>>;
-
 export struct Outline {
     Px width = 3_px;
     Px offset = 0_px;
     Union<Keywords::Auto, Gfx::BorderStyle> style = Gfx::BorderStyle::NONE;
     Color color = Keywords::CURRENT_COLOR;
 };
-
-export using Paddings = Math::Insets<PxPercent>;
 
 export struct Sizing {
     Size width = Keywords::AUTO, height = Keywords::AUTO;
@@ -242,7 +234,7 @@ export struct ComputedValues {
     Cow<Sizing> sizing;
     Cow<Inline> inline_;
     Cow<BoxInsets> insets = BoxInsets(Keywords::AUTO);
-    Cow<Clip> clip;
+    Cow<ClipPath> clip;
     Cow<Transforms> transform;
     Cow<Table> table;
     Cow<Fonts> font;

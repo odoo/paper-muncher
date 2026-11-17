@@ -2,6 +2,7 @@ export module Vaev.Engine:style.values;
 
 export import :style.values.align;
 export import :style.values.backgrounds;
+export import :style.values.box;
 export import :style.values.breaks;
 export import :style.values.calc;
 export import :style.values.color;

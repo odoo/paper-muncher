@@ -116,7 +116,7 @@ export struct OpacityProperty : Property {
 
 // https://drafts.csswg.org/css-masking/#the-clip-path
 export struct ClipPathProperty : Property {
-    using Value = Union</* Url, */ Css::BasicShape, Keywords::None>;
+    using Value = Css::ClipPath;
 
     struct Registration : Property::Registration {
         Registration() : Property::Registration(Properties::CLIP_PATH) {}

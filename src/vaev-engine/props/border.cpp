@@ -789,10 +789,6 @@ export struct BorderRadiusProperty : Property {
     }
 };
 
-Css::Border toSpecified(Border const& value) {
-    return {toSpecified(value.width), value.style, toSpecified(value.color)};
-}
-
 // https://www.w3.org/TR/css-backgrounds-3/#border-shorthands
 export struct BorderTopProperty : Property {
     using Value = Css::Border;

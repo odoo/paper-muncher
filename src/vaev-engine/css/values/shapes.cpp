@@ -424,4 +424,7 @@ struct ValueParser<BasicShape> {
     }
 };
 
+// https://drafts.csswg.org/css-masking-1/#propdef-clip-path
+export using ClipPath = Union</* Url, */ BasicShape, Keywords::None>;
+
 } // namespace Vaev::Css

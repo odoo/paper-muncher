@@ -17,7 +17,7 @@ namespace Vaev::Style {
 
 // https://drafts.csswg.org/css-box-4/#propdef-margin-top
 export struct MarginTopProperty : Property {
-    using Value = Union<Keywords::Auto, Css::LengthPercentage>;
+    using Value = Css::Margin;
 
     struct Registration : Property::Registration {
         Registration() : Property::Registration(Properties::MARGIN_TOP) {}

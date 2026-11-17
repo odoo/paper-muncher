@@ -3,6 +3,7 @@ export module Vaev.Engine:css.values;
 export import :css.values.align;
 export import :css.values.backgrounds;
 export import :css.values.base;
+export import :css.values.box;
 export import :css.values.breaks;
 export import :css.values.calc;
 export import :css.values.color;

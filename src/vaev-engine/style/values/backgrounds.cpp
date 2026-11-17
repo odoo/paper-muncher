@@ -1,6 +1,7 @@
 export module Vaev.Engine:style.values.backgrounds;
 
 import Karm.Core;
+import Karm.Gfx;
 import Karm.Math;
 
 import :css.values.backgrounds;
@@ -10,6 +11,7 @@ import :css.values.images;
 import :style.values.numeric;
 import :css.values.unitValue;
 import :style.values.keywords;
+import :style.values.color;
 
 using namespace Vaev::Literals;
 using namespace Karm;
@@ -127,6 +129,17 @@ export struct BackgroundLayer {
 
 export Css::BackgroundLayer toSpecified(BackgroundLayer const& value) {
     return {value.image, value.attachment, toSpecified(value.position), value.repeat};
+}
+
+// https://drafts.csswg.org/css-backgrounds/#border-shorthands
+export struct Border {
+    Px width = 3_px;
+    Gfx::BorderStyle style = Gfx::BorderStyle::NONE;
+    Color color = Gfx::BLACK;
+};
+
+export Css::Border toSpecified(Border const& value) {
+    return {toSpecified(value.width), value.style, toSpecified(value.color)};
 }
 
 } // namespace Vaev::Style

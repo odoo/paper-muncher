@@ -237,4 +237,7 @@ export Css::BasicShape toSpecified(BasicShape const& value) {
     };
 }
 
+// https://drafts.csswg.org/css-masking-1/#propdef-clip-path
+export using ClipPath = Opt<BasicShape>;
+
 } // namespace Vaev::Style
