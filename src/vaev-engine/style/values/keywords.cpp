@@ -9,9 +9,6 @@ using namespace Karm;
 namespace Vaev::Style {
 
 // Keywords compute as specified.
-export using Css::Keyword;
-export namespace Keywords = Css::Keywords;
-
 export template <StrLit K>
 Keyword<K> toComputed(Keyword<K> const& value, auto const&) {
     return value;

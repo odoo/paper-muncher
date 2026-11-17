@@ -15,9 +15,9 @@ struct InlineFormatingContext : FormatingContext {
 
     // https://www.w3.org/TR/css-inline-3/#baseline-source
     BaselinePositionsSet getUsedBaselineFromBox(Box const& childBox, Output const& output) {
-        if (childBox.style->inline_->baselineSource == Style::Keywords::FIRST)
+        if (childBox.style->inline_->baselineSource == Keywords::FIRST)
             return output.firstBaselineSet;
-        if (childBox.style->inline_->baselineSource == Style::Keywords::LAST)
+        if (childBox.style->inline_->baselineSource == Keywords::LAST)
             return output.lastBaselineSet;
 
         if (childBox.style->display == Style::Display::INLINE and childBox.style->display == Style::Display::FLOW_ROOT)
@@ -237,7 +237,7 @@ struct InlineFormatingContext : FormatingContext {
                 if (placesFloats and atomicBox.isFloating())
                     continue;
 
-                if (oneOf(atomicBox.style->position, Style::Keywords::ABSOLUTE, Style::Keywords::FIXED)) {
+                if (oneOf(atomicBox.style->position, Keywords::ABSOLUTE, Keywords::FIXED)) {
                     if (input.generateFragment) {
                         // https://www.w3.org/TR/css-position-3/#staticpos-rect
 
@@ -297,7 +297,7 @@ struct InlineFormatingContext : FormatingContext {
                     );
                 }
 
-                if (atomicBox.style->position == Style::Keywords::RELATIVE) {
+                if (atomicBox.style->position == Keywords::RELATIVE) {
                     childInput.position += relativePositionOffset(atomicBox, input.containingBlock);
                 }
 

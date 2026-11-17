@@ -114,7 +114,7 @@ export struct FontFace {
     Union<None, FontStyle, Range<Deg>> style = FontStyle{};
 
     Opt<Range<Gfx::FontWeight>> weight = Some(Range<Gfx::FontWeight>::emptyAt(Gfx::FontWeight::REGULAR));
-    Opt<Range<Percent>> width = Some(Range<Percent>::emptyAt(toComputed(Css::FontWidth{Css::Keywords::NORMAL})));
+    Opt<Range<Percent>> width = Some(Range<Percent>::emptyAt(toComputed(Css::FontWidth{Keywords::NORMAL})));
 
     Vec<Range<Rune>> unicodeRange;
 
@@ -302,18 +302,18 @@ export struct FontStyleFontDescriptor {
 
     // auto | normal | italic | left | right | oblique [ <angle [-90deg,90deg]>{1,2} ]?
     using Value = Union<
-        Css::Keywords::Auto,
-        Css::Keywords::Normal,
-        Css::Keywords::Italic,
-        Css::Keywords::Left,
-        Css::Keywords::Right,
+        Keywords::Auto,
+        Keywords::Normal,
+        Keywords::Italic,
+        Keywords::Left,
+        Keywords::Right,
         Oblique>;
 
     Value value = initial();
 
     static Str name() { return "font-style"; }
 
-    static Value initial() { return Css::Keywords::AUTO; }
+    static Value initial() { return Keywords::AUTO; }
 
     // <angle [-90deg,90deg]>: math functions are clamped to the range.
     static Deg _clampAngle(Css::Angle const& angle) {
@@ -323,10 +323,10 @@ export struct FontStyleFontDescriptor {
     void apply(FontFace& f) const {
         using Computed = Union<None, FontStyle, Range<Deg>>;
         f.style = value.visit(
-            [](Css::Keywords::Auto) -> Computed {
+            [](Keywords::Auto) -> Computed {
                 return NONE;
             },
-            [](Css::Keywords::Italic) -> Computed {
+            [](Keywords::Italic) -> Computed {
                 return FontStyle{.val = Gfx::FontStyle::ITALIC};
             },
             [](Oblique const& oblique) -> Computed {
@@ -360,11 +360,11 @@ export struct FontStyleFontDescriptor {
         }
 
         using Keyword = Union<
-            Css::Keywords::Auto,
-            Css::Keywords::Normal,
-            Css::Keywords::Italic,
-            Css::Keywords::Left,
-            Css::Keywords::Right>;
+            Keywords::Auto,
+            Keywords::Normal,
+            Keywords::Italic,
+            Keywords::Left,
+            Keywords::Right>;
 
         value = try$(parseValue<Keyword>(c)).visit([](auto keyword) -> Value {
             return keyword;
@@ -377,13 +377,13 @@ export struct FontStyleFontDescriptor {
 // https://www.w3.org/TR/css-fonts-4/#font-weight-desc
 export struct FontWeightFontDescriptor {
     // auto | <font-weight-absolute>{1,2}
-    using Value = Union<Css::Keywords::Auto, _OneOrTwo<Css::FontWeightAbsolute>>;
+    using Value = Union<Keywords::Auto, _OneOrTwo<Css::FontWeightAbsolute>>;
 
     Value value = initial();
 
     static Str name() { return "font-weight"; }
 
-    static Value initial() { return Css::Keywords::AUTO; }
+    static Value initial() { return Keywords::AUTO; }
 
     static Gfx::FontWeight _weight(Css::FontWeightAbsolute const& weight) {
         return Gfx::FontWeight{static_cast<u16>(toComputed(weight))};
@@ -391,7 +391,7 @@ export struct FontWeightFontDescriptor {
 
     void apply(FontFace& f) const {
         f.weight = value.visit(
-            [](Css::Keywords::Auto) -> Opt<Range<Gfx::FontWeight>> {
+            [](Keywords::Auto) -> Opt<Range<Gfx::FontWeight>> {
                 return NONE;
             },
             [](_OneOrTwo<Css::FontWeightAbsolute> const& weights) -> Opt<Range<Gfx::FontWeight>> {
@@ -404,7 +404,7 @@ export struct FontWeightFontDescriptor {
 
     Res<> parse(Cursor<Css::Sst>& c) {
         if (c.skip(Css::Token::ident("auto"))) {
-            value = Css::Keywords::AUTO;
+            value = Keywords::AUTO;
             return Ok();
         }
 
@@ -417,17 +417,17 @@ export struct FontWeightFontDescriptor {
 // https://www.w3.org/TR/css-fonts-4/#font-width-prop
 export struct FontWidthFontDescriptor {
     // auto | <'font-width'>{1,2}
-    using Value = Union<Css::Keywords::Auto, _OneOrTwo<Css::FontWidth>>;
+    using Value = Union<Keywords::Auto, _OneOrTwo<Css::FontWidth>>;
 
     Value value = initial();
 
     static Str name() { return "font-width"; }
 
-    static Value initial() { return Css::Keywords::AUTO; }
+    static Value initial() { return Keywords::AUTO; }
 
     void apply(FontFace& f) const {
         f.width = value.visit(
-            [](Css::Keywords::Auto) -> Opt<Range<Percent>> {
+            [](Keywords::Auto) -> Opt<Range<Percent>> {
                 return NONE;
             },
             [](_OneOrTwo<Css::FontWidth> const& widths) -> Opt<Range<Percent>> {
@@ -440,7 +440,7 @@ export struct FontWidthFontDescriptor {
 
     Res<> parse(Cursor<Css::Sst>& c) {
         if (c.skip(Css::Token::ident("auto"))) {
-            value = Css::Keywords::AUTO;
+            value = Keywords::AUTO;
             return Ok();
         }
 
@@ -502,13 +502,13 @@ export struct FontVariationSettingsFontDescriptor {
 // MARK: font-named-instance
 // https://www.w3.org/TR/css-fonts-4/#font-named-instance
 export struct FontNamedInstanceFontDescriptor {
-    using Value = Union<Css::Keywords::Auto, String>;
+    using Value = Union<Keywords::Auto, String>;
 
     Value value = initial();
 
     static Str name() { return "font-named-instance"; }
 
-    static Value initial() { return Css::Keywords::AUTO; }
+    static Value initial() { return Keywords::AUTO; }
 
     void apply(FontFace&) const {
         // TODO
@@ -558,18 +558,18 @@ export struct FontDisplayFontDescriptor {
 // https://www.w3.org/TR/css-fonts-4/#font-metrics-override-desc
 export struct AscentOverrideFontDescriptor {
     // normal | <percentage [0,∞]>
-    using Value = Union<Css::Keywords::Normal, Css::Percentage>;
+    using Value = Union<Keywords::Normal, Css::Percentage>;
 
     Value value = initial();
 
     static Str name() { return "ascent-override"; }
 
-    static Value initial() { return Css::Keywords::NORMAL; }
+    static Value initial() { return Keywords::NORMAL; }
 
     void apply(FontFace& f) const {
         // NOTE: normal is NONE
         f.ascentOverride = value.visit(
-            [](Css::Keywords::Normal) -> Opt<Percent> { return NONE; },
+            [](Keywords::Normal) -> Opt<Percent> { return NONE; },
             [](Css::Percentage const& p) -> Opt<Percent> { return Some(toComputed(p)); }
         );
     }
@@ -584,18 +584,18 @@ export struct AscentOverrideFontDescriptor {
 // https://www.w3.org/TR/css-fonts-4/#font-metrics-override-desc
 export struct DescentOverrideStyleProp {
     // normal | <percentage [0,∞]>
-    using Value = Union<Css::Keywords::Normal, Css::Percentage>;
+    using Value = Union<Keywords::Normal, Css::Percentage>;
 
     Value value = initial();
 
     static Str name() { return "descent-override"; }
 
-    static Value initial() { return Css::Keywords::NORMAL; }
+    static Value initial() { return Keywords::NORMAL; }
 
     void apply(FontFace& f) const {
         // NOTE: normal is NONE
         f.descentOverride = value.visit(
-            [](Css::Keywords::Normal) -> Opt<Percent> { return NONE; },
+            [](Keywords::Normal) -> Opt<Percent> { return NONE; },
             [](Css::Percentage const& p) -> Opt<Percent> { return Some(toComputed(p)); }
         );
     }
@@ -610,18 +610,18 @@ export struct DescentOverrideStyleProp {
 // https://www.w3.org/TR/css-fonts-4/#font-metrics-override-desc
 export struct LineGapOverrideFontDescriptor {
     // normal | <percentage [0,∞]>
-    using Value = Union<Css::Keywords::Normal, Css::Percentage>;
+    using Value = Union<Keywords::Normal, Css::Percentage>;
 
     Value value = initial();
 
     static Str name() { return "line-gap-override"; }
 
-    static Value initial() { return Css::Keywords::NORMAL; }
+    static Value initial() { return Keywords::NORMAL; }
 
     void apply(FontFace& f) const {
         // NOTE: normal is NONE
         f.lineGapOverride = value.visit(
-            [](Css::Keywords::Normal) -> Opt<Percent> { return NONE; },
+            [](Keywords::Normal) -> Opt<Percent> { return NONE; },
             [](Css::Percentage const& p) -> Opt<Percent> { return Some(toComputed(p)); }
         );
     }

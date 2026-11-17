@@ -10,7 +10,9 @@ import :css.values.primitives;
 
 using namespace Karm;
 
-namespace Vaev::Css {
+// NOTE: Keywords are part of the CSS vocabulary, not of a computation stage:
+//       a keyword is the same value specified, computed and used.
+namespace Vaev {
 
 // https://drafts.csswg.org/css-values-4/#css-keyword
 export template <StrLit K>
@@ -24,6 +26,20 @@ struct Keyword {
         return K == L;
     }
 };
+
+namespace Keywords {
+
+#define KEYWORD(TYPE, VALUE, NAME)      \
+    export using TYPE = Keyword<VALUE>; \
+    export constexpr inline TYPE NAME{};
+#include "defs/keywords.inc"
+#undef KEYWORD
+
+} // namespace Keywords
+
+} // namespace Vaev
+
+namespace Vaev::Css {
 
 export template <StrLit K>
 struct ValueParser<Keyword<K>> {
@@ -48,15 +64,5 @@ struct ValueSerializer<Keyword<K>> {
         return w.writeStr(static_cast<Str>(K));
     }
 };
-
-namespace Keywords {
-
-#define KEYWORD(TYPE, VALUE, NAME)      \
-    export using TYPE = Keyword<VALUE>; \
-    export constexpr inline TYPE NAME{};
-#include "defs/keywords.inc"
-#undef KEYWORD
-
-} // namespace Keywords
 
 } // namespace Vaev::Css

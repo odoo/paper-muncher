@@ -34,13 +34,13 @@ export struct StackingContext {
 
         void paintBoxDecoration(Gfx::Canvas& g) {
             if (auto fragment = content.is<Rc<Layout::Fragment>>())
-                if ((*fragment)->style().visibility != Style::Keywords::HIDDEN)
+                if ((*fragment)->style().visibility != Keywords::HIDDEN)
                     (*fragment)->paintDecoration(g);
         }
 
         void paintBoxContent(Gfx::Canvas& g, Vec<Layout::OutOfBandOutline>& outOfBandOutlines) {
             if (auto fragment = content.is<Rc<Layout::Fragment>>())
-                if ((*fragment)->style().visibility != Style::Keywords::HIDDEN)
+                if ((*fragment)->style().visibility != Keywords::HIDDEN)
                     (*fragment)->paintContent(g, outOfBandOutlines);
         }
 
@@ -200,7 +200,7 @@ export struct StackingContext {
         // 9. positioned descendants with z-index: auto or z-index: 0
         else if (box.isPositioned() and zIndexNumber == 0) {
             // descendant has z-index: auto
-            if (zIndex == Style::Keywords::AUTO and not impliesStackingContext) {
+            if (zIndex == Keywords::AUTO and not impliesStackingContext) {
                 parentStackingContext.addStackingContainer(
                     PaintingOrder::POSITIONED_ZERO_Z,
                     zIndexNumber,
@@ -272,7 +272,7 @@ export struct StackingContext {
         Vec<Layout::OutOfBandOutline> outOfBandOutlines;
 
         // 4. If root is a block-level box, paint a block’s decorations given root and canvas.
-        if (fragment->style().visibility != Style::Keywords::HIDDEN)
+        if (fragment->style().visibility != Keywords::HIDDEN)
             fragment->paintDecoration(g);
 
         for (auto& e : layers) {
@@ -295,7 +295,7 @@ export struct StackingContext {
         //    non-positioned, block-level descendants. Descendants that
         //    established their own stacking context are painted atomically,
         //    in tree order.
-        if (fragment->style().visibility != Style::Keywords::HIDDEN)
+        if (fragment->style().visibility != Keywords::HIDDEN)
             fragment->paintContent(g, outOfBandOutlines);
 
         for (auto& e : layers) {

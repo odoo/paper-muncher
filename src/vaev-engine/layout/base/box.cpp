@@ -136,14 +136,14 @@ struct Box : Meta::NoCopy {
         if (forceStaticPosition)
             return false;
 
-        return style->position == Style::Keywords::ABSOLUTE or
-               style->position == Style::Keywords::FIXED or
+        return style->position == Keywords::ABSOLUTE or
+               style->position == Keywords::FIXED or
                style->position.is<Style::RunningPosition>();
     }
 
     // https://drafts.csswg.org/css2/#floats
     bool isFloating() const {
-        return style->float_ != Style::Keywords::NONE;
+        return style->float_ != Keywords::NONE;
     }
 
     // https://www.w3.org/TR/CSS22/visuren.html#block-formatting
@@ -160,10 +160,10 @@ struct Box : Meta::NoCopy {
         return isRemovedFromFlow() or
                isReplaced() or
                style->display != Style::Display::Inside::FLOW or
-               style->overflows.x != Style::Keywords::VISIBLE or
-               style->overflows.y != Style::Keywords::VISIBLE or
-               style->overflows.block != Style::Keywords::VISIBLE or
-               style->overflows.inline_ != Style::Keywords::VISIBLE;
+               style->overflows.x != Keywords::VISIBLE or
+               style->overflows.y != Keywords::VISIBLE or
+               style->overflows.block != Keywords::VISIBLE or
+               style->overflows.inline_ != Keywords::VISIBLE;
     }
 
     // https://www.w3.org/TR/CSS22/zindex.html
@@ -177,7 +177,7 @@ struct Box : Meta::NoCopy {
     }
 
     bool isPositioned() const {
-        return style->position != Style::Keywords::STATIC;
+        return style->position != Keywords::STATIC;
     }
 
     // https://drafts.csswg.org/css-tables-3/#table-wrapper-box

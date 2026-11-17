@@ -16,7 +16,7 @@ static Media const TEST_MEDIA = {
     .width = 1920_px,
     .height = 1080_px,
     .aspectRatio = 16.0 / 9.0,
-    .orientation = Style::Keywords::LANDSCAPE,
+    .orientation = Keywords::LANDSCAPE,
 
     .resolution = 1_dppx,
     .scan = Keywords::PROGRESSIVE,

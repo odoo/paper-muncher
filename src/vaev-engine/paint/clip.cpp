@@ -13,29 +13,29 @@ Pair<Layout::RectAu, Layout::RadiiAu> resolveClipGeometryBox(Rc<Layout::Fragment
         metricsRadii = boxFragment->metrics.radii;
 
     return box.visit(
-        [&](Style::Keywords::BorderBox const&) -> Pair<Layout::RectAu, Layout::RadiiAu> {
+        [&](Keywords::BorderBox const&) -> Pair<Layout::RectAu, Layout::RadiiAu> {
             return {fragment->borderBox(), metricsRadii};
         },
-        [&](Style::Keywords::PaddingBox const&) -> Pair<Layout::RectAu, Layout::RadiiAu> {
+        [&](Keywords::PaddingBox const&) -> Pair<Layout::RectAu, Layout::RadiiAu> {
             return {fragment->paddingBox(), {0_au}};
         },
-        [&](Style::Keywords::ContentBox const&) -> Pair<Layout::RectAu, Layout::RadiiAu> {
+        [&](Keywords::ContentBox const&) -> Pair<Layout::RectAu, Layout::RadiiAu> {
             return {fragment->contentBox(), {0_au}};
         },
-        [&](Style::Keywords::MarginBox const&) -> Pair<Layout::RectAu, Layout::RadiiAu> {
+        [&](Keywords::MarginBox const&) -> Pair<Layout::RectAu, Layout::RadiiAu> {
             return {fragment->marginBox(), {0_au}};
         },
-        [&](Style::Keywords::FillBox const&) -> Pair<Layout::RectAu, Layout::RadiiAu> {
+        [&](Keywords::FillBox const&) -> Pair<Layout::RectAu, Layout::RadiiAu> {
             if (fragment->hasCssLayoutBox())
                 return {fragment->contentBox(), {0_au}};
             return {fragment->objectBoundingBox(), {0_au}};
         },
-        [&](Style::Keywords::StrokeBox const&) -> Pair<Layout::RectAu, Layout::RadiiAu> {
+        [&](Keywords::StrokeBox const&) -> Pair<Layout::RectAu, Layout::RadiiAu> {
             if (fragment->hasCssLayoutBox())
                 return {fragment->borderBox(), metricsRadii};
             return {fragment->strokeBoundingBox(), metricsRadii};
         },
-        [&](Style::Keywords::ViewBox const&) -> Pair<Layout::RectAu, Layout::RadiiAu> {
+        [&](Keywords::ViewBox const&) -> Pair<Layout::RectAu, Layout::RadiiAu> {
             if (fragment->hasCssLayoutBox())
                 return {fragment->borderBox(), metricsRadii};
             return {viewBox, {0_au}};
@@ -88,14 +88,14 @@ Tuple<Math::Path, Gfx::FillRule> resolvedClipShape(Style::BasicShapeFunction con
             );
 
             f64 radius;
-            if (circle.radius.is<Style::Keywords::ClosestSide>()) {
+            if (circle.radius.is<Keywords::ClosestSide>()) {
                 radius = min(
                     Math::abs(referenceBox.width.cast<f64>() - center.x),
                     center.x,
                     center.y,
                     Math::abs(referenceBox.height.cast<f64>() - center.y)
                 );
-            } else if (circle.radius.is<Style::Keywords::FarthestSide>()) {
+            } else if (circle.radius.is<Keywords::FarthestSide>()) {
                 radius = max(
                     Math::abs(referenceBox.width.cast<f64>() - center.x),
                     center.x,
@@ -159,9 +159,9 @@ Tuple<Math::Path, Gfx::FillRule> resolvedClipShape(Style::BasicShapeFunction con
             );
 
             f64 rx;
-            if (ellipse.rx.is<Style::Keywords::ClosestSide>()) {
+            if (ellipse.rx.is<Keywords::ClosestSide>()) {
                 rx = min(Math::abs(referenceBox.width.cast<f64>() - center.x), center.x);
-            } else if (ellipse.rx.is<Style::Keywords::FarthestSide>()) {
+            } else if (ellipse.rx.is<Keywords::FarthestSide>()) {
                 rx = max(Math::abs(referenceBox.width.cast<f64>() - center.x), center.x);
             } else {
                 rx = Layout::resolve(
@@ -172,9 +172,9 @@ Tuple<Math::Path, Gfx::FillRule> resolvedClipShape(Style::BasicShapeFunction con
             }
 
             f64 ry;
-            if (ellipse.ry.is<Style::Keywords::ClosestSide>()) {
+            if (ellipse.ry.is<Keywords::ClosestSide>()) {
                 ry = min(Math::abs(referenceBox.height.cast<f64>() - center.y), center.y);
-            } else if (ellipse.ry.is<Style::Keywords::FarthestSide>()) {
+            } else if (ellipse.ry.is<Keywords::FarthestSide>()) {
                 ry = max(Math::abs(referenceBox.height.cast<f64>() - center.y), center.y);
             } else {
                 ry =

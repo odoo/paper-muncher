@@ -19,19 +19,19 @@ export enum struct FloatSide : u8 {
 // https://drafts.csswg.org/css-logical-1/#float-clear
 // The mapping on these properties uses the writing mode of the element’s containing block.
 export FloatSide resolveFloatSide(Style::Float const& float_, Style::Direction const& direction) {
-    bool rtl = direction == Style::Keywords::RTL;
+    bool rtl = direction == Keywords::RTL;
 
     return float_.visit(
-        [](Style::Keywords::Right) {
+        [](Keywords::Right) {
             return FloatSide::RIGHT;
         },
-        [&](Style::Keywords::InlineStart) {
+        [&](Keywords::InlineStart) {
             return rtl ? FloatSide::RIGHT : FloatSide::LEFT;
         },
-        [&](Style::Keywords::InlineEnd) {
+        [&](Keywords::InlineEnd) {
             return rtl ? FloatSide::LEFT : FloatSide::RIGHT;
         },
-        [](auto const&) {
+        [](Keywords::Left) {
             return FloatSide::LEFT;
         }
     );
@@ -97,12 +97,12 @@ export struct Floats {
     // https://drafts.csswg.org/css-logical-1/#float-clear
     // The mapping on these properties uses the writing mode of the element’s containing block.
     Opt<Au> clearance(Style::Clear const& clear, Style::Direction const& direction) const {
-        bool rtl = direction == Style::Keywords::RTL;
-        bool clearsInlineStart = clear == Style::Keywords::INLINE_START;
-        bool clearsInlineEnd = clear == Style::Keywords::INLINE_END;
-        bool clearsLeft = oneOf(clear, Style::Keywords::LEFT, Style::Keywords::BOTH) or
+        bool rtl = direction == Keywords::RTL;
+        bool clearsInlineStart = clear == Keywords::INLINE_START;
+        bool clearsInlineEnd = clear == Keywords::INLINE_END;
+        bool clearsLeft = oneOf(clear, Keywords::LEFT, Keywords::BOTH) or
                           (rtl ? clearsInlineEnd : clearsInlineStart);
-        bool clearsRight = oneOf(clear, Style::Keywords::RIGHT, Style::Keywords::BOTH) or
+        bool clearsRight = oneOf(clear, Keywords::RIGHT, Keywords::BOTH) or
                            (rtl ? clearsInlineStart : clearsInlineEnd);
 
         Opt<Au> result = NONE;

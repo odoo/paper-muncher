@@ -23,10 +23,10 @@ export using FontFamily = Css::FontFamily;
 // https://drafts.csswg.org/css-fonts-4/#font-weight-absolute-values
 export f64 toComputed(Css::FontWeightAbsolute const& weight) {
     return weight.visit(
-        [](Css::Keywords::Normal) -> f64 {
+        [](Keywords::Normal) -> f64 {
             return 400;
         },
-        [](Css::Keywords::Bold) -> f64 {
+        [](Keywords::Bold) -> f64 {
             return 700;
         },
         [&](Css::Number const& number) {
@@ -53,7 +53,7 @@ export FontStyle toComputed(Css::FontStyle const& value) {
                     style.obliqueAngle = toComputed(angle);
                 return style;
             },
-            [](Css::Keywords::Italic) {
+            [](Keywords::Italic) {
                 return FontStyle{.val = Gfx::FontStyle::ITALIC};
             },
             // TODO: left and right
@@ -65,9 +65,9 @@ export FontStyle toComputed(Css::FontStyle const& value) {
 
 Css::FontStyle toSpecified(FontStyle const& value) {
     if (value.val == Gfx::FontStyle::ITALIC)
-        return Css::Keywords::ITALIC;
+        return Keywords::ITALIC;
     if (value.val != Gfx::FontStyle::OBLIQUE)
-        return Css::Keywords::NORMAL;
+        return Keywords::NORMAL;
 
     Opt<Css::Angle> angle = NONE;
     if (value.obliqueAngle != Deg{14})
@@ -79,31 +79,31 @@ Css::FontStyle toSpecified(FontStyle const& value) {
 // Computed value: a percentage
 export Percent toComputed(Css::FontWidth const& value) {
     return value.visit(
-        [](Css::Keywords::UltraCondensed) {
+        [](Keywords::UltraCondensed) {
             return Percent{50};
         },
-        [](Css::Keywords::ExtraCondensed) {
+        [](Keywords::ExtraCondensed) {
             return Percent{62.5};
         },
-        [](Css::Keywords::Condensed) {
+        [](Keywords::Condensed) {
             return Percent{75};
         },
-        [](Css::Keywords::SemiCondensed) {
+        [](Keywords::SemiCondensed) {
             return Percent{87.5};
         },
-        [](Css::Keywords::Normal) {
+        [](Keywords::Normal) {
             return Percent{100};
         },
-        [](Css::Keywords::SemiExpanded) {
+        [](Keywords::SemiExpanded) {
             return Percent{112.5};
         },
-        [](Css::Keywords::Expanded) {
+        [](Keywords::Expanded) {
             return Percent{125};
         },
-        [](Css::Keywords::ExtraExpanded) {
+        [](Keywords::ExtraExpanded) {
             return Percent{150};
         },
-        [](Css::Keywords::UltraExpanded) {
+        [](Keywords::UltraExpanded) {
             return Percent{200};
         },
         [](Css::Percentage const& percentage) {

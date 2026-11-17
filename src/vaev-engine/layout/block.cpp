@@ -56,9 +56,9 @@ Res<None, Output> processBreakpointsAfterChild(Fragmentainer const& fc, Fragment
     // BREAK CLASS A
     if (not isLastChild) {
         bool breakIsAvoided =
-            oneOf(parentBox.style->break_->inside, Style::Keywords::AVOID, Style::Keywords::AVOID_PAGE) or
-            oneOf(childBox.style->break_->after, Style::Keywords::AVOID, Style::Keywords::AVOID_PAGE) or
-            (not isLastChild and oneOf(parentBox.children()[childIndex + 1].style->break_->before, Style::Keywords::AVOID, Style::Keywords::AVOID_PAGE));
+            oneOf(parentBox.style->break_->inside, Keywords::AVOID, Keywords::AVOID_PAGE) or
+            oneOf(childBox.style->break_->after, Keywords::AVOID, Keywords::AVOID_PAGE) or
+            (not isLastChild and oneOf(parentBox.children()[childIndex + 1].style->break_->before, Keywords::AVOID, Keywords::AVOID_PAGE));
 
         currentBreakpoint.overrideIfBetter(
             Breakpoint::classB(
@@ -69,7 +69,7 @@ Res<None, Output> processBreakpointsAfterChild(Fragmentainer const& fc, Fragment
     }
 
     // FORCED BREAK
-    if (childBox.style->break_->after == Style::Keywords::PAGE) {
+    if (childBox.style->break_->after == Keywords::PAGE) {
         return Output{
             .fragment = fragBuilder.buildBoxFromInput(input, currentBoxSize),
             .size = currentBoxSize,
@@ -160,7 +160,7 @@ Opt<Au> _tableWrapperFitContentWidth(Box& wrapper, Au availableWidth) {
 
         // TODO: Specified widths live on the table grid box and may be percentages,
         //       which we cannot resolve during intrinsic sizing; bail out for now.
-        if (not gridBox.style->sizing->width.is<Style::Keywords::Auto>())
+        if (not gridBox.style->sizing->width.is<Keywords::Auto>())
             return NONE;
 
         return Some(computeFitContentInlineSize(wrapper, availableWidth));
@@ -176,7 +176,7 @@ void _populateChildSpecifiedSizes(Box& child, Input& parentInput, Input& childIn
     auto containingBlock = child.style->display == Style::Display::TABLE_BOX ? parentInput.containingBlock : childInput.containingBlock;
 
     if (childInput.intrinsic == IntrinsicSize::AUTO or child.style->display != Style::Display::INLINE) {
-        if (child.style->sizing->width.is<Style::Keywords::Auto>()) {
+        if (child.style->sizing->width.is<Keywords::Auto>()) {
             // https://www.w3.org/TR/css-tables-3/#layout-principles
             // Unlike other block-level boxes, tables do not fill their containing block by default.
             // When their width computes to auto, they behave as if they had fit-content specified instead.
@@ -215,8 +215,8 @@ void _populateChildSpecifiedSizes(Box& child, Input& parentInput, Input& childIn
 // containing block inline size and the box inline size are known; otherwise 'auto'
 // margins resolve to zero.
 void _resolveAutoHorizontalMargins(Box& child, Input& childInput, UsedSpacings& usedSpacings, Opt<Au> blockInlineSize) {
-    bool startIsAuto = child.style->margin->start.is<Style::Keywords::Auto>().has();
-    bool endIsAuto = child.style->margin->end.is<Style::Keywords::Auto>().has();
+    bool startIsAuto = child.style->margin->start.is<Keywords::Auto>().has();
+    bool endIsAuto = child.style->margin->end.is<Keywords::Auto>().has();
 
     if (not(startIsAuto or endIsAuto))
         return;
@@ -267,11 +267,11 @@ PlacedFloat _placeFloat(Box& child, Style::Direction const& direction, Input con
         //       specified width, which lives on the table grid box: then the wrapper shrinks to the grid box.
         bool gridBoxWidthIsAuto = iter(child.children()) | Any([](Box const& gridBox) {
                                       return gridBox.style->display == Style::Display::Internal::TABLE_BOX and
-                                             gridBox.style->sizing->width.is<Style::Keywords::Auto>();
+                                             gridBox.style->sizing->width.is<Keywords::Auto>();
                                   });
         if (not gridBoxWidthIsAuto)
             childInput.knownSize.width = NONE;
-    } else if (child.style->sizing->width.is<Style::Keywords::Auto>()) {
+    } else if (child.style->sizing->width.is<Keywords::Auto>()) {
         // https://www.w3.org/TR/CSS22/visudet.html#float-width
         // If 'width' is computed as 'auto', the used value is the "shrink-to-fit" width.
         childInput.knownSize.width = Some(computeFitContentInlineSize(child, availableWidth) + borderBoxSpacings);
@@ -331,7 +331,7 @@ Opt<Range<Au>> _avoidFloats(Box& child, Input const& input, Input& childInput, U
     Au margins = spacings.margin.horizontal();
     Au borderBoxSpacings = spacings.padding.horizontal() + spacings.borders.horizontal();
     Au minContentWidth = computeIntrinsicContentSize(child, IntrinsicSize::MIN_CONTENT).x + borderBoxSpacings + margins;
-    bool stretches = child.style->sizing->width.is<Style::Keywords::Auto>() and child.style->display != Style::Display::TABLE;
+    bool stretches = child.style->sizing->width.is<Keywords::Auto>() and child.style->display != Style::Display::TABLE;
 
     while (auto floatsBottom = floats.nextBottom(top, 0_au)) {
         auto band = floats.freeBand(top, 0_au, container);
@@ -433,7 +433,7 @@ struct BlockFormatingContext : FormatingContext {
             if (c.isRunningPositionedBox())
                 continue;
 
-            if (oneOf(c.style->position, Style::Keywords::ABSOLUTE, Style::Keywords::FIXED)) {
+            if (oneOf(c.style->position, Keywords::ABSOLUTE, Keywords::FIXED)) {
                 if (input.generateFragment) {
                     // https://www.w3.org/TR/css-position-3/#staticpos-rect
                     RectAu staticPosRect = {
@@ -459,7 +459,7 @@ struct BlockFormatingContext : FormatingContext {
                     fragBuilder,
                     i,
                     Vec2Au{inlineSize, contentBlockSize()},
-                    c.style->break_->before == Style::Keywords::PAGE,
+                    c.style->break_->before == Keywords::PAGE,
                     startAt,
                     input
                 )
@@ -524,7 +524,7 @@ struct BlockFormatingContext : FormatingContext {
             if (placesFloats and floats.len() and avoidsFloats and not c.isRemovedFromFlow() and not c.isPseudoElement(Dom::PseudoElement::MARKER))
                 bandNextToFloats = _avoidFloats(c, input, childInput, usedSpacings, floats, blockSize, inlineSize);
 
-            if (box.style->text->align == Style::Keywords::VAEV_BLOCK_CENTER and not placedFloat) {
+            if (box.style->text->align == Keywords::VAEV_BLOCK_CENTER and not placedFloat) {
                 Au availableWidth = bandNextToFloats ? bandNextToFloats.expect().size : inlineSize;
                 childInput.position.x += availableWidth / 2 - layoutBorderBox(c, childInput.withGenerateFragment(false)).width() / 2;
             }
@@ -536,7 +536,7 @@ struct BlockFormatingContext : FormatingContext {
                 childInput.knownSize.width = Some(width);
             }
 
-            if (c.style->position == Style::Keywords::RELATIVE) {
+            if (c.style->position == Keywords::RELATIVE) {
                 childInput.position += relativePositionOffset(c, input.containingBlock);
             }
 
@@ -561,7 +561,7 @@ struct BlockFormatingContext : FormatingContext {
                 *input.fragmentainer,
                 currentBreakpoint,
                 i,
-                oneOf(box.style->break_->inside, Style::Keywords::AVOID, Style::Keywords::AVOID_PAGE),
+                oneOf(box.style->break_->inside, Keywords::AVOID, Keywords::AVOID_PAGE),
                 output.breakpoint
             );
 
@@ -592,7 +592,7 @@ struct BlockFormatingContext : FormatingContext {
 
             Au childInlineSize = output.size.x + usedSpacings.margin.horizontal();
             if (input.intrinsic == IntrinsicSize::MAX_CONTENT) {
-                if (c.style->clear != Style::Keywords::NONE)
+                if (c.style->clear != Keywords::NONE)
                     floatsBesideInlineSize = 0_au;
 
                 if (c.isFloating()) {

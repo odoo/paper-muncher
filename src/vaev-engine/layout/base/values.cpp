@@ -70,8 +70,8 @@ export Au resolve(Style::PxPercent const& value, Au relative) {
     panic("calc didn't simplify to a single value of expected unit");
 }
 
-export Au resolve(Union<Style::Keywords::Auto, Style::PxPercent> const& value, Au relative) {
-    if (value.is<Style::Keywords::Auto>())
+export Au resolve(Union<Keywords::Auto, Style::PxPercent> const& value, Au relative) {
+    if (value.is<Keywords::Auto>())
         return 0_au;
     return resolve(value.expect<Style::PxPercent>(), relative);
 }

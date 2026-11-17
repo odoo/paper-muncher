@@ -879,7 +879,7 @@ export struct TableFormatingContext : FormatingContext {
         // NOTE: The table does not automatically expand to fill its containing block.
         //       (https://www.w3.org/TR/CSS22/tables.html#width-layout)
 
-        if (not(style.sizing->width.is<Style::Keywords::Auto>() or style.sizing->width.is<Style::PxPercent>()))
+        if (not(style.sizing->width.is<Keywords::Auto>() or style.sizing->width.is<Style::PxPercent>()))
             logWarn("width can't be anything other than 'auto' or a length in a table context");
 
         tableUsedWidth = knownSizeX;
@@ -893,7 +893,7 @@ export struct TableFormatingContext : FormatingContext {
         for (auto& col : cols) {
             auto const& width = col.el.style->sizing->width;
 
-            if (not(width.is<Style::Keywords::Auto>() or width.is<Style::PxPercent>()))
+            if (not(width.is<Keywords::Auto>() or width.is<Style::PxPercent>()))
                 logWarn("width can't be anything other than 'auto' or a length in a table context");
 
             if (auto widthCalc = width.is<Style::PxPercent>()) {
@@ -922,7 +922,7 @@ export struct TableFormatingContext : FormatingContext {
 
             auto cellBoxWidthCalc = cell.box->style->sizing->width.is<Style::PxPercent>();
 
-            if (not(cell.box->style->sizing->width.is<Style::Keywords::Auto>() or cellBoxWidthCalc))
+            if (not(cell.box->style->sizing->width.is<Keywords::Auto>() or cellBoxWidthCalc))
                 logWarn("width can't be anything other than 'auto' or a length in a table context");
 
             // AUTO case
@@ -992,7 +992,7 @@ export struct TableFormatingContext : FormatingContext {
                             usedSpacings.borders.horizontal() +
                             usedSpacings.margin.horizontal();
 
-        if (not(cell.box->style->sizing->width.is<Style::Keywords::Auto>() or cell.box->style->sizing->width.is<Style::PxPercent>()))
+        if (not(cell.box->style->sizing->width.is<Keywords::Auto>() or cell.box->style->sizing->width.is<Style::PxPercent>()))
             logWarn("width can't be anything other than 'auto' or a length in a table context");
 
         if (auto cellBoxWidthCalc = cell.box->style->sizing->width.is<Style::PxPercent>()) {
@@ -1090,7 +1090,7 @@ export struct TableFormatingContext : FormatingContext {
             auto columnGroupWidth = group.el.style->sizing->width;
             auto columnGroupWidthCalc = columnGroupWidth.is<Style::PxPercent>();
 
-            if (not(columnGroupWidth.is<Style::Keywords::Auto>() or columnGroupWidthCalc))
+            if (not(columnGroupWidth.is<Keywords::Auto>() or columnGroupWidthCalc))
                 logWarn("width can't be anything other than 'auto' or a length in a table context");
 
             // AUTO case
@@ -1118,7 +1118,7 @@ export struct TableFormatingContext : FormatingContext {
             auto width = el.style->sizing->width;
             auto widthCalc = width.is<Style::PxPercent>();
 
-            if (not(width.is<Style::Keywords::Auto>() or widthCalc))
+            if (not(width.is<Keywords::Auto>() or widthCalc))
                 logWarn("width can't be anything other than 'auto' or a length in a table context");
 
             // FIXME: docs are not clear on what to do for columns with AUTO width
@@ -1268,7 +1268,7 @@ export struct TableFormatingContext : FormatingContext {
             auto& height = row.el.style->sizing->height;
             auto heightCalc = height.is<Style::PxPercent>();
 
-            if (not(height.is<Style::Keywords::Auto>() or heightCalc))
+            if (not(height.is<Keywords::Auto>() or heightCalc))
                 logWarn("height can't be anything other than 'auto' or a length in a table context");
 
             // AUTO case
@@ -1297,7 +1297,7 @@ export struct TableFormatingContext : FormatingContext {
                 // [A] CSS 2.2 does not specify how cells that span more than one row affect row height calculations except
                 // that the sum of the row heights involved must be great enough to encompass the cell spanning the rows.
 
-                if (not(cell.box->style->sizing->height.is<Style::Keywords::Auto>() or cell.box->style->sizing->height.is<Style::PxPercent>()))
+                if (not(cell.box->style->sizing->height.is<Keywords::Auto>() or cell.box->style->sizing->height.is<Style::PxPercent>()))
                     logWarn("height can't be anything other than 'auto' or a length in a table context");
 
                 auto rowSpan = cell.rowSpan;
@@ -1370,7 +1370,7 @@ export struct TableFormatingContext : FormatingContext {
     bool useBordersCollapse = false;
 
     void build(Box& box) override {
-        useBordersCollapse = box.style->table->collapse == Style::Keywords::COLLAPSE;
+        useBordersCollapse = box.style->table->collapse == Keywords::COLLAPSE;
 
         if (not useBordersCollapse)
             spacing = {
@@ -1405,7 +1405,7 @@ export struct TableFormatingContext : FormatingContext {
         //
         //      However, Chrome does not implement this exception, and we are not implementing it either.
         bool shouldRunAutoAlgorithm =
-            box.style->tableLayout == Style::Keywords::AUTO or
+            box.style->tableLayout == Keywords::AUTO or
             not input.knownSize.width;
         Opt<AutoLayoutCacheKey> cacheKey;
 
@@ -1447,7 +1447,7 @@ export struct TableFormatingContext : FormatingContext {
 
             if (hasAutoHeightRows) {
                 for (usize i = 0; i < rows.len(); i++) {
-                    if (rows[i].el.style->sizing->height.is<Style::Keywords::Auto>())
+                    if (rows[i].el.style->sizing->height.is<Keywords::Auto>())
                         rowHeight[i] += surplus * (rowHeight[i] / (usedVerticalSpace - totalNonAutoHeight));
                 }
             } else {
@@ -1564,7 +1564,7 @@ export struct TableFormatingContext : FormatingContext {
             .pendingVerticalSizes = input.pendingVerticalSizes,
         };
 
-        if (cell.box->style->position == Style::Keywords::RELATIVE) {
+        if (cell.box->style->position == Keywords::RELATIVE) {
             childInput.position += relativePositionOffset(*cell.box, input.containingBlock);
         }
 
@@ -1576,7 +1576,7 @@ export struct TableFormatingContext : FormatingContext {
         }
 
         if (input.fragmentainer->isDiscoveryMode()) {
-            if (oneOf(cell.box->style->break_->inside, Style::Keywords::AVOID, Style::Keywords::AVOID_PAGE)) {
+            if (oneOf(cell.box->style->break_->inside, Keywords::AVOID, Keywords::AVOID_PAGE)) {
                 outputCell.breakpoint.expect().withAppeal(Breakpoint::Appeal::AVOID);
             }
         }
@@ -1678,25 +1678,25 @@ export struct TableFormatingContext : FormatingContext {
         // if row is self-contained, the <tr> it belongs to has size 1
         bool forcedBreakAfterCurrRow =
             rowGroupIdxs[i].axisIdx and
-            rows[rowGroupIdxs[i].axisIdx.expect()].el.style->break_->after == Style::Keywords::PAGE;
+            rows[rowGroupIdxs[i].axisIdx.expect()].el.style->break_->after == Keywords::PAGE;
 
         bool forcedBreakBeforeNextRow =
             i + 1 <= dataRowsInterval.y and
             rowGroupIdxs[i + 1].axisIdx and
-            rows[rowGroupIdxs[i + 1].axisIdx.expect()].el.style->break_->before == Style::Keywords::PAGE;
+            rows[rowGroupIdxs[i + 1].axisIdx.expect()].el.style->break_->before == Keywords::PAGE;
 
         bool limitOfCurrRowGroup = i + 1 <= dataRowsInterval.y and rowGroupIdxs[i].groupIdx != rowGroupIdxs[i + 1].groupIdx;
 
         bool forcedBreakAfterCurrRowGroup =
             limitOfCurrRowGroup and
             rowGroupIdxs[i].groupIdx and
-            rowGroups[rowGroupIdxs[i].groupIdx.expect()].el.style->break_->after == Style::Keywords::PAGE;
+            rowGroups[rowGroupIdxs[i].groupIdx.expect()].el.style->break_->after == Keywords::PAGE;
 
         bool forcedBreakBeforeNextRowGroup =
             limitOfCurrRowGroup and
             i + 1 <= dataRowsInterval.y and
             rowGroupIdxs[i + 1].groupIdx and
-            rowGroups[rowGroupIdxs[i + 1].groupIdx.expect()].el.style->break_->before == Style::Keywords::PAGE;
+            rowGroups[rowGroupIdxs[i + 1].groupIdx.expect()].el.style->break_->before == Keywords::PAGE;
 
         if (forcedBreakAfterCurrRow or forcedBreakBeforeNextRow or
             forcedBreakAfterCurrRowGroup or forcedBreakBeforeNextRowGroup) {
@@ -1710,15 +1710,15 @@ export struct TableFormatingContext : FormatingContext {
     bool handleUnforcedBreakpointsInsideAndAfterRow(Box& box, Breakpoint& currentBreakpoint, RowOutput outputRow, usize i, Vec2Au fragmentainerSize) {
         bool rowIsFreelyFragmentable = isFreelyFragmentableRow(i, fragmentainerSize);
 
-        bool avoidBreakInsideTable = oneOf(box.style->break_->inside, Style::Keywords::AVOID, Style::Keywords::AVOID_PAGE);
+        bool avoidBreakInsideTable = oneOf(box.style->break_->inside, Keywords::AVOID, Keywords::AVOID_PAGE);
 
         bool avoidBreakInsideRow =
             rowGroupIdxs[i].axisIdx and
-            oneOf(rows[rowGroupIdxs[i].axisIdx.expect()].el.style->break_->inside, Style::Keywords::AVOID, Style::Keywords::AVOID_PAGE);
+            oneOf(rows[rowGroupIdxs[i].axisIdx.expect()].el.style->break_->inside, Keywords::AVOID, Keywords::AVOID_PAGE);
 
         bool avoidBreakInsideRowGroup =
             rowGroupIdxs[i].groupIdx and
-            oneOf(rowGroups[rowGroupIdxs[i].groupIdx.expect()].el.style->break_->inside, Style::Keywords::AVOID, Style::Keywords::AVOID_PAGE);
+            oneOf(rowGroups[rowGroupIdxs[i].groupIdx.expect()].el.style->break_->inside, Keywords::AVOID, Keywords::AVOID_PAGE);
 
         if (rowIsFreelyFragmentable) {
             // breakpoint inside of row, take in consideration ALL breakpoints

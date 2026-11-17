@@ -15,18 +15,18 @@ using namespace Karm::Ref::Literals;
 using namespace Vaev::Literals;
 
 template <StrLit K>
-struct Cli::ValueParser<Vaev::Style::Keyword<K>> {
+struct Cli::ValueParser<Vaev::Keyword<K>> {
     static Res<> usage(Io::TextWriter& w) {
         return w.writeStr(Str{K});
     }
 
-    static Res<Vaev::Style::Keyword<K>> parse(Cursor<Token>& c) {
+    static Res<Vaev::Keyword<K>> parse(Cursor<Token>& c) {
         using namespace Vaev;
 
         if (c.ended() or c->kind != Token::OPERAND)
             return Error::invalidData("expected a css keyword");
 
-        auto specified = try$(Css::parseValue<Css::Keyword<K>>(c->value));
+        auto specified = try$(Css::parseValue<Vaev::Keyword<K>>(c->value));
         c.next();
 
         return Ok(specified);
@@ -217,9 +217,9 @@ Async::Task<> entryPointAsync(Sys::Env& env, Async::CancellationToken ct) {
     };
 
     auto headerArg = Cli::option<Opt<Ref::Url>>(NONE, "header"s, "Document to render as the page header"s, NONE);
-    auto headerSizeArg = Cli::option<Union<Vaev::Style::Keywords::Auto, Vaev::Style::Px>>(NONE, "header-size"s, "Height of the page header (default: auto)"s, Vaev::Css::Keywords::AUTO);
+    auto headerSizeArg = Cli::option<Union<Vaev::Keywords::Auto, Vaev::Style::Px>>(NONE, "header-size"s, "Height of the page header (default: auto)"s, Vaev::Keywords::AUTO);
     auto footerArg = Cli::option<Opt<Ref::Url>>(NONE, "footer"s, "Document to render as the page footer"s, NONE);
-    auto footerSizeArg = Cli::option<Union<Vaev::Style::Keywords::Auto, Vaev::Style::Px>>(NONE, "footer-size"s, "Height of the page footer (default: auto)"s, Vaev::Css::Keywords::AUTO);
+    auto footerSizeArg = Cli::option<Union<Vaev::Keywords::Auto, Vaev::Style::Px>>(NONE, "footer-size"s, "Height of the page footer (default: auto)"s, Vaev::Keywords::AUTO);
 
     Cli::Section decorationSection{
         .title = "Document decoration"s,

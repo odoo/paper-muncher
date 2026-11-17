@@ -93,8 +93,8 @@ export struct Options {
     Batch batch = Batch::CONCAT;
     Flow flow = Flow::AUTO;
     Extend extend = Extend::CROP;
-    Union<Vaev::Style::Keywords::Auto, Vaev::Style::Px> headerSize = Vaev::Style::Keywords::AUTO;
-    Union<Vaev::Style::Keywords::Auto, Vaev::Style::Px> footerSize = Vaev::Style::Keywords::AUTO;
+    Union<Vaev::Keywords::Auto, Vaev::Style::Px> headerSize = Vaev::Keywords::AUTO;
+    Union<Vaev::Keywords::Auto, Vaev::Style::Px> footerSize = Vaev::Keywords::AUTO;
 
     auto derivePrintSettings() const -> Print::Settings {
         auto stock = this->stock;
@@ -137,14 +137,14 @@ export struct Options {
 struct HeaderFooterDecorator : Vaev::Driver::PageDecorator {
     Opt<Rc<Vaev::WebView>> headerWebView;
     Opt<Rc<Vaev::WebView>> footerWebView;
-    Union<Vaev::Style::Keywords::Auto, Vaev::Style::Px> headerSize = Vaev::Style::Keywords::AUTO;
-    Union<Vaev::Style::Keywords::Auto, Vaev::Style::Px> footerSize = Vaev::Style::Keywords::AUTO;
+    Union<Vaev::Keywords::Auto, Vaev::Style::Px> headerSize = Vaev::Keywords::AUTO;
+    Union<Vaev::Keywords::Auto, Vaev::Style::Px> footerSize = Vaev::Keywords::AUTO;
     Map<Math::Vec2Au, Pair<Vaev::Layout::Au>> _memo;
 
     Vaev::Layout::RectAu layout(Vaev::Style::DisplayArea const& area, Vaev::Style::ViewerPrefs const& prefs, Vaev::Driver::PageLayoutInfos const& infos) override {
         auto [headerHeight, footerHeight] = _memo.lookupOrPut(infos.pageDecoration.size(), [&] {
             auto headerHeightMemo = headerSize.visit(
-                [&](Vaev::Style::Keywords::Auto){
+                [&](Vaev::Keywords::Auto){
                     if (auto& [w] = headerWebView) {
                         w->changeArea(area.withViewport(Vaev::Layout::toPixel(infos.pageDecoration.size())));
                         w->changePrefs(prefs);
@@ -159,7 +159,7 @@ struct HeaderFooterDecorator : Vaev::Driver::PageDecorator {
             );
 
             auto footerHeightMemo = footerSize.visit(
-                [&](Vaev::Style::Keywords::Auto){
+                [&](Vaev::Keywords::Auto){
                     if (auto& [w] = footerWebView) {
                         w->changeArea(area.withViewport(Vaev::Layout::toPixel(infos.pageDecoration.size())));
                         w->changePrefs(prefs);

@@ -127,7 +127,7 @@ export struct FontWeightProperty : Property {
                 return toComputed(weight);
             },
             // https://www.w3.org/TR/css-fonts-4/#relative-weights
-            [&](Css::Keywords::Lighter) -> f64 {
+            [&](Keywords::Lighter) -> f64 {
                 auto w = parent.font->weight;
                 if (w < 100)
                     return w;
@@ -137,7 +137,7 @@ export struct FontWeightProperty : Property {
                     return 400;
                 return 700;
             },
-            [&](Css::Keywords::Bolder) -> f64 {
+            [&](Keywords::Bolder) -> f64 {
                 auto w = parent.font->weight;
                 if (w < 350)
                     return 400;

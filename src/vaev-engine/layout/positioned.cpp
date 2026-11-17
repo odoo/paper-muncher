@@ -17,8 +17,8 @@ static RectAu _computeInsetModifiedContainingBlock(Box& box, RectAu containingBl
 
     using InsetLength = Style::PxPercent;
 
-    bool startIsAuto = style.insets->start.is<Style::Keywords::Auto>().has();
-    bool endIsAuto = style.insets->end.is<Style::Keywords::Auto>().has();
+    bool startIsAuto = style.insets->start.is<Keywords::Auto>().has();
+    bool endIsAuto = style.insets->end.is<Keywords::Auto>().has();
 
     // If only one inset property in a given axis is auto, it is set to zero. If both inset properties in a given axis are auto, then,
     // depending on the box’s self-alignment property in the relevant axis:
@@ -71,8 +71,8 @@ static RectAu _computeInsetModifiedContainingBlock(Box& box, RectAu containingBl
         }
     }
 
-    bool topIsAuto = style.insets->top.is<Style::Keywords::Auto>().has();
-    bool bottomIsAuto = style.insets->bottom.is<Style::Keywords::Auto>().has();
+    bool topIsAuto = style.insets->top.is<Keywords::Auto>().has();
+    bool bottomIsAuto = style.insets->bottom.is<Keywords::Auto>().has();
 
     // If only one inset property in a given axis is auto, it is set to zero. If both inset properties in a given axis are auto, then,
     // depending on the box’s self-alignment property in the relevant axis:
@@ -134,7 +134,7 @@ bool _isAbsoluteAndFixedPositioningContainingBlock(Style::ComputedValues const& 
     // For elements whose layout is governed by the CSS box model, any value other than none for the transform property
     // also causes the element to establish a containing block for all descendants. Its padding box will be used to layout
     // for all of its absolute-position descendants, fixed-position descendants, and descendant fixed background attachments.
-    if (style.transform->transform != Style::Keywords::NONE) {
+    if (style.transform->transform != Keywords::NONE) {
         return true;
     }
 
@@ -147,7 +147,7 @@ export bool isAbsolutePositioningContainingBlock(Style::ComputedValues const& st
     // NOTE: There is a helpful but non-normative article on MDN
     // https://developer.mozilla.org/en-US/docs/Web/CSS/Guides/Display/Containing_block#identifying_the_containing_block
 
-    if (style.position != Style::Keywords::STATIC) {
+    if (style.position != Keywords::STATIC) {
         return true;
     }
 
@@ -192,7 +192,7 @@ export Output layoutAbsolutePositioned(Input const& input, Box& box, RectAu cont
     // TODO: Handle `margin: auto` case once they are implemented.
 
     Opt<Au> width = NONE;
-    if (not style.insets->start.is<Style::Keywords::Auto>() and not style.insets->end.is<Style::Keywords::Auto>()) {
+    if (not style.insets->start.is<Keywords::Auto>() and not style.insets->end.is<Keywords::Auto>()) {
         width = Some(availableSpace.width);
     } else {
         width = computeSpecifiedBorderBoxWidth(
@@ -202,7 +202,7 @@ export Output layoutAbsolutePositioned(Input const& input, Box& box, RectAu cont
     }
 
     Opt<Au> height = NONE;
-    if (not style.insets->top.is<Style::Keywords::Auto>() and not style.insets->bottom.is<Style::Keywords::Auto>()) {
+    if (not style.insets->top.is<Keywords::Auto>() and not style.insets->bottom.is<Keywords::Auto>()) {
         height = Some(availableSpace.height);
     } else {
         height = computeSpecifiedBorderBoxHeight(
@@ -219,13 +219,13 @@ export Output layoutAbsolutePositioned(Input const& input, Box& box, RectAu cont
 
     auto position = availableSpace.topStart() + usedSpacings.margin.topStart();
 
-    if (style.insets->start.is<Style::Keywords::Auto>() and
-        not style.insets->end.is<Style::Keywords::Auto>() and width) {
+    if (style.insets->start.is<Keywords::Auto>() and
+        not style.insets->end.is<Keywords::Auto>() and width) {
         position.x = availableSpace.end() - usedSpacings.margin.end - *width;
     }
 
-    if (style.insets->top.is<Style::Keywords::Auto>() and
-        not style.insets->bottom.is<Style::Keywords::Auto>() and height) {
+    if (style.insets->top.is<Keywords::Auto>() and
+        not style.insets->bottom.is<Keywords::Auto>() and height) {
         position.y = availableSpace.bottom() - usedSpacings.margin.bottom - *height;
     }
 
@@ -244,9 +244,9 @@ export Output layoutAbsolutePositioned(Input const& input, Box& box, RectAu cont
 }
 
 // https://www.w3.org/TR/css-position-3/#relpos-insets
-Au _negotiateInsetsForRelativePositioning(Union<Style::Keywords::Auto, Style::PxPercent> const& start, Union<Style::Keywords::Auto, Style::PxPercent> const& end, Au relativeTo) {
-    bool startIsAuto = start.is<Style::Keywords::Auto>().has();
-    bool endIsAuto = end.is<Style::Keywords::Auto>().has();
+Au _negotiateInsetsForRelativePositioning(Union<Keywords::Auto, Style::PxPercent> const& start, Union<Keywords::Auto, Style::PxPercent> const& end, Au relativeTo) {
+    bool startIsAuto = start.is<Keywords::Auto>().has();
+    bool endIsAuto = end.is<Keywords::Auto>().has();
 
     // - If opposing inset properties in an axis both compute to auto (their initial values), their used values are zero
     //   (i.e., the boxes stay in their original position in that axis).

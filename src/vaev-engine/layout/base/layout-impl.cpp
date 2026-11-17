@@ -90,7 +90,7 @@ Au _snapLengthAsBorderWidth(Au v) {
 
 InsetsAu computeBorders(Box& box) {
     // NOTE: In borders collapse mode, we assume that the table box borders are 'transfered' to the cells
-    if (box.style->display == Style::Display::TABLE_BOX and box.style->table->collapse == Style::Keywords::COLLAPSE) {
+    if (box.style->display == Style::Display::TABLE_BOX and box.style->table->collapse == Keywords::COLLAPSE) {
         return InsetsAu{};
     }
 
@@ -169,25 +169,25 @@ Vec2Au computeIntrinsicContentSize(Box& box, IntrinsicSize intrinsic, Opt<Au> ca
 Opt<Au> computeSpecifiedBorderBoxWidth(Box& box, Style::Size size, Vec2Au containingBlock, Au horizontalBorderBox, Opt<Au> capmin) {
     if (auto calc = size.is<Style::PxPercent>()) {
         auto specifiedWidth = Layout::resolve(*calc, containingBlock.x);
-        if (box.style->boxSizing == Style::Keywords::CONTENT_BOX) {
+        if (box.style->boxSizing == Keywords::CONTENT_BOX) {
             specifiedWidth += horizontalBorderBox;
         }
         return Some(specifiedWidth);
     }
 
-    if (size.is<Style::Keywords::MinContent>()) {
+    if (size.is<Keywords::MinContent>()) {
         auto intrinsicSize = computeIntrinsicContentSize(box, IntrinsicSize::MIN_CONTENT, capmin);
         return Some(intrinsicSize.x + horizontalBorderBox);
-    } else if (size.is<Style::Keywords::MaxContent>()) {
+    } else if (size.is<Keywords::MaxContent>()) {
         auto intrinsicSize = computeIntrinsicContentSize(box, IntrinsicSize::MAX_CONTENT, capmin);
         return Some(intrinsicSize.x + horizontalBorderBox);
-    } else if (size.is<Style::Keywords::FitContent>()) {
+    } else if (size.is<Keywords::FitContent>()) {
         auto minIntrinsicSize = computeIntrinsicContentSize(box, IntrinsicSize::MIN_CONTENT, capmin);
         auto maxIntrinsicSize = computeIntrinsicContentSize(box, IntrinsicSize::MAX_CONTENT, capmin);
         auto stretchIntrinsicSize = computeIntrinsicContentSize(box, IntrinsicSize::STRETCH_TO_FIT, capmin);
 
         return Some(clamp(stretchIntrinsicSize.x, minIntrinsicSize.x, maxIntrinsicSize.x) + horizontalBorderBox);
-    } else if (size.is<Style::Keywords::Auto>()) {
+    } else if (size.is<Keywords::Auto>()) {
         return NONE;
     } else {
         logWarn("unknown specified size: {}", size);
@@ -198,24 +198,24 @@ Opt<Au> computeSpecifiedBorderBoxWidth(Box& box, Style::Size size, Vec2Au contai
 Opt<Au> computeSpecifiedBorderBoxHeight(Box& box, Style::Size size, Vec2Au containingBlock, Au verticalBorderBox) {
     if (auto calc = size.is<Style::PxPercent>()) {
         auto specifiedHeight = Layout::resolve(*calc, containingBlock.y);
-        if (box.style->boxSizing == Style::Keywords::CONTENT_BOX) {
+        if (box.style->boxSizing == Keywords::CONTENT_BOX) {
             specifiedHeight += verticalBorderBox;
         }
         return Some(specifiedHeight);
     }
 
-    if (size.is<Style::Keywords::MinContent>()) {
+    if (size.is<Keywords::MinContent>()) {
         // https://drafts.csswg.org/css-sizing-3/#valdef-width-min-content
         // for a box’s block size, unless otherwise specified, this is equivalent to its automatic size.
         return NONE;
-    } else if (size.is<Style::Keywords::MaxContent>()) {
+    } else if (size.is<Keywords::MaxContent>()) {
         // https://drafts.csswg.org/css-sizing-3/#valdef-width-max-content
         // for a box’s block size, unless otherwise specified, this is equivalent to its automatic size.
         return NONE;
-    } else if (size.is<Style::Keywords::FitContent>()) {
+    } else if (size.is<Keywords::FitContent>()) {
         // Since this depends on min/max content size, this is also unknown.
         return NONE;
-    } else if (size.is<Style::Keywords::Auto>()) {
+    } else if (size.is<Keywords::Auto>()) {
         return NONE;
     } else {
         logWarn("unknown specified size: {}", size);
@@ -280,8 +280,8 @@ Output layoutContentBox(Box& box, Input input) {
         for (usize i = 0; i < pending.len(); ++i) {
             auto oofChild = pending[i];
 
-            bool handleAsAbsoluteCb = oofChild->style().position == Style::Keywords::ABSOLUTE and isAbsolutePositioningContainingBlock(*box.style);
-            bool handleAsFixedCb = oofChild->style().position == Style::Keywords::FIXED and isFixedPositioningContainingBlock(*box.style);
+            bool handleAsAbsoluteCb = oofChild->style().position == Keywords::ABSOLUTE and isAbsolutePositioningContainingBlock(*box.style);
+            bool handleAsFixedCb = oofChild->style().position == Keywords::FIXED and isFixedPositioningContainingBlock(*box.style);
 
             if (handleAsAbsoluteCb or handleAsFixedCb) {
                 auto containingBlock = RectAu{

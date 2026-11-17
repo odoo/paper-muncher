@@ -33,15 +33,15 @@ bool isSegmentBreak(Rune rune) {
 
 // http://drafts.csswg.org/css-text/#white-space-property
 static bool _allowsWrap(Style::WhiteSpace whiteSpace) {
-    return oneOf(whiteSpace, Style::Keywords::NORMAL, Style::Keywords::PRE_WRAP, Style::Keywords::BREAK_SPACES, Style::Keywords::PRE_LINE);
+    return oneOf(whiteSpace, Keywords::NORMAL, Keywords::PRE_WRAP, Keywords::BREAK_SPACES, Keywords::PRE_LINE);
 }
 
 static bool _collapsesWhitespace(Style::WhiteSpace whiteSpace) {
-    return oneOf(whiteSpace, Style::Keywords::NORMAL, Style::Keywords::NOWRAP, Style::Keywords::PRE_LINE);
+    return oneOf(whiteSpace, Keywords::NORMAL, Keywords::NOWRAP, Keywords::PRE_LINE);
 }
 
 static bool _discardsWhitespaceOnlyTextAtContentStart(Style::WhiteSpace whiteSpace) {
-    return oneOf(whiteSpace, Style::Keywords::NORMAL, Style::Keywords::NOWRAP);
+    return oneOf(whiteSpace, Keywords::NORMAL, Keywords::NOWRAP);
 }
 
 static Gfx::ProseStyle _proseStyleFromStyle(Style::ComputedValues const& style) {
@@ -50,13 +50,13 @@ static Gfx::ProseStyle _proseStyleFromStyle(Style::ComputedValues const& style) 
     };
 
     style.text->align.visit(
-        [&](Meta::Contains<Style::Keywords::Start, Style::Keywords::Left> auto) {
+        [&](Meta::Contains<Keywords::Start, Keywords::Left> auto) {
             proseStyle.align = Gfx::TextAlign::LEFT;
         },
-        [&](Meta::Contains<Style::Keywords::End, Style::Keywords::Right> auto) {
+        [&](Meta::Contains<Keywords::End, Keywords::Right> auto) {
             proseStyle.align = Gfx::TextAlign::RIGHT;
         },
-        [&](Meta::Contains<Style::Keywords::Center, Style::Keywords::VaevBlockCenter> auto) {
+        [&](Meta::Contains<Keywords::Center, Keywords::VaevBlockCenter> auto) {
             proseStyle.align = Gfx::TextAlign::CENTER;
         },
         [](auto) {
@@ -70,7 +70,7 @@ static Gfx::ProseStyle _proseStyleFromStyle(Style::ComputedValues const& style) 
 static Gfx::SpanStyle _spanStyleFromStyle(Style::ComputedValues const& style) {
     // FIXME: Assert bounds at parse time to respect inherits.
     auto usedLineHeight = style.inline_->lineHeight.visit(
-        [](Style::Keywords::Normal) -> Opt<Au> {
+        [](Keywords::Normal) -> Opt<Au> {
             return NONE;
         },
         [&](f64 number) -> Opt<Au> {
@@ -106,13 +106,13 @@ static Gfx::SpanStyle _spanStyleFromStyle(Style::ComputedValues const& style) {
 
 void _transformAndAppendRuneToProse(Rc<Gfx::Prose> prose, Rune rune, Style::TextTransform transform) {
     transform.visit(
-        [&](Style::Keywords::Uppercase) {
+        [&](Keywords::Uppercase) {
             prose->append(toAsciiUpper(rune));
         },
-        [&](Style::Keywords::Lowercase) {
+        [&](Keywords::Lowercase) {
             prose->append(toAsciiLower(rune));
         },
-        [&](Style::Keywords::None) {
+        [&](Keywords::None) {
             prose->append(rune);
         }
     );
@@ -126,7 +126,7 @@ void _appendTextToInlineBox(Io::SScan scan, Rc<Style::ComputedValues const> pare
 
     // A sequence of collapsible spaces at the beginning of a line is removed.
     if (not rootInlineBox.isActive()) {
-        if (whitespace == Style::Keywords::PRE_LINE)
+        if (whitespace == Keywords::PRE_LINE)
             scan.eat(Re::blank());
         else if (whiteSpacesAreCollapsible)
             scan.eat(Re::space());
@@ -149,7 +149,7 @@ void _appendTextToInlineBox(Io::SScan scan, Rc<Style::ComputedValues const> pare
         // Preserve pre-line segment breaks. Prose collapses other whitespace
         // across text and inline boundaries.
         if (whiteSpacesAreCollapsible) {
-            if (whitespace == Style::Keywords::PRE_LINE and isSegmentBreak(rune)) {
+            if (whitespace == Keywords::PRE_LINE and isSegmentBreak(rune)) {
                 // A CRLF sequence represents one segment break.
                 if (rune == '\r' and not scan.ended() and scan.peek() == '\n')
                     scan.next();
@@ -752,7 +752,7 @@ static void _buildTableBox(BuilderContext tableWrapperBc, Gc::Ref<Dom::Element> 
 
     Box tableBox = {tableBoxStyle, Some(el)};
 
-    bool captionsOnTop = tableBoxStyle->table->captionSide == Style::Keywords::TOP;
+    bool captionsOnTop = tableBoxStyle->table->captionSide == Keywords::TOP;
     if (captionsOnTop) {
         searchAndBuildCaption();
     }
@@ -883,7 +883,7 @@ static void _buildChildDefaultDisplay(BuilderContext bc, Gc::Ref<Dom::Element> c
         return;
     }
 
-    if (childStyle->float_ != Style::Keywords::NONE) {
+    if (childStyle->float_ != Keywords::NONE) {
         // NOSPEC: A float that follows inline content stays an atomic inline-level box, so it can be placed on the
         //         line where it appears. Otherwise, it is a block-level box of its block container.
         if (bc.hasRootInlineBox() and bc.rootInlineBox().isActive()) {
@@ -950,14 +950,14 @@ static void _buildPseudoElement(BuilderContext bc, Gc::Ref<Dom::PseudoElement> p
         return;
 
     bool isBeforeOrAfter = (pseudoElement->type == Dom::PseudoElement::BEFORE or pseudoElement->type == Dom::PseudoElement::AFTER);
-    if (isBeforeOrAfter and (style->content.is<Style::Keywords::Normal>() or style->content.is<Style::Keywords::None>()))
+    if (isBeforeOrAfter and (style->content.is<Keywords::Normal>() or style->content.is<Keywords::None>()))
         return;
 
-    if (pseudoElement->type == Dom::PseudoElement::MARKER and listStyleType == Style::Keywords::NONE)
+    if (pseudoElement->type == Dom::PseudoElement::MARKER and listStyleType == Keywords::NONE)
         return;
 
     auto generateInnerContent = [&](BuilderContext& innerBc) {
-        if (pseudoElement->type == Dom::PseudoElement::MARKER and style->content.is<Style::Keywords::Normal>()) {
+        if (pseudoElement->type == Dom::PseudoElement::MARKER and style->content.is<Keywords::Normal>()) {
             String marker = ""s;
             if (listStyleType == Style::CustomIdent{"disc"_sym}) {
                 marker = "\u2022"s;
@@ -983,7 +983,7 @@ static void _buildPseudoElement(BuilderContext bc, Gc::Ref<Dom::PseudoElement> p
     // https://www.w3.org/TR/css-lists-3/#list-style-position-outside
     bool isOutsideMarker =
         pseudoElement->type == Dom::PseudoElement::MARKER and
-        pseudoElement->element()->computedValues()->list->position == Style::Keywords::OUTSIDE;
+        pseudoElement->element()->computedValues()->list->position == Keywords::OUTSIDE;
 
     if (bc.hasRootInlineBox() and oneOf(display, Style::Display::INLINE, Style::Display::CONTENTS) and not isOutsideMarker) {
         bc.startInlineBox(_spanStyleFromStyle(*style));

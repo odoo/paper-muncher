@@ -6,8 +6,6 @@ import :css.values.keywords;
 
 using namespace Karm;
 
-// https://drafts.csswg.org/css-tables-3/
-
 namespace Vaev::Css {
 
 // https://drafts.csswg.org/css-tables-3/#table-layout-property
