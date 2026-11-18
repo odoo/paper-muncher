@@ -33,7 +33,7 @@ export struct StyleRule {
     Vec<Declaration> declarations;
     Origin origin = Origin::AUTHOR;
 
-    static StyleRule parse(RegisteredPropertySet& propertyRegistry, Css::Sst const& sst, Origin origin, NamespaceScope& ns) {
+    static StyleRule parse(RegisteredPropertySet& propertyRegistry, Css::Sst const& sst, Origin origin, NamespaceScope& ns, Opt<Selector const&> parent) {
         if (sst != Css::Sst::RULE)
             panic("expected rule");
 
