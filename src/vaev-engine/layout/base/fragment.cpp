@@ -116,6 +116,11 @@ export struct Fragment {
         return NONE;
     }
 
+    // https://www.w3.org/TR/css-overflow-3/#overflow-control
+    virtual Opt<RectAu> overflowClip() const {
+        return NONE;
+    }
+
     // https://www.w3.org/TR/css-transforms-1/#transform-box
     // NOTE: Elements with an associated CSS layout box resolve fill-box,
     //       stroke-box and view-box against their own boxes, while SVG
@@ -607,6 +612,16 @@ export struct BoxFragment : Fragment {
         return NONE;
     }
 
+    // https://www.w3.org/TR/css-overflow-3/#valdef-overflow-hidden
+    // https://www.w3.org/TR/css-overflow-3/#valdef-overflow-clip
+    // NOTE: 'overflow-clip-margin' is not supported, the overflow clip edge is always the padding box.
+    // FIXME: Both axes are clipped as soon as one of them is, and the clip doesn't follow the border radius.
+    Opt<RectAu> overflowClip() const override {
+        if (not style().overflows.clips())
+            return NONE;
+        return Some(paddingBox());
+    }
+
     static Opt<Gfx::Borders> buildBorders(BoxMetrics const& metrics, Style::ComputedValues const& style) {
         if (metrics.borders.zero())
             return NONE;
@@ -722,6 +737,8 @@ export struct BoxFragment : Fragment {
             auto& prose = originatingBox().content.expect<Rc<Gfx::Prose>>();
 
             g.push();
+            if (auto clip = overflowClip())
+                g.clip(clip->round().cast<f64>());
             g.origin(contentBox().topStart().cast<f64>());
             g.fill(prose);
             g.pop();
@@ -742,6 +759,7 @@ export struct BoxFragment : Fragment {
 
             outline.fill = resolve(outlineStyle.color, style().color);
 
+            // FIXME: Out-of-band outlines are painted outside of the overflow clip of their ancestors.
             outOfBandOutlines.pushBack(OutOfBandOutline{
                 .outline = outline,
                 .rect = borderBox().round().cast<f64>(),

@@ -14,6 +14,7 @@ namespace Vaev {
 export enum struct Overflow : u8 {
     VISIBLE,
     HIDDEN,
+    CLIP,
     SCROLL,
     AUTO,
 
@@ -33,6 +34,8 @@ struct ValueParser<Overflow> {
             return Ok(Overflow::VISIBLE);
         else if (c.skip(Css::Token::ident("hidden")))
             return Ok(Overflow::HIDDEN);
+        else if (c.skip(Css::Token::ident("clip")))
+            return Ok(Overflow::CLIP);
         else if (c.skip(Css::Token::ident("scroll")))
             return Ok(Overflow::SCROLL);
         else if (c.skip(Css::Token::ident("auto")))
@@ -47,6 +50,28 @@ export struct Overflows {
     Overflow y = Overflow::VISIBLE;
     Overflow block = Overflow::VISIBLE;
     Overflow inline_ = Overflow::VISIBLE;
+
+    // https://www.w3.org/TR/css-overflow-3/#scrollable-overflow-value
+    bool scrollable() const {
+        auto scrollableValue = [](Overflow overflow) {
+            return overflow == Overflow::SCROLL or
+                   overflow == Overflow::AUTO or
+                   overflow == Overflow::HIDDEN;
+        };
+
+        return scrollableValue(x) or
+               scrollableValue(y) or
+               scrollableValue(block) or
+               scrollableValue(inline_);
+    }
+
+    // https://www.w3.org/TR/css-overflow-3/#valdef-overflow-visible
+    bool clips() const {
+        return x != Overflow::VISIBLE or
+               y != Overflow::VISIBLE or
+               block != Overflow::VISIBLE or
+               inline_ != Overflow::VISIBLE;
+    }
 
     void repr(Io::Emit& e) const {
         e("(overflows");

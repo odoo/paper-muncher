@@ -26,22 +26,43 @@ export struct StackingContext {
         PaintingOrder paintingOrder;
         Integer zIndex;
         Union<Rc<Layout::Fragment>, Rc<StackingContext>> content;
+        Opt<RectAu> clip = NONE;
+
+        void clipTo(RectAu r) {
+            clip = Some(clip ? clip->clipTo(r) : r);
+        }
+
+        void paintClipped(Gfx::Canvas& g, auto paint) {
+            if (not clip)
+                return paint();
+
+            g.push();
+            g.clip(clip->round().cast<f64>());
+            paint();
+            g.pop();
+        }
 
         void paintStackingContext(Gfx::Canvas& g, Math::Rectf viewBox) {
             if (auto stackingContext = content.is<Rc<StackingContext>>())
-                (*stackingContext)->paintNested(g, viewBox);
+                paintClipped(g, [&] {
+                    (*stackingContext)->paintNested(g, viewBox);
+                });
         }
 
         void paintBoxDecoration(Gfx::Canvas& g) {
             if (auto fragment = content.is<Rc<Layout::Fragment>>())
                 if ((*fragment)->style().visibility != Visibility::HIDDEN)
-                    (*fragment)->paintDecoration(g);
+                    paintClipped(g, [&] {
+                        (*fragment)->paintDecoration(g);
+                    });
         }
 
         void paintBoxContent(Gfx::Canvas& g, Vec<Layout::OutOfBandOutline>& outOfBandOutlines) {
             if (auto fragment = content.is<Rc<Layout::Fragment>>())
                 if ((*fragment)->style().visibility != Visibility::HIDDEN)
-                    (*fragment)->paintContent(g, outOfBandOutlines);
+                    paintClipped(g, [&] {
+                        (*fragment)->paintContent(g, outOfBandOutlines);
+                    });
         }
 
         void paintWireframe(Gfx::Canvas& g, Math::Rectf viewBox) {
@@ -80,8 +101,9 @@ export struct StackingContext {
             );
         }
 
+        // https://www.w3.org/TR/css-overflow-3/#scrollable
         RectAu scrollableOverflow() {
-            return content.visit(
+            auto overflow = content.visit(
                 [](Rc<Layout::Fragment>& f) {
                     return f->borderBox();
                 },
@@ -89,6 +111,7 @@ export struct StackingContext {
                     return sc->scrollableOverflow();
                 }
             );
+            return clip ? overflow.clipTo(*clip) : overflow;
         }
 
         void repr(Io::Emit& e) const {
@@ -132,6 +155,9 @@ export struct StackingContext {
     }
 
     void dispatchChildren(Rc<Layout::Fragment> fragment, StackingContext& parentStackingContext) {
+        auto first = layers.len();
+        auto parentFirst = parentStackingContext.layers.len();
+
         for (auto& c : fragment->children()) {
             if (c->flags().has(Layout::Fragment::OUT_OF_FLOW))
                 continue;
@@ -143,6 +169,14 @@ export struct StackingContext {
             }
 
             dispatchStackingLayer(c, parentStackingContext);
+        }
+
+        // NOTE: The layers added since belong to the descendants of the fragment.
+        if (auto clip = fragment->overflowClip()) {
+            for (auto& layer : mutSub(layers, first, layers.len()))
+                layer.clipTo(*clip);
+            for (auto& layer : mutSub(parentStackingContext.layers, parentFirst, parentStackingContext.layers.len()))
+                layer.clipTo(*clip);
         }
     }
 
