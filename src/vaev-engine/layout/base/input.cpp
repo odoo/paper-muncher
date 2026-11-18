@@ -66,6 +66,9 @@ export struct Input {
     // "availableSpaceInFragmentainer" parameter
     Au pendingVerticalSizes = {};
 
+    // No content was placed above this box in the current fragmentainer yet.
+    bool atFragmentainerStart = false;
+
     Input withIntrinsic(IntrinsicSize i) const {
         auto copy = *this;
         copy.intrinsic = i;
