@@ -27,14 +27,8 @@ export struct TransformOriginProperty : Property {
             return {"-webkit-transform-origin"_sym};
         }
 
-        Rc<Property> initial() const override {
-            return makeRc<TransformOriginProperty>(
-                self(),
-                TransformOrigin{
-                    .xOffset = Calc<PercentOr<Length>>{Percent{50}},
-                    .yOffset = Calc<PercentOr<Length>>{Percent{50}},
-                }
-            );
+        InitialValue initialValue() const override {
+            return "50% 50%"s;
         }
 
         Rc<Property> load(ComputedValues const& c) const override {
@@ -69,8 +63,8 @@ export struct TransformBoxProperty : Property {
     struct Registration : Property::Registration {
         Registration() : Property::Registration(Properties::TRANSFORM_BOX) {}
 
-        Rc<Property> initial() const override {
-            return makeRc<TransformBoxProperty>(self(), TransformBox{Keywords::VIEW_BOX});
+        InitialValue initialValue() const override {
+            return "view-box"s;
         }
 
         Rc<Property> load(ComputedValues const& c) const override {
@@ -111,8 +105,8 @@ export struct TransformProperty : Property {
             return {"-webkit-transform"_sym};
         }
 
-        Rc<Property> initial() const override {
-            return makeRc<TransformProperty>(self(), Transform{Keywords::NONE});
+        InitialValue initialValue() const override {
+            return "none"s;
         }
 
         Rc<Property> load(ComputedValues const& c) const override {

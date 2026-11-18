@@ -16,8 +16,8 @@ export struct CounterResetProperty : Property {
     struct Registration : Property::Registration {
         Registration() : Property::Registration(Properties::COUNTER_RESET) {}
 
-        Rc<Property> initial() const override {
-            return makeRc<CounterResetProperty>(self(), Vec<CounterProps::Reset>{});
+        InitialValue initialValue() const override {
+            return "none"s;
         }
 
         Rc<Property> load(ComputedValues const& c) const override {
@@ -51,8 +51,8 @@ export struct CounterIncrementProperty : Property {
     struct Registration : Property::Registration {
         Registration() : Property::Registration(Properties::COUNTER_INCREMENT) {}
 
-        Rc<Property> initial() const override {
-            return makeRc<CounterIncrementProperty>(self(), Vec<CounterProps::Increment>{});
+        InitialValue initialValue() const override {
+            return "none"s;
         }
 
         Rc<Property> load(ComputedValues const& c) const override {
@@ -86,8 +86,8 @@ export struct CounterSetProperty : Property {
     struct Registration : Property::Registration {
         Registration() : Property::Registration(Properties::COUNTER_SET) {}
 
-        Rc<Property> initial() const override {
-            return makeRc<CounterSetProperty>(self(), Vec<CounterProps::Set>{});
+        InitialValue initialValue() const override {
+            return "none"s;
         }
 
         Rc<Property> load(ComputedValues const& c) const override {

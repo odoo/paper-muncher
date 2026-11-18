@@ -21,8 +21,8 @@ export struct PaddingTopProperty : Property {
     struct Registration : Property::Registration {
         Registration() : Property::Registration(Properties::PADDING_TOP) {}
 
-        Rc<Property> initial() const override {
-            return makeRc<PaddingTopProperty>(self(), Calc<PercentOr<Length>>{Length{}});
+        InitialValue initialValue() const override {
+            return "0"s;
         }
 
         Rc<Property> load(ComputedValues const& c) const override {
@@ -56,8 +56,8 @@ export struct PaddingRightProperty : Property {
     struct Registration : Property::Registration {
         Registration() : Property::Registration(Properties::PADDING_RIGHT) {}
 
-        Rc<Property> initial() const override {
-            return makeRc<PaddingRightProperty>(self(), Calc<PercentOr<Length>>{Length{}});
+        InitialValue initialValue() const override {
+            return "0"s;
         }
 
         Rc<Property> load(ComputedValues const& c) const override {
@@ -91,8 +91,8 @@ export struct PaddingBottomProperty : Property {
     struct Registration : Property::Registration {
         Registration() : Property::Registration(Properties::PADDING_BOTTOM) {}
 
-        Rc<Property> initial() const override {
-            return makeRc<PaddingBottomProperty>(self(), Calc<PercentOr<Length>>{Length{}});
+        InitialValue initialValue() const override {
+            return "0"s;
         }
 
         Rc<Property> load(ComputedValues const& c) const override {
@@ -126,8 +126,8 @@ export struct PaddingLeftProperty : Property {
     struct Registration : Property::Registration {
         Registration() : Property::Registration(Properties::PADDING_LEFT) {}
 
-        Rc<Property> initial() const override {
-            return makeRc<PaddingLeftProperty>(self(), Calc<PercentOr<Length>>{Length{}});
+        InitialValue initialValue() const override {
+            return "0"s;
         }
 
         Rc<Property> load(ComputedValues const& c) const override {
@@ -161,8 +161,8 @@ export struct PaddingInlineStartProperty : Property {
     struct Registration : Property::Registration {
         Registration() : Property::Registration(Properties::PADDING_INLINE_START, LOGICAL) {}
 
-        Rc<Property> initial() const override {
-            return makeRc<PaddingInlineStartProperty>(self(), Calc<PercentOr<Length>>{Length{}});
+        InitialValue initialValue() const override {
+            return "0"s;
         }
 
         Rc<Property> load(ComputedValues const& c) const override {
@@ -199,8 +199,8 @@ export struct PaddingInlineEndProperty : Property {
     struct Registration : Property::Registration {
         Registration() : Property::Registration(Properties::PADDING_INLINE_END, LOGICAL) {}
 
-        Rc<Property> initial() const override {
-            return makeRc<PaddingInlineEndProperty>(self(), Calc<PercentOr<Length>>{Length{}});
+        InitialValue initialValue() const override {
+            return "0"s;
         }
 
         Rc<Property> load(ComputedValues const& c) const override {
@@ -238,8 +238,8 @@ export struct PaddingProperty : Property {
         Registration()
             : Property::Registration(Properties::PADDING, SHORTHAND) {}
 
-        Rc<Property> initial() const override {
-            return makeRc<PaddingProperty>(self(), Math::Insets<Calc<PercentOr<Length>>>{Length{}});
+        InitialValue initialValue() const override {
+            return "0"s;
         }
 
         Rc<Property> load(ComputedValues const& c) const override {

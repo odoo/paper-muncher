@@ -23,8 +23,8 @@ export struct BackgroundColorProperty : Property {
     struct Registration : Property::Registration {
         Registration() : Property::Registration(Properties::BACKGROUND_COLOR) {}
 
-        Rc<Property> initial() const override {
-            return makeRc<BackgroundColorProperty>(self(), TRANSPARENT);
+        InitialValue initialValue() const override {
+            return "transparent"s;
         }
 
         Rc<Property> load(ComputedValues const& c) const override {
@@ -61,8 +61,8 @@ export struct BackgroundAttachmentProperty : Property {
     struct Registration : Property::Registration {
         Registration() : Property::Registration(Properties::BACKGROUND_ATTACHMENT) {}
 
-        Rc<Property> initial() const override {
-            return makeRc<BackgroundAttachmentProperty>(self(), Vec<BackgroundAttachment>{Keywords::SCROLL});
+        InitialValue initialValue() const override {
+            return "scroll"s;
         }
 
         Rc<Property> load(ComputedValues const& c) const override {
@@ -106,6 +106,11 @@ export struct BackgroundImageProperty : Property {
     struct Registration : Property::Registration {
         Registration() : Property::Registration(Properties::BACKGROUND_IMAGE) {}
 
+        InitialValue initialValue() const override {
+            return "none"s;
+        }
+
+        // NOTE: The parser isn't implemented yet, so it can't read initial().
         Rc<Property> initial() const override {
             return makeRc<BackgroundImageProperty>(self(), Vec<Image>{});
         }
@@ -139,6 +144,11 @@ export struct BackgroundPositionProperty : Property {
     struct Registration : Property::Registration {
         Registration() : Property::Registration(Properties::BACKGROUND_POSITION) {}
 
+        InitialValue initialValue() const override {
+            return "0% 0%"s;
+        }
+
+        // NOTE: The parser isn't implemented yet, so it can't read initial().
         Rc<Property> initial() const override {
             return makeRc<BackgroundPositionProperty>(self(), Vec<BackgroundPosition>{});
         }
@@ -172,6 +182,11 @@ export struct BackgroundRepeatProperty : Property {
     struct Registration : Property::Registration {
         Registration() : Property::Registration(Properties::BACKGROUND_REPEAT) {}
 
+        InitialValue initialValue() const override {
+            return "repeat"s;
+        }
+
+        // NOTE: The parser isn't implemented yet, so it can't read initial().
         Rc<Property> initial() const override {
             return makeRc<BackgroundRepeatProperty>(self(), Vec<BackgroundRepeat>{BackgroundRepeat::REPEAT});
         }
@@ -208,8 +223,8 @@ export struct BackgroundProperty : Property {
         Registration()
             : Property::Registration(Properties::BACKGROUND, SHORTHAND) {}
 
-        Rc<Property> initial() const override {
-            return makeRc<BackgroundProperty>(self(), SpecifiedBackground{TRANSPARENT});
+        InitialValue initialValue() const override {
+            return "transparent"s;
         }
 
         Rc<Property> load(ComputedValues const& c) const override {
@@ -248,8 +263,8 @@ export struct ColorProperty : Property {
         Registration()
             : Property::Registration(Properties::COLOR, INHERITED) {}
 
-        Rc<Property> initial() const override {
-            return makeRc<ColorProperty>(self(), BLACK);
+        InitialValue initialValue() const override {
+            return "CanvasText"s;
         }
 
         void inherit(ComputedValues const& parent, ComputedValues& child) const override {

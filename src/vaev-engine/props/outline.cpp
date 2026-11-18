@@ -20,8 +20,8 @@ export struct OutlineWidthProperty : Property {
     struct Registration : Property::Registration {
         Registration() : Property::Registration(Properties::OUTLINE_WIDTH) {}
 
-        Rc<Property> initial() const override {
-            return makeRc<OutlineWidthProperty>(self(), LineWidth{Keywords::MEDIUM});
+        InitialValue initialValue() const override {
+            return "medium"s;
         }
 
         Rc<Property> load(ComputedValues const& c) const override {
@@ -58,8 +58,8 @@ export struct OutlineStyleProperty : Property {
     struct Registration : Property::Registration {
         Registration() : Property::Registration(Properties::OUTLINE_STYLE) {}
 
-        Rc<Property> initial() const override {
-            return makeRc<OutlineStyleProperty>(self(), Value{Gfx::BorderStyle::NONE});
+        InitialValue initialValue() const override {
+            return "none"s;
         }
 
         Rc<Property> load(ComputedValues const& c) const override {
@@ -101,8 +101,8 @@ export struct OutlineColorProperty : Property {
             return ComputationPhase::LATE;
         }
 
-        Rc<Property> initial() const override {
-            return makeRc<OutlineColorProperty>(self(), Value{Keywords::AUTO});
+        InitialValue initialValue() const override {
+            return "auto"s;
         }
 
         Rc<Property> load(ComputedValues const& c) const override {
@@ -149,8 +149,8 @@ export struct OutlineOffsetProperty : Property {
     struct Registration : Property::Registration {
         Registration() : Property::Registration(Properties::OUTLINE_OFFSET) {}
 
-        Rc<Property> initial() const override {
-            return makeRc<OutlineOffsetProperty>(self(), Calc<Length>{0_au});
+        InitialValue initialValue() const override {
+            return "0"s;
         }
 
         Rc<Property> load(ComputedValues const& c) const override {
@@ -186,8 +186,8 @@ export struct OutlineProperty : Property {
         Registration()
             : Property::Registration(Properties::OUTLINE, SHORTHAND) {}
 
-        Rc<Property> initial() const override {
-            return makeRc<OutlineProperty>(self(), SpecifiedOutline{});
+        InitialValue initialValue() const override {
+            return "medium none auto"s;
         }
 
         Rc<Property> load(ComputedValues const& c) const override {
@@ -196,35 +196,58 @@ export struct OutlineProperty : Property {
 
         Res<Rc<Property>> parse(Cursor<Css::Sst>& c) const override {
             SpecifiedOutline value;
+
+            bool widthSet = false;
             bool styleSet = false;
+            bool colorSet = false;
+            usize autoCount = 0;
+
             while (not c.ended()) {
-                auto width = parseValue<Calc<Length>>(c);
+                if (c.skip(Css::Token::ident("auto"))) {
+                    autoCount++;
+                    continue;
+                }
+
+                auto width = parseValue<LineWidth>(c);
                 if (width) {
+                    if (widthSet)
+                        return Error::invalidData("duplicated outline width");
                     value.width = width.expect();
+                    widthSet = true;
                     continue;
                 }
 
                 auto color = parseValue<Color>(c);
                 if (color) {
+                    if (colorSet)
+                        return Error::invalidData("duplicated outline color");
                     value.color = color.expect();
+                    colorSet = true;
                     continue;
                 }
 
                 auto style = parseValue<Gfx::BorderStyle>(c);
                 if (style) {
+                    if (styleSet)
+                        return Error::invalidData("duplicated outline style");
                     value.style = style.expect();
                     styleSet = true;
                     continue;
                 }
 
-                if (c.skip(Css::Token::ident("auto"))) {
-                    if (not styleSet)
-                        value.style = Keywords::AUTO;
-                    value.color = Keywords::AUTO;
-                    continue;
-                }
-
                 break;
+            }
+
+            for (usize i = 0; i < autoCount; i++) {
+                if (not styleSet) {
+                    value.style = Keywords::AUTO;
+                    styleSet = true;
+                } else if (not colorSet) {
+                    value.color = Keywords::AUTO;
+                    colorSet = true;
+                } else {
+                    return Error::invalidData("duplicated outline auto");
+                }
             }
 
             return Ok(makeRc<OutlineProperty>(self(), value));

@@ -14,8 +14,8 @@ struct ListStyleImageProperty : Property {
         Registration()
             : Property::Registration(Properties::LIST_STYLE_IMAGE, {INHERITED, BULK_INHERITED}) {}
 
-        Rc<Property> initial() const override {
-            return makeRc<ListStyleImageProperty>(self(), Keywords::NONE);
+        InitialValue initialValue() const override {
+            return "none"s;
         }
 
         void inherit(ComputedValues const& parent, ComputedValues& child) const override {
@@ -52,8 +52,8 @@ struct ListStyleTypeProperty : Property {
         Registration()
             : Property::Registration(Properties::LIST_STYLE_TYPE, {INHERITED, BULK_INHERITED}) {}
 
-        Rc<Property> initial() const override {
-            return makeRc<ListStyleTypeProperty>(self(), CustomIdent{"disc"_sym});
+        InitialValue initialValue() const override {
+            return "disc"s;
         }
 
         void inherit(ComputedValues const& parent, ComputedValues& child) const override {
@@ -90,8 +90,8 @@ struct ListStylePositionProperty : Property {
         Registration()
             : Property::Registration(Properties::LIST_STYLE_POSITION, {INHERITED, BULK_INHERITED}) {}
 
-        Rc<Property> initial() const override {
-            return makeRc<ListStylePositionProperty>(self(), Keywords::OUTSIDE);
+        InitialValue initialValue() const override {
+            return "outside"s;
         }
 
         void inherit(ComputedValues const& parent, ComputedValues& child) const override {
@@ -142,8 +142,8 @@ struct ListStyleProperty : Property {
         Registration()
             : Property::Registration(Properties::LIST_STYLE, SHORTHAND) {}
 
-        Rc<Property> initial() const override {
-            return makeRc<ListStyleProperty>(self(), Value{});
+        InitialValue initialValue() const override {
+            return "outside none disc"s;
         }
 
         Rc<Property> load(ComputedValues const& c) const override {
@@ -218,8 +218,8 @@ struct MarkerSideProperty : Property {
             child.list.cow().markerSide = parent.list->markerSide;
         }
 
-        Rc<Property> initial() const override {
-            return makeRc<MarkerSideProperty>(self(), Keywords::MATCH_SELF);
+        InitialValue initialValue() const override {
+            return "match-self"s;
         }
 
         Rc<Property> load(ComputedValues const& c) const override {
