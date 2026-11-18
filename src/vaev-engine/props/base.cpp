@@ -29,7 +29,7 @@ export struct RegisteredPropertySet;
 
 export struct ComputationContext :
     RelativeLengthContextData,
-    Style::FontSizeContextData {
+    FontSizeContextData {
 
     void populateUsingViewport(Viewport const& vp) {
         viewportSmallWidth = vp.small.width.value();
@@ -179,7 +179,6 @@ export struct Property : Meta::NoCopy {
         virtual Rc<Property> initialProperty() const {
             auto content = initial().visit(
                 [](GuaranteedInvalid) {
-                    // The guaranteed-invalid value has no text, it's represented by its own token.
                     return Css::Content{Css::Sst::guaranteedInvalid()};
                 },
                 [](Str text) {

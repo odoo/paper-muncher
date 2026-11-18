@@ -1046,7 +1046,7 @@ export struct BorderWidthProperty : Property {
 
 // MARK: Borders - Table -------------------------------------------------------
 
-// https://www.w3.org/TR/CSS22/tables.html#propdef-border-collapse
+// https://drafts.csswg.org/css-tables-3/#border-collapse-property
 export struct BorderCollapseProperty : Property {
     using Value = Css::BorderCollapse;
 
@@ -1085,9 +1085,8 @@ export struct BorderCollapseProperty : Property {
     }
 };
 
-// https://www.w3.org/TR/CSS22/tables.html#propdef-border-spacing
+// https://drafts.csswg.org/css-tables-3/#propdef-border-spacing
 export struct BorderSpacingProperty : Property {
-    // <length>{1,2}
     struct Value {
         Css::Length horizontal, vertical;
 

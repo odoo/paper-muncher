@@ -335,7 +335,6 @@ export struct ColumnGapProperty : Property {
 };
 
 export struct GapProperty : Property {
-    // <'row-gap'> <'column-gap'>?
     struct Value {
         RowGapProperty::Value row = Keywords::NORMAL;
         RowGapProperty::Value col = Keywords::NORMAL;

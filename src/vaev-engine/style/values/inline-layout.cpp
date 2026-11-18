@@ -17,7 +17,6 @@ namespace Vaev::Style {
 // Computed value: the specified keyword, a number, or a computed <length> value
 export using LineHeight = Union<Keywords::Normal, f64, Px>;
 
-// NOTE: Percentages compute to lengths, so a length comes back as a <length-percentage>.
 export Union<Keywords::Normal, Css::Number, Css::LengthPercentage> toSpecified(LineHeight const& value) {
     using Specified = Union<Keywords::Normal, Css::Number, Css::LengthPercentage>;
     return value.visit(
@@ -42,12 +41,15 @@ export using AlignmentBaseline = Css::AlignmentBaseline;
 // https://www.w3.org/TR/css-inline-3/#dominant-baseline-property
 export using DominantBaseline = Css::DominantBaseline;
 
+// https://www.w3.org/TR/css-inline-3/#baseline-shift-property
+// Computed Value: the specified keyword or a computed <length-percentage> value
 export using BaselineShift = Union<
-    PxPercent,
     Keywords::Sub,
     Keywords::Super,
     Keywords::Top,
     Keywords::Center,
-    Keywords::Bottom>;
+    Keywords::Bottom,
+    PxPercent
+>;
 
 } // namespace Vaev::Style
