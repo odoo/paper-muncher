@@ -1087,13 +1087,7 @@ export struct BorderCollapseProperty : Property {
 
 // https://drafts.csswg.org/css-tables-3/#propdef-border-spacing
 export struct BorderSpacingProperty : Property {
-    struct Value {
-        Css::Length horizontal, vertical;
-
-        void repr(Io::Emit& e) const {
-            e("({}, {})", horizontal, vertical);
-        }
-    };
+    using Value = Pair<Css::Length>;
 
     struct Registration : Property::Registration {
         Registration()
@@ -1111,17 +1105,7 @@ export struct BorderSpacingProperty : Property {
         }
 
         Res<Rc<Property>> parse(Cursor<Css::Sst>& c) const override {
-            if (c.ended())
-                return Error::invalidData("unexpected end of input");
-
-            auto horizontal = parseValue<Css::Length>(c);
-            if (not horizontal)
-                return Error::invalidData("expected length parameter for border-spacing");
-
-            auto vertical = parseValue<Css::Length>(c);
-            if (not vertical)
-                return Ok(makeRc<BorderSpacingProperty>(self(), Value{horizontal.expect(), horizontal.expect()}));
-            return Ok(makeRc<BorderSpacingProperty>(self(), Value{horizontal.take(), vertical.take()}));
+            return Ok(makeRc<BorderSpacingProperty>(self(), try$(parseValue<Value>(c))));
         }
     };
 
@@ -1131,7 +1115,7 @@ export struct BorderSpacingProperty : Property {
         : Property(registration), _value(value) {}
 
     void apply([[maybe_unused]] ComputedValues const& parent, ComputedValues& c, [[maybe_unused]] ComputationContext const& cx) const override {
-        c.table.cow().spacing = {toComputed(_value.horizontal, cx), toComputed(_value.vertical, cx)};
+        c.table.cow().spacing = {toComputed(_value.v0, cx), toComputed(_value.v1, cx)};
     }
 
     // https://drafts.csswg.org/cssom/#serialize-a-css-value
@@ -1139,9 +1123,9 @@ export struct BorderSpacingProperty : Property {
         // If component values can be omitted or replaced with a shorter representation
         // without changing the meaning of the value, omit/replace them.
         Io::StringWriter horizontal;
-        try$(serializeValue(horizontal, _value.horizontal));
+        try$(serializeValue(horizontal, _value.v0));
         Io::StringWriter vertical;
-        try$(serializeValue(vertical, _value.vertical));
+        try$(serializeValue(vertical, _value.v1));
 
         auto h = horizontal.take();
         auto v = vertical.take();

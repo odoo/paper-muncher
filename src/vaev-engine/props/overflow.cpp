@@ -186,21 +186,7 @@ export struct OverflowProperty : Property {
         }
 
         Res<Rc<Property>> parse(Cursor<Css::Sst>& c) const override {
-            eatWhitespace(c);
-            if (c.ended())
-                return Error::invalidData("unexpected end of input");
-
-            Pair<Css::Overflow> value{Keywords::VISIBLE, Keywords::VISIBLE};
-            value.v0 = try$(parseValue<Css::Overflow>(c));
-
-            eatWhitespace(c);
-            if (c.ended()) {
-                value.v1 = value.v0;
-            } else {
-                value.v1 = try$(parseValue<Css::Overflow>(c));
-            }
-
-            return Ok(makeRc<OverflowProperty>(self(), value));
+            return Ok(makeRc<OverflowProperty>(self(), try$(parseValue<Value>(c))));
         }
     };
 

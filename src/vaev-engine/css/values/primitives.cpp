@@ -264,6 +264,18 @@ struct ValueSerializer<S> {
 };
 
 export template <typename T>
+struct ValueParser<Pair<T>> {
+    static Res<Pair<T>> parse(Cursor<Sst>& c) {
+        auto first = try$(parseValue<T>(c));
+        eatWhitespace(c);
+        auto second = parseValue<T>(c);
+        if (not second)
+            return Ok(Pair<T>{first, first});
+        return Ok(Pair<T>{first, second.take()});
+    }
+};
+
+export template <typename T>
 struct ValueParser<Math::Insets<T>> {
     static Res<Math::Insets<T>> parse(Cursor<Sst>& c) {
         if (c.ended())

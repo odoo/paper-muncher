@@ -291,24 +291,7 @@ export struct MarginInlineEndProperty : Property {
 
 // https://drafts.csswg.org/css-logical/#propdef-margin-inline
 export struct MarginInlineProperty : Property {
-    // <'margin-top'>{1,2}
-    // The first value is the start side, the second (defaulting to the first) is the end side.
-    struct Value {
-        MarginTopProperty::Value start;
-        MarginTopProperty::Value end;
-
-        static Res<Value> parse(Cursor<Css::Sst>& c) {
-            auto start = try$(parseValue<MarginTopProperty::Value>(c));
-            auto end = parseValue<MarginTopProperty::Value>(c);
-            if (not end)
-                return Ok(Value{start, start});
-            return Ok(Value{start, end.take()});
-        }
-
-        void repr(Io::Emit& e) const {
-            e("({} {})", start, end);
-        }
-    };
+    using Value = Pair<MarginTopProperty::Value>;
 
     struct Registration : Property::Registration {
         Registration() : Property::Registration(Properties::MARGIN_INLINE, LOGICAL) {}
@@ -322,7 +305,7 @@ export struct MarginInlineProperty : Property {
         }
 
         Res<Rc<Property>> parse(Cursor<Css::Sst>& c) const override {
-            return Ok(makeRc<MarginInlineProperty>(self(), try$(Value::parse(c))));
+            return Ok(makeRc<MarginInlineProperty>(self(), try$(parseValue<Value>(c))));
         }
     };
 
@@ -334,8 +317,8 @@ export struct MarginInlineProperty : Property {
     // FIXME: Take writing mode into account
     Longhands expand(RegisteredPropertySet& registry, ComputedValues const&, ComputedValues&) const override {
         return {
-            makeRc<MarginLeftProperty>(registry.resolveRegistration(Properties::MARGIN_LEFT, {}).expect(), _value.start),
-            makeRc<MarginRightProperty>(registry.resolveRegistration(Properties::MARGIN_RIGHT, {}).expect(), _value.end),
+            makeRc<MarginLeftProperty>(registry.resolveRegistration(Properties::MARGIN_LEFT, {}).expect(), _value.v0),
+            makeRc<MarginRightProperty>(registry.resolveRegistration(Properties::MARGIN_RIGHT, {}).expect(), _value.v1),
         };
     }
 
@@ -442,7 +425,7 @@ export struct MarginBlockProperty : Property {
         }
 
         Res<Rc<Property>> parse(Cursor<Css::Sst>& c) const override {
-            return Ok(makeRc<MarginBlockProperty>(self(), try$(Value::parse(c))));
+            return Ok(makeRc<MarginBlockProperty>(self(), try$(parseValue<Value>(c))));
         }
     };
 
@@ -454,8 +437,8 @@ export struct MarginBlockProperty : Property {
     // FIXME: Take writing mode into account
     Longhands expand(RegisteredPropertySet& registry, ComputedValues const&, ComputedValues&) const override {
         return {
-            makeRc<MarginTopProperty>(registry.resolveRegistration(Properties::MARGIN_TOP, {}).expect(), _value.start),
-            makeRc<MarginBottomProperty>(registry.resolveRegistration(Properties::MARGIN_BOTTOM, {}).expect(), _value.end),
+            makeRc<MarginTopProperty>(registry.resolveRegistration(Properties::MARGIN_TOP, {}).expect(), _value.v0),
+            makeRc<MarginBottomProperty>(registry.resolveRegistration(Properties::MARGIN_BOTTOM, {}).expect(), _value.v1),
         };
     }
 
