@@ -197,7 +197,6 @@ export struct Property : Meta::NoCopy {
     };
 
     Rc<Registration> registration;
-    bool important = false;
 
     Property(Rc<Registration> registration)
         : registration(registration) {}
@@ -625,6 +624,18 @@ struct BogusProperty : Property {
     }
 };
 
+// // MARK: Declaration --------------------------------------------------------
+
+// https://www.w3.org/TR/cssom-1/#css-declarations
+export struct Declaration {
+    Rc<Property> property;
+    bool important;
+
+    void repr(Io::Emit& e) const {
+        e("(decl prop={} important={})", property, important);
+    }
+};
+
 // MARK: Property Registry -----------------------------------------------------
 
 export struct RegisteredPropertySet {
@@ -832,7 +843,7 @@ export struct RegisteredPropertySet {
 
     // MARK: Declaration Parsing -----------------------------------------------
 
-    Res<Rc<Property>> parseDeclaration(Css::Sst const& sst, Flags<Options> options) {
+    Res<Declaration> parseDeclaration(Css::Sst const& sst, Flags<Options> options) {
         if (sst != Css::Sst::DECL)
             panic("expected declaration");
 
@@ -842,12 +853,12 @@ export struct RegisteredPropertySet {
         auto propertyName = Symbol::from(sst.token.data);
         Cursor<Css::Sst> content = sst.content;
         auto prop = try$(parseValue(propertyName, content, options));
-        prop->important = sst.flags.has(Css::Sst::IMPORTANT);
-        return Ok(prop);
+        auto important = sst.flags.has(Css::Sst::IMPORTANT);
+        return Ok(Declaration{prop, important});
     }
 
-    Vec<Rc<Property>> parseDeclarations(Css::Content const& sst, Flags<Options> options) {
-        Vec<Rc<Property>> res;
+    Vec<Declaration> parseDeclarations(Css::Content const& sst, Flags<Options> options) {
+        Vec<Declaration> res;
 
         for (auto const& item : sst) {
             if (item != Css::Sst::DECL)
@@ -862,11 +873,11 @@ export struct RegisteredPropertySet {
         return res;
     }
 
-    Vec<Rc<Property>> parseDeclarations(Css::Sst const& sst, Flags<Options> options) {
+    Vec<Declaration> parseDeclarations(Css::Sst const& sst, Flags<Options> options) {
         return parseDeclarations(sst.content, options);
     }
 
-    Vec<Rc<Property>> parseDeclarations(Str style, Flags<Options> options) {
+    Vec<Declaration> parseDeclarations(Str style, Flags<Options> options) {
         Css::Lexer lex{style};
         auto diags = Diag::Collector::ignore();
         auto sst = Css::consumeDeclarationList(lex, diags, true);

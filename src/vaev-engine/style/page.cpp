@@ -183,7 +183,7 @@ export struct PageSelector {
 
 export struct PageAreaRule {
     PageArea area;
-    Vec<Rc<Property>> props;
+    Vec<Declaration> declarations;
 
     static Opt<PageArea> _parsePageArea(Css::Token tok) {
         Str name = next(tok.data);
@@ -207,7 +207,7 @@ export struct PageAreaRule {
         for (auto const& item : sst.content) {
             if (item == Css::Sst::DECL) {
                 if (auto p = propertyRegistry.parseDeclaration(item, RegisteredPropertySet::TOP_LEVEL))
-                    res.props.pushBack(p.take());
+                    res.declarations.pushBack(p.take());
             } else {
                 logWarnIf(DEBUG_PAGE, "unexpected item in style rule: {}", item);
             }
@@ -218,7 +218,7 @@ export struct PageAreaRule {
 
     void apply(RegisteredPropertySet& registry, ComputedValues const& parent, ComputedValues& child) const {
         ComputationContext cx;
-        for (auto const& prop : props) {
+        for (auto const& [prop, _] : declarations) {
             if (prop->isBogusProperty())
                 continue;
 
@@ -233,7 +233,7 @@ export struct PageAreaRule {
     }
 
     void repr(Io::Emit& e) const {
-        e("(page-margin-rule\nmargin: {}\nprops: {})", area, props);
+        e("(page-margin-rule\nmargin: {}\ndeclarations: {})", area, declarations);
     }
 };
 
