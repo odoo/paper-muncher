@@ -14,7 +14,7 @@ test$("test-specificity-selector-list") {
 
     StyleRule rule{
         .selector = selector,
-        .props = {}
+        .declarations = {}
     };
 
     {
@@ -63,14 +63,14 @@ test$("test-specificity-is-where") {
     el.setAttribute(Html::ID_ATTR, "x"s);
 
     // https://www.w3.org/TR/selectors-4/#zero-matches
-    StyleRule where{.selector = try$(Selector::parse("div:where(#x, .a)")), .props = {}};
+    StyleRule where{.selector = try$(Selector::parse("div:where(#x, .a)")), .declarations = {}};
     assert$(where.match(el, NONE) == Specificity(0, 0, 1));
 
     // https://www.w3.org/TR/selectors-4/#matches
-    StyleRule is{.selector = try$(Selector::parse("div:is(.a, #y)")), .props = {}};
+    StyleRule is{.selector = try$(Selector::parse("div:is(.a, #y)")), .declarations = {}};
     assert$(is.match(el, NONE) == Specificity(1, 0, 1));
 
-    StyleRule whereNoMatch{.selector = try$(Selector::parse("div:where(.b)")), .props = {}};
+    StyleRule whereNoMatch{.selector = try$(Selector::parse("div:where(.b)")), .declarations = {}};
     assert$(whereNoMatch.match(el, NONE) == NONE);
 
     return Ok();

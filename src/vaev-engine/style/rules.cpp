@@ -29,7 +29,7 @@ export struct Rule;
 // https://www.w3.org/TR/cssom-1/#the-cssstylerule-interface
 export struct StyleRule {
     Selector selector = TypeSelector::universal();
-    Vec<Rc<Property>> props;
+    Vec<Declaration> declarations;
     Origin origin = Origin::AUTHOR;
 
     static StyleRule parse(RegisteredPropertySet& propertyRegistry, Css::Sst const& sst, Origin origin, NamespaceScope& ns) {
@@ -54,8 +54,8 @@ export struct StyleRule {
         // Parse the properties.
         for (auto const& item : sst.content) {
             if (item == Css::Sst::DECL) {
-                if (auto p = propertyRegistry.parseDeclaration(item, RegisteredPropertySet::TOP_LEVEL))
-                    res.props.pushBack(p.take());
+                if (auto decl = propertyRegistry.parseDeclaration(item, RegisteredPropertySet::TOP_LEVEL))
+                    res.declarations.pushBack(decl.take());
             } else {
                 logWarnIf(debugRule, "unexpected item in style rule: {}", item);
             }
@@ -73,12 +73,12 @@ export struct StyleRule {
         e("(style-rule");
         e.indent();
         e("\nselector: {}", selector);
-        if (props) {
+        if (declarations) {
             e.newline();
-            e("props: [");
+            e("declarations: [");
             e.indentNewline();
-            for (auto const& prop : props) {
-                e("({} {})\n", prop->registration->name, prop);
+            for (auto const& decl : declarations) {
+                e("({} {} important={})\n", decl.property->registration->name, decl.property, decl.important);
             }
             e.deindent();
             e("]\n");
@@ -264,7 +264,7 @@ export struct NamespaceRule {
 
 export struct PageRule {
     Vec<PageSelector> selectors;
-    Vec<Rc<Property>> props;
+    Vec<Declaration> declarations;
     Vec<PageAreaRule> areas;
 
     static PageRule parse(RegisteredPropertySet& registry, Css::Sst const& sst) {
@@ -284,9 +284,8 @@ export struct PageRule {
         // Parse the properties.
         for (auto const& item : sst.content) {
             if (item == Css::Sst::DECL) {
-                auto prop = registry.parseDeclaration(item, RegisteredPropertySet::TOP_LEVEL);
-                if (prop)
-                    res.props.pushBack(prop.take());
+                if (auto decl = registry.parseDeclaration(item, RegisteredPropertySet::TOP_LEVEL))
+                    res.declarations.pushBack(decl.take());
             } else if (item == Css::Sst::RULE and item.token == Css::Token::AT_KEYWORD) {
                 auto rule = PageAreaRule::parse(registry, item);
                 if (rule)
@@ -313,7 +312,7 @@ export struct PageRule {
 
     void apply(RegisteredPropertySet& registry, PageComputedValues& c) const {
         ComputationContext cx;
-        for (auto const& prop : props) {
+        for (auto const& [prop, _] : declarations) {
             if (prop->isBogusProperty())
                 continue;
 
@@ -334,7 +333,7 @@ export struct PageRule {
     }
 
     void repr(Io::Emit& e) const {
-        e("(page-rule\nselectors: {}\nprops: {}\nmargins: {})", selectors, props, areas);
+        e("(page-rule\nselectors: {}\ndeclarations: {}\nmargins: {})", selectors, declarations, areas);
     }
 };
 

@@ -228,7 +228,7 @@ export struct Computer {
             if (auto property = _registeredPropertySet.parseValue(
                     Properties::COLOR, fgcolor, {}
                 ))
-                cascadedValues.putStyleAttribute(property.take(), Origin::AUTHOR_PRESENTATIONAL_HINT, PRESENTATION_HINT_SPEC);
+                cascadedValues.putStyleAttribute(Declaration{property.take(), false}, Origin::AUTHOR_PRESENTATIONAL_HINT, PRESENTATION_HINT_SPEC);
         }
 
         // https://html.spec.whatwg.org/multipage/obsolete.html#dom-document-bgcolor
@@ -236,7 +236,7 @@ export struct Computer {
             if (auto property = _registeredPropertySet.parseValue(
                     Properties::BACKGROUND_COLOR, bgcolor, {}
                 ))
-                cascadedValues.putStyleAttribute(property.take(), Origin::AUTHOR_PRESENTATIONAL_HINT, PRESENTATION_HINT_SPEC);
+                cascadedValues.putStyleAttribute(Declaration{property.take(), false}, Origin::AUTHOR_PRESENTATIONAL_HINT, PRESENTATION_HINT_SPEC);
         }
 
         // https://html.spec.whatwg.org/multipage/images.html#sizes-attributes
@@ -244,7 +244,7 @@ export struct Computer {
             if (auto property = _registeredPropertySet.parseValue(
                     Properties::WIDTH, width, {}
                 ))
-                cascadedValues.putStyleAttribute(property.take(), Origin::AUTHOR_PRESENTATIONAL_HINT, PRESENTATION_HINT_SPEC);
+                cascadedValues.putStyleAttribute(Declaration{property.take(), false}, Origin::AUTHOR_PRESENTATIONAL_HINT, PRESENTATION_HINT_SPEC);
         }
 
         // https://html.spec.whatwg.org/multipage/images.html#sizes-attributes
@@ -252,7 +252,7 @@ export struct Computer {
             if (auto property = _registeredPropertySet.parseValue(
                     Properties::HEIGHT, height, {}
                 ))
-                cascadedValues.putStyleAttribute(property.take(), Origin::AUTHOR_PRESENTATIONAL_HINT, PRESENTATION_HINT_SPEC);
+                cascadedValues.putStyleAttribute(Declaration{property.take(), false}, Origin::AUTHOR_PRESENTATIONAL_HINT, PRESENTATION_HINT_SPEC);
         }
 
         // https://html.spec.whatwg.org/multipage/input.html#the-size-attribute
@@ -260,7 +260,7 @@ export struct Computer {
             if (auto property = _registeredPropertySet.parseValue(
                     Properties::WIDTH, Io::format("{}ch", size), {}
                 ))
-                cascadedValues.putStyleAttribute(property.take(), Origin::AUTHOR_PRESENTATIONAL_HINT, PRESENTATION_HINT_SPEC);
+                cascadedValues.putStyleAttribute(Declaration{property.take(), false}, Origin::AUTHOR_PRESENTATIONAL_HINT, PRESENTATION_HINT_SPEC);
         }
     }
 
@@ -306,13 +306,19 @@ export struct Computer {
 
             if (not svgEl->hasAttribute(Svg::WIDTH_ATTR))
                 cascadedValues.putStyleAttribute(
-                    _registeredPropertySet.parseValue(Properties::WIDTH, "300px", {}).expect(),
+                    Declaration{
+                        .property = _registeredPropertySet.parseValue(Properties::WIDTH, "300px", {}).expect(),
+                        .important = false,
+                    },
                     Origin::AUTHOR_PRESENTATIONAL_HINT, PRESENTATION_HINT_SPEC
                 );
 
             if (not svgEl->hasAttribute(Svg::HEIGHT_ATTR))
                 cascadedValues.putStyleAttribute(
-                    _registeredPropertySet.parseValue(Properties::HEIGHT, "150px", {}).expect(),
+                    Declaration{
+                        .property = _registeredPropertySet.parseValue(Properties::HEIGHT, "150px", {}).expect(),
+                        .important = false,
+                    },
                     Origin::AUTHOR_PRESENTATIONAL_HINT, PRESENTATION_HINT_SPEC
                 );
         }
@@ -327,8 +333,8 @@ export struct Computer {
             return;
 
         for (auto const& attr : el->attributes)
-            if (auto const& [property] = _registeredPropertySet.parsePresentationAttribute(attr.qualifiedName.name, attr.value))
-                cascadedValues.putStyleAttribute(property, Origin::AUTHOR_PRESENTATIONAL_HINT, PRESENTATION_HINT_SPEC);
+            if (auto const& [prop] = _registeredPropertySet.parsePresentationAttribute(attr.qualifiedName.name, attr.value))
+                cascadedValues.putStyleAttribute(Declaration{prop, false}, Origin::AUTHOR_PRESENTATIONAL_HINT, PRESENTATION_HINT_SPEC);
 
         if (el->qualifiedName == Svg::SVG_TAG)
             _applySvgElementSizingRules(el, cascadedValues);
