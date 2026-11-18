@@ -18,8 +18,8 @@ export struct DisplayProperty : Property {
     struct Registration : Property::Registration {
         Registration() : Property::Registration(Properties::DISPLAY) {}
 
-        Rc<Property> initial() const override {
-            return makeRc<DisplayProperty>(self(), Display{Display::FLOW, Display::INLINE});
+        InitialValue initialValue() const override {
+            return "inline"s;
         }
 
         Rc<Property> load(ComputedValues const& s) const override {
@@ -55,8 +55,8 @@ export struct ContentProperty : Property {
     struct Registration : Property::Registration {
         Registration() : Property::Registration(Properties::CONTENT) {}
 
-        Rc<Property> initial() const override {
-            return makeRc<ContentProperty>(self(), Keywords::NORMAL);
+        InitialValue initialValue() const override {
+            return "normal"s;
         }
 
         Rc<Property> load(ComputedValues const& c) const override {
@@ -87,8 +87,8 @@ export struct OrderProperty : Property {
     struct Registration : Property::Registration {
         Registration() : Property::Registration(Properties::ORDER) {}
 
-        Rc<Property> initial() const override {
-            return makeRc<OrderProperty>(self(), Integer{0});
+        InitialValue initialValue() const override {
+            return "0"s;
         }
 
         Rc<Property> load(ComputedValues const& c) const override {

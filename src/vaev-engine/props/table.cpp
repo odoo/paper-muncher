@@ -18,8 +18,8 @@ export struct TableLayoutProperty : Property {
     struct Registration : Property::Registration {
         Registration() : Property::Registration(Properties::TABLE_LAYOUT) {}
 
-        Rc<Property> initial() const override {
-            return makeRc<TableLayoutProperty>(self(), TableLayout::AUTO);
+        InitialValue initialValue() const override {
+            return "auto"s;
         }
 
         Rc<Property> load(ComputedValues const& s) const override {
@@ -55,8 +55,8 @@ export struct CaptionSideProperty : Property {
         Registration()
             : Property::Registration(Properties::CAPTION_SIDE, {INHERITED, BULK_INHERITED}) {}
 
-        Rc<Property> initial() const override {
-            return makeRc<CaptionSideProperty>(self(), CaptionSide::TOP);
+        InitialValue initialValue() const override {
+            return "top"s;
         }
 
         Rc<Property> load(ComputedValues const& s) const override {

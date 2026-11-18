@@ -19,8 +19,8 @@ export struct WritingModeProperty : Property {
         Registration()
             : Property::Registration(Properties::WRITING_MODE, INHERITED) {}
 
-        Rc<Property> initial() const override {
-            return makeRc<WritingModeProperty>(self(), Keywords::HORIZONTAL_TB);
+        InitialValue initialValue() const override {
+            return "horizontal-tb"s;
         }
 
         void inherit(ComputedValues const& parent, ComputedValues& child) const override {
@@ -60,8 +60,8 @@ export struct DirectionProperty : Property {
         Registration()
             : Property::Registration(Properties::DIRECTION, {INHERITED, ALL_EXCLUDED}) {}
 
-        Rc<Property> initial() const override {
-            return makeRc<DirectionProperty>(self(), Keywords::LTR);
+        InitialValue initialValue() const override {
+            return "ltr"s;
         }
 
         void inherit(ComputedValues const& parent, ComputedValues& child) const override {

@@ -19,8 +19,8 @@ export struct VisibilityProperty : Property {
         Registration()
             : Property::Registration(Properties::VISIBILITY, INHERITED) {}
 
-        Rc<Property> initial() const override {
-            return makeRc<VisibilityProperty>(self(), Visibility::VISIBLE);
+        InitialValue initialValue() const override {
+            return "visible"s;
         }
 
         void inherit(ComputedValues const& parent, ComputedValues& child) const override {
@@ -70,8 +70,8 @@ export struct OpacityProperty : Property {
     struct Registration : Property::Registration {
         Registration() : Property::Registration(Properties::OPACITY) {}
 
-        Rc<Property> initial() const override {
-            return makeRc<OpacityProperty>(self(), Number{1});
+        InitialValue initialValue() const override {
+            return "1"s;
         }
 
         Rc<Property> load(ComputedValues const& c) const override {
@@ -112,8 +112,8 @@ export struct ClipPathProperty : Property {
     struct Registration : Property::Registration {
         Registration() : Property::Registration(Properties::CLIP_PATH) {}
 
-        Rc<Property> initial() const override {
-            return makeRc<ClipPathProperty>(self(), Keywords::NONE);
+        InitialValue initialValue() const override {
+            return "none"s;
         }
 
         Rc<Property> load(ComputedValues const& c) const override {

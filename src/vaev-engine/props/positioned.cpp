@@ -20,8 +20,8 @@ export struct PositionProperty : Property {
     struct Registration : Property::Registration {
         Registration() : Property::Registration(Properties::POSITION) {}
 
-        Rc<Property> initial() const override {
-            return makeRc<PositionProperty>(self(), Position{Keywords::STATIC});
+        InitialValue initialValue() const override {
+            return "static"s;
         }
 
         Rc<Property> load(ComputedValues const& c) const override {
@@ -54,8 +54,8 @@ export struct TopProperty : Property {
     struct Registration : Property::Registration {
         Registration() : Property::Registration(Properties::TOP) {}
 
-        Rc<Property> initial() const override {
-            return makeRc<TopProperty>(self(), Value{Keywords::AUTO});
+        InitialValue initialValue() const override {
+            return "auto"s;
         }
 
         Rc<Property> load(ComputedValues const& c) const override {
@@ -92,8 +92,8 @@ export struct RightProperty : Property {
     struct Registration : Property::Registration {
         Registration() : Property::Registration(Properties::RIGHT) {}
 
-        Rc<Property> initial() const override {
-            return makeRc<RightProperty>(self(), Value{Keywords::AUTO});
+        InitialValue initialValue() const override {
+            return "auto"s;
         }
 
         Rc<Property> load(ComputedValues const& c) const override {
@@ -130,8 +130,8 @@ export struct BottomProperty : Property {
     struct Registration : Property::Registration {
         Registration() : Property::Registration(Properties::BOTTOM) {}
 
-        Rc<Property> initial() const override {
-            return makeRc<BottomProperty>(self(), Value{Keywords::AUTO});
+        InitialValue initialValue() const override {
+            return "auto"s;
         }
 
         Rc<Property> load(ComputedValues const& c) const override {
@@ -168,8 +168,8 @@ export struct LeftProperty : Property {
     struct Registration : Property::Registration {
         Registration() : Property::Registration(Properties::LEFT) {}
 
-        Rc<Property> initial() const override {
-            return makeRc<LeftProperty>(self(), Value{Keywords::AUTO});
+        InitialValue initialValue() const override {
+            return "auto"s;
         }
 
         Rc<Property> load(ComputedValues const& c) const override {
@@ -204,8 +204,8 @@ export struct ZIndexProperty : Property {
     struct Registration : Property::Registration {
         Registration() : Property::Registration(Properties::Z_INDEX) {}
 
-        Rc<Property> initial() const override {
-            return makeRc<ZIndexProperty>(self(), ZIndex{Keywords::AUTO});
+        InitialValue initialValue() const override {
+            return "auto"s;
         }
 
         Rc<Property> load(ComputedValues const& c) const override {

@@ -26,8 +26,8 @@ export struct FontFamilyProperty : Property {
             return ComputationPhase::FONT;
         }
 
-        Rc<Property> initial() const override {
-            return makeRc<FontFamilyProperty>(self(), Vec<FontFamily>{"sans-serif"_sym});
+        InitialValue initialValue() const override {
+            return "sans-serif"s;
         }
 
         Rc<Property> load(ComputedValues const& c) const override {
@@ -92,8 +92,8 @@ export struct FontWeightProperty : Property {
             return ComputationPhase::FONT;
         }
 
-        Rc<Property> initial() const override {
-            return makeRc<FontWeightProperty>(self(), FontWeight{Gfx::FontWeight::REGULAR});
+        InitialValue initialValue() const override {
+            return "normal"s;
         }
 
         void inherit(ComputedValues const& parent, ComputedValues& child) const override {
@@ -142,8 +142,8 @@ export struct FontWidthProperty : Property {
             return ComputationPhase::FONT;
         }
 
-        Rc<Property> initial() const override {
-            return makeRc<FontWidthProperty>(self(), FontWidth::NORMAL);
+        InitialValue initialValue() const override {
+            return "normal"s;
         }
 
         void inherit(ComputedValues const& parent, ComputedValues& child) const override {
@@ -187,8 +187,8 @@ export struct FontStyleProperty : Property {
             return ComputationPhase::FONT;
         }
 
-        Rc<Property> initial() const override {
-            return makeRc<FontStyleProperty>(self(), FontStyle::NORMAL);
+        InitialValue initialValue() const override {
+            return "normal"s;
         }
 
         void inherit(ComputedValues const& parent, ComputedValues& child) const override {
@@ -232,8 +232,8 @@ export struct FontSizeProperty : Property {
             return ComputationPhase::FONT;
         }
 
-        Rc<Property> initial() const override {
-            return makeRc<FontSizeProperty>(self(), Keywords::MEDIUM);
+        InitialValue initialValue() const override {
+            return "medium"s;
         }
 
         void inherit(ComputedValues const& parent, ComputedValues& child) const override {
@@ -292,8 +292,8 @@ export struct FontProperty : Property {
         Registration()
             : Property::Registration(Properties::FONT, SHORTHAND) {}
 
-        Rc<Property> initial() const override {
-            return makeRc<FontProperty>(self(), Value{});
+        InitialValue initialValue() const override {
+            return "medium sans-serif"s;
         }
 
         Rc<Property> load(ComputedValues const& c) const override {

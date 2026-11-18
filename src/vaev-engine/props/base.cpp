@@ -71,6 +71,12 @@ export struct ComputationContext :
     }
 };
 
+export enum struct GuaranteedInvalid { GUARANTEED_INVALID };
+export using enum GuaranteedInvalid;
+
+// https://drafts.csswg.org/css-cascade/#initial-value
+export using InitialValue = Union<GuaranteedInvalid, Str>;
+
 export struct Property;
 
 export using Longhands = SmallVec<Rc<Property>, 12>;
@@ -168,7 +174,36 @@ export struct Property : Meta::NoCopy {
         }
 
         // https://drafts.csswg.org/css-cascade/#initial-value
-        virtual Rc<Property> initial() const = 0;
+        virtual InitialValue initialValue() const = 0;
+
+        mutable Opt<Rc<Property>> _memoInitial = NONE;
+
+        virtual Rc<Property> initial() const {
+            if (auto const& [memo] = _memoInitial)
+                return memo;
+
+            auto content = initialValue().visit(
+                [](GuaranteedInvalid) {
+                    return Css::Content{Css::Sst::guaranteedInvalid()};
+                },
+                [](Str text) {
+                    Css::Lexer lex{text};
+                    auto diags = Diag::Collector::ignore();
+                    auto [content, _] = Css::consumeDeclarationValue(lex, diags);
+                    return content;
+                }
+            );
+
+            Cursor<Css::Sst> c = content;
+            eatWhitespace(c);
+            auto property = parse(c);
+            eatWhitespace(c);
+            if (not property or not c.ended())
+                logFatal("invalid initial value {} for property {:#}", initialValue(), name);
+
+            _memoInitial = Some(property.take());
+            return *_memoInitial;
+        }
 
         virtual Rc<Property> load(ComputedValues const& c) const = 0;
 
@@ -279,10 +314,9 @@ struct CustomProperty : Property {
             return ComputationPhase::CUSTOM_PROPERTY;
         }
 
-        Rc<Property> initial() const override {
-            return makeRc<CustomProperty>(
-                self(), Css::Content{Css::Sst::guaranteedInvalid()}
-            );
+        // https://drafts.csswg.org/css-variables/#guaranteed-invalid
+        InitialValue initialValue() const override {
+            return GUARANTEED_INVALID;
         }
 
         void inherit(ComputedValues const& parent, ComputedValues& child) const override {
@@ -594,7 +628,7 @@ struct BogusProperty : Property {
         Registration(Symbol const name)
             : Property::Registration(name, BOGUS_REGISTRATION) {}
 
-        Rc<Property> initial() const override {
+        InitialValue initialValue() const override {
             unreachable();
         }
 

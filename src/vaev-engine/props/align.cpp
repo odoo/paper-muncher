@@ -21,8 +21,8 @@ export struct AlignContentProperty : Property {
     struct Registration : Property::Registration {
         Registration() : Property::Registration(Properties::ALIGN_CONTENT) {}
 
-        Rc<Property> initial() const override {
-            return makeRc<AlignContentProperty>(self(), Align::Keywords::STRETCH);
+        InitialValue initialValue() const override {
+            return "stretch"s;
         }
 
         Rc<Property> load(ComputedValues const& c) const override {
@@ -57,8 +57,8 @@ export struct JustifyContentProperty : Property {
     struct Registration : Property::Registration {
         Registration() : Property::Registration(Properties::JUSTIFY_CONTENT) {}
 
-        Rc<Property> initial() const override {
-            return makeRc<JustifyContentProperty>(self(), Align::Keywords::FLEX_START);
+        InitialValue initialValue() const override {
+            return "flex-start"s;
         }
 
         Rc<Property> load(ComputedValues const& c) const override {
@@ -93,8 +93,8 @@ export struct JustifySelfProperty : Property {
     struct Registration : Property::Registration {
         Registration() : Property::Registration(Properties::JUSTIFY_SELF) {}
 
-        Rc<Property> initial() const override {
-            return makeRc<JustifySelfProperty>(self(), Align::Keywords::AUTO);
+        InitialValue initialValue() const override {
+            return "auto"s;
         }
 
         Rc<Property> load(ComputedValues const& c) const override {
@@ -129,8 +129,8 @@ export struct AlignSelfProperty : Property {
     struct Registration : Property::Registration {
         Registration() : Property::Registration(Properties::ALIGN_SELF) {}
 
-        Rc<Property> initial() const override {
-            return makeRc<AlignSelfProperty>(self(), Align::Keywords::AUTO);
+        InitialValue initialValue() const override {
+            return "auto"s;
         }
 
         Rc<Property> load(ComputedValues const& c) const override {
@@ -165,8 +165,8 @@ export struct JustifyItemsProperty : Property {
     struct Registration : Property::Registration {
         Registration() : Property::Registration(Properties::JUSTIFY_ITEMS) {}
 
-        Rc<Property> initial() const override {
-            return makeRc<JustifyItemsProperty>(self(), Align::LEGACY);
+        InitialValue initialValue() const override {
+            return "legacy"s;
         }
 
         Rc<Property> load(ComputedValues const& c) const override {
@@ -201,8 +201,8 @@ export struct AlignItemsProperty : Property {
     struct Registration : Property::Registration {
         Registration() : Property::Registration(Properties::ALIGN_ITEMS) {}
 
-        Rc<Property> initial() const override {
-            return makeRc<AlignItemsProperty>(self(), Align::Keywords::STRETCH);
+        InitialValue initialValue() const override {
+            return "stretch"s;
         }
 
         Rc<Property> load(ComputedValues const& c) const override {
@@ -242,8 +242,8 @@ export struct RowGapProperty : Property {
             return {"grid-row-gap"_sym};
         }
 
-        Rc<Property> initial() const override {
-            return makeRc<RowGapProperty>(self(), Keywords::NORMAL);
+        InitialValue initialValue() const override {
+            return "normal"s;
         }
 
         Rc<Property> load(ComputedValues const& c) const override {
@@ -283,8 +283,8 @@ export struct ColumnGapProperty : Property {
             return {"grid-column-gap"_sym};
         }
 
-        Rc<Property> initial() const override {
-            return makeRc<ColumnGapProperty>(self(), Keywords::NORMAL);
+        InitialValue initialValue() const override {
+            return "normal"s;
         }
 
         Rc<Property> load(ComputedValues const& c) const override {
@@ -323,14 +323,8 @@ export struct GapProperty : Property {
             return {"grid-gap"_sym};
         }
 
-        Rc<Property> initial() const override {
-            return makeRc<GapProperty>(
-                self(),
-                Gaps{
-                    Keywords::NORMAL,
-                    Keywords::NORMAL,
-                }
-            );
+        InitialValue initialValue() const override {
+            return "normal"s;
         }
 
         Rc<Property> load(ComputedValues const& c) const override {
