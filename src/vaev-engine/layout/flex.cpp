@@ -530,6 +530,11 @@ struct FlexItem {
         if (align == Align::AUTO)
             align = parentAlignItems;
 
+        // https://drafts.csswg.org/css-align-3/#align-flex
+        // normal Behavior: Behaves as stretch.
+        if (align == Align::NORMAL)
+            align = Align::STRETCH;
+
         switch (align) {
         case Align::FLEX_END:
             alignCrossFlexEnd(lineCrossSize);
@@ -1191,7 +1196,9 @@ struct FlexFormatingContext : FormatingContext {
         if (
             not(input.intrinsic == IntrinsicSize::MIN_CONTENT) and
             (fa.crossAxis(box.style->sizing).is<Keywords::Auto>() or fa.crossAxis(input.knownSize)) and
-            box.style->aligns.alignContent == Align::STRETCH
+            // https://drafts.csswg.org/css-align-3/#distribution-flex
+            // normal behaves as stretch.
+            (box.style->aligns.alignContent == Align::STRETCH or box.style->aligns.alignContent == Align::NORMAL)
         ) {
             Au sumOfCrossSizes{0};
             for (auto& flexLine : _lines)
@@ -1223,7 +1230,9 @@ struct FlexFormatingContext : FormatingContext {
                     itemAlign = box.style->aligns.alignItems;
 
                 if (
-                    itemAlign == Align::STRETCH and
+                    // https://drafts.csswg.org/css-align-3/#align-flex
+                    // normal Behavior: Behaves as stretch.
+                    (itemAlign == Align::STRETCH or itemAlign == Align::NORMAL) and
                     fa.crossAxis(flexItem.box->style->sizing).is<Keywords::Auto>() and
                     not flexItem.hasAnyCrossMarginAuto()
                 ) {

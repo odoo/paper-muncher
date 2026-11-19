@@ -24,7 +24,7 @@ export struct TextAlignProperty : Property {
             : Property::Registration(Properties::TEXT_ALIGN, {INHERITED, BULK_INHERITED}) {}
 
         InitialValue initialValue() const override {
-            return "left"s;
+            return "start"s;
         }
 
         void inherit(ComputedValues const& parent, ComputedValues& child) const override {

@@ -22,7 +22,7 @@ export struct AlignContentProperty : Property {
         Registration() : Property::Registration(Properties::ALIGN_CONTENT) {}
 
         InitialValue initialValue() const override {
-            return "stretch"s;
+            return "normal"s;
         }
 
         Rc<Property> load(ComputedValues const& c) const override {
@@ -58,7 +58,7 @@ export struct JustifyContentProperty : Property {
         Registration() : Property::Registration(Properties::JUSTIFY_CONTENT) {}
 
         InitialValue initialValue() const override {
-            return "flex-start"s;
+            return "normal"s;
         }
 
         Rc<Property> load(ComputedValues const& c) const override {
@@ -202,7 +202,7 @@ export struct AlignItemsProperty : Property {
         Registration() : Property::Registration(Properties::ALIGN_ITEMS) {}
 
         InitialValue initialValue() const override {
-            return "stretch"s;
+            return "normal"s;
         }
 
         Rc<Property> load(ComputedValues const& c) const override {
