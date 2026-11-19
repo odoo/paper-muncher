@@ -70,29 +70,16 @@ struct TypedUnitValue {
     }
 };
 
-// https://drafts.csswg.org/css-values/#numbers
-export using PureNumber = TypedUnitValue<NONE>;
+// NOTE: The legacy values don't allow calc, they will get removed at some point.
 
 // https://drafts.csswg.org/css-values/#lengths
-export using PureLength = TypedUnitValue<Some(NumericBaseType::LENGTH)>;
+export using LegacyLength = TypedUnitValue<Some(NumericBaseType::LENGTH)>;
 
 // https://drafts.csswg.org/css-values/#angles
-export using PureAngle = TypedUnitValue<Some(NumericBaseType::ANGLE)>;
+export using LegacyAngle = TypedUnitValue<Some(NumericBaseType::ANGLE)>;
 
 // https://drafts.csswg.org/css-values/#percentages
-export using PurePercentage = TypedUnitValue<Some(NumericBaseType::PERCENT)>;
-
-// https://drafts.csswg.org/css-values/#time
-export using PureTime = TypedUnitValue<Some(NumericBaseType::TIME)>;
-
-// https://drafts.csswg.org/css-values/#frequency
-export using PureFrequency = TypedUnitValue<Some(NumericBaseType::FREQUENCY)>;
-
-// https://drafts.csswg.org/css-values/#resolution
-export using PureResolution = TypedUnitValue<Some(NumericBaseType::RESOLUTION)>;
-
-// https://drafts.csswg.org/css-grid/#typedef-flex
-export using PureFlex = TypedUnitValue<Some(NumericBaseType::FLEX)>;
+export using LegacyPercentage = TypedUnitValue<Some(NumericBaseType::PERCENT)>;
 
 export template <typename T>
     requires Meta::Derive<T, TypedUnitValue<T::BASE_TYPE, T::ACCEPTS_PERCENTS>>
