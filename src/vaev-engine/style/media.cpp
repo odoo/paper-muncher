@@ -8,9 +8,6 @@ import Karm.Debug;
 
 import :css.values;
 import :style.values;
-import :style.viewport;
-import :props.base;
-import :props.registry;
 import :css;
 
 using namespace Karm;
@@ -348,7 +345,12 @@ export struct Media {
     Px deviceHeight;
     f64 deviceAspectRatio;
 
-    static Media from(DisplayArea const& area, ViewerPrefs const& prefs) {
+    // https://drafts.csswg.org/mediaqueries-4/#units
+    // Relative length units in media queries are based on the initial value,
+    // which means that units are never based on results of declarations.
+    RelativeLengthContextData initialFontMetrics = {};
+
+    static Media from(DisplayArea const& area, ViewerPrefs const& prefs, RelativeLengthContextData const& initialFontMetrics) {
         auto ratio = [](f64 width, f64 height) -> f64 {
             if (height == 0)
                 return 0;
@@ -401,29 +403,20 @@ export struct Media {
             .deviceWidth = Px{deviceSize.width},
             .deviceHeight = Px{deviceSize.height},
             .deviceAspectRatio = ratio(deviceSize.width, deviceSize.height),
+
+            .initialFontMetrics = initialFontMetrics,
         };
+    }
+
+    RelativeLengthContextData lengthContext() const {
+        auto cx = initialFontMetrics;
+        cx.viewportSmallWidth = cx.viewportLargeWidth = cx.viewportDynamicWidth = width.value();
+        cx.viewportSmallHeight = cx.viewportLargeHeight = cx.viewportDynamicHeight = height.value();
+        return cx;
     }
 
     bool operator==(Media const&) const = default;
 };
-
-// https://drafts.csswg.org/mediaqueries-4/#units
-// Relative length units in media queries are based on the initial value,
-// which means that units are never based on results of declarations.
-static ComputationContext _initialComputationContext(Media const& media) {
-    static auto const initial = [] {
-        auto initialStyle = defaultRegistry().initialComputedValues();
-        auto cx = ComputationContext{};
-        cx.populateUsingRootComputedValues(*initialStyle);
-        cx.populateUsingParentComputedValues(*initialStyle);
-        cx.populateUsingOwnComputedValues(*initialStyle);
-        return cx;
-    }();
-
-    auto cx = initial;
-    cx.populateUsingViewport(Viewport{.small = {media.width, media.height}});
-    return cx;
-}
 
 // MARK: Media Features --------------------------------------------------------
 
@@ -458,7 +451,6 @@ struct RangeFeature {
     using Bound = RangeBound<T>;
     using Inner = T;
 
-    // NOTE: A feature in a boolean context has neither bound.
     Opt<Bound> lower;
     Opt<Bound> upper;
 
@@ -466,33 +458,23 @@ struct RangeFeature {
         return NAME;
     }
 
-    using Actual = Meta::RemoveConstVolatileRef<decltype(Meta::declval<Media>().*F)>;
-
-    static Actual _computed(T const& value, Media const& media) {
-        if constexpr (Meta::Same<T, Actual>)
-            return value;
-        else if constexpr (requires { toComputed(value, _initialComputationContext(media)); })
-            return toComputed(value, _initialComputationContext(media));
-        else
-            return toComputed(value);
-    }
-
     bool match(Media const& media) const {
-        Actual actual = media.*F;
+        auto actual = media.*F;
 
         // https://drafts.csswg.org/mediaqueries-5/#mq-boolean-context
         if (not lower and not upper)
-            return actual != Actual{};
+            return actual != decltype(actual){};
 
+        auto cx = media.lengthContext();
         bool result = true;
 
         if (lower) {
-            auto bound = _computed(lower->value, media);
+            auto bound = computeValue(lower->value, cx);
             result &= lower->type == Bound::INCLUSIVE ? actual >= bound : actual > bound;
         }
 
         if (upper) {
-            auto bound = _computed(upper->value, media);
+            auto bound = computeValue(upper->value, cx);
             result &= upper->type == Bound::INCLUSIVE ? actual <= bound : actual < bound;
         }
 
@@ -904,6 +886,11 @@ export struct MediaQuery {
         return MediaQuery{OR, lhs, rhs};
     }
 
+    // https://drafts.csswg.org/mediaqueries-4/#error-handling
+    static MediaQuery nothing() {
+        return negate(TypeFeature{Keywords::ALL});
+    }
+
     bool match(Media const& media) const {
         return _store.visit(
             [&](auto const& value) {
@@ -986,17 +973,10 @@ Opt<Feature> _parseMediaFeature(Cursor<Css::Sst>& c) {
 
 MediaQuery _parseMediaQueryInfix(Cursor<Css::Sst>& c);
 
-// https://drafts.csswg.org/mediaqueries-4/#error-handling
-// A media query that does not match the grammar in the previous section
-// must be replaced by not all during parsing.
-MediaQuery _matchNothing() {
-    return MediaQuery::negate(TypeFeature{Keywords::ALL});
-}
-
 MediaQuery _parseMediaQueryLeaf(Cursor<Css::Sst>& c) {
     if (c.ended()) {
         logWarn("unexpected end of input");
-        return _matchNothing();
+        return MediaQuery::nothing();
     }
 
     if (c.skip(Css::Token::ident("not"))) {
@@ -1010,8 +990,9 @@ MediaQuery _parseMediaQueryLeaf(Cursor<Css::Sst>& c) {
         return TypeFeature{type.take()};
     } else if (auto feature = _parseMediaFeature(c)) {
         return feature.take();
-    } else
-        return _matchNothing();
+    } else {
+        return MediaQuery::nothing();
+    }
 }
 
 MediaQuery _parseMediaQueryInfix(Cursor<Css::Sst>& c) {

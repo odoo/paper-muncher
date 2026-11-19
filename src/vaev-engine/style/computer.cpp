@@ -26,6 +26,14 @@ namespace Vaev::Style {
 static auto debugCounters = Debug::Flag::debug("web-css-counters", "Log all the registered CSS counters");
 static auto debugMpc = Debug::Flag::debug("web-css-mpc", "Log the matched property cache statistics");
 
+RelativeLengthContextData _initialFontMetrics(RegisteredPropertySet const& registry) {
+    auto initial = registry.initialComputedValues();
+    ComputationContext cx{};
+    cx.populateUsingRootComputedValues(*initial);
+    cx.populateUsingOwnComputedValues(*initial);
+    return cx;
+}
+
 export struct Computer {
     Gc::Heap& _heap;
     DisplayArea _area;
@@ -33,7 +41,7 @@ export struct Computer {
     RegisteredPropertySet& _registeredPropertySet;
     StyleSheetList const& _stylesheets;
     Rc<Font::Database> _fontDatabase;
-    Media _media = Media::from(_area, _prefs);
+    Media _media = Media::from(_area, _prefs, _initialFontMetrics(_registeredPropertySet));
     RuleIndex _ruleIndex = {};
     CascadeLayers _layers = {};
     AncestorFilter _ancestorFilter = {};

@@ -3,6 +3,8 @@ export module Vaev.Engine:style.values.generic;
 import Karm.Core;
 import Karm.Math;
 
+import :style.values.numeric;
+import :style.values.primitives;
 import :style.values.unitValue;
 import :style.values.keywords;
 
@@ -16,8 +18,8 @@ auto toComputed(Union<Ts...> const& value, auto const& ctx);
 export template <typename... Ts>
 auto toSpecified(Union<Ts...> const& value);
 
-template <typename T>
-auto _toComputedAlternative(T const& value, auto const& ctx) {
+export template <typename T>
+auto computeValue(T const& value, auto const& ctx) {
     if constexpr (requires { toComputed(value, ctx); })
         return toComputed(value, ctx);
     else
@@ -26,9 +28,9 @@ auto _toComputedAlternative(T const& value, auto const& ctx) {
 
 export template <typename... Ts>
 auto toComputed(Union<Ts...> const& value, auto const& ctx) {
-    using Computed = Union<decltype(_toComputedAlternative(Meta::declval<Ts const&>(), ctx))...>;
+    using Computed = Union<decltype(computeValue(Meta::declval<Ts const&>(), ctx))...>;
     return value.visit([&](auto const& v) -> Computed {
-        return _toComputedAlternative(v, ctx);
+        return computeValue(v, ctx);
     });
 }
 

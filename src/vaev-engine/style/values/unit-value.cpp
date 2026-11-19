@@ -43,6 +43,8 @@ export struct RelativeLengthContextData {
     // Whether the box's inline axis is horizontal, for the vi/vb units.
     // FIXME: Always true, the box's writing-mode isn't wired in yet.
     bool horizontalWritingMode = true;
+
+    bool operator==(RelativeLengthContextData const&) const = default;
 };
 
 export template <typename T>
