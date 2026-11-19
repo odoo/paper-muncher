@@ -325,16 +325,18 @@ export struct SvgShapeFragment : Fragment {
         return objectBoundingBox();
     }
 
-    Opt<Gfx::Fill> resolveFill(Style::SvgPainting const& svgPaint) {
-        if (Math::epsilonEq(svgPaint.fillOpacity, 0.))
+    Opt<Gfx::Fill> resolveFill() const {
+        auto const& paint = *style().svgPaint;
+
+        if (Math::epsilonEq(paint.fillOpacity, 0.))
             return NONE;
 
-        if (not svgPaint.fill)
+        if (not paint.fill)
             return NONE;
 
-        if (auto const& [c] = Style::resolve(svgPaint.fill, style().color)) {
+        if (auto const& [c] = Style::resolve(paint.fill, style().color)) {
             auto color = c;
-            color = color.withOpacity(svgPaint.fillOpacity);
+            color = color.withOpacity(paint.fillOpacity);
             if (color.transparent())
                 return NONE;
             return Some(Gfx::Fill{color});
@@ -343,19 +345,21 @@ export struct SvgShapeFragment : Fragment {
         return NONE;
     }
 
-    Opt<Gfx::Stroke> resolveStroke(Style::SvgPainting const& svgPaint) {
-        if (Math::epsilonEq(svgPaint.strokeOpacity, 0.))
+    Opt<Gfx::Stroke> resolveStroke() const {
+        auto const& paint = *style().svgPaint;
+
+        if (Math::epsilonEq(paint.strokeOpacity, 0.))
             return NONE;
 
         if (strokeWidth == 0_au)
             return NONE;
 
-        if (not svgPaint.stroke)
+        if (not paint.stroke)
             return NONE;
 
-        if (auto const& [c] = Style::resolve(svgPaint.stroke, style().color)) {
+        if (auto const& [c] = Style::resolve(paint.stroke, style().color)) {
             auto color = c;
-            color = color.withOpacity(svgPaint.strokeOpacity);
+            color = color.withOpacity(paint.strokeOpacity);
             if (color.transparent())
                 return NONE;
 
@@ -374,10 +378,8 @@ export struct SvgShapeFragment : Fragment {
     void paintContent(Gfx::Canvas& g, Vec<OutOfBandOutline>& outOfBandOutlines) override {
         (void)outOfBandOutlines;
 
-        auto const& style = *originatingBox().style->svgPaint;
-
-        Opt<Gfx::Fill> resolvedFill = resolveFill(style);
-        Opt<Gfx::Stroke> resolvedStroke = resolveStroke(style);
+        Opt<Gfx::Fill> resolvedFill = resolveFill();
+        Opt<Gfx::Stroke> resolvedStroke = resolveStroke();
 
         if (not(resolvedFill or resolvedStroke))
             return;

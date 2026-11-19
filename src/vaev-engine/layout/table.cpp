@@ -50,8 +50,27 @@ void advanceUntil(MutCursor<Box>& cursor, auto pred) {
         cursor.next();
 }
 
-UsedBorder resolve(Box const& box, Style::BorderEdge const edge) {
-    auto& border = box.style->borders->get(edge);
+enum struct BorderEdge {
+    TOP,
+    START,
+    BOTTOM,
+    END,
+};
+
+UsedBorder resolve(Box const& box, BorderEdge const edge) {
+    Style::Border const& border = [&] -> Style::Border const& {
+        switch (edge) {
+        case BorderEdge::TOP:
+            return box.style->borders->top;
+        case BorderEdge::START:
+            return box.style->borders->start;
+        case BorderEdge::BOTTOM:
+            return box.style->borders->bottom;
+        case BorderEdge::END:
+            return box.style->borders->end;
+        }
+    }();
+
     return UsedBorder{
         border.style == Gfx::BorderStyle::NONE
             ? 0_au
@@ -499,7 +518,7 @@ export struct TableFormatingContext : FormatingContext {
     void addAxisAndGroupBorder(
         Vec<UsedBorder>& borders,
         AxisAndGroupsIdxs const& axisAndGroupsIdxs,
-        Style::BorderEdge edge,
+        BorderEdge edge,
         Vec<TableAxis> const& axis,
         Vec<TableGroup> const& groups
     ) {
@@ -580,14 +599,14 @@ export struct TableFormatingContext : FormatingContext {
 
             for (usize j = start; j <= end; j += colSpanAt(j, i))
                 if (grid.at(j, i).box)
-                    borders.pushBack(resolve(*grid.at(j, i).box, Style::BorderEdge::BOTTOM));
+                    borders.pushBack(resolve(*grid.at(j, i).box, BorderEdge::BOTTOM));
 
             for (usize j = start; j <= end; j += colSpanAt(j, i + 1))
                 if (grid.at(j, i + 1).box)
-                    borders.pushBack(resolve(*grid.at(j, i + 1).box, Style::BorderEdge::TOP));
+                    borders.pushBack(resolve(*grid.at(j, i + 1).box, BorderEdge::TOP));
 
-            addAxisAndGroupBorder(borders, rowGroupIdxs[i], Style::BorderEdge::BOTTOM, rows, rowGroups);
-            addAxisAndGroupBorder(borders, rowGroupIdxs[i + 1], Style::BorderEdge::TOP, rows, rowGroups);
+            addAxisAndGroupBorder(borders, rowGroupIdxs[i], BorderEdge::BOTTOM, rows, rowGroups);
+            addAxisAndGroupBorder(borders, rowGroupIdxs[i + 1], BorderEdge::TOP, rows, rowGroups);
 
             auto finalBorder = harmonizeConflictingBorders(borders);
 
@@ -636,14 +655,14 @@ export struct TableFormatingContext : FormatingContext {
 
             for (usize i = start; i <= end; i += rowSpanAt(j, i))
                 if (grid.at(j, i).box)
-                    borders.pushBack(resolve(*grid.at(j, i).box, Style::BorderEdge::END));
+                    borders.pushBack(resolve(*grid.at(j, i).box, BorderEdge::END));
 
             for (usize i = start; i <= end; i += rowSpanAt(j + 1, i))
                 if (grid.at(j + 1, i).box)
-                    borders.pushBack(resolve(*grid.at(j + 1, i).box, Style::BorderEdge::START));
+                    borders.pushBack(resolve(*grid.at(j + 1, i).box, BorderEdge::START));
 
-            addAxisAndGroupBorder(borders, colGroupIdxs[j], Style::BorderEdge::END, cols, colGroups);
-            addAxisAndGroupBorder(borders, colGroupIdxs[j + 1], Style::BorderEdge::START, cols, colGroups);
+            addAxisAndGroupBorder(borders, colGroupIdxs[j], BorderEdge::END, cols, colGroups);
+            addAxisAndGroupBorder(borders, colGroupIdxs[j + 1], BorderEdge::START, cols, colGroups);
 
             auto finalBorder = harmonizeConflictingBorders(borders);
 
@@ -659,12 +678,12 @@ export struct TableFormatingContext : FormatingContext {
         }
     }
 
-    void resolveConflictForTableBordersAtHorizontalAxis(Box& box, Style::BorderEdge edge) {
+    void resolveConflictForTableBordersAtHorizontalAxis(Box& box, BorderEdge edge) {
         if (grid.size.x == 0 or grid.size.y == 0)
             return;
 
         UsedBorder tableBorder = resolve(box, edge);
-        usize const i = edge == Style::BorderEdge::TOP ? 0 : grid.size.y - 1;
+        usize const i = edge == BorderEdge::TOP ? 0 : grid.size.y - 1;
 
         usize j = 0;
         while (j < grid.size.x) {
@@ -684,7 +703,7 @@ export struct TableFormatingContext : FormatingContext {
 
             auto finalBorder = harmonizeConflictingBorders(borders);
 
-            if (edge == Style::BorderEdge::TOP) {
+            if (edge == BorderEdge::TOP) {
                 paintCellTop(i, j, finalBorder);
             } else {
                 auto sj = grid.at(j, i).anchorIdx.x;
@@ -695,12 +714,12 @@ export struct TableFormatingContext : FormatingContext {
         }
     }
 
-    void resolveConflictForTableBordersAtVerticalAxis(Box& box, Style::BorderEdge edge) {
+    void resolveConflictForTableBordersAtVerticalAxis(Box& box, BorderEdge edge) {
         if (grid.size.x == 0 or grid.size.y == 0)
             return;
 
         UsedBorder tableBorder = resolve(box, edge);
-        usize const j = edge == Style::BorderEdge::START ? 0 : grid.size.x - 1;
+        usize const j = edge == BorderEdge::START ? 0 : grid.size.x - 1;
 
         usize i = 0;
         while (i < grid.size.y) {
@@ -720,7 +739,7 @@ export struct TableFormatingContext : FormatingContext {
 
             auto finalBorder = harmonizeConflictingBorders(borders);
 
-            if (edge == Style::BorderEdge::START) {
+            if (edge == BorderEdge::START) {
                 paintCellStart(i, j, finalBorder);
             } else {
                 auto si = grid.at(j, i).anchorIdx.y;
@@ -795,10 +814,10 @@ export struct TableFormatingContext : FormatingContext {
             }
         }
 
-        resolveConflictForTableBordersAtHorizontalAxis(box, Style::BorderEdge::TOP);
-        resolveConflictForTableBordersAtHorizontalAxis(box, Style::BorderEdge::BOTTOM);
-        resolveConflictForTableBordersAtVerticalAxis(box, Style::BorderEdge::START);
-        resolveConflictForTableBordersAtVerticalAxis(box, Style::BorderEdge::END);
+        resolveConflictForTableBordersAtHorizontalAxis(box, BorderEdge::TOP);
+        resolveConflictForTableBordersAtHorizontalAxis(box, BorderEdge::BOTTOM);
+        resolveConflictForTableBordersAtVerticalAxis(box, BorderEdge::START);
+        resolveConflictForTableBordersAtVerticalAxis(box, BorderEdge::END);
     }
 
     void computeBordersStructsSeparate() {

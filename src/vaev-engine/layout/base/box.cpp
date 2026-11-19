@@ -170,7 +170,7 @@ struct Box : Meta::NoCopy {
     // https://svgwg.org/svg2-draft/single-page.html#render-EstablishingStackingContex
     bool impliesNewStackingContext() const {
         return style->clip->has() or
-               style->transform->has() or
+               style->transform->transform != Keywords::NONE or
                style->opacity != 1.0 or
                isSvgRootBox() or
                isSvgForeignObjectBox();
