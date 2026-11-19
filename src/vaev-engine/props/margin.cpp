@@ -27,7 +27,7 @@ export struct MarginTopProperty : Property {
         }
 
         Rc<Property> load(ComputedValues const& c) const override {
-            return makeRc<MarginTopProperty>(self(), toSpecified(c.margin->top));
+            return makeRc<MarginTopProperty>(self(), specifyValue<Value>(c.margin->top));
         }
 
         Res<Rc<Property>> parse(Cursor<Css::Sst>& c) const override {
@@ -41,7 +41,7 @@ export struct MarginTopProperty : Property {
         : Property(registration), _value(value) {}
 
     void apply([[maybe_unused]] ComputedValues const& parent, ComputedValues& c, [[maybe_unused]] ComputationContext const& cx) const override {
-        c.margin.cow().top = toComputed(_value, cx);
+        c.margin.cow().top = computeValue(_value, cx);
     }
 
     Res<> serialize(Io::TextWriter& w) const override {
@@ -65,7 +65,7 @@ export struct MarginRightProperty : Property {
         }
 
         Rc<Property> load(ComputedValues const& c) const override {
-            return makeRc<MarginRightProperty>(self(), toSpecified(c.margin->end));
+            return makeRc<MarginRightProperty>(self(), specifyValue<Value>(c.margin->end));
         }
 
         Res<Rc<Property>> parse(Cursor<Css::Sst>& c) const override {
@@ -79,7 +79,7 @@ export struct MarginRightProperty : Property {
         : Property(registration), _value(value) {}
 
     void apply([[maybe_unused]] ComputedValues const& parent, ComputedValues& c, [[maybe_unused]] ComputationContext const& cx) const override {
-        c.margin.cow().end = toComputed(_value, cx);
+        c.margin.cow().end = computeValue(_value, cx);
     }
 
     Res<> serialize(Io::TextWriter& w) const override {
@@ -103,7 +103,7 @@ export struct MarginBottomProperty : Property {
         }
 
         Rc<Property> load(ComputedValues const& c) const override {
-            return makeRc<MarginBottomProperty>(self(), toSpecified(c.margin->bottom));
+            return makeRc<MarginBottomProperty>(self(), specifyValue<Value>(c.margin->bottom));
         }
 
         Res<Rc<Property>> parse(Cursor<Css::Sst>& c) const override {
@@ -117,7 +117,7 @@ export struct MarginBottomProperty : Property {
         : Property(registration), _value(value) {}
 
     void apply([[maybe_unused]] ComputedValues const& parent, ComputedValues& c, [[maybe_unused]] ComputationContext const& cx) const override {
-        c.margin.cow().bottom = toComputed(_value, cx);
+        c.margin.cow().bottom = computeValue(_value, cx);
     }
 
     Res<> serialize(Io::TextWriter& w) const override {
@@ -141,7 +141,7 @@ export struct MarginLeftProperty : Property {
         }
 
         Rc<Property> load(ComputedValues const& c) const override {
-            return makeRc<MarginLeftProperty>(self(), toSpecified(c.margin->start));
+            return makeRc<MarginLeftProperty>(self(), specifyValue<Value>(c.margin->start));
         }
 
         Res<Rc<Property>> parse(Cursor<Css::Sst>& c) const override {
@@ -155,7 +155,7 @@ export struct MarginLeftProperty : Property {
         : Property(registration), _value(value) {}
 
     void apply([[maybe_unused]] ComputedValues const& parent, ComputedValues& c, [[maybe_unused]] ComputationContext const& cx) const override {
-        c.margin.cow().start = toComputed(_value, cx);
+        c.margin.cow().start = computeValue(_value, cx);
     }
 
     Res<> serialize(Io::TextWriter& w) const override {
@@ -180,7 +180,7 @@ export struct MarginProperty : Property {
         }
 
         Rc<Property> load(ComputedValues const& c) const override {
-            return makeRc<MarginProperty>(self(), toSpecified(*c.margin));
+            return makeRc<MarginProperty>(self(), specifyValue<Value>(*c.margin));
         }
 
         Res<Rc<Property>> parse(Cursor<Css::Sst>& c) const override {
@@ -219,7 +219,7 @@ export struct MarginInlineStartProperty : Property {
         }
 
         Rc<Property> load(ComputedValues const& c) const override {
-            return makeRc<MarginInlineStartProperty>(self(), toSpecified(c.margin->start));
+            return makeRc<MarginInlineStartProperty>(self(), specifyValue<Value>(c.margin->start));
         }
 
         Res<Rc<Property>> parse(Cursor<Css::Sst>& c) const override {
@@ -260,7 +260,7 @@ export struct MarginInlineEndProperty : Property {
         }
 
         Rc<Property> load(ComputedValues const& c) const override {
-            return makeRc<MarginInlineEndProperty>(self(), toSpecified(c.margin->end));
+            return makeRc<MarginInlineEndProperty>(self(), specifyValue<Value>(c.margin->end));
         }
 
         Res<Rc<Property>> parse(Cursor<Css::Sst>& c) const override {
@@ -301,7 +301,7 @@ export struct MarginInlineProperty : Property {
         }
 
         Rc<Property> load(ComputedValues const& c) const override {
-            return makeRc<MarginInlineProperty>(self(), Value{toSpecified(c.margin->start), toSpecified(c.margin->end)});
+            return makeRc<MarginInlineProperty>(self(), Value{specifyValue<MarginTopProperty::Value>(c.margin->start), specifyValue<MarginTopProperty::Value>(c.margin->end)});
         }
 
         Res<Rc<Property>> parse(Cursor<Css::Sst>& c) const override {
@@ -339,7 +339,7 @@ export struct MarginBlockStartProperty : Property {
         }
 
         Rc<Property> load(ComputedValues const& c) const override {
-            return makeRc<MarginBlockStartProperty>(self(), toSpecified(c.margin->top));
+            return makeRc<MarginBlockStartProperty>(self(), specifyValue<Value>(c.margin->top));
         }
 
         Res<Rc<Property>> parse(Cursor<Css::Sst>& c) const override {
@@ -380,7 +380,7 @@ export struct MarginBlockEndProperty : Property {
         }
 
         Rc<Property> load(ComputedValues const& c) const override {
-            return makeRc<MarginBlockEndProperty>(self(), toSpecified(c.margin->bottom));
+            return makeRc<MarginBlockEndProperty>(self(), specifyValue<Value>(c.margin->bottom));
         }
 
         Res<Rc<Property>> parse(Cursor<Css::Sst>& c) const override {
@@ -421,7 +421,7 @@ export struct MarginBlockProperty : Property {
         }
 
         Rc<Property> load(ComputedValues const& c) const override {
-            return makeRc<MarginBlockProperty>(self(), Value{toSpecified(c.margin->top), toSpecified(c.margin->bottom)});
+            return makeRc<MarginBlockProperty>(self(), Value{specifyValue<MarginTopProperty::Value>(c.margin->top), specifyValue<MarginTopProperty::Value>(c.margin->bottom)});
         }
 
         Res<Rc<Property>> parse(Cursor<Css::Sst>& c) const override {

@@ -114,7 +114,7 @@ export struct FontFace {
     Union<None, FontStyle, Range<Deg>> style = FontStyle{};
 
     Opt<Range<Gfx::FontWeight>> weight = Some(Range<Gfx::FontWeight>::emptyAt(Gfx::FontWeight::REGULAR));
-    Opt<Range<Percent>> width = Some(Range<Percent>::emptyAt(toComputed(Css::FontWidth{Keywords::NORMAL})));
+    Opt<Range<Percent>> width = Some(Range<Percent>::emptyAt(computeValue(Css::FontWidth{Keywords::NORMAL})));
 
     Vec<Range<Rune>> unicodeRange;
 
@@ -317,7 +317,7 @@ export struct FontStyleFontDescriptor {
 
     // <angle [-90deg,90deg]>: math functions are clamped to the range.
     static Deg _clampAngle(Css::Angle const& angle) {
-        return Deg{clamp(toComputed(angle).value(), -90.0, 90.0)};
+        return Deg{clamp(computeValue(angle).value(), -90.0, 90.0)};
     }
 
     void apply(FontFace& f) const {
@@ -386,7 +386,7 @@ export struct FontWeightFontDescriptor {
     static Value initial() { return Keywords::AUTO; }
 
     static Gfx::FontWeight _weight(Css::FontWeightAbsolute const& weight) {
-        return Gfx::FontWeight{static_cast<u16>(toComputed(weight))};
+        return Gfx::FontWeight{static_cast<u16>(computeValue(weight))};
     }
 
     void apply(FontFace& f) const {
@@ -432,8 +432,8 @@ export struct FontWidthFontDescriptor {
             },
             [](_OneOrTwo<Css::FontWidth> const& widths) -> Opt<Range<Percent>> {
                 if (widths.end)
-                    return Some(Range<Percent>::fromStartEnd(toComputed(widths.start), toComputed(*widths.end)));
-                return Some(Range<Percent>::emptyAt(toComputed(widths.start)));
+                    return Some(Range<Percent>::fromStartEnd(computeValue(widths.start), computeValue(*widths.end)));
+                return Some(Range<Percent>::emptyAt(computeValue(widths.start)));
             }
         );
     }
@@ -570,7 +570,7 @@ export struct AscentOverrideFontDescriptor {
         // NOTE: normal is NONE
         f.ascentOverride = value.visit(
             [](Keywords::Normal) -> Opt<Percent> { return NONE; },
-            [](Css::Percentage const& p) -> Opt<Percent> { return Some(toComputed(p)); }
+            [](Css::Percentage const& p) -> Opt<Percent> { return Some(computeValue(p)); }
         );
     }
 
@@ -596,7 +596,7 @@ export struct DescentOverrideStyleProp {
         // NOTE: normal is NONE
         f.descentOverride = value.visit(
             [](Keywords::Normal) -> Opt<Percent> { return NONE; },
-            [](Css::Percentage const& p) -> Opt<Percent> { return Some(toComputed(p)); }
+            [](Css::Percentage const& p) -> Opt<Percent> { return Some(computeValue(p)); }
         );
     }
 
@@ -622,7 +622,7 @@ export struct LineGapOverrideFontDescriptor {
         // NOTE: normal is NONE
         f.lineGapOverride = value.visit(
             [](Keywords::Normal) -> Opt<Percent> { return NONE; },
-            [](Css::Percentage const& p) -> Opt<Percent> { return Some(toComputed(p)); }
+            [](Css::Percentage const& p) -> Opt<Percent> { return Some(computeValue(p)); }
         );
     }
 
@@ -645,7 +645,7 @@ export struct SizeAdjustFontDescriptor {
     static Value initial() { return Css::percent(100); }
 
     void apply(FontFace& f) const {
-        f.sizeAdjust = Some(toComputed(value));
+        f.sizeAdjust = Some(computeValue(value));
     }
 
     Res<> parse(Cursor<Css::Sst>& c) {

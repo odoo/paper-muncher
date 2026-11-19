@@ -8,7 +8,6 @@ import Karm.Core;
 import Karm.Math;
 
 import :style.values;
-import :style.values.generic;
 import :layout.box;
 
 using namespace Karm;

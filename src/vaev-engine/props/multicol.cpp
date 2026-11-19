@@ -28,7 +28,7 @@ export struct ColumnWidthProperty : Property {
         }
 
         Rc<Property> load(ComputedValues const& c) const override {
-            return makeRc<ColumnWidthProperty>(self(), Value{toSpecified(c.column->width)});
+            return makeRc<ColumnWidthProperty>(self(), specifyValue<Value>(c.column->width));
         }
 
         Res<Rc<Property>> parse(Cursor<Css::Sst>& c) const override {
@@ -42,7 +42,7 @@ export struct ColumnWidthProperty : Property {
         : Property(registration), _value(value) {}
 
     void apply([[maybe_unused]] ComputedValues const& parent, ComputedValues& c, ComputationContext const& cx) const override {
-        c.column.cow().width = toComputed(_value, cx);
+        c.column.cow().width = computeValue(_value, cx);
     }
 
     Res<> serialize(Io::TextWriter& w) const override {
@@ -67,7 +67,7 @@ export struct ColumnHeightProperty : Property {
         }
 
         Rc<Property> load(ComputedValues const& c) const override {
-            return makeRc<ColumnHeightProperty>(self(), Value{toSpecified(c.column->height)});
+            return makeRc<ColumnHeightProperty>(self(), specifyValue<Value>(c.column->height));
         }
 
         Res<Rc<Property>> parse(Cursor<Css::Sst>& c) const override {
@@ -81,7 +81,7 @@ export struct ColumnHeightProperty : Property {
         : Property(registration), _value(value) {}
 
     void apply([[maybe_unused]] ComputedValues const& parent, ComputedValues& c, ComputationContext const& cx) const override {
-        c.column.cow().height = toComputed(_value, cx);
+        c.column.cow().height = computeValue(_value, cx);
     }
 
     Res<> serialize(Io::TextWriter& w) const override {
@@ -152,9 +152,9 @@ export struct ColumnsProperty : Property {
             return makeRc<ColumnsProperty>(
                 self(),
                 Value{
-                    .width = toSpecified(c.column->width),
+                    .width = specifyValue<ColumnWidthProperty::Value>(c.column->width),
                     .count = c.column->count,
-                    .height = toSpecified(c.column->height),
+                    .height = specifyValue<ColumnHeightProperty::Value>(c.column->height),
                 }
             );
         }

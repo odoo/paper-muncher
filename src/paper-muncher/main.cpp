@@ -48,7 +48,7 @@ struct Cli::ValueParser<Vaev::Style::Dppx> {
         auto specified = try$(Css::parseValue<Css::Resolution>(c->value));
         c.next();
 
-        return Ok(Style::toComputed(specified));
+        return Ok(Style::computeValue(specified));
     }
 };
 
@@ -67,7 +67,7 @@ struct Cli::ValueParser<Vaev::Style::Px> {
         auto specified = try$(Css::parseValue<Css::Length>(c->value));
         c.next();
 
-        return Style::toComputed(specified).okOr(Error::invalidData("unsupported relative unit"));
+        return Style::computeValue(specified).okOr(Error::invalidData("unsupported relative unit"));
     }
 };
 
@@ -87,7 +87,7 @@ struct Cli::ValueParser<Math::Insets<Vaev::Style::Px>> {
         c.next();
 
         auto const compute = [](Css::Length const& length) {
-            return Style::toComputed(length).okOr(Error::invalidData("unsupported relative unit"));
+            return Style::computeValue(length).okOr(Error::invalidData("unsupported relative unit"));
         };
 
         return Ok(Math::Insets{
@@ -114,7 +114,7 @@ struct Cli::ValueParser<Vaev::Style::Color> {
         auto specified = try$(Css::parseValue<Css::Color>(c->value));
         c.next();
 
-        return Ok(Style::toComputed(specified, Gfx::ALPHA));
+        return Ok(Style::computeValue(specified, Gfx::ALPHA));
     }
 };
 

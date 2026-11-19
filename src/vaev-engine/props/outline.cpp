@@ -29,7 +29,7 @@ export struct OutlineWidthProperty : Property {
         }
 
         Rc<Property> load(ComputedValues const& c) const override {
-            return makeRc<OutlineWidthProperty>(self(), toSpecified(c.outline->width));
+            return makeRc<OutlineWidthProperty>(self(), specifyValue<Value>(c.outline->width));
         }
 
         Res<Rc<Property>> parse(Cursor<Css::Sst>& c) const override {
@@ -43,7 +43,7 @@ export struct OutlineWidthProperty : Property {
         : Property(registration), _value(value) {}
 
     void apply([[maybe_unused]] ComputedValues const& parent, ComputedValues& c, [[maybe_unused]] ComputationContext const& cx) const override {
-        c.outline.cow().width = toComputed(_value, cx);
+        c.outline.cow().width = computeValue(_value, cx);
     }
 
     Res<> serialize(Io::TextWriter& w) const override {
@@ -110,7 +110,7 @@ export struct OutlineColorProperty : Property {
         }
 
         Rc<Property> load(ComputedValues const& c) const override {
-            return makeRc<OutlineColorProperty>(self(), toSpecified(c.outline->color));
+            return makeRc<OutlineColorProperty>(self(), specifyValue<Css::Color>(c.outline->color));
         }
 
         Res<Rc<Property>> parse(Cursor<Css::Sst>& c) const override {
@@ -131,11 +131,11 @@ export struct OutlineColorProperty : Property {
                 // Otherwise, outline-color: auto computes to currentColor.
                 // NOSPEC: auto is stored as the accent color it represents.
                 if (c.outline->style == Keywords::AUTO)
-                    return toComputed(Css::Color{Css::SystemColor::ACCENT_COLOR}, c.color);
+                    return computeValue(Css::Color{Css::SystemColor::ACCENT_COLOR}, c.color);
                 return Keywords::CURRENT_COLOR;
             },
             [&](Css::Color const& color) {
-                return toComputed(color, c.color);
+                return computeValue(color, c.color);
             }
         );
     }
@@ -161,7 +161,7 @@ export struct OutlineOffsetProperty : Property {
         }
 
         Rc<Property> load(ComputedValues const& c) const override {
-            return makeRc<OutlineOffsetProperty>(self(), toSpecified(c.outline->offset));
+            return makeRc<OutlineOffsetProperty>(self(), specifyValue<Value>(c.outline->offset));
         }
 
         Res<Rc<Property>> parse(Cursor<Css::Sst>& c) const override {
@@ -175,7 +175,7 @@ export struct OutlineOffsetProperty : Property {
         : Property(registration), _value(value) {}
 
     void apply([[maybe_unused]] ComputedValues const& parent, ComputedValues& c, [[maybe_unused]] ComputationContext const& cx) const override {
-        c.outline.cow().offset = toComputed(_value, cx);
+        c.outline.cow().offset = computeValue(_value, cx);
     }
 
     Res<> serialize(Io::TextWriter& w) const override {
@@ -212,10 +212,10 @@ export struct OutlineProperty : Property {
             return makeRc<OutlineProperty>(
                 self(),
                 Value{
-                    toSpecified(c.outline->width),
-                    toSpecified(c.outline->offset),
+                    specifyValue<Css::LineWidth>(c.outline->width),
+                    specifyValue<Css::Length>(c.outline->offset),
                     c.outline->style,
-                    toSpecified(c.outline->color),
+                    specifyValue<Css::Color>(c.outline->color),
                 }
             );
         }

@@ -35,7 +35,7 @@ export struct FlexBasisProperty : Property {
         }
 
         Rc<Property> load(ComputedValues const& c) const override {
-            return makeRc<FlexBasisProperty>(self(), toSpecified(c.flex->basis));
+            return makeRc<FlexBasisProperty>(self(), specifyValue<Value>(c.flex->basis));
         }
 
         Res<Rc<Property>> parse(Cursor<Css::Sst>& c) const override {
@@ -49,7 +49,7 @@ export struct FlexBasisProperty : Property {
         : Property(registration), _value(value) {}
 
     void apply([[maybe_unused]] ComputedValues const& parent, ComputedValues& c, [[maybe_unused]] ComputationContext const& cx) const override {
-        c.flex.cow().basis = toComputed(_value, cx);
+        c.flex.cow().basis = computeValue(_value, cx);
     }
 
     Res<> serialize(Io::TextWriter& w) const override {
@@ -111,7 +111,7 @@ export struct FlexGrowProperty : Property {
         }
 
         Rc<Property> load(ComputedValues const& c) const override {
-            return makeRc<FlexGrowProperty>(self(), toSpecified(c.flex->grow));
+            return makeRc<FlexGrowProperty>(self(), specifyValue<Value>(c.flex->grow));
         }
 
         Res<Rc<Property>> parse(Cursor<Css::Sst>& c) const override {
@@ -125,7 +125,7 @@ export struct FlexGrowProperty : Property {
         : Property(registration), _value(value) {}
 
     void apply([[maybe_unused]] ComputedValues const& parent, ComputedValues& c, [[maybe_unused]] ComputationContext const& cx) const override {
-        c.flex.cow().grow = toComputed(_value);
+        c.flex.cow().grow = computeValue(_value);
     }
 
     Res<> serialize(Io::TextWriter& w) const override {
@@ -149,7 +149,7 @@ export struct FlexShrinkProperty : Property {
         }
 
         Rc<Property> load(ComputedValues const& c) const override {
-            return makeRc<FlexShrinkProperty>(self(), toSpecified(c.flex->shrink));
+            return makeRc<FlexShrinkProperty>(self(), specifyValue<Value>(c.flex->shrink));
         }
 
         Res<Rc<Property>> parse(Cursor<Css::Sst>& c) const override {
@@ -163,7 +163,7 @@ export struct FlexShrinkProperty : Property {
         : Property(registration), _value(value) {}
 
     void apply([[maybe_unused]] ComputedValues const& parent, ComputedValues& c, [[maybe_unused]] ComputationContext const& cx) const override {
-        c.flex.cow().shrink = toComputed(_value);
+        c.flex.cow().shrink = computeValue(_value);
     }
 
     Res<> serialize(Io::TextWriter& w) const override {
@@ -293,9 +293,9 @@ export struct FlexProperty : Property {
             return makeRc<FlexProperty>(
                 self(),
                 Value{
-                    toSpecified(c.flex->basis),
-                    toSpecified(c.flex->grow),
-                    toSpecified(c.flex->shrink),
+                    specifyValue<FlexBasisProperty::Value>(c.flex->basis),
+                    specifyValue<Css::Number>(c.flex->grow),
+                    specifyValue<Css::Number>(c.flex->shrink),
             });
         }
 

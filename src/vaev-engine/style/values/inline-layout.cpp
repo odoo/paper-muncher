@@ -6,6 +6,7 @@ import :css.values.inlineLayout;
 import :css.values.numeric;
 import :style.values.keywords;
 import :style.values.numeric;
+import :style.values.base;
 
 using namespace Karm;
 
@@ -15,21 +16,6 @@ namespace Vaev::Style {
 
 // https://drafts.csswg.org/css-inline-3/#line-height-property
 export using LineHeight = Union<Keywords::Normal, f64, Px>;
-
-export Union<Keywords::Normal, Css::Number, Css::LengthPercentage> toSpecified(LineHeight const& value) {
-    using Specified = Union<Keywords::Normal, Css::Number, Css::LengthPercentage>;
-    return value.visit(
-        [](Keywords::Normal) -> Specified {
-            return Keywords::NORMAL;
-        },
-        [](f64 number) -> Specified {
-            return toSpecified(number);
-        },
-        [](Px px) -> Specified {
-            return toSpecified(PxPercent{px});
-        }
-    );
-}
 
 // https://www.w3.org/TR/css-inline-3/#baseline-source
 export using BaselineSource = Css::BaselineSource;
@@ -43,12 +29,11 @@ export using DominantBaseline = Css::DominantBaseline;
 // https://www.w3.org/TR/css-inline-3/#baseline-shift-property
 // Computed Value: the specified keyword or a computed <length-percentage> value
 export using BaselineShift = Union<
+    PxPercent,
     Keywords::Sub,
     Keywords::Super,
     Keywords::Top,
     Keywords::Center,
-    Keywords::Bottom,
-    PxPercent
->;
+    Keywords::Bottom>;
 
 } // namespace Vaev::Style

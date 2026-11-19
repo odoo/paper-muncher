@@ -39,8 +39,8 @@ export struct TransformOriginProperty : Property {
             return makeRc<TransformOriginProperty>(
                 self(),
                 Value{
-                    .xOffset = toSpecified(c.transform->origin.x),
-                    .yOffset = toSpecified(c.transform->origin.y),
+                    .xOffset = specifyValue<Css::LengthPercentage>(c.transform->origin.x),
+                    .yOffset = specifyValue<Css::LengthPercentage>(c.transform->origin.y),
                 }
             );
         }
@@ -56,7 +56,7 @@ export struct TransformOriginProperty : Property {
         : Property(registration), _value(value) {}
 
     void apply([[maybe_unused]] ComputedValues const& parent, ComputedValues& c, [[maybe_unused]] ComputationContext const& cx) const override {
-        c.transform.cow().origin = toComputed(_value, cx);
+        c.transform.cow().origin = computeValue(_value, cx);
     }
 
     Res<> serialize(Io::TextWriter& w) const override {
@@ -124,7 +124,7 @@ export struct TransformProperty : Property {
         }
 
         Rc<Property> load(ComputedValues const& c) const override {
-            return makeRc<TransformProperty>(self(), toSpecified(c.transform->transform));
+            return makeRc<TransformProperty>(self(), specifyValue<Value>(c.transform->transform));
         }
 
         // https://www.w3.org/TR/SVG11/coords.html#TransformAttribute
@@ -241,7 +241,7 @@ export struct TransformProperty : Property {
         : Property(registration), _value(value) {}
 
     void apply([[maybe_unused]] ComputedValues const& parent, ComputedValues& c, [[maybe_unused]] ComputationContext const& cx) const override {
-        c.transform.cow().transform = toComputed(_value, cx);
+        c.transform.cow().transform = computeValue(_value, cx);
     }
 
     void repr(Io::Emit& e) const override {

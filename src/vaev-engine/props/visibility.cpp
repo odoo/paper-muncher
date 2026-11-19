@@ -70,7 +70,7 @@ export struct OpacityProperty : Property {
         }
 
         Rc<Property> load(ComputedValues const& c) const override {
-            return makeRc<OpacityProperty>(self(), toSpecified(c.opacity));
+            return makeRc<OpacityProperty>(self(), specifyValue<Value>(c.opacity));
         }
 
         Res<Rc<Property>> parse(Cursor<Css::Sst>& c) const override {
@@ -84,7 +84,7 @@ export struct OpacityProperty : Property {
         : Property(registration), _value(std::move(value)) {}
 
     void apply([[maybe_unused]] ComputedValues const& parent, ComputedValues& c, [[maybe_unused]] ComputationContext const& cx) const override {
-        c.opacity = toComputed(_value);
+        c.opacity = computeValue(_value);
     }
 
     Res<> serialize(Io::TextWriter& w) const override {
@@ -109,7 +109,7 @@ export struct ClipPathProperty : Property {
 
         Rc<Property> load(ComputedValues const& c) const override {
             if (auto const& [clip] = *c.clip)
-                return makeRc<ClipPathProperty>(self(), toSpecified(clip));
+                return makeRc<ClipPathProperty>(self(), specifyValue<Css::BasicShape>(clip));
             return makeRc<ClipPathProperty>(self(), Keywords::NONE);
         }
 
@@ -125,7 +125,7 @@ export struct ClipPathProperty : Property {
 
     void apply([[maybe_unused]] ComputedValues const& parent, ComputedValues& c, [[maybe_unused]] ComputationContext const& cx) const override {
         if (auto clipShape = _value.is<Css::BasicShape>())
-            c.clip.cow() = Some(toComputed(*clipShape, cx));
+            c.clip.cow() = Some(computeValue(*clipShape, cx));
         else
             c.clip.cow() = NONE;
     }

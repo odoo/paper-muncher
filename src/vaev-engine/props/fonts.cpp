@@ -108,7 +108,7 @@ export struct FontWeightProperty : Property {
         }
 
         Rc<Property> load(ComputedValues const& c) const override {
-            return makeRc<FontWeightProperty>(self(), Value{Css::FontWeightAbsolute{toSpecified(c.font->weight)}});
+            return makeRc<FontWeightProperty>(self(), Value{specifyValue<Css::FontWeightAbsolute>(c.font->weight)});
         }
 
         Res<Rc<Property>> parse(Cursor<Css::Sst>& c) const override {
@@ -124,7 +124,7 @@ export struct FontWeightProperty : Property {
     void apply(ComputedValues const& parent, ComputedValues& c, [[maybe_unused]] ComputationContext const& cx) const override {
         c.font.cow().weight = _value.visit(
             [](Css::FontWeightAbsolute const& weight) -> f64 {
-                return toComputed(weight);
+                return computeValue(weight);
             },
             // https://www.w3.org/TR/css-fonts-4/#relative-weights
             [&](Keywords::Lighter) -> f64 {
@@ -185,7 +185,7 @@ export struct FontWidthProperty : Property {
         }
 
         Rc<Property> load(ComputedValues const& c) const override {
-            return makeRc<FontWidthProperty>(self(), toSpecified(c.font->width));
+            return makeRc<FontWidthProperty>(self(), specifyValue<Value>(c.font->width));
         }
 
         Res<Rc<Property>> parse(Cursor<Css::Sst>& c) const override {
@@ -199,7 +199,7 @@ export struct FontWidthProperty : Property {
         : Property(registration), _value(value) {}
 
     void apply([[maybe_unused]] ComputedValues const& parent, ComputedValues& c, [[maybe_unused]] ComputationContext const& cx) const override {
-        c.font.cow().width = toComputed(_value);
+        c.font.cow().width = computeValue(_value);
     }
 
     Res<> serialize(Io::TextWriter& w) const override {
@@ -232,7 +232,7 @@ export struct FontStyleProperty : Property {
         }
 
         Rc<Property> load(ComputedValues const& c) const override {
-            return makeRc<FontStyleProperty>(self(), toSpecified(c.font->style));
+            return makeRc<FontStyleProperty>(self(), specifyValue<Value>(c.font->style));
         }
 
         Res<Rc<Property>> parse(Cursor<Css::Sst>& c) const override {
@@ -247,7 +247,7 @@ export struct FontStyleProperty : Property {
 
     // Computed value: the keyword specified, plus angle in degrees if specified
     void apply([[maybe_unused]] ComputedValues const& parent, ComputedValues& c, [[maybe_unused]] ComputationContext const& cx) const override {
-        c.font.cow().style = toComputed(_value);
+        c.font.cow().style = computeValue(_value);
     }
 
     Res<> serialize(Io::TextWriter& w) const override {
@@ -290,7 +290,7 @@ export struct FontSizeProperty : Property {
         }
 
         Rc<Property> load(ComputedValues const& c) const override {
-            return makeRc<FontSizeProperty>(self(), toSpecified(PxPercent{c.font->size}));
+            return makeRc<FontSizeProperty>(self(), specifyValue<Css::LengthPercentage>(PxPercent{c.font->size}));
         }
 
         Res<Rc<Property>> parse(Cursor<Css::Sst>& c) const override {
@@ -306,7 +306,7 @@ export struct FontSizeProperty : Property {
     void apply([[maybe_unused]] ComputedValues const& parent, ComputedValues& c, [[maybe_unused]] ComputationContext const& cx) const override {
         c.font.cow().size = _value.visit(
             [&](Css::LengthPercentage const& v) {
-                return Px{max(toComputed(v, cx, cx.parentFontSize).value(), 0.0)};
+                return Px{max(computeValue(v, cx, cx.parentFontSize).value(), 0.0)};
             },
             [&](Keywords::XxSmall) {
                 return Px{cx.userFontSize * 0.5};
@@ -383,11 +383,11 @@ export struct FontProperty : Property {
                 self(),
                 Value{
                     .families = font.families,
-                    .weight = Some(FontWeightProperty::Value{Css::FontWeightAbsolute{toSpecified(font.weight)}}),
-                    .width = toSpecified(font.width),
-                    .style = toSpecified(font.style),
-                    .size = toSpecified(PxPercent{font.size}),
-                    .lineHeight = toSpecified(c.inline_->lineHeight),
+                    .weight = Some(FontWeightProperty::Value{specifyValue<Css::FontWeightAbsolute>(font.weight)}),
+                    .width = specifyValue<FontWidthProperty::Value>(font.width),
+                    .style = specifyValue<FontStyleProperty::Value>(font.style),
+                    .size = specifyValue<Css::LengthPercentage>(PxPercent{font.size}),
+                    .lineHeight = specifyValue<LineHeightProperty::Value>(c.inline_->lineHeight),
                 }
             );
         }

@@ -8,6 +8,7 @@ import :css.values.color;
 import :css.values.numeric;
 import :style.values.keywords;
 import :style.values.numeric;
+import :style.values.base;
 
 using namespace Karm;
 using namespace Karm::Literals;
@@ -97,33 +98,35 @@ export using Color = Union<Gfx::Color, Keywords::CurrentColor>;
 
 Gfx::Color _mix(Css::ColorMix const& cm, Gfx::Color currentColor);
 
-// NOTE: currentColor is only used to resolve color-mix() functions referencing currentcolor.
-export Color toComputed(Css::Color const& value, Gfx::Color currentColor) {
-    return value.visit(
-        [](Gfx::Color const& srgb) -> Color {
-            return srgb;
-        },
-        // https://drafts.csswg.org/css-color-4/#resolving-other-colors
-        // The currentcolor keyword computes to itself.
-        [](Keywords::CurrentColor) -> Color {
-            return Keywords::CURRENT_COLOR;
-        },
-        // For system colors, the computed and used value is the corresponding color in its color space.
-        [](Css::SystemColor const& system) -> Color {
-            return _SYSTEM_COLORS[static_cast<usize>(system)];
-        },
-        // https://drafts.csswg.org/css-color-5/#resolving-mix
-        // FIXME: A color-mix() referencing currentcolor should compute to the function itself,
-        //        to preserve inheritance; we mix eagerly with the current color instead.
-        [&](Box<Css::ColorMix> const& mix) -> Color {
-            return _mix(*mix, currentColor);
-        }
-    );
-}
+export template <>
+struct ValueComputer<Css::Color> {
+    static Color compute(Css::Color const& value, Gfx::Color currentColor) {
+        return value.visit(
+            [](Gfx::Color const& srgb) -> Color {
+                return srgb;
+            },
+            // https://drafts.csswg.org/css-color-4/#resolving-other-colors
+            // The currentcolor keyword computes to itself.
+            [](Keywords::CurrentColor) -> Color {
+                return Keywords::CURRENT_COLOR;
+            },
+            // For system colors, the computed and used value is the corresponding color in its color space.
+            [](Css::SystemColor const& system) -> Color {
+                return _SYSTEM_COLORS[static_cast<usize>(system)];
+            },
+            // https://drafts.csswg.org/css-color-5/#resolving-mix
+            // FIXME: A color-mix() referencing currentcolor should compute to the function itself,
+            //        to preserve inheritance; we mix eagerly with the current color instead.
+            [&](Box<Css::ColorMix> const& mix) -> Color {
+                return _mix(*mix, currentColor);
+            }
+        );
+    }
 
-export Css::Color toSpecified(Color const& value) {
-    return value.visit([](auto const& v) -> Css::Color { return v; });
-}
+    static Css::Color specify(Color const& value) {
+        return value.visit([](auto const& v) -> Css::Color { return v; });
+    }
+};
 
 export Gfx::Color resolve(Color const& value, Gfx::Color currentColor) {
     return value.visit(
@@ -137,7 +140,7 @@ export Gfx::Color resolve(Color const& value, Gfx::Color currentColor) {
 }
 
 export Gfx::Color toUsed(Css::Color const& value, Gfx::Color currentColor) {
-    return resolve(toComputed(value, currentColor), currentColor);
+    return resolve(computeValue(value, currentColor), currentColor);
 }
 
 Gfx::Color _mix(Css::ColorMix const& cm, Gfx::Color currentColor) {
@@ -173,17 +176,24 @@ Gfx::Color _mix(Css::ColorMix const& cm, Gfx::Color currentColor) {
 // MARK: Opacity ---------------------------------------------------------------
 // https://drafts.csswg.org/css-color-4/#typedef-opacity-opacity-value
 
-export f64 toComputed(Css::OpacityValue const& value) {
-    auto number = value.visit(
-        [](Css::Number const& n) {
-            return toComputed(n);
-        },
-        [](Css::Percentage const& percent) {
-            return toComputed(percent, 1);
-        }
-    );
+export template <>
+struct ValueComputer<Css::OpacityValue> {
+    static f64 compute(Css::OpacityValue const& value) {
+        auto number = value.visit(
+            [](Css::Number const& n) {
+                return computeValue(n);
+            },
+            [](Css::Percentage const& percent) {
+                return computeValue(percent, 1);
+            }
+        );
 
-    return clamp(number, 0., 1.);
-}
+        return clamp(number, 0., 1.);
+    }
+
+    static Css::OpacityValue specify(f64 value) {
+        return specifyValue<Css::Number>(value);
+    }
+};
 
 } // namespace Vaev::Style

@@ -12,7 +12,7 @@ export import :style.values.display;
 export import :style.values.flexbox;
 export import :style.values.fonts;
 export import :style.values.gcpm;
-export import :style.values.generic;
+export import :style.values.base;
 export import :style.values.inlineLayout;
 export import :style.values.keywords;
 export import :style.values.lists;

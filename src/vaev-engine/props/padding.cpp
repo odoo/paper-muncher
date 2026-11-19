@@ -29,7 +29,7 @@ export struct PaddingTopProperty : Property {
         }
 
         Rc<Property> load(ComputedValues const& c) const override {
-            return makeRc<PaddingTopProperty>(self(), toSpecified(c.padding->top));
+            return makeRc<PaddingTopProperty>(self(), specifyValue<Value>(c.padding->top));
         }
 
         Res<Rc<Property>> parse(Cursor<Css::Sst>& c) const override {
@@ -43,7 +43,7 @@ export struct PaddingTopProperty : Property {
         : Property(registration), _value(value) {}
 
     void apply([[maybe_unused]] ComputedValues const& parent, ComputedValues& c, [[maybe_unused]] ComputationContext const& cx) const override {
-        c.padding.cow().top = toComputed(_value, cx);
+        c.padding.cow().top = computeValue(_value, cx);
     }
 
     Res<> serialize(Io::TextWriter& w) const override {
@@ -66,7 +66,7 @@ export struct PaddingRightProperty : Property {
         }
 
         Rc<Property> load(ComputedValues const& c) const override {
-            return makeRc<PaddingRightProperty>(self(), toSpecified(c.padding->end));
+            return makeRc<PaddingRightProperty>(self(), specifyValue<Value>(c.padding->end));
         }
 
         Res<Rc<Property>> parse(Cursor<Css::Sst>& c) const override {
@@ -80,7 +80,7 @@ export struct PaddingRightProperty : Property {
         : Property(registration), _value(value) {}
 
     void apply([[maybe_unused]] ComputedValues const& parent, ComputedValues& c, [[maybe_unused]] ComputationContext const& cx) const override {
-        c.padding.cow().end = toComputed(_value, cx);
+        c.padding.cow().end = computeValue(_value, cx);
     }
 
     Res<> serialize(Io::TextWriter& w) const override {
@@ -103,7 +103,7 @@ export struct PaddingBottomProperty : Property {
         }
 
         Rc<Property> load(ComputedValues const& c) const override {
-            return makeRc<PaddingBottomProperty>(self(), toSpecified(c.padding->bottom));
+            return makeRc<PaddingBottomProperty>(self(), specifyValue<Value>(c.padding->bottom));
         }
 
         Res<Rc<Property>> parse(Cursor<Css::Sst>& c) const override {
@@ -117,7 +117,7 @@ export struct PaddingBottomProperty : Property {
         : Property(registration), _value(value) {}
 
     void apply([[maybe_unused]] ComputedValues const& parent, ComputedValues& c, [[maybe_unused]] ComputationContext const& cx) const override {
-        c.padding.cow().bottom = toComputed(_value, cx);
+        c.padding.cow().bottom = computeValue(_value, cx);
     }
 
     Res<> serialize(Io::TextWriter& w) const override {
@@ -140,7 +140,7 @@ export struct PaddingLeftProperty : Property {
         }
 
         Rc<Property> load(ComputedValues const& c) const override {
-            return makeRc<PaddingLeftProperty>(self(), toSpecified(c.padding->start));
+            return makeRc<PaddingLeftProperty>(self(), specifyValue<Value>(c.padding->start));
         }
 
         Res<Rc<Property>> parse(Cursor<Css::Sst>& c) const override {
@@ -154,7 +154,7 @@ export struct PaddingLeftProperty : Property {
         : Property(registration), _value(value) {}
 
     void apply([[maybe_unused]] ComputedValues const& parent, ComputedValues& c, [[maybe_unused]] ComputationContext const& cx) const override {
-        c.padding.cow().start = toComputed(_value, cx);
+        c.padding.cow().start = computeValue(_value, cx);
     }
 
     Res<> serialize(Io::TextWriter& w) const override {
@@ -177,7 +177,7 @@ export struct PaddingInlineStartProperty : Property {
         }
 
         Rc<Property> load(ComputedValues const& c) const override {
-            return makeRc<PaddingInlineStartProperty>(self(), toSpecified(c.padding->start));
+            return makeRc<PaddingInlineStartProperty>(self(), specifyValue<Value>(c.padding->start));
         }
 
         Res<Rc<Property>> parse(Cursor<Css::Sst>& c) const override {
@@ -217,7 +217,7 @@ export struct PaddingInlineEndProperty : Property {
         }
 
         Rc<Property> load(ComputedValues const& c) const override {
-            return makeRc<PaddingInlineEndProperty>(self(), toSpecified(c.padding->end));
+            return makeRc<PaddingInlineEndProperty>(self(), specifyValue<Value>(c.padding->end));
         }
 
         Res<Rc<Property>> parse(Cursor<Css::Sst>& c) const override {
@@ -258,7 +258,7 @@ export struct PaddingProperty : Property {
         }
 
         Rc<Property> load(ComputedValues const& c) const override {
-            return makeRc<PaddingProperty>(self(), toSpecified(*c.padding));
+            return makeRc<PaddingProperty>(self(), specifyValue<Value>(*c.padding));
         }
 
         Res<Rc<Property>> parse(Cursor<Css::Sst>& c) const override {

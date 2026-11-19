@@ -8,6 +8,7 @@ import :css.values.transforms;
 import :style.values.backgrounds;
 import :style.values.numeric;
 import :style.values.keywords;
+import :style.values.base;
 
 using namespace Karm::Math::Literals;
 
@@ -95,112 +96,118 @@ export using TransformList = Vec<TransformFunction>;
 export using Transform = Union<Keywords::None, TransformList>;
 
 // https://drafts.csswg.org/css-transforms/#transform-property
-export TransformFunction toComputed(Css::TransformFunction const& value, LengthContext auto const& ctx) {
-    return value.visit(
-        [](Css::MatrixTransform const& t) -> TransformFunction {
-            return MatrixTransform{{
-                toComputed(t.values[0]),
-                toComputed(t.values[1]),
-                toComputed(t.values[2]),
-                toComputed(t.values[3]),
-                toComputed(t.values[4]),
-                toComputed(t.values[5]),
-            }};
-        },
-        [&](Css::TranslateTransform const& t) -> TransformFunction {
-            return TranslateTransform{toComputed(t.x, ctx), toComputed(t.y, ctx)};
-        },
-        [](Css::ScaleTransform const& t) -> TransformFunction {
-            return ScaleTransform{toComputed(t.x), toComputed(t.y)};
-        },
-        [](Css::RotateTransform const& t) -> TransformFunction {
-            return RotateTransform{toComputed(t.value)};
-        },
-        [](Css::SkewTransform const& t) -> TransformFunction {
-            return SkewTransform{toComputed(t.x), toComputed(t.y)};
-        },
-        [](Css::SkewXTransform const& t) -> TransformFunction {
-            return SkewXTransform{toComputed(t.value)};
-        },
-        [](Css::SkewYTransform const& t) -> TransformFunction {
-            return SkewYTransform{toComputed(t.value)};
-        }
-    );
-}
+export template <>
+struct ValueComputer<Css::TransformFunction> {
+    static TransformFunction compute(Css::TransformFunction const& value, LengthContext auto const& ctx) {
+        return value.visit(
+            [](Css::MatrixTransform const& t) -> TransformFunction {
+                return MatrixTransform{{
+                    computeValue(t.values[0]),
+                    computeValue(t.values[1]),
+                    computeValue(t.values[2]),
+                    computeValue(t.values[3]),
+                    computeValue(t.values[4]),
+                    computeValue(t.values[5]),
+                }};
+            },
+            [&](Css::TranslateTransform const& t) -> TransformFunction {
+                return TranslateTransform{computeValue(t.x, ctx), computeValue(t.y, ctx)};
+            },
+            [](Css::ScaleTransform const& t) -> TransformFunction {
+                return ScaleTransform{computeValue(t.x), computeValue(t.y)};
+            },
+            [](Css::RotateTransform const& t) -> TransformFunction {
+                return RotateTransform{computeValue(t.value)};
+            },
+            [](Css::SkewTransform const& t) -> TransformFunction {
+                return SkewTransform{computeValue(t.x), computeValue(t.y)};
+            },
+            [](Css::SkewXTransform const& t) -> TransformFunction {
+                return SkewXTransform{computeValue(t.value)};
+            },
+            [](Css::SkewYTransform const& t) -> TransformFunction {
+                return SkewYTransform{computeValue(t.value)};
+            }
+        );
+    }
 
-export Css::TransformFunction toSpecified(TransformFunction const& value) {
-    auto number = [](f64 n) {
-        return Css::number(n);
-    };
+    static Css::TransformFunction specify(TransformFunction const& value) {
+        auto number = [](f64 n) {
+            return Css::number(n);
+        };
 
-    return value.visit(
-        [&](MatrixTransform const& t) -> Css::TransformFunction {
-            return Css::MatrixTransform{{
-                number(t.values[0]),
-                number(t.values[1]),
-                number(t.values[2]),
-                number(t.values[3]),
-                number(t.values[4]),
-                number(t.values[5]),
-            }};
-        },
-        [](TranslateTransform const& t) -> Css::TransformFunction {
-            return Css::TranslateTransform{toSpecified(t.x), toSpecified(t.y)};
-        },
-        [&](ScaleTransform const& t) -> Css::TransformFunction {
-            return Css::ScaleTransform{number(t.x), number(t.y)};
-        },
-        [](RotateTransform const& t) -> Css::TransformFunction {
-            return Css::RotateTransform{toSpecified(t.value)};
-        },
-        [](SkewTransform const& t) -> Css::TransformFunction {
-            return Css::SkewTransform{toSpecified(t.x), toSpecified(t.y)};
-        },
-        [](SkewXTransform const& t) -> Css::TransformFunction {
-            return Css::SkewXTransform{toSpecified(t.value)};
-        },
-        [](SkewYTransform const& t) -> Css::TransformFunction {
-            return Css::SkewYTransform{toSpecified(t.value)};
-        }
-    );
-}
+        return value.visit(
+            [&](MatrixTransform const& t) -> Css::TransformFunction {
+                return Css::MatrixTransform{{
+                    number(t.values[0]),
+                    number(t.values[1]),
+                    number(t.values[2]),
+                    number(t.values[3]),
+                    number(t.values[4]),
+                    number(t.values[5]),
+                }};
+            },
+            [](TranslateTransform const& t) -> Css::TransformFunction {
+                return Css::TranslateTransform{specifyValue<Css::LengthPercentage>(t.x), specifyValue<Css::LengthPercentage>(t.y)};
+            },
+            [&](ScaleTransform const& t) -> Css::TransformFunction {
+                return Css::ScaleTransform{number(t.x), number(t.y)};
+            },
+            [](RotateTransform const& t) -> Css::TransformFunction {
+                return Css::RotateTransform{specifyValue<Css::Angle>(t.value)};
+            },
+            [](SkewTransform const& t) -> Css::TransformFunction {
+                return Css::SkewTransform{specifyValue<Css::Angle>(t.x), specifyValue<Css::Angle>(t.y)};
+            },
+            [](SkewXTransform const& t) -> Css::TransformFunction {
+                return Css::SkewXTransform{specifyValue<Css::Angle>(t.value)};
+            },
+            [](SkewYTransform const& t) -> Css::TransformFunction {
+                return Css::SkewYTransform{specifyValue<Css::Angle>(t.value)};
+            }
+        );
+    }
+};
 
 export using TransformBox = Css::TransformBox;
 
 // https://drafts.csswg.org/css-transforms/#transform-origin-property
 // Computed value: list, each item a pair of offsets (horizontal and vertical) from the top left
 //                 origin each given as a computed <length-percentage> value
-export Position toComputed(Css::TransformOrigin const& value, LengthContext auto const& ctx) {
-    return {
-        value.xOffset.visit(
-            [](Keywords::Left) -> PxPercent {
-                return Percent{0};
-            },
-            [](Keywords::Center) -> PxPercent {
-                return Percent{50};
-            },
-            [](Keywords::Right) -> PxPercent {
-                return Percent{100};
-            },
-            [&](Css::LengthPercentage const& length) -> PxPercent {
-                return toComputed(length, ctx);
-            }
-        ),
-        value.yOffset.visit(
-            [](Keywords::Top) -> PxPercent {
-                return Percent{0};
-            },
-            [](Keywords::Center) -> PxPercent {
-                return Percent{50};
-            },
-            [](Keywords::Bottom) -> PxPercent {
-                return Percent{100};
-            },
-            [&](Css::LengthPercentage const& length) -> PxPercent {
-                return toComputed(length, ctx);
-            }
-        ),
-    };
-}
+export template <>
+struct ValueComputer<Css::TransformOrigin> {
+    static Position compute(Css::TransformOrigin const& value, LengthContext auto const& ctx) {
+        return {
+            value.xOffset.visit(
+                [](Keywords::Left) -> PxPercent {
+                    return Percent{0};
+                },
+                [](Keywords::Center) -> PxPercent {
+                    return Percent{50};
+                },
+                [](Keywords::Right) -> PxPercent {
+                    return Percent{100};
+                },
+                [&](Css::LengthPercentage const& length) -> PxPercent {
+                    return computeValue(length, ctx);
+                }
+            ),
+            value.yOffset.visit(
+                [](Keywords::Top) -> PxPercent {
+                    return Percent{0};
+                },
+                [](Keywords::Center) -> PxPercent {
+                    return Percent{50};
+                },
+                [](Keywords::Bottom) -> PxPercent {
+                    return Percent{100};
+                },
+                [&](Css::LengthPercentage const& length) -> PxPercent {
+                    return computeValue(length, ctx);
+                }
+            ),
+        };
+    }
+};
 
 } // namespace Vaev::Style
