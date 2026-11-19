@@ -68,6 +68,11 @@ void _evalFontfaceRules(Style::Rule const& rule, Vec<Style::FontFace>& fontFaces
             for (auto const& subRule : r.rules)
                 _evalFontfaceRules(subRule, fontFaces);
         },
+        [&](Style::SupportsRule const& r) {
+            if (r.match())
+                for (auto const& subRule : r.rules)
+                    _evalFontfaceRules(subRule, fontFaces);
+        },
         [&](auto const&) {
             // Ignore other rule types
         }
