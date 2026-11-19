@@ -139,7 +139,7 @@ export struct ColorMix {
     struct Side {
         Color color;
         // FIXME: Allow calc.
-        Opt<PurePercentage> perc;
+        Opt<LegacyPercentage> perc;
 
         void repr(Io::Emit& e) const {
             e("{}", color);
@@ -241,7 +241,7 @@ struct ValueParser<Color> {
 
         // FIXME: Allow calc.
         if (scan.peek() == Token::Type::PERCENTAGE) {
-            auto perc = try$(parseValue<PurePercentage>(scan)).value();
+            auto perc = try$(parseValue<LegacyPercentage>(scan)).value();
             return Ok(Math::round((perc * 255) / 100));
         } else if (scan.peek() == Token::Type::NUMBER)
             return Ok(Math::round(try$(parseValue<f64>(scan)) * 255));
@@ -270,7 +270,7 @@ struct ValueParser<Color> {
         if (scan.skip(Token::ident("none"))) {
             return Ok(noneValue);
         } else if (scan.peek() == Token::Type::PERCENTAGE) {
-            auto perc = try$(parseValue<PurePercentage>(scan));
+            auto perc = try$(parseValue<LegacyPercentage>(scan));
             return Ok((perc.value() * percOf) / 100.0f);
         } else
             return Ok(try$(parseValue<f64>(scan)));
@@ -328,7 +328,7 @@ struct ValueParser<Color> {
 
             // FIXME: Allow calc.
             if (usingPercentages) {
-                auto perc = try$(parseValue<PurePercentage>(scan));
+                auto perc = try$(parseValue<LegacyPercentage>(scan));
                 channels[i] = Math::round((perc.value() * 255) / 100.0f);
             } else {
                 channels[i] = try$(parseValue<f64>(scan));
@@ -369,7 +369,7 @@ struct ValueParser<Color> {
         if (scan.skip(Token::ident("none")))
             hue = 0;
         else if (scan.peek() == Token::DIMENSION)
-            hue = try$(parseValue<PureAngle>(scan)).unitValue().to(UnitValue::Unit::DEG);
+            hue = try$(parseValue<LegacyAngle>(scan)).unitValue().to(UnitValue::Unit::DEG);
         else if (scan.peek() == Token::Type::NUMBER)
             hue = try$(parseValue<f64>(scan));
         else
@@ -405,7 +405,7 @@ struct ValueParser<Color> {
         if (scan.skip(Token::ident("none")))
             hue = 0;
         else if (scan.peek() == Token::DIMENSION)
-            hue = try$(parseValue<PureAngle>(scan)).unitValue().to(UnitValue::Unit::DEG);
+            hue = try$(parseValue<LegacyAngle>(scan)).unitValue().to(UnitValue::Unit::DEG);
         else if (scan.peek() == Token::Type::NUMBER)
             hue = try$(parseValue<f64>(scan));
         else
@@ -418,7 +418,7 @@ struct ValueParser<Color> {
         eatWhitespace(scan);
 
         // FIXME: Allow calc.
-        auto sat = try$(parseValue<PurePercentage>(scan)).value() / 100.0f;
+        auto sat = try$(parseValue<LegacyPercentage>(scan)).value() / 100.0f;
         eatWhitespace(scan);
 
         if (not scan.skip(Token::COMMA))
@@ -426,7 +426,7 @@ struct ValueParser<Color> {
         eatWhitespace(scan);
 
         // FIXME: Allow calc.
-        auto l = try$(parseValue<PurePercentage>(scan)).value() / 100.0f;
+        auto l = try$(parseValue<LegacyPercentage>(scan)).value() / 100.0f;
         eatWhitespace(scan);
 
         if (scan.ended()) {
@@ -530,13 +530,13 @@ struct ValueParser<Color> {
 
     static Res<ColorMix::Side> _parseColorMixSide(Cursor<Sst>& s) {
         // FIXME: Allow calc.
-        Opt<PurePercentage> percent;
+        Opt<LegacyPercentage> percent;
 
         if (s.ended())
             return Error::invalidData("unexpected end of input");
 
         if (s.peek() == Token::Type::PERCENTAGE) {
-            percent = Some(try$(parseValue<PurePercentage>(s)));
+            percent = Some(try$(parseValue<LegacyPercentage>(s)));
             eatWhitespace(s);
             return Ok(ColorMix::Side{
                 try$(parseValue<Color>(s)),
@@ -547,7 +547,7 @@ struct ValueParser<Color> {
         Color color = try$(parseValue<Color>(s));
         eatWhitespace(s);
         if (not s.ended() and s.peek() == Token::Type::PERCENTAGE)
-            percent = Some(try$(parseValue<PurePercentage>(s)));
+            percent = Some(try$(parseValue<LegacyPercentage>(s)));
 
         return Ok(ColorMix::Side{
             std::move(color),
@@ -679,7 +679,7 @@ struct ValueParser<OpacityValue> {
         // NOTE: A literal <percentage> is equivalent to the <number> it maps to,
         //       only math functions keep their percentages.
         if (c.peek() == Token::PERCENTAGE) {
-            auto percentage = try$(parseValue<PurePercentage>(c));
+            auto percentage = try$(parseValue<LegacyPercentage>(c));
             return Ok(number(percentage.value() / 100.));
         }
 

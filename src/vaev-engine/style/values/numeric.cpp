@@ -74,7 +74,7 @@ export f64 toComputed(Css::Percentage const& value, f64 percentBasis) {
 // FIXME: Make Pixel and Percentage backed by f32.
 export using Px = Distinct<f64, struct _PixelTag>;
 
-export Px toComputed(Css::PureLength const& value, LengthContext auto const& ctx) {
+export Px toComputed(Css::LegacyLength const& value, LengthContext auto const& ctx) {
     return Px{simplify(value.unitValue(), ctx).value()};
 }
 
@@ -116,10 +116,6 @@ export Css::Length toSpecified(Px const& px) {
 
 export using Deg = Distinct<f64, struct _DegTag>;
 
-export Deg toComputed(Css::PureAngle const& value) {
-    return Deg{value.unitValue().to(UnitValue::Unit::DEG)};
-}
-
 export Deg toComputed(Css::Angle const& value) {
     auto simplified = simplify(
         value.calcTree(),
@@ -143,10 +139,6 @@ export Css::Angle toSpecified(Deg const& angle) {
 // https://drafts.csswg.org/css-values/#resolution
 
 export using Dppx = Distinct<f64, struct _DppxTag>;
-
-export Dppx toComputed(Css::PureResolution const& value) {
-    return Dppx{value.unitValue().to(UnitValue::Unit::DPPX)};
-}
 
 export Dppx toComputed(Css::Resolution const& value) {
     auto simplified = simplify(
