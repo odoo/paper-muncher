@@ -180,7 +180,7 @@ export struct ComputedValues {
     Integer order;
     Aligns aligns;
     Display display;
-    f32 opacity;
+    f64 opacity;
 
     // Small Field
     Float float_ = Keywords::NONE;

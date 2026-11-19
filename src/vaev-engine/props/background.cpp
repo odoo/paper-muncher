@@ -33,7 +33,7 @@ export struct BackgroundColorProperty : Property {
         }
 
         Rc<Property> load(ComputedValues const& c) const override {
-            return makeRc<BackgroundColorProperty>(self(), toSpecified(c.backgrounds->color));
+            return makeRc<BackgroundColorProperty>(self(), specifyValue<Value>(c.backgrounds->color));
         }
 
         Res<Rc<Property>> parse(Cursor<Css::Sst>& c) const override {
@@ -47,7 +47,7 @@ export struct BackgroundColorProperty : Property {
         : Property(registration), _value(value) {}
 
     void apply([[maybe_unused]] ComputedValues const& parent, ComputedValues& c, [[maybe_unused]] ComputationContext const& cx) const override {
-        c.backgrounds.cow().color = toComputed(_value, c.color);
+        c.backgrounds.cow().color = computeValue(_value, c.color);
     }
 
     Res<> serialize(Io::TextWriter& w) const override {
@@ -254,9 +254,9 @@ export struct BackgroundProperty : Property {
 
         Rc<Property> load(ComputedValues const& c) const override {
             return makeRc<BackgroundProperty>(self(), [&] {
-                Value value{toSpecified(c.backgrounds->color), {}};
+                Value value{specifyValue<Css::Color>(c.backgrounds->color), {}};
                 for (auto const& layer : c.backgrounds->layers)
-                    value.layers.pushBack(toSpecified(layer));
+                    value.layers.pushBack(specifyValue<Css::BackgroundLayer>(layer));
                 return value;
             }());
         }

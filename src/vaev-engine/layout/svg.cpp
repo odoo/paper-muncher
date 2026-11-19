@@ -125,10 +125,10 @@ struct SvgFormatingContext : FormatingContext {
                 return 0;
             return value.take().visit(
                 [](Css::Number const& number) {
-                    return Style::toComputed(number);
+                    return Style::computeValue(number);
                 },
                 [&](Css::LengthPercentage const& length) {
-                    return Layout::resolve(Style::toComputed(length, cx), relative).cast<f64>();
+                    return Layout::resolve(Style::computeValue(length, cx), relative).cast<f64>();
                 }
             );
         };

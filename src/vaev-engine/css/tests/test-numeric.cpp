@@ -48,21 +48,21 @@ static Res<String> _specified(Str input) {
 static Res<String> _px(Str input) {
     auto calc = try$(_parse<Length>(input));
     auto cx = Style::RelativeLengthContextData{};
-    return _serialize(Style::toSpecified(Style::toComputed(calc, cx)));
+    return _serialize(Style::specifyValue<Length>(Style::computeValue(calc, cx)));
 }
 
 // Computed <length-percentage>, serialized.
 static Res<String> _lp(Str input) {
     auto calc = try$(_parse<LengthPercentage>(input));
     auto cx = Style::RelativeLengthContextData{};
-    return _serialize(Style::toSpecified(Style::toComputed(calc, cx)));
+    return _serialize(Style::specifyValue<LengthPercentage>(Style::computeValue(calc, cx)));
 }
 
 // Used <length-percentage> against a percentage basis, in px.
 static Res<f64> _used(Str input, f64 basis) {
     auto calc = try$(_parse<LengthPercentage>(input));
     auto cx = Style::RelativeLengthContextData{};
-    return Ok(Layout::resolve(Style::toComputed(calc, cx), Layout::Au{basis}).cast<f64>());
+    return Ok(Layout::resolve(Style::computeValue(calc, cx), Layout::Au{basis}).cast<f64>());
 }
 
 // Used <length-percentage> against an optional percentage basis, in px.
@@ -72,19 +72,19 @@ static Res<Opt<f64>> _usedOpt(Str input, Opt<f64> basis) {
     Opt<Layout::Au> relative = NONE;
     if (basis)
         relative = Some(Layout::Au{*basis});
-    return Ok(Layout::resolve(Style::toComputed(calc, cx), relative).map([](Layout::Au au) {
+    return Ok(Layout::resolve(Style::computeValue(calc, cx), relative).map([](Layout::Au au) {
         return au.cast<f64>();
     }));
 }
 
 // Computed <number>.
 static Res<f64> _num(Str input) {
-    return Ok(static_cast<f64>(Style::toComputed(try$(_parse<Number>(input)))));
+    return Ok(static_cast<f64>(Style::computeValue(try$(_parse<Number>(input)))));
 }
 
 // Computed <percentage>.
 static Res<f64> _pct(Str input) {
-    return Ok(Style::toComputed(try$(_parse<Percentage>(input))).value());
+    return Ok(Style::computeValue(try$(_parse<Percentage>(input))).value());
 }
 
 static bool _near(f64 a, f64 b) {
@@ -489,10 +489,10 @@ test$("calc-unsimplifiable-functions") {
 test$("calc-computed-infinity-and-nan-are-clamped", XFAIL) {
     auto cx = Style::RelativeLengthContextData{};
 
-    auto inf = Style::toComputed(try$(_parse<Length>("calc(1px / 0)")), cx).value();
+    auto inf = Style::computeValue(try$(_parse<Length>("calc(1px / 0)")), cx).value();
     assert$(inf > 0 and not Math::isInf(inf));
 
-    auto negInf = Style::toComputed(try$(_parse<Length>("calc(-infinity * 1px)")), cx).value();
+    auto negInf = Style::computeValue(try$(_parse<Length>("calc(-infinity * 1px)")), cx).value();
     assert$(negInf < 0 and not Math::isInf(negInf));
 
     assertEq$(try$(_px("calc(NaN * 1px)")), "0px"s);

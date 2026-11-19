@@ -265,7 +265,7 @@ export struct RowGapProperty : Property {
         }
 
         Rc<Property> load(ComputedValues const& c) const override {
-            return makeRc<RowGapProperty>(self(), toSpecified(c.gaps->row));
+            return makeRc<RowGapProperty>(self(), specifyValue<Value>(c.gaps->row));
         }
 
         Res<Rc<Property>> parse(Cursor<Css::Sst>& c) const override {
@@ -279,7 +279,7 @@ export struct RowGapProperty : Property {
         : Property(registration), _value(value) {}
 
     void apply([[maybe_unused]] ComputedValues const& parent, ComputedValues& c, [[maybe_unused]] ComputationContext const& cx) const override {
-        c.gaps.cow().row = toComputed(_value, cx);
+        c.gaps.cow().row = computeValue(_value, cx);
     }
 
     Res<> serialize(Io::TextWriter& w) const override {
@@ -308,7 +308,7 @@ export struct ColumnGapProperty : Property {
         }
 
         Rc<Property> load(ComputedValues const& c) const override {
-            return makeRc<ColumnGapProperty>(self(), toSpecified(c.gaps->col));
+            return makeRc<ColumnGapProperty>(self(), specifyValue<Value>(c.gaps->col));
         }
 
         Res<Rc<Property>> parse(Cursor<Css::Sst>& c) const override {
@@ -322,7 +322,7 @@ export struct ColumnGapProperty : Property {
         : Property(registration), _value(value) {}
 
     void apply([[maybe_unused]] ComputedValues const& parent, ComputedValues& c, [[maybe_unused]] ComputationContext const& cx) const override {
-        c.gaps.cow().col = toComputed(_value, cx);
+        c.gaps.cow().col = computeValue(_value, cx);
     }
 
     Res<> serialize(Io::TextWriter& w) const override {
@@ -357,7 +357,10 @@ export struct GapProperty : Property {
         }
 
         Rc<Property> load(ComputedValues const& c) const override {
-            return makeRc<GapProperty>(self(), Value{toSpecified(c.gaps->row), toSpecified(c.gaps->col)});
+            return makeRc<GapProperty>(self(), Value{
+                specifyValue<RowGapProperty::Value>(c.gaps->row),
+                specifyValue<RowGapProperty::Value>(c.gaps->col),
+            });
         }
 
         Res<Rc<Property>> parse(Cursor<Css::Sst>& c) const override {

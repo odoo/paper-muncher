@@ -7,7 +7,7 @@ import Karm.Math;
 import :css.values.backgrounds;
 import :css.values.shapes;
 import :style.values.backgrounds;
-import :style.values.generic;
+import :style.values.base;
 import :style.values.numeric;
 
 using namespace Karm;
@@ -21,22 +21,25 @@ export using GeometryBox = Css::GeometryBox;
 // https://www.w3.org/TR/SVG2/painting.html#FillRuleProperty
 export using FillRule = Gfx::FillRule;
 
-export FillRule toComputed(Css::FillRule const& value) {
-    return value.visit(
-        [](Keywords::Nonzero) {
-            return FillRule::NONZERO;
-        },
-        [](Keywords::Evenodd) {
-            return FillRule::EVENODD;
-        }
-    );
-}
+export template <>
+struct ValueComputer<Css::FillRule> {
+    static FillRule compute(Css::FillRule const& value) {
+        return value.visit(
+            [](Keywords::Nonzero) {
+                return FillRule::NONZERO;
+            },
+            [](Keywords::Evenodd) {
+                return FillRule::EVENODD;
+            }
+        );
+    }
 
-export Css::FillRule toSpecified(FillRule value) {
-    if (value == FillRule::EVENODD)
-        return Keywords::EVENODD;
-    return Keywords::NONZERO;
-}
+    static Css::FillRule specify(FillRule value) {
+        if (value == FillRule::EVENODD)
+            return Keywords::EVENODD;
+        return Keywords::NONZERO;
+    }
+};
 
 // https://drafts.csswg.org/css-shapes/#funcdef-basic-shape-path
 export struct Path {
@@ -48,13 +51,16 @@ export struct Path {
     }
 };
 
-export Path toComputed(Css::Path const& value) {
-    return {value.path, toComputed(value.fillRule)};
-}
+export template <>
+struct ValueComputer<Css::Path> {
+    static Path compute(Css::Path const& value) {
+        return {value.path, computeValue(value.fillRule)};
+    }
 
-export Css::Path toSpecified(Path const& value) {
-    return {value.path, toSpecified(value.fillRule)};
-}
+    static Css::Path specify(Path const& value) {
+        return {value.path, specifyValue<Css::FillRule>(value.fillRule)};
+    }
+};
 
 export using ShapeRadius = Union<
     PxPercent,
@@ -71,13 +77,16 @@ export struct Circle {
     }
 };
 
-export Circle toComputed(Css::Circle const& value, LengthContext auto const& ctx) {
-    return {toComputed(value.radius, ctx), toComputed(value.position, ctx)};
-}
+export template <>
+struct ValueComputer<Css::Circle> {
+    static Circle compute(Css::Circle const& value, LengthContext auto const& ctx) {
+        return {computeValue(value.radius, ctx), computeValue(value.position, ctx)};
+    }
 
-export Css::Circle toSpecified(Circle const& value) {
-    return {toSpecified(value.radius), toSpecified(value.position)};
-}
+    static Css::Circle specify(Circle const& value) {
+        return {specifyValue<Css::ShapeRadius>(value.radius), specifyValue<Css::BackgroundPosition>(value.position)};
+    }
+};
 
 // https://www.w3.org/TR/css-shapes-1/#funcdef-basic-shape-ellipse
 export struct Ellipse {
@@ -90,13 +99,16 @@ export struct Ellipse {
     }
 };
 
-export Ellipse toComputed(Css::Ellipse const& value, LengthContext auto const& ctx) {
-    return {toComputed(value.rx, ctx), toComputed(value.ry, ctx), toComputed(value.position, ctx)};
-}
+export template <>
+struct ValueComputer<Css::Ellipse> {
+    static Ellipse compute(Css::Ellipse const& value, LengthContext auto const& ctx) {
+        return {computeValue(value.rx, ctx), computeValue(value.ry, ctx), computeValue(value.position, ctx)};
+    }
 
-export Css::Ellipse toSpecified(Ellipse const& value) {
-    return {toSpecified(value.rx), toSpecified(value.ry), toSpecified(value.position)};
-}
+    static Css::Ellipse specify(Ellipse const& value) {
+        return {specifyValue<Css::ShapeRadius>(value.rx), specifyValue<Css::ShapeRadius>(value.ry), specifyValue<Css::BackgroundPosition>(value.position)};
+    }
+};
 
 // https://www.w3.org/TR/css-shapes-1/#funcdef-basic-shape-inset
 export struct Inset {
@@ -108,13 +120,16 @@ export struct Inset {
     }
 };
 
-export Inset toComputed(Css::Inset const& value, LengthContext auto const& ctx) {
-    return {toComputed(value.insets, ctx), toComputed(value.borderRadius, ctx)};
-}
+export template <>
+struct ValueComputer<Css::Inset> {
+    static Inset compute(Css::Inset const& value, LengthContext auto const& ctx) {
+        return {computeValue(value.insets, ctx), computeValue(value.borderRadius, ctx)};
+    }
 
-export Css::Inset toSpecified(Inset const& value) {
-    return {toSpecified(value.insets), toSpecified(value.borderRadius)};
-}
+    static Css::Inset specify(Inset const& value) {
+        return {specifyValue<Math::Insets<Css::LengthPercentage>>(value.insets), specifyValue<Math::Radii<Css::LengthPercentage>>(value.borderRadius)};
+    }
+};
 
 // https://www.w3.org/TR/css-shapes-1/#funcdef-basic-shape-polygon
 export struct Polygon {
@@ -126,19 +141,22 @@ export struct Polygon {
     }
 };
 
-export Polygon toComputed(Css::Polygon const& value, LengthContext auto const& ctx) {
-    Polygon result{toComputed(value.fillRule), {}};
-    for (auto const& [x, y] : value.points)
-        result.points.emplaceBack(toComputed(x, ctx), toComputed(y, ctx));
-    return result;
-}
+export template <>
+struct ValueComputer<Css::Polygon> {
+    static Polygon compute(Css::Polygon const& value, LengthContext auto const& ctx) {
+        Polygon result{computeValue(value.fillRule), {}};
+        for (auto const& [x, y] : value.points)
+            result.points.emplaceBack(computeValue(x, ctx), computeValue(y, ctx));
+        return result;
+    }
 
-export Css::Polygon toSpecified(Polygon const& value) {
-    Css::Polygon result{toSpecified(value.fillRule), {}};
-    for (auto const& [x, y] : value.points)
-        result.points.emplaceBack(toSpecified(x), toSpecified(y));
-    return result;
-}
+    static Css::Polygon specify(Polygon const& value) {
+        Css::Polygon result{specifyValue<Css::FillRule>(value.fillRule), {}};
+        for (auto const& [x, y] : value.points)
+            result.points.emplaceBack(specifyValue<Css::LengthPercentage>(x), specifyValue<Css::LengthPercentage>(y));
+        return result;
+    }
+};
 
 // https://www.w3.org/TR/css-shapes-1/#funcdef-basic-shape-rect
 export struct Rect {
@@ -150,13 +168,16 @@ export struct Rect {
     }
 };
 
-export Rect toComputed(Css::Rect const& value, LengthContext auto const& ctx) {
-    return {toComputed(value.insets, ctx), toComputed(value.borderRadius, ctx)};
-}
+export template <>
+struct ValueComputer<Css::Rect> {
+    static Rect compute(Css::Rect const& value, LengthContext auto const& ctx) {
+        return {computeValue(value.insets, ctx), computeValue(value.borderRadius, ctx)};
+    }
 
-export Css::Rect toSpecified(Rect const& value) {
-    return {toSpecified(value.insets), toSpecified(value.borderRadius)};
-}
+    static Css::Rect specify(Rect const& value) {
+        return {specifyValue<Math::Insets<Css::LengthPercentage>>(value.insets), specifyValue<Math::Radii<Css::LengthPercentage>>(value.borderRadius)};
+    }
+};
 
 // https://www.w3.org/TR/css-shapes-1/#funcdef-basic-shape-xywh
 export struct Xywh {
@@ -171,25 +192,28 @@ export struct Xywh {
     }
 };
 
-export Xywh toComputed(Css::Xywh const& value, LengthContext auto const& ctx) {
-    return {
-        toComputed(value.x, ctx),
-        toComputed(value.y, ctx),
-        toComputed(value.width, ctx),
-        toComputed(value.height, ctx),
-        toComputed(value.borderRadius, ctx),
-    };
-}
+export template <>
+struct ValueComputer<Css::Xywh> {
+    static Xywh compute(Css::Xywh const& value, LengthContext auto const& ctx) {
+        return {
+            computeValue(value.x, ctx),
+            computeValue(value.y, ctx),
+            computeValue(value.width, ctx),
+            computeValue(value.height, ctx),
+            computeValue(value.borderRadius, ctx),
+        };
+    }
 
-export Css::Xywh toSpecified(Xywh const& value) {
-    return {
-        toSpecified(value.x),
-        toSpecified(value.y),
-        toSpecified(value.width),
-        toSpecified(value.height),
-        toSpecified(value.borderRadius),
-    };
-}
+    static Css::Xywh specify(Xywh const& value) {
+        return {
+            specifyValue<Css::LengthPercentage>(value.x),
+            specifyValue<Css::LengthPercentage>(value.y),
+            specifyValue<Css::LengthPercentage>(value.width),
+            specifyValue<Css::LengthPercentage>(value.height),
+            specifyValue<Math::Radii<Css::LengthPercentage>>(value.borderRadius),
+        };
+    }
+};
 
 // https://drafts.csswg.org/css-shapes-1/#typedef-basic-shape
 export using BasicShapeFunction = Union<
@@ -210,37 +234,33 @@ export struct BasicShape {
     }
 };
 
-export BasicShape toComputed(Css::BasicShape const& value, LengthContext auto const& ctx) {
-    return {
-        value.shape.map([&](Css::BasicShapeFunction const& shape) {
-            return shape.visit(
-                [](Css::Path const& path) -> BasicShapeFunction {
-                    return toComputed(path);
-                },
-                [&](auto const& s) -> BasicShapeFunction {
-                    return toComputed(s, ctx);
-                }
-            );
-        }),
-        value.referenceBox,
-    };
-}
+export template <>
+struct ValueComputer<Css::BasicShape> {
+    static BasicShape compute(Css::BasicShape const& value, LengthContext auto const& ctx) {
+        return {
+            value.shape.map([&](Css::BasicShapeFunction const& shape) {
+                return shape.visit(
+                    [](Css::Path const& path) -> BasicShapeFunction {
+                        return computeValue(path);
+                    },
+                    [&](auto const& s) -> BasicShapeFunction {
+                        return computeValue(s, ctx);
+                    }
+                );
+            }),
+            value.referenceBox,
+        };
+    }
 
-export Css::BasicShape toSpecified(BasicShape const& value) {
-    return {
-        value.shape.map([](BasicShapeFunction const& shape) {
-            return shape.visit(
-                [](Path const& path) -> Css::BasicShapeFunction {
-                    return toSpecified(path);
-                },
-                [](auto const& s) -> Css::BasicShapeFunction {
-                    return toSpecified(s);
-                }
-            );
-        }),
-        value.referenceBox,
-    };
-}
+    static Css::BasicShape specify(BasicShape const& value) {
+        return {
+            value.shape.map([](BasicShapeFunction const& shape) {
+                return specifyValue<Css::BasicShapeFunction>(shape);
+            }),
+            value.referenceBox,
+        };
+    }
+};
 
 // https://drafts.csswg.org/css-masking-1/#propdef-clip-path
 export using ClipPath = Opt<BasicShape>;

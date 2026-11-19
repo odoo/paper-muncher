@@ -7,6 +7,7 @@ import :css.values.fonts;
 import :css.values.keywords;
 import :css.values.numeric;
 import :style.values.numeric;
+import :style.values.base;
 
 using namespace Karm;
 
@@ -21,19 +22,26 @@ export struct FontSizeContextData {
 export using FontFamily = Css::FontFamily;
 
 // https://drafts.csswg.org/css-fonts-4/#font-weight-absolute-values
-export f64 toComputed(Css::FontWeightAbsolute const& weight) {
-    return weight.visit(
-        [](Keywords::Normal) -> f64 {
-            return 400;
-        },
-        [](Keywords::Bold) -> f64 {
-            return 700;
-        },
-        [&](Css::Number const& number) {
-            return toComputed(number);
-        }
-    );
-}
+export template <>
+struct ValueComputer<Css::FontWeightAbsolute> {
+    static f64 compute(Css::FontWeightAbsolute const& weight) {
+        return weight.visit(
+            [](Keywords::Normal) -> f64 {
+                return 400;
+            },
+            [](Keywords::Bold) -> f64 {
+                return 700;
+            },
+            [&](Css::Number const& number) {
+                return computeValue(number);
+            }
+        );
+    }
+
+    static Css::FontWeightAbsolute specify(f64 value) {
+        return specifyValue<Css::Number>(value);
+    }
+};
 
 // https://drafts.csswg.org/css-fonts-4/#font-style-prop
 // Computed value: the keyword specified, plus angle in degrees if specified
@@ -45,71 +53,81 @@ export struct FontStyle {
     bool operator==(FontStyle const&) const = default;
 };
 
-export FontStyle toComputed(Css::FontStyle const& value) {
-    return value.visit(
-            [](Opt<Css::Angle> const& oblique) {
-                auto style = FontStyle{.val = Gfx::FontStyle::OBLIQUE};
-                if (auto const& [angle] = oblique)
-                    style.obliqueAngle = toComputed(angle);
-                return style;
-            },
-            [](Keywords::Italic) {
-                return FontStyle{.val = Gfx::FontStyle::ITALIC};
-            },
-            // TODO: left and right
-            [](auto) {
-                return FontStyle{.val = Gfx::FontStyle::NORMAL};
-            }
-        );
-}
+export template <>
+struct ValueComputer<Css::FontStyle> {
+    static FontStyle compute(Css::FontStyle const& value) {
+        return value.visit(
+                [](Opt<Css::Angle> const& oblique) {
+                    auto style = FontStyle{.val = Gfx::FontStyle::OBLIQUE};
+                    if (auto const& [angle] = oblique)
+                        style.obliqueAngle = computeValue(angle);
+                    return style;
+                },
+                [](Keywords::Italic) {
+                    return FontStyle{.val = Gfx::FontStyle::ITALIC};
+                },
+                // TODO: left and right
+                [](auto) {
+                    return FontStyle{.val = Gfx::FontStyle::NORMAL};
+                }
+            );
+    }
 
-Css::FontStyle toSpecified(FontStyle const& value) {
-    if (value.val == Gfx::FontStyle::ITALIC)
-        return Keywords::ITALIC;
-    if (value.val != Gfx::FontStyle::OBLIQUE)
-        return Keywords::NORMAL;
+    static Css::FontStyle specify(FontStyle const& value) {
+        if (value.val == Gfx::FontStyle::ITALIC)
+            return Keywords::ITALIC;
+        if (value.val != Gfx::FontStyle::OBLIQUE)
+            return Keywords::NORMAL;
 
-    Opt<Css::Angle> angle = NONE;
-    if (value.obliqueAngle != Deg{14})
-        angle = Some(toSpecified(value.obliqueAngle));
-    return angle;
-}
+        Opt<Css::Angle> angle = NONE;
+        if (value.obliqueAngle != Deg{14})
+            angle = Some(specifyValue<Css::Angle>(value.obliqueAngle));
+        return angle;
+    }
+};
 
 // https://drafts.csswg.org/css-fonts-4/#font-width-prop
 // Computed value: a percentage
-export Percent toComputed(Css::FontWidth const& value) {
-    return value.visit(
-        [](Keywords::UltraCondensed) {
-            return Percent{50};
-        },
-        [](Keywords::ExtraCondensed) {
-            return Percent{62.5};
-        },
-        [](Keywords::Condensed) {
-            return Percent{75};
-        },
-        [](Keywords::SemiCondensed) {
-            return Percent{87.5};
-        },
-        [](Keywords::Normal) {
-            return Percent{100};
-        },
-        [](Keywords::SemiExpanded) {
-            return Percent{112.5};
-        },
-        [](Keywords::Expanded) {
-            return Percent{125};
-        },
-        [](Keywords::ExtraExpanded) {
-            return Percent{150};
-        },
-        [](Keywords::UltraExpanded) {
-            return Percent{200};
-        },
-        [](Css::Percentage const& percentage) {
-            return toComputed(percentage);
-        }
-    );
-}
+export template <>
+struct ValueComputer<Css::FontWidth> {
+    static Percent compute(Css::FontWidth const& value) {
+        return value.visit(
+            [](Keywords::UltraCondensed) {
+                return Percent{50};
+            },
+            [](Keywords::ExtraCondensed) {
+                return Percent{62.5};
+            },
+            [](Keywords::Condensed) {
+                return Percent{75};
+            },
+            [](Keywords::SemiCondensed) {
+                return Percent{87.5};
+            },
+            [](Keywords::Normal) {
+                return Percent{100};
+            },
+            [](Keywords::SemiExpanded) {
+                return Percent{112.5};
+            },
+            [](Keywords::Expanded) {
+                return Percent{125};
+            },
+            [](Keywords::ExtraExpanded) {
+                return Percent{150};
+            },
+            [](Keywords::UltraExpanded) {
+                return Percent{200};
+            },
+            [](Css::Percentage const& percentage) {
+                return computeValue(percentage);
+            }
+        );
+    }
+
+    static Css::FontWidth specify(Percent value) {
+        return specifyValue<Css::Percentage>(value);
+    }
+};
 
 } // namespace Vaev::Style

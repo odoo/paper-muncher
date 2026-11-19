@@ -32,7 +32,7 @@ export struct LineHeightProperty : Property {
         }
 
         Rc<Property> load(ComputedValues const& c) const override {
-            return makeRc<LineHeightProperty>(self(), toSpecified(c.inline_->lineHeight));
+            return makeRc<LineHeightProperty>(self(), specifyValue<Value>(c.inline_->lineHeight));
         }
 
         Res<Rc<Property>> parse(Cursor<Css::Sst>& c) const override {
@@ -53,10 +53,10 @@ export struct LineHeightProperty : Property {
                 return normal;
             },
             [](Css::Number const& number) -> LineHeight {
-                return toComputed(number);
+                return computeValue(number);
             },
             [&](Css::LengthPercentage const& length) -> LineHeight {
-                return toComputed(length, cx, cx.fontSize);
+                return computeValue(length, cx, cx.fontSize);
             }
         );
     }
@@ -202,7 +202,7 @@ export struct BaselineShiftProperty : Property {
         }
 
         Rc<Property> load(ComputedValues const& c) const override {
-            return makeRc<BaselineShiftProperty>(self(), toSpecified(c.inline_->baselineShift));
+            return makeRc<BaselineShiftProperty>(self(), specifyValue<Value>(c.inline_->baselineShift));
         }
 
         Res<Rc<Property>> parse(Cursor<Css::Sst>& c) const override {
@@ -216,7 +216,7 @@ export struct BaselineShiftProperty : Property {
         : Property(registration), _value(value) {}
 
     void apply([[maybe_unused]] ComputedValues const& parent, ComputedValues& c, [[maybe_unused]] ComputationContext const& cx) const override {
-        c.inline_.cow().baselineShift = toComputed(_value, cx);
+        c.inline_.cow().baselineShift = computeValue(_value, cx);
     }
 
     Res<> serialize(Io::TextWriter& w) const override {
@@ -250,7 +250,7 @@ export struct VerticalAlignProperty : Property {
                 Value{
                     Some(c.inline_->baselineSource),
                     Some(c.inline_->alignmentBaseline),
-                    Some(toSpecified(c.inline_->baselineShift)),
+                    Some(specifyValue<BaselineShiftProperty::Value>(c.inline_->baselineShift)),
                 }
             );
         }

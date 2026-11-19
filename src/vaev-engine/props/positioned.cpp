@@ -64,7 +64,7 @@ export struct TopProperty : Property {
         }
 
         Rc<Property> load(ComputedValues const& c) const override {
-            return makeRc<TopProperty>(self(), toSpecified(c.insets->top));
+            return makeRc<TopProperty>(self(), specifyValue<Value>(c.insets->top));
         }
 
         Res<Rc<Property>> parse(Cursor<Css::Sst>& c) const override {
@@ -78,7 +78,7 @@ export struct TopProperty : Property {
         : Property(registration), _value(value) {}
 
     void apply([[maybe_unused]] ComputedValues const& parent, ComputedValues& c, [[maybe_unused]] ComputationContext const& cx) const override {
-        c.insets.cow().top = toComputed(_value, cx);
+        c.insets.cow().top = computeValue(_value, cx);
     }
 
     Res<> serialize(Io::TextWriter& w) const override {
@@ -102,7 +102,7 @@ export struct RightProperty : Property {
         }
 
         Rc<Property> load(ComputedValues const& c) const override {
-            return makeRc<RightProperty>(self(), toSpecified(c.insets->end));
+            return makeRc<RightProperty>(self(), specifyValue<Value>(c.insets->end));
         }
 
         Res<Rc<Property>> parse(Cursor<Css::Sst>& c) const override {
@@ -116,7 +116,7 @@ export struct RightProperty : Property {
         : Property(registration), _value(value) {}
 
     void apply([[maybe_unused]] ComputedValues const& parent, ComputedValues& c, [[maybe_unused]] ComputationContext const& cx) const override {
-        c.insets.cow().end = toComputed(_value, cx);
+        c.insets.cow().end = computeValue(_value, cx);
     }
 
     Res<> serialize(Io::TextWriter& w) const override {
@@ -140,7 +140,7 @@ export struct BottomProperty : Property {
         }
 
         Rc<Property> load(ComputedValues const& c) const override {
-            return makeRc<BottomProperty>(self(), toSpecified(c.insets->bottom));
+            return makeRc<BottomProperty>(self(), specifyValue<Value>(c.insets->bottom));
         }
 
         Res<Rc<Property>> parse(Cursor<Css::Sst>& c) const override {
@@ -154,7 +154,7 @@ export struct BottomProperty : Property {
         : Property(registration), _value(value) {}
 
     void apply([[maybe_unused]] ComputedValues const& parent, ComputedValues& c, [[maybe_unused]] ComputationContext const& cx) const override {
-        c.insets.cow().bottom = toComputed(_value, cx);
+        c.insets.cow().bottom = computeValue(_value, cx);
     }
 
     Res<> serialize(Io::TextWriter& w) const override {
@@ -178,7 +178,7 @@ export struct LeftProperty : Property {
         }
 
         Rc<Property> load(ComputedValues const& c) const override {
-            return makeRc<LeftProperty>(self(), toSpecified(c.insets->start));
+            return makeRc<LeftProperty>(self(), specifyValue<Value>(c.insets->start));
         }
 
         Res<Rc<Property>> parse(Cursor<Css::Sst>& c) const override {
@@ -192,7 +192,7 @@ export struct LeftProperty : Property {
         : Property(registration), _value(value) {}
 
     void apply([[maybe_unused]] ComputedValues const& parent, ComputedValues& c, [[maybe_unused]] ComputationContext const& cx) const override {
-        c.insets.cow().start = toComputed(_value, cx);
+        c.insets.cow().start = computeValue(_value, cx);
     }
 
     Res<> serialize(Io::TextWriter& w) const override {

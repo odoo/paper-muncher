@@ -7,6 +7,7 @@ import Karm.Gfx;
 import :css.values.color;
 import :css.values.svg;
 import :style.values.color;
+import :style.values.base;
 
 using namespace Karm::Literals;
 using namespace Karm::Math::Literals;
@@ -27,17 +28,20 @@ export using SvgMeetOrSlice = Css::SvgMeetOrSlice;
 // https://svgwg.org/svg2-draft/painting.html#SpecifyingPaint
 export using SvgPaint = Opt<Color>;
 
-export SvgPaint toComputed(Css::SvgPaint const& value, Gfx::Color currentColor) {
-    return value.map([&](Css::Color const& color) {
-        return toComputed(color, currentColor);
-    });
-}
+export template <>
+struct ValueComputer<Css::SvgPaint> {
+    static SvgPaint compute(Css::SvgPaint const& value, Gfx::Color currentColor) {
+        return value.map([&](Css::Color const& color) {
+            return computeValue(color, currentColor);
+        });
+    }
 
-export Css::SvgPaint toSpecified(SvgPaint const& value) {
-    return value.map([](Color const& color) {
-        return toSpecified(color);
-    });
-}
+    static Css::SvgPaint specify(SvgPaint const& value) {
+        return value.map([](Color const& color) {
+            return specifyValue<Css::Color>(color);
+        });
+    }
+};
 
 export Opt<Gfx::Color> resolve(SvgPaint const& value, Gfx::Color currentColor) {
     return value.map([&](Color const& color) {

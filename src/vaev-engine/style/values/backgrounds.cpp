@@ -12,28 +12,36 @@ import :style.values.numeric;
 import :css.values.unitValue;
 import :style.values.keywords;
 import :style.values.color;
+import :style.values.base;
 
 using namespace Vaev::Literals;
 using namespace Karm;
 
 namespace Vaev::Style {
 
-export Px toComputed(Css::LineWidth const& value, LengthContext auto const& ctx) {
-    return value.visit(
-        [](Keywords::Thin const&) {
-            return 1_px;
-        },
-        [](Keywords::Medium const&) {
-            return 3_px;
-        },
-        [](Keywords::Thick const&) {
-            return 5_px;
-        },
-        [&](Css::Length const& length) {
-            return toComputed(length, ctx);
-        }
-    );
-}
+export template <>
+struct ValueComputer<Css::LineWidth> {
+    static Px compute(Css::LineWidth const& value, LengthContext auto const& ctx) {
+        return value.visit(
+            [](Keywords::Thin const&) {
+                return 1_px;
+            },
+            [](Keywords::Medium const&) {
+                return 3_px;
+            },
+            [](Keywords::Thick const&) {
+                return 5_px;
+            },
+            [&](Css::Length const& length) {
+                return computeValue(length, ctx);
+            }
+        );
+    }
+
+    static Css::LineWidth specify(Px value) {
+        return specifyValue<Css::Length>(value);
+    }
+};
 
 // https://drafts.csswg.org/css-values/#position
 // The computed value is a pair of offsets from the top left origin.
@@ -51,46 +59,52 @@ export struct Position {
     }
 };
 
-export Position toComputed(Css::BackgroundPosition const& value, LengthContext auto const& ctx) {
-    auto offset = [&](bool isCenter, bool isFromEnd, Css::LengthPercentage const& length) -> PxPercent {
-        if (isCenter)
-            return Percent{50};
+export template <>
+struct ValueComputer<Css::BackgroundPosition> {
+    static Position compute(Css::BackgroundPosition const& value, LengthContext auto const& ctx) {
+        auto offset = [&](bool isCenter, bool isFromEnd, Css::LengthPercentage const& length) -> PxPercent {
+            if (isCenter)
+                return Percent{50};
 
-        if (isFromEnd) {
-            return toComputed(
-                Css::LengthPercentage{
-                    UNCHECKED,
-                    Css::SumNode{
-                        .children = {
-                            UnitValue{100, UnitValue::Unit::PERCENT},
-                            Css::NegateNode{makeBox<Calc>(length.calcTree())},
+            if (isFromEnd) {
+                return computeValue(
+                    Css::LengthPercentage{
+                        UNCHECKED,
+                        Css::SumNode{
+                            .children = {
+                                UnitValue{100, UnitValue::Unit::PERCENT},
+                                Css::NegateNode{makeBox<Calc>(length.calcTree())},
+                            },
                         },
                     },
-                },
-                ctx
-            );
-        }
+                    ctx
+                );
+            }
 
-        return toComputed(length, ctx);
-    };
+            return computeValue(length, ctx);
+        };
 
-    return {
-        offset(
-            value.horizontalAnchor.is<Keywords::Center>().has(),
-            value.horizontalAnchor.is<Keywords::Right>().has(),
-            value.horizontal
-        ),
-        offset(
-            value.verticalAnchor.is<Keywords::Center>().has(),
-            value.verticalAnchor.is<Keywords::Bottom>().has(),
-            value.vertical
-        ),
-    };
-}
+        return {
+            offset(
+                value.horizontalAnchor.is<Keywords::Center>().has(),
+                value.horizontalAnchor.is<Keywords::Right>().has(),
+                value.horizontal
+            ),
+            offset(
+                value.verticalAnchor.is<Keywords::Center>().has(),
+                value.verticalAnchor.is<Keywords::Bottom>().has(),
+                value.vertical
+            ),
+        };
+    }
 
-export Css::BackgroundPosition toSpecified(Position const& value) {
-    return {toSpecified(value.x), toSpecified(value.y)};
-}
+    static Css::BackgroundPosition specify(Position const& value) {
+        return {
+            specifyValue<Css::LengthPercentage>(value.x),
+            specifyValue<Css::LengthPercentage>(value.y),
+        };
+    }
+};
 
 // https://drafts.csswg.org/css-backgrounds/#typedef-bg-layer
 export struct BackgroundLayer {
@@ -100,9 +114,12 @@ export struct BackgroundLayer {
     Css::BackgroundRepeat repeat;
 };
 
-export Css::BackgroundLayer toSpecified(BackgroundLayer const& value) {
-    return {value.image, value.attachment, toSpecified(value.position), value.repeat};
-}
+export template <>
+struct ValueComputer<Css::BackgroundLayer> {
+    static Css::BackgroundLayer specify(BackgroundLayer const& value) {
+        return {value.image, value.attachment, specifyValue<Css::BackgroundPosition>(value.position), value.repeat};
+    }
+};
 
 // https://drafts.csswg.org/css-backgrounds/#border-shorthands
 export struct Border {
@@ -111,8 +128,11 @@ export struct Border {
     Color color = Gfx::BLACK;
 };
 
-export Css::Border toSpecified(Border const& value) {
-    return {toSpecified(value.width), value.style, toSpecified(value.color)};
-}
+export template <>
+struct ValueComputer<Css::Border> {
+    static Css::Border specify(Border const& value) {
+        return {specifyValue<Css::LineWidth>(value.width), value.style, specifyValue<Css::Color>(value.color)};
+    }
+};
 
 } // namespace Vaev::Style
