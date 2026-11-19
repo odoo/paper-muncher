@@ -507,7 +507,8 @@ export struct Computer {
 
         // If the computed value of background-image on the
         // root element is none and its background-color is transparent
-        if (rootBackground->color == Gfx::ALPHA and rootBackground->imageIsNone()) {
+        bool imageIsNone = iter(rootBackground->layers) | All([](auto const& l) { return l.image == NONE; });
+        if (rootBackground->color == Gfx::ALPHA and imageIsNone) {
             // User agents must instead propagate the computed values of the
             // background properties from that element’s first HTML BODY
             // or XHTML body child element.

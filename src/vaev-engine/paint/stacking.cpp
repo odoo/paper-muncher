@@ -251,7 +251,7 @@ export struct StackingContext {
             applyClip(fragment, g, viewBox);
         }
 
-        if (fragment->style().transform->has()) {
+        if (fragment->style().transform->transform != Keywords::NONE) {
             applyTransform(fragment, g, viewBox);
         }
 
@@ -329,7 +329,7 @@ export struct StackingContext {
 
         g.push();
 
-        if (fragment->style().transform->has()) {
+        if (fragment->style().transform->transform != Keywords::NONE) {
             applyTransform(fragment, g, viewBox);
         }
 
@@ -360,7 +360,7 @@ export struct StackingContext {
 
         pos = fragment->intrinsicTransform().inverse().apply(pos);
 
-        if (fragment->style().transform->has())
+        if (fragment->style().transform->transform != Keywords::NONE)
             pos = resolveTransform(fragment, viewBox).inverse().apply(pos);
 
         for (auto& l : mutIterRev(layers))
