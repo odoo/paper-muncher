@@ -258,42 +258,9 @@ struct PseudoElementSelector {
     }
 };
 
-enum struct PseudoClass {
-#define PSEUDO(ID, ...) ID,
-#include "defs/pseudo-class.inc"
-
-#undef PSEUDO
-    _LEN,
-};
-
-static Opt<PseudoClass> parsePseudoClass(Str name) {
-#define PSEUDO(IDENT, NAME) \
-    if (name == NAME)       \
-        return Some(PseudoClass::IDENT);
-#include "defs/pseudo-class.inc"
-
-#undef PSEUDO
-
-    return NONE;
-}
-
-static Str serializePseudoClass(PseudoClass pseudoClass) {
-    switch (pseudoClass) {
-#define PSEUDO(IDENT, NAME)  \
-    case PseudoClass::IDENT: \
-        return NAME;
-
-#include "defs/pseudo-class.inc"
-
-#undef PSEUDO
-    default:
-        unreachable();
-    }
-}
-
 // https://www.w3.org/TR/selectors-4/#pseudo-class
 struct PseudoClassSelector {
-    PseudoClass pseudoClass;
+    Dom::PseudoClass pseudoClass;
 
     bool operator==(PseudoClassSelector const&) const = default;
 
@@ -371,24 +338,6 @@ struct LangPseudoClass {
 
     void repr(Io::Emit& e) const {
         e("(lang-pseudo-class)");
-    }
-};
-
-// https://www.w3.org/TR/selectors-4/#the-root-pseudo
-struct RootPseudoClass {
-    bool operator==(RootPseudoClass const&) const = default;
-
-    void repr(Io::Emit& e) const {
-        e("(root-pseudo-class)");
-    }
-};
-
-// https://www.w3.org/TR/selectors-4/#the-empty-pseudo
-struct EmptyPseudoClass {
-    bool operator==(EmptyPseudoClass const&) const = default;
-
-    void repr(Io::Emit& e) const {
-        e("(empty-pseudo-class)");
     }
 };
 
@@ -599,6 +548,7 @@ struct ChildIndexPseudoClass {
         FIRST_CHILD,
         LAST_CHILD,
         ONLY_CHILD,
+        _LEN,
     };
 
     Type type;
@@ -620,6 +570,7 @@ struct TypedChildIndexPseudoClass {
         FIRST_OF_TYPE,
         LAST_OF_TYPE,
         ONLY_OF_TYPE,
+        _LEN,
     };
 
     Type type;
@@ -643,9 +594,8 @@ struct NestingSelector {
     }
 };
 
-// https://www.w3.org/TR/selectors-4/#simple
-using SimpleSelector = Union<
-    TypeSelector,
+// https://www.w3.org/TR/selectors-4/#typedef-subclass-selector
+using SubclassSelector = Union<
     AttributeSelector,
     ClassSelector,
     IdSelector,
@@ -657,20 +607,19 @@ using SimpleSelector = Union<
     RelationalPseudoClass,
     DirPseudoClass,
     LangPseudoClass,
-    RootPseudoClass,
-    EmptyPseudoClass,
     ChildIndexPseudoClass,
     TypedChildIndexPseudoClass,
     NestingSelector>;
 
 // https://www.w3.org/TR/selectors-4/#compound
 struct CompoundSelector {
-    Vec<SimpleSelector> selectors;
+    Opt<TypeSelector> type;
+    Vec<SubclassSelector> subclasses;
 
     bool operator==(CompoundSelector const&) const = default;
 
     void repr(Io::Emit& e) const {
-        e("(compound-selector {})", selectors);
+        e("(compound-selector {})", subclasses);
     }
 };
 
@@ -814,7 +763,12 @@ static Res<QualifiedNameSelector> _parseQualifiedNameSelector(Cursor<Css::Sst>& 
 
 // MARK: Simple Selector
 
-Res<TypeSelector> _parseTypeSelector(Cursor<Css::Sst>& s) {}
+Res<TypeSelector> _parseTypeSelector(Cursor<Css::Sst>& s, NamespaceScope const& ns) {
+    auto rollback = s.rollbackPoint();
+    auto qualifiedName = try$(_parseQualifiedNameSelector(s, ns, ns.defaultNamespacePattern()));
+    rollback.disarm();
+    return Ok<TypeSelector>(std::move(qualifiedName));
+}
 
 Res<AttributeSelector> _parseAttributeSelector(Cursor<Css::Sst>& s, NamespaceScope const& ns) {
     if (s->type != Css::Sst::BLOCK)
@@ -920,6 +874,7 @@ Res<ClassSelector> _parseClassSelector(Cursor<Css::Sst>& s) {
     if (s->token != Css::Token::IDENT)
         return Error::invalidData("expected class selector");
 
+    rollback.disarm();
     return Ok(ClassSelector{s->token.data});
 }
 
@@ -942,25 +897,59 @@ Res<MatchAnyPseudoClass> _parseMatchAnyPseudoClass(Cursor<Css::Sst>& s) {}
 
 Res<NegationPseudoClass> _parseNegationPseudoClass(Cursor<Css::Sst>& s) {}
 
-void _parseSpecificityAdjustmentPseudoClass(Cursor<Css::Sst>& s) {}
+Res<SpecificityAdjustmentPseudoClass> _parseSpecificityAdjustmentPseudoClass(Cursor<Css::Sst>& s) {}
 
-void _parseRelationalPseudoClass(Cursor<Css::Sst>& s) {}
+Res<RelationalPseudoClass> _parseRelationalPseudoClass(Cursor<Css::Sst>& s) {}
 
-void _parseDirPseudoClass(Cursor<Css::Sst>& s) {}
+Res<Dir> _parseDirPseudoClass(Cursor<Css::Sst>& s) {}
 
-void _parseLangPseudoClass(Cursor<Css::Sst>& s) {}
+Res<LangPseudoClass> _parseLangPseudoClass(Cursor<Css::Sst>& s) {}
 
-void _parseRootPseudoClass(Cursor<Css::Sst>& s) {}
+// https://www.w3.org/TR/selectors-4/#nth-of-type-pseudo
+Res<ChildIndexPseudoClass> _parseChildIndexPseudoClass(Cursor<Css::Sst>& s) {
+    auto rollback = s.rollbackPoint();
 
-void _parseEmptyPseudoClass(Cursor<Css::Sst>& s) {}
+    if (s.ended() or not s.skip(Css::Token::COLON))
+        return Error::invalidData("expected nth-child selector"s);
 
-void _parseChildIndexPseudoClass(Cursor<Css::Sst>& s) {}
+    if (s->prefix == Css::Token::function("nth-child("s)) {
+    } else if (s->prefix == Css::Token::function("nth-last-child("s)) {
+    } else if (*s == Css::Token::ident("first-child")) {
+    } else if (*s == Css::Token::ident("last-child")) {
+    } else if (*s == Css::Token::ident("only-child")) {
+    } else {
+        return Error::invalidData("expected nth-child selector");
+    }
+}
 
-void _parseTypedChildIndexPseudoClass(Cursor<Css::Sst>& s) {}
+Res<TypedChildIndexPseudoClass> _parseTypedChildIndexPseudoClass(Cursor<Css::Sst>& s) {
+    auto rollback = s.rollbackPoint();
 
-void _parseNestingSelector(Cursor<Css::Sst>& s) {}
+    if (s.ended() or not s.skip(Css::Token::COLON))
+        return Error::invalidData("expected nth-child selector"s);
 
-void _parseSimpleSelector(Cursor<Css::Sst>& s) {
+    if (s->prefix == Css::Token::function("nth-of-type("s)) {
+    } else if (s->prefix == Css::Token::function("nth-of-type("s)) {
+    } else if (*s == Css::Token::ident("first-of-type")) {
+    } else if (*s == Css::Token::ident("last-of-type")) {
+    } else if (*s == Css::Token::ident("only-of-type")) {
+    } else {
+        return Error::invalidData("expected <typed-child-index-pseudo-class>");
+    }
+}
+
+// https://www.w3.org/TR/css-nesting-1/#nest-selector
+Res<NestingSelector> _parseNestingSelector(Cursor<Css::Sst>& s) {
+    if (s.peek().token == "&"s)
+        return Error::invalidData("expected nth-child selector"s);
+    s.next();
+    return Ok<NestingSelector>();
+}
+
+// https://www.w3.org/TR/selectors-4/#typedef-subclass-selector
+Res<SubclassSelector> _parseSubclassSelector(Cursor<Css::Sst>& s) {
+    // <subclass-selector> = <id-selector> | <class-selector> |
+    //                       <attribute-selector> | <pseudo-class-selector>
 }
 
 // MARK: Compound Selector
@@ -971,7 +960,7 @@ void _parseCompoundSelector(Cursor<Css::Sst>& s) {
 }
 
 // https://www.w3.org/TR/selectors-4/#typedef-compound-selector-list
-void _parseCompoundSelectorList(Cursor<Css::Sst>& s) {
+CompoundSelector _parseCompoundSelectorList(Cursor<Css::Sst>& s) {
     // <compound-selector-list> = <compound-selector>#
 }
 
@@ -983,25 +972,32 @@ void _parseComplexSelectorUnit(Cursor<Css::Sst>& s) {
 }
 
 // https://www.w3.org/TR/selectors-4/#typedef-complex-selector
-void _parseComplexSelector(Cursor<Css::Sst>& s) {
+Res<ComplexSelector> _parseComplexSelector(Cursor<Css::Sst>& s) {
     // <complex-selector> = <complex-selector-unit> [ <combinator>? <complex-selector-unit> ]*
 }
 
 // https://www.w3.org/TR/selectors-4/#typedef-complex-selector-list
 Res<Vec<ComplexSelector>> _parseComplexSelectorList(Cursor<Css::Sst>& s) {
     // <complex-selector-list> = <complex-selector>#
+    Vec<ComplexSelector> complexSelectors;
+    do {
+        eatWhitespace(s);
+        complexSelectors.pushBack(try$(_parseComplexSelector(s)));
+        eatWhitespace(s);
+    } while (s.skip(Css::Token::COMMA));
+    return Ok(std::move(complexSelectors));
 }
 
 // MARK: Selector
 
 // https://www.w3.org/TR/selectors-4/#typedef-selector-list
-Res<SelectorList> _parseSelectorList(Io::SScan& s) {
+Res<SelectorList> _parseSelectorList(Cursor<Css::Sst>& s) {
     // <selector-list> = <complex-selector-list>
     return _parseComplexSelectorList(s);
 }
 
 // https://www.w3.org/TR/selectors-4/#parse-selector
-export void parseSelector() {
+export Res<Selector> parseSelector(Cursor<Css::Sst>& s) {
     // 1. Let selector be the result of parsing source as a <selector-list>. If this returns failure, it’s an invalid selector; return failure.
     auto selector = try$(_parseSelectorList(s));
     // 2. If selector is an invalid selector for any other reason (such as, for example, containing an undeclared namespace prefix), return failure.
@@ -1012,19 +1008,24 @@ export void parseSelector() {
 // MARK: Relative Selector
 
 // https://www.w3.org/TR/selectors-4/#typedef-relative-selector
-Res<RelativeComplexSelector> _parseRelativeSelector() {
+Res<RelativeComplexSelector> _parseRelativeSelector(Cursor<Css::Sst>& s) {
     // <relative-selector> = <combinator>? <complex-selector>
 }
 
 // https://www.w3.org/TR/selectors-4/#typedef-relative-selector-list
-Res<RelativeSelectorList> _parseRelativeSelectorList(Io::SScan& s) {
+Res<RelativeSelectorList> _parseRelativeSelectorList(Cursor<Css::Sst>& s) {
     // <relative-selector-list> = <relative-selector>#
-    while (not s.ended()) {
-    }
+    Vec<RelativeComplexSelector> complexSelectors;
+    do {
+        eatWhitespace(s);
+        complexSelectors.pushBack(try$(_parseRelativeSelector(s)));
+        eatWhitespace(s);
+    } while (s.skip(Css::Token::COMMA));
+    return Ok(std::move(complexSelectors));
 }
 
 // https://www.w3.org/TR/selectors-4/#parse-relative-selector
-export Res<RelativeSelector> parseRelativeSelector(Io::SScan& s) {
+export Res<RelativeSelector> parseRelativeSelector(Cursor<Css::Sst>& s) {
     // 1. Let selector be the result of parsing source as a <relative-selector-list>. If this returns failure, it’s an invalid selector; return failure.
     auto selector = try$(_parseRelativeSelectorList(s));
     // 2. If selector is an invalid selector for any other reason (such as, for example, containing an undeclared namespace prefix), return failure.
@@ -1122,25 +1123,55 @@ void serialize(LangPseudoClass const& selector, Io::Emit& e) {
     e(":lang({})", selector.lang);
 }
 
-void serialize(RootPseudoClass const&, Io::Emit& e) {
-    e(":root");
-}
-
-void serialize(EmptyPseudoClass const&, Io::Emit& e) {
-    e(":empty");
-}
-
 void serialize(ChildIndexPseudoClass const& selector, Io::Emit& e) {
+    switch (selector.type) {
+    case ChildIndexPseudoClass::NTH_CHILD:
+        e(":nth-child");
+        break;
+    case ChildIndexPseudoClass::NTH_LAST_CHILD:
+        e(":nth-last-child");
+        break;
+    case ChildIndexPseudoClass::FIRST_CHILD:
+        e(":first-child");
+        return;
+    case ChildIndexPseudoClass::LAST_CHILD:
+        e(":last-child");
+        return;
+    case ChildIndexPseudoClass::ONLY_CHILD:
+        e(":only-child");
+        return;
+    default:
+        unreachable();
+    }
 }
 
 void serialize(TypedChildIndexPseudoClass const& selector, Io::Emit& e) {
+    switch (selector.type) {
+    case TypedChildIndexPseudoClass::NTH_OF_TYPE:
+        e(":nth-of-type");
+        break;
+    case TypedChildIndexPseudoClass::NTH_LAST_OF_TYPE:
+        e(":nth-last-of-type");
+        break;
+    case TypedChildIndexPseudoClass::FIRST_OF_TYPE:
+        e(":first-of-type");
+        break;
+    case TypedChildIndexPseudoClass::LAST_OF_TYPE:
+        e(":last-of-type");
+        break;
+    case TypedChildIndexPseudoClass::ONLY_OF_TYPE:
+        e(":only-of-type");
+        break;
+    default:
+        unreachable();
+    }
 }
 
 void serialize(NestingSelector const&, Io::Emit& e) {
     e("&");
 }
 
-void serialize(SimpleSelector const& selector, Io::Emit& e) {
+void serialize(SubclassSelector const& selector, Io::Emit& e) {
     selector.visit([&](auto& s) {
         serialize(s, e);
     });
@@ -1246,15 +1277,6 @@ Specificity specificity(LangPseudoClass const&) {
     return Specificity::B;
 }
 
-Specificity specificity(RootPseudoClass const&) {
-    return Specificity::B;
-}
-
-Specificity specificity(EmptyPseudoClass const&) {
-    return Specificity::B;
-}
-
-// :nth-child(... of S) adds the most specific S.
 Specificity specificity(ChildIndexPseudoClass const& s) {
     return Specificity::B + maxSpecificity(s.s);
 }
@@ -1263,12 +1285,11 @@ Specificity specificity(TypedChildIndexPseudoClass const&) {
     return Specificity::B;
 }
 
-// Should equal :is(parent); needs parent context.
 Specificity specificity(NestingSelector const&) {
     return Specificity::ZERO;
 }
 
-Specificity specificity(SimpleSelector const& s) {
+Specificity specificity(SubclassSelector const& s) {
     return s.visit([](auto const& s) {
         return specificity(s);
     });
@@ -1276,8 +1297,8 @@ Specificity specificity(SimpleSelector const& s) {
 
 Specificity specificity(CompoundSelector const& s) {
     Specificity res = Specificity::ZERO;
-    for (auto const& simple : s.selectors)
-        res = res + specificity(simple);
+    for (auto const& subclass : s.subclasses)
+        res = res + specificity(subclass);
     return res;
 }
 
@@ -1287,6 +1308,9 @@ Specificity specificity(ComplexSelector const& s) {
         res = res + specificity(compound.selector);
     res = res + specificity(s.rhs);
     return res;
+}
+
+Specificity specificity(RelativeComplexSelector const& s) {
 }
 
 // MARK: Matching --------------------------------------------------------------
@@ -1308,19 +1332,118 @@ bool match(TypeSelector const& selector, MatchSubject const& subject) {
     return selector.qualifiedName.match(subject.element->qualifiedName);
 }
 
+static Opt<Str> _getAttributeValue(AttributeSelector const& selector, Gc::Ref<Dom::Element> element) {
+    auto name = selector.qualifiedName.exactName();
+    if (not name)
+        return NONE;
+
+    if (selector.qualifiedName.ns.is<Universal>())
+        return element->getAttributeUnqualified(name.expect().str());
+
+    return element->getAttribute(selector.qualifiedName.fullyQualified());
+}
+
+static bool _matchContainsWord(Str attrValue, Str word, auto cmp) {
+    usize tokenStart = 0;
+    while (tokenStart < attrValue.len()) {
+        while (tokenStart < attrValue.len() and isAsciiSpace(attrValue[tokenStart]))
+            tokenStart++;
+
+        usize tokenEnd = tokenStart;
+        while (tokenEnd < attrValue.len() and not isAsciiSpace(attrValue[tokenEnd]))
+            tokenEnd++;
+
+        if (tokenStart != tokenEnd and startWith(sub(attrValue, tokenStart, tokenEnd), word, cmp) == Match::YES)
+            return true;
+
+        tokenStart = tokenEnd;
+    }
+
+    return false;
+}
+
+// https://www.w3.org/TR/selectors-4/#attribute-selectors
 bool match(AttributeSelector const& selector, MatchSubject const& subject) {
+    auto maybeAttrValue = _getAttributeValue(selector, subject.element);
+
+    if (selector.match == AttributeSelector::PRESENT) {
+        // Represents an element with the att attribute, whatever the value of the attribute.
+        return maybeAttrValue != NONE;
+    }
+
+    if (not maybeAttrValue)
+        return false;
+
+    auto attrValue = maybeAttrValue.expect();
+
+    auto cmp = [&selector](Rune const& a, Rune const& b) {
+        if (selector.case_ == AttributeSelector::INSENSITIVE)
+            return toAsciiLower(a) == toAsciiLower(b);
+        else
+            return a == b;
+    };
+
+    if (selector.match == AttributeSelector::EXACT) {
+        // Represents an element with the att attribute whose value is exactly "val".
+        return startWith(attrValue, selector.value.str(), cmp) == Match::YES;
+    } else if (selector.match == AttributeSelector::CONTAINS) {
+        // If "val" contains whitespace, it will never represent anything (since the words are separated by spaces).
+        if (contains(selector.value, ' '))
+            return false;
+
+        // Also if "val" is the empty string, it will never represent anything.
+        if (selector.value.len() == 0)
+            return false;
+
+        // Represents an element with the att attribute whose value is a whitespace-separated list of words,
+        // one of which is exactly "val".
+        return _matchContainsWord(attrValue, selector.value, cmp);
+    } else if (selector.match == AttributeSelector::HYPHENATED) {
+        // Represents an element with the att attribute, its value either being exactly "val"
+        auto prefixMatch = startWith(attrValue, selector.value.str(), cmp);
+        if (prefixMatch == Match::YES)
+            return true;
+        if (prefixMatch == Match::NO)
+            return false;
+
+        // or beginning with "val" immediately followed by "-" (U+002D).
+        return attrValue[selector.value.len()] == '-';
+    } else {
+        // 6.2. Substring matching attribute selectors
+        // https://www.w3.org/TR/selectors-4/#attribute-substrings
+
+        // If "val" is the empty string then the selector does not represent anything.
+        if (selector.value.len() == 0)
+            return false;
+
+        if (selector.match == AttributeSelector::STR_START_WITH) {
+            // Represents an element with the att attribute whose value begins with the prefix "val".
+            return startWith(attrValue, selector.value.str(), cmp) != Match::NO;
+        } else if (selector.match == AttributeSelector::STR_END_WITH) {
+            // Represents an element with the att attribute whose value ends with the suffix "val".
+            return endWith(attrValue, selector.value.str(), cmp) != Match::NO;
+        } else {
+            // Represents an element with the att attribute whose value contains at least one instance of the
+            // substring "val".
+            return contains(attrValue, selector.value, cmp);
+        }
+    }
 }
 
 bool match(ClassSelector const& selector, MatchSubject const& subject) {
+    return subject.element->classList.contains(selector.class_);
 }
 
 bool match(IdSelector const& selector, MatchSubject const& subject) {
+    return subject.element->id() == selector.id;
 }
 
 bool match(PseudoElementSelector const& selector, MatchSubject const& subject) {
+    return subject.pseudoElement == selector.type;
 }
 
 bool match(PseudoClassSelector const& selector, MatchSubject const& subject) {
+    return contains(subject.element->pseudoClasses(), selector.pseudoClass);
 }
 
 bool match(MatchAnyPseudoClass const& selector, MatchSubject const& subject) {
@@ -1336,15 +1459,11 @@ bool match(RelationalPseudoClass const& selector, MatchSubject const& subject) {
 }
 
 bool match(DirPseudoClass const& selector, MatchSubject const& subject) {
+    return subject.direction == selector.dir;
 }
 
 bool match(LangPseudoClass const& selector, MatchSubject const& subject) {
-}
-
-bool match(RootPseudoClass const& selector, MatchSubject const& subject) {
-}
-
-bool match(EmptyPseudoClass const& selector, MatchSubject const& subject) {
+    return Glob::matchGlob(selector.lang, subject.lang);
 }
 
 bool match(ChildIndexPseudoClass const& selector, MatchSubject const& subject) {
@@ -1356,7 +1475,7 @@ bool match(TypedChildIndexPseudoClass const& selector, MatchSubject const& subje
 bool match(NestingSelector const& selector, MatchSubject const& subject) {
 }
 
-bool match(SimpleSelector const& selector, MatchSubject const& subject) {
+bool match(SubclassSelector const& selector, MatchSubject const& subject) {
 }
 
 bool match(CompoundSelector const& selector, MatchSubject const& subject) {
