@@ -22,4 +22,4 @@ jobs:
         run: ./ck tools setup && ./ck sync
 
       - name: Build Website with cat
-        run: ./ck cat build
+        run: ./ck run cat-site -- ./doc -o .cutekit/build/site
