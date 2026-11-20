@@ -1,11 +1,6 @@
 {
     "$schema": "https://schemas.cute.engineering/stable/cutekit.lockfile.v2",
     "externs": {
-        "cute-engineering/cat": {
-            "commit": "d3f8cf7b343c43aeb13f58b0a1dd11cebffddf27",
-            "git": "https://codeberg.org/cute-engineering/cat.git",
-            "tag": "main"
-        },
         "cute-engineering/ce-bootfs": {
             "commit": "07f00223a9dc333ce81e11016887331b11d8e78b",
             "git": "https://codeberg.org/cute-engineering/ce-bootfs.git",
@@ -32,12 +27,12 @@
             "tag": "v1.9.1"
         },
         "cute-engineering/ce-targets": {
-            "commit": "a9f2dd23a2f56c2ae3080aea0ef3ed96f6117b36",
+            "commit": "2dc6872644fc10abe6b96832609dbfb7687b0337",
             "git": "https://codeberg.org/cute-engineering/ce-targets.git",
             "tag": "v0.9.0"
         },
         "skift/karm": {
-            "commit": "3a6404d8265987d695b30eec72fa22083ccd7de6",
+            "commit": "435f725a451c726e6570175fb194a7d95d64b997",
             "git": "https://codeberg.org/skift/karm.git",
             "tag": "main"
         }

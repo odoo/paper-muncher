@@ -14,10 +14,6 @@
         "skift/karm": {
             "git": "https://codeberg.org/skift/karm.git",
             "tag": "main"
-        },
-        "cute-engineering/cat": {
-            "git": "https://codeberg.org/cute-engineering/cat.git",
-            "tag": "main"
         }
     }
 }

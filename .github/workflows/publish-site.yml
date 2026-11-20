@@ -27,7 +27,7 @@ jobs:
 
       - name: Build Website with cat
         run: |
-          ./ck cat build
+          ./ck run cat-site -- ./doc -o .cutekit/build/site
 
       - name: Setup Pages
         id: pages
