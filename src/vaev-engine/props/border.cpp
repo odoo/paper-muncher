@@ -40,7 +40,7 @@ export struct BorderTopColorProperty : Property {
     Value _value;
 
     BorderTopColorProperty(Rc<Property::Registration> registration, Value value)
-        : Property(registration), _value(value) {}
+        : Property(registration), _value(std::move(value)) {}
 
     void apply([[maybe_unused]] ComputedValues const& parent, ComputedValues& c, [[maybe_unused]] ComputationContext const& cx) const override {
         c.borders.cow().top.color = computeValue(_value, c.color);
@@ -78,7 +78,7 @@ export struct BorderRightColorProperty : Property {
     Value _value;
 
     BorderRightColorProperty(Rc<Property::Registration> registration, Value value)
-        : Property(registration), _value(value) {}
+        : Property(registration), _value(std::move(value)) {}
 
     void apply([[maybe_unused]] ComputedValues const& parent, ComputedValues& c, [[maybe_unused]] ComputationContext const& cx) const override {
         c.borders.cow().end.color = computeValue(_value, c.color);
@@ -116,7 +116,7 @@ export struct BorderBottomColorProperty : Property {
     Value _value;
 
     BorderBottomColorProperty(Rc<Property::Registration> registration, Value value)
-        : Property(registration), _value(value) {}
+        : Property(registration), _value(std::move(value)) {}
 
     void apply([[maybe_unused]] ComputedValues const& parent, ComputedValues& c, [[maybe_unused]] ComputationContext const& cx) const override {
         c.borders.cow().bottom.color = computeValue(_value, c.color);
@@ -154,7 +154,7 @@ export struct BorderLeftColorProperty : Property {
     Value _value;
 
     BorderLeftColorProperty(Rc<Property::Registration> registration, Value value)
-        : Property(registration), _value(value) {}
+        : Property(registration), _value(std::move(value)) {}
 
     void apply([[maybe_unused]] ComputedValues const& parent, ComputedValues& c, [[maybe_unused]] ComputationContext const& cx) const override {
         c.borders.cow().start.color = computeValue(_value, c.color);
@@ -200,7 +200,7 @@ export struct BorderColorProperty : Property {
     Value _value;
 
     BorderColorProperty(Rc<Property::Registration> registration, Value value)
-        : Property(registration), _value(value) {}
+        : Property(registration), _value(std::move(value)) {}
 
     Longhands expand(RegisteredPropertySet& registry, ComputedValues const&, ComputedValues&) const override {
         return {
@@ -239,7 +239,7 @@ export struct BorderLeftStyleProperty : Property {
     Value _value;
 
     BorderLeftStyleProperty(Rc<Property::Registration> registration, Value value)
-        : Property(registration), _value(value) {}
+        : Property(registration), _value(std::move(value)) {}
 
     void apply([[maybe_unused]] ComputedValues const& parent, ComputedValues& c, [[maybe_unused]] ComputationContext const& cx) const override {
         c.borders.cow().start.style = _value;
@@ -277,7 +277,7 @@ export struct BorderTopStyleProperty : Property {
     Value _value;
 
     BorderTopStyleProperty(Rc<Property::Registration> registration, Value value)
-        : Property(registration), _value(value) {}
+        : Property(registration), _value(std::move(value)) {}
 
     void apply([[maybe_unused]] ComputedValues const& parent, ComputedValues& c, [[maybe_unused]] ComputationContext const& cx) const override {
         c.borders.cow().top.style = _value;
@@ -315,7 +315,7 @@ export struct BorderRightStyleProperty : Property {
     Value _value;
 
     BorderRightStyleProperty(Rc<Property::Registration> registration, Value value)
-        : Property(registration), _value(value) {}
+        : Property(registration), _value(std::move(value)) {}
 
     void apply([[maybe_unused]] ComputedValues const& parent, ComputedValues& c, [[maybe_unused]] ComputationContext const& cx) const override {
         c.borders.cow().end.style = _value;
@@ -353,7 +353,7 @@ export struct BorderBottomStyleProperty : Property {
     Value _value;
 
     BorderBottomStyleProperty(Rc<Property::Registration> registration, Value value)
-        : Property(registration), _value(value) {}
+        : Property(registration), _value(std::move(value)) {}
 
     void apply([[maybe_unused]] ComputedValues const& parent, ComputedValues& c, [[maybe_unused]] ComputationContext const& cx) const override {
         c.borders.cow().bottom.style = _value;
@@ -400,7 +400,7 @@ export struct BorderStyleProperty : Property {
     Value _value;
 
     BorderStyleProperty(Rc<Property::Registration> registration, Value value)
-        : Property(registration), _value(value) {}
+        : Property(registration), _value(std::move(value)) {}
 
     Longhands expand(RegisteredPropertySet& registry, ComputedValues const&, ComputedValues&) const override {
         return {
@@ -438,7 +438,7 @@ export struct BorderTopWidthProperty : Property {
     Value _value;
 
     BorderTopWidthProperty(Rc<Property::Registration> registration, Value value)
-        : Property(registration), _value(value) {}
+        : Property(registration), _value(std::move(value)) {}
 
     void apply([[maybe_unused]] ComputedValues const& parent, ComputedValues& c, [[maybe_unused]] ComputationContext const& cx) const override {
         c.borders.cow().top.width = computeValue(_value, cx);
@@ -476,7 +476,7 @@ export struct BorderRightWidthProperty : Property {
     Value _value;
 
     BorderRightWidthProperty(Rc<Property::Registration> registration, Value value)
-        : Property(registration), _value(value) {}
+        : Property(registration), _value(std::move(value)) {}
 
     void apply([[maybe_unused]] ComputedValues const& parent, ComputedValues& c, [[maybe_unused]] ComputationContext const& cx) const override {
         c.borders.cow().end.width = computeValue(_value, cx);
@@ -514,7 +514,7 @@ export struct BorderBottomWidthProperty : Property {
     Value _value;
 
     BorderBottomWidthProperty(Rc<Property::Registration> registration, Value value)
-        : Property(registration), _value(value) {}
+        : Property(registration), _value(std::move(value)) {}
 
     void apply([[maybe_unused]] ComputedValues const& parent, ComputedValues& c, [[maybe_unused]] ComputationContext const& cx) const override {
         c.borders.cow().bottom.width = computeValue(_value, cx);
@@ -552,7 +552,7 @@ export struct BorderLeftWidthProperty : Property {
     Value _value;
 
     BorderLeftWidthProperty(Rc<Property::Registration> registration, Value value)
-        : Property(registration), _value(value) {}
+        : Property(registration), _value(std::move(value)) {}
 
     void apply([[maybe_unused]] ComputedValues const& parent, ComputedValues& c, [[maybe_unused]] ComputationContext const& cx) const override {
         c.borders.cow().start.width = computeValue(_value, cx);
@@ -600,7 +600,7 @@ export struct BorderTopRightRadiusProperty : Property {
     Value _value;
 
     BorderTopRightRadiusProperty(Rc<Property::Registration> registration, Value value)
-        : Property(registration), _value(value) {}
+        : Property(registration), _value(std::move(value)) {}
 
     void apply([[maybe_unused]] ComputedValues const& parent, ComputedValues& c, [[maybe_unused]] ComputationContext const& cx) const override {
         c.borders.cow().radii.c = computeValue(_value[0], cx);
@@ -649,7 +649,7 @@ export struct BorderTopLeftRadiusProperty : Property {
     Value _value;
 
     BorderTopLeftRadiusProperty(Rc<Property::Registration> registration, Value value)
-        : Property(registration), _value(value) {}
+        : Property(registration), _value(std::move(value)) {}
 
     void apply([[maybe_unused]] ComputedValues const& parent, ComputedValues& c, [[maybe_unused]] ComputationContext const& cx) const override {
         c.borders.cow().radii.a = computeValue(_value[1], cx);
@@ -698,7 +698,7 @@ export struct BorderBottomRightRadiusProperty : Property {
     Value _value;
 
     BorderBottomRightRadiusProperty(Rc<Property::Registration> registration, Value value)
-        : Property(registration), _value(value) {}
+        : Property(registration), _value(std::move(value)) {}
 
     void apply([[maybe_unused]] ComputedValues const& parent, ComputedValues& c, [[maybe_unused]] ComputationContext const& cx) const override {
         c.borders.cow().radii.e = computeValue(_value[1], cx);
@@ -747,7 +747,7 @@ export struct BorderBottomLeftRadiusProperty : Property {
     Value _value;
 
     BorderBottomLeftRadiusProperty(Rc<Property::Registration> registration, Value value)
-        : Property(registration), _value(value) {}
+        : Property(registration), _value(std::move(value)) {}
 
     void apply([[maybe_unused]] ComputedValues const& parent, ComputedValues& c, [[maybe_unused]] ComputationContext const& cx) const override {
         c.borders.cow().radii.g = computeValue(_value[0], cx);
@@ -787,7 +787,7 @@ export struct BorderRadiusProperty : Property {
     Value _value;
 
     BorderRadiusProperty(Rc<Property::Registration> registration, Value value)
-        : Property(registration), _value(value) {}
+        : Property(registration), _value(std::move(value)) {}
 
     void apply([[maybe_unused]] ComputedValues const& parent, ComputedValues& c, [[maybe_unused]] ComputationContext const& cx) const override {
         c.borders.cow().radii = computeValue(_value, cx);
@@ -831,7 +831,7 @@ export struct BorderTopProperty : Property {
     Value _value;
 
     BorderTopProperty(Rc<Property::Registration> registration, Value value)
-        : Property(registration), _value(value) {}
+        : Property(registration), _value(std::move(value)) {}
 
     Longhands expand(RegisteredPropertySet& registry, ComputedValues const&, ComputedValues&) const override {
         return {
@@ -870,7 +870,7 @@ export struct BorderRightProperty : Property {
     Value _value;
 
     BorderRightProperty(Rc<Property::Registration> registration, Value value)
-        : Property(registration), _value(value) {}
+        : Property(registration), _value(std::move(value)) {}
 
     Longhands expand(RegisteredPropertySet& registry, ComputedValues const&, ComputedValues&) const override {
         return {
@@ -909,7 +909,7 @@ export struct BorderBottomProperty : Property {
     Value _value;
 
     BorderBottomProperty(Rc<Property::Registration> registration, Value value)
-        : Property(registration), _value(value) {}
+        : Property(registration), _value(std::move(value)) {}
 
     Longhands expand(RegisteredPropertySet& registry, ComputedValues const&, ComputedValues&) const override {
         return {
@@ -948,7 +948,7 @@ export struct BorderLeftProperty : Property {
     Value _value;
 
     BorderLeftProperty(Rc<Property::Registration> registration, Value value)
-        : Property(registration), _value(value) {}
+        : Property(registration), _value(std::move(value)) {}
 
     Longhands expand(RegisteredPropertySet& registry, ComputedValues const&, ComputedValues&) const override {
         return {
@@ -987,7 +987,7 @@ export struct BorderProperty : Property {
     Value _value;
 
     BorderProperty(Rc<Property::Registration> registration, Value value)
-        : Property(registration), _value(value) {}
+        : Property(registration), _value(std::move(value)) {}
 
     Longhands expand(RegisteredPropertySet& registry, ComputedValues const&, ComputedValues&) const override {
         return {
@@ -1046,7 +1046,7 @@ export struct BorderWidthProperty : Property {
     Value _value;
 
     BorderWidthProperty(Rc<Property::Registration> registration, Value value)
-        : Property(registration), _value(value) {}
+        : Property(registration), _value(std::move(value)) {}
 
     Longhands expand(RegisteredPropertySet& registry, ComputedValues const&, ComputedValues&) const override {
         return {
@@ -1088,7 +1088,7 @@ export struct BorderCollapseProperty : Property {
     Value _value;
 
     BorderCollapseProperty(Rc<Property::Registration> registration, Value value)
-        : Property(registration), _value(value) {}
+        : Property(registration), _value(std::move(value)) {}
 
     void apply([[maybe_unused]] ComputedValues const& parent, ComputedValues& c, [[maybe_unused]] ComputationContext const& cx) const override {
         c.table.cow().collapse = _value;
@@ -1133,7 +1133,7 @@ export struct BorderSpacingProperty : Property {
     Value _value;
 
     BorderSpacingProperty(Rc<Property::Registration> registration, Value value)
-        : Property(registration), _value(value) {}
+        : Property(registration), _value(std::move(value)) {}
 
     void apply([[maybe_unused]] ComputedValues const& parent, ComputedValues& c, [[maybe_unused]] ComputationContext const& cx) const override {
         c.table.cow().spacing = {

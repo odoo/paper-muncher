@@ -338,7 +338,7 @@ struct CustomProperty : Property {
     Css::Content _value;
 
     CustomProperty(Rc<Property::Registration> registration, Css::Content value)
-        : Property(registration), _value(value) {}
+        : Property(registration), _value(std::move(value)) {}
 
     void apply([[maybe_unused]] ComputedValues const& parent, ComputedValues& c, [[maybe_unused]] ComputationContext const& cx) const override {
         c.setCustomProp(registration->name, _value);
@@ -361,7 +361,7 @@ struct ToggleProperty : Property {
     Vec<Rc<Property>> _value;
 
     ToggleProperty(Rc<Property::Registration> registration, Vec<Rc<Property>> value)
-        : Property(registration), _value(value) {}
+        : Property(registration), _value(std::move(value)) {}
 
     Longhands expand(RegisteredPropertySet& registry, ComputedValues const& parent, ComputedValues& child) const override {
         // If toggle() is used on a shorthand property, it sets each of its
@@ -422,7 +422,7 @@ struct DeferredProperty : Property {
     Css::Content _value;
 
     DeferredProperty(Rc<Property::Registration> registration, Css::Content value)
-        : Property(registration), _value(value) {}
+        : Property(registration), _value(std::move(value)) {}
 
     // https://www.w3.org/TR/css-variables-1/#substitute-a-var
     static Res<bool> _expandVariable(Cursor<Css::Sst>& c, Map<Symbol, Css::Content> const& env, Css::Content& out, usize depth) {
@@ -551,7 +551,7 @@ struct DefaultedProperty : Property {
     Default _value;
 
     DefaultedProperty(Rc<Registration> registration, Default value)
-        : Property(registration), _value(value) {}
+        : Property(registration), _value(std::move(value)) {}
 
     Longhands expand(RegisteredPropertySet& registry, ComputedValues const& parent, ComputedValues& child) const override {
         if (_value == Default::INITIAL) {
@@ -646,7 +646,7 @@ struct BogusProperty : Property {
 
     BogusProperty(Rc<Property::Registration> registration, Css::Content value, Error error)
         : Property(registration),
-          _value(value),
+          _value(std::move(value)),
           _error(error) {}
 
     bool isBogusProperty() const override {

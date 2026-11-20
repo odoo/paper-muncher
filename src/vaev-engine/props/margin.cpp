@@ -38,7 +38,7 @@ export struct MarginTopProperty : Property {
     Value _value;
 
     MarginTopProperty(Rc<Property::Registration> registration, Value value)
-        : Property(registration), _value(value) {}
+        : Property(registration), _value(std::move(value)) {}
 
     void apply([[maybe_unused]] ComputedValues const& parent, ComputedValues& c, [[maybe_unused]] ComputationContext const& cx) const override {
         c.margin.cow().top = computeValue(_value, cx);
@@ -76,7 +76,7 @@ export struct MarginRightProperty : Property {
     Value _value;
 
     MarginRightProperty(Rc<Property::Registration> registration, Value value)
-        : Property(registration), _value(value) {}
+        : Property(registration), _value(std::move(value)) {}
 
     void apply([[maybe_unused]] ComputedValues const& parent, ComputedValues& c, [[maybe_unused]] ComputationContext const& cx) const override {
         c.margin.cow().end = computeValue(_value, cx);
@@ -114,7 +114,7 @@ export struct MarginBottomProperty : Property {
     Value _value;
 
     MarginBottomProperty(Rc<Property::Registration> registration, Value value)
-        : Property(registration), _value(value) {}
+        : Property(registration), _value(std::move(value)) {}
 
     void apply([[maybe_unused]] ComputedValues const& parent, ComputedValues& c, [[maybe_unused]] ComputationContext const& cx) const override {
         c.margin.cow().bottom = computeValue(_value, cx);
@@ -152,7 +152,7 @@ export struct MarginLeftProperty : Property {
     Value _value;
 
     MarginLeftProperty(Rc<Property::Registration> registration, Value value)
-        : Property(registration), _value(value) {}
+        : Property(registration), _value(std::move(value)) {}
 
     void apply([[maybe_unused]] ComputedValues const& parent, ComputedValues& c, [[maybe_unused]] ComputationContext const& cx) const override {
         c.margin.cow().start = computeValue(_value, cx);
@@ -191,7 +191,7 @@ export struct MarginProperty : Property {
     Value _value;
 
     MarginProperty(Rc<Property::Registration> registration, Value value)
-        : Property(registration), _value(value) {}
+        : Property(registration), _value(std::move(value)) {}
 
     Longhands expand(RegisteredPropertySet& registry, ComputedValues const&, ComputedValues&) const override {
         return {
@@ -230,7 +230,7 @@ export struct MarginInlineStartProperty : Property {
     Value _value;
 
     MarginInlineStartProperty(Rc<Property::Registration> registration, Value value)
-        : Property(registration), _value(value) {}
+        : Property(registration), _value(std::move(value)) {}
 
     // FIXME: Take writing mode into account
     Longhands expand(RegisteredPropertySet& registry, ComputedValues const&, ComputedValues&) const override {
@@ -271,7 +271,7 @@ export struct MarginInlineEndProperty : Property {
     Value _value;
 
     MarginInlineEndProperty(Rc<Property::Registration> registration, Value value)
-        : Property(registration), _value(value) {}
+        : Property(registration), _value(std::move(value)) {}
 
     // FIXME: Take writing mode into account
     Longhands expand(RegisteredPropertySet& registry, ComputedValues const&, ComputedValues&) const override {
@@ -312,7 +312,7 @@ export struct MarginInlineProperty : Property {
     Value _value;
 
     MarginInlineProperty(Rc<Property::Registration> registration, Value value)
-        : Property(registration), _value(value) {}
+        : Property(registration), _value(std::move(value)) {}
 
     // FIXME: Take writing mode into account
     Longhands expand(RegisteredPropertySet& registry, ComputedValues const&, ComputedValues&) const override {
@@ -350,7 +350,7 @@ export struct MarginBlockStartProperty : Property {
     Value _value;
 
     MarginBlockStartProperty(Rc<Property::Registration> registration, Value value)
-        : Property(registration), _value(value) {}
+        : Property(registration), _value(std::move(value)) {}
 
     // FIXME: Take writing mode into account
     Longhands expand(RegisteredPropertySet& registry, ComputedValues const&, ComputedValues&) const override {
@@ -391,7 +391,7 @@ export struct MarginBlockEndProperty : Property {
     Value _value;
 
     MarginBlockEndProperty(Rc<Property::Registration> registration, Value value)
-        : Property(registration), _value(value) {}
+        : Property(registration), _value(std::move(value)) {}
 
     // FIXME: Take writing mode into account
     Longhands expand(RegisteredPropertySet& registry, ComputedValues const&, ComputedValues&) const override {
@@ -432,7 +432,7 @@ export struct MarginBlockProperty : Property {
     Value _value;
 
     MarginBlockProperty(Rc<Property::Registration> registration, Value value)
-        : Property(registration), _value(value) {}
+        : Property(registration), _value(std::move(value)) {}
 
     // FIXME: Take writing mode into account
     Longhands expand(RegisteredPropertySet& registry, ComputedValues const&, ComputedValues&) const override {

@@ -40,7 +40,7 @@ export struct OverflowXProperty : Property {
     Value _value;
 
     OverflowXProperty(Rc<Property::Registration> registration, Value value)
-        : Property(registration), _value(value) {}
+        : Property(registration), _value(std::move(value)) {}
 
     void apply([[maybe_unused]] ComputedValues const& parent, ComputedValues& c, [[maybe_unused]] ComputationContext const& cx) const override {
         c.overflows.x = _value;
@@ -78,7 +78,7 @@ export struct OverflowYProperty : Property {
     Value _value;
 
     OverflowYProperty(Rc<Property::Registration> registration, Value value)
-        : Property(registration), _value(value) {}
+        : Property(registration), _value(std::move(value)) {}
 
     void apply([[maybe_unused]] ComputedValues const& parent, ComputedValues& c, [[maybe_unused]] ComputationContext const& cx) const override {
         c.overflows.y = _value;
@@ -116,7 +116,7 @@ export struct OverflowBlockProperty : Property {
     Value _value;
 
     OverflowBlockProperty(Rc<Property::Registration> registration, Value value)
-        : Property(registration), _value(value) {}
+        : Property(registration), _value(std::move(value)) {}
 
     void apply([[maybe_unused]] ComputedValues const& parent, ComputedValues& c, [[maybe_unused]] ComputationContext const& cx) const override {
         c.overflows.block = _value;
@@ -154,7 +154,7 @@ export struct OverflowInlineProperty : Property {
     Value _value;
 
     OverflowInlineProperty(Rc<Property::Registration> registration, Value value)
-        : Property(registration), _value(value) {}
+        : Property(registration), _value(std::move(value)) {}
 
     void apply([[maybe_unused]] ComputedValues const& parent, ComputedValues& c, [[maybe_unused]] ComputationContext const& cx) const override {
         c.overflows.inline_ = _value;
@@ -193,7 +193,7 @@ export struct OverflowProperty : Property {
     Value _value;
 
     OverflowProperty(Rc<Property::Registration> registration, Value value)
-        : Property(registration), _value(value) {}
+        : Property(registration), _value(std::move(value)) {}
 
     Longhands expand(RegisteredPropertySet& registry, ComputedValues const&, ComputedValues&) const override {
         return {

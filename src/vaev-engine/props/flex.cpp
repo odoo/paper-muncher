@@ -46,7 +46,7 @@ export struct FlexBasisProperty : Property {
     Value _value;
 
     FlexBasisProperty(Rc<Property::Registration> registration, Value value)
-        : Property(registration), _value(value) {}
+        : Property(registration), _value(std::move(value)) {}
 
     void apply([[maybe_unused]] ComputedValues const& parent, ComputedValues& c, [[maybe_unused]] ComputationContext const& cx) const override {
         c.flex.cow().basis = computeValue(_value, cx);
@@ -84,7 +84,7 @@ export struct FlexDirectionProperty : Property {
     Value _value;
 
     FlexDirectionProperty(Rc<Property::Registration> registration, Value value)
-        : Property(registration), _value(value) {}
+        : Property(registration), _value(std::move(value)) {}
 
     void apply([[maybe_unused]] ComputedValues const& parent, ComputedValues& c, [[maybe_unused]] ComputationContext const& cx) const override {
         c.flex.cow().direction = _value;
@@ -122,7 +122,7 @@ export struct FlexGrowProperty : Property {
     Value _value;
 
     FlexGrowProperty(Rc<Property::Registration> registration, Value value)
-        : Property(registration), _value(value) {}
+        : Property(registration), _value(std::move(value)) {}
 
     void apply([[maybe_unused]] ComputedValues const& parent, ComputedValues& c, [[maybe_unused]] ComputationContext const& cx) const override {
         c.flex.cow().grow = computeValue(_value);
@@ -160,7 +160,7 @@ export struct FlexShrinkProperty : Property {
     Value _value;
 
     FlexShrinkProperty(Rc<Property::Registration> registration, Value value)
-        : Property(registration), _value(value) {}
+        : Property(registration), _value(std::move(value)) {}
 
     void apply([[maybe_unused]] ComputedValues const& parent, ComputedValues& c, [[maybe_unused]] ComputationContext const& cx) const override {
         c.flex.cow().shrink = computeValue(_value);
@@ -198,7 +198,7 @@ export struct FlexWrapProperty : Property {
     Value _value;
 
     FlexWrapProperty(Rc<Property::Registration> registration, Value value)
-        : Property(registration), _value(value) {}
+        : Property(registration), _value(std::move(value)) {}
 
     void apply([[maybe_unused]] ComputedValues const& parent, ComputedValues& c, [[maybe_unused]] ComputationContext const& cx) const override {
         c.flex.cow().wrap = _value;
@@ -260,7 +260,7 @@ export struct FlexFlowProperty : Property {
     Value _value;
 
     FlexFlowProperty(Rc<Property::Registration> registration, Value value)
-        : Property(registration), _value(value) {}
+        : Property(registration), _value(std::move(value)) {}
 
     Longhands expand(RegisteredPropertySet& registry, ComputedValues const&, ComputedValues&) const override {
         return {
@@ -352,7 +352,7 @@ export struct FlexProperty : Property {
     Value _value;
 
     FlexProperty(Rc<Property::Registration> registration, Value value)
-        : Property(registration), _value(value) {}
+        : Property(registration), _value(std::move(value)) {}
 
     Longhands expand(RegisteredPropertySet& registry, ComputedValues const&, ComputedValues&) const override {
         return {

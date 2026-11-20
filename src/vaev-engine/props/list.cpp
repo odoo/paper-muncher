@@ -41,7 +41,7 @@ struct ListStyleImageProperty : Property {
     Value _value;
 
     ListStyleImageProperty(Rc<Property::Registration> registration, Value value)
-        : Property(registration), _value(value) {}
+        : Property(registration), _value(std::move(value)) {}
 
     void apply(ComputedValues const&, ComputedValues& c, [[maybe_unused]] ComputationContext const& cx) const override {
         c.list.cow().image = _value;
@@ -81,7 +81,7 @@ struct ListStyleTypeProperty : Property {
     Value _value;
 
     ListStyleTypeProperty(Rc<Property::Registration> registration, Value value)
-        : Property(registration), _value(value) {}
+        : Property(registration), _value(std::move(value)) {}
 
     void apply(ComputedValues const&, ComputedValues& c, [[maybe_unused]] ComputationContext const& cx) const override {
         c.list.cow().type = _value;
@@ -121,7 +121,7 @@ struct ListStylePositionProperty : Property {
     Value _value;
 
     ListStylePositionProperty(Rc<Property::Registration> registration, Value value)
-        : Property(registration), _value(value) {}
+        : Property(registration), _value(std::move(value)) {}
 
     void apply(ComputedValues const&, ComputedValues& c, [[maybe_unused]] ComputationContext const& cx) const override {
         c.list.cow().position = _value;
@@ -203,7 +203,7 @@ struct ListStyleProperty : Property {
     Value _value;
 
     ListStyleProperty(Rc<Property::Registration> registration, Value value)
-        : Property(registration), _value(value) {}
+        : Property(registration), _value(std::move(value)) {}
 
     Longhands expand(RegisteredPropertySet& registry, ComputedValues const&, ComputedValues&) const override {
         return {
@@ -247,7 +247,7 @@ struct MarkerSideProperty : Property {
     Value _value;
 
     MarkerSideProperty(Rc<Property::Registration> registration, Value value)
-        : Property(registration), _value(value) {}
+        : Property(registration), _value(std::move(value)) {}
 
     void apply(ComputedValues const&, ComputedValues& c, [[maybe_unused]] ComputationContext const& cx) const override {
         c.list.cow().markerSide = _value;

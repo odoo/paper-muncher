@@ -43,7 +43,7 @@ export struct WritingModeProperty : Property {
     Value _value;
 
     WritingModeProperty(Rc<Property::Registration> registration, Value value)
-        : Property(registration), _value(value) {}
+        : Property(registration), _value(std::move(value)) {}
 
     void apply([[maybe_unused]] ComputedValues const& parent, ComputedValues& c, [[maybe_unused]] ComputationContext const& cx) const override {
         c.writingMode = _value;
@@ -86,7 +86,7 @@ export struct DirectionProperty : Property {
     Value _value;
 
     DirectionProperty(Rc<Property::Registration> registration, Value value)
-        : Property(registration), _value(value) {}
+        : Property(registration), _value(std::move(value)) {}
 
     void apply([[maybe_unused]] ComputedValues const& parent, ComputedValues& c, [[maybe_unused]] ComputationContext const& cx) const override {
         c.direction = _value;

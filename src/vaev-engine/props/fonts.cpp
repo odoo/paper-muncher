@@ -119,7 +119,7 @@ export struct FontWeightProperty : Property {
     Value _value;
 
     FontWeightProperty(Rc<Property::Registration> registration, Value value)
-        : Property(registration), _value(value) {}
+        : Property(registration), _value(std::move(value)) {}
 
     void apply(ComputedValues const& parent, ComputedValues& c, [[maybe_unused]] ComputationContext const& cx) const override {
         c.font.cow().weight = _value.visit(
@@ -196,7 +196,7 @@ export struct FontWidthProperty : Property {
     Value _value;
 
     FontWidthProperty(Rc<Property::Registration> registration, Value value)
-        : Property(registration), _value(value) {}
+        : Property(registration), _value(std::move(value)) {}
 
     void apply([[maybe_unused]] ComputedValues const& parent, ComputedValues& c, [[maybe_unused]] ComputationContext const& cx) const override {
         c.font.cow().width = computeValue(_value);
@@ -243,7 +243,7 @@ export struct FontStyleProperty : Property {
     Value _value;
 
     FontStyleProperty(Rc<Property::Registration> registration, Value value)
-        : Property(registration), _value(value) {}
+        : Property(registration), _value(std::move(value)) {}
 
     // Computed value: the keyword specified, plus angle in degrees if specified
     void apply([[maybe_unused]] ComputedValues const& parent, ComputedValues& c, [[maybe_unused]] ComputationContext const& cx) const override {
@@ -301,7 +301,7 @@ export struct FontSizeProperty : Property {
     Value _value;
 
     FontSizeProperty(Rc<Property::Registration> registration, Value value)
-        : Property(registration), _value(value) {}
+        : Property(registration), _value(std::move(value)) {}
 
     void apply([[maybe_unused]] ComputedValues const& parent, ComputedValues& c, [[maybe_unused]] ComputationContext const& cx) const override {
         c.font.cow().size = _value.visit(

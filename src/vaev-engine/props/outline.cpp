@@ -40,7 +40,7 @@ export struct OutlineWidthProperty : Property {
     Value _value;
 
     OutlineWidthProperty(Rc<Property::Registration> registration, Value value)
-        : Property(registration), _value(value) {}
+        : Property(registration), _value(std::move(value)) {}
 
     void apply([[maybe_unused]] ComputedValues const& parent, ComputedValues& c, [[maybe_unused]] ComputationContext const& cx) const override {
         c.outline.cow().width = computeValue(_value, cx);
@@ -78,7 +78,7 @@ export struct OutlineStyleProperty : Property {
     Value _value;
 
     OutlineStyleProperty(Rc<Property::Registration> registration, Value value)
-        : Property(registration), _value(value) {}
+        : Property(registration), _value(std::move(value)) {}
 
     void apply([[maybe_unused]] ComputedValues const& parent, ComputedValues& c, [[maybe_unused]] ComputationContext const& cx) const override {
         c.outline.cow().style = _value;
@@ -121,7 +121,7 @@ export struct OutlineColorProperty : Property {
     Value _value;
 
     OutlineColorProperty(Rc<Property::Registration> registration, Value value)
-        : Property(registration), _value(value) {}
+        : Property(registration), _value(std::move(value)) {}
 
     void apply([[maybe_unused]] ComputedValues const& parent, ComputedValues& c, [[maybe_unused]] ComputationContext const& cx) const override {
         c.outline.cow().color = _value.visit(
@@ -172,7 +172,7 @@ export struct OutlineOffsetProperty : Property {
     Value _value;
 
     OutlineOffsetProperty(Rc<Property::Registration> registration, Value value)
-        : Property(registration), _value(value) {}
+        : Property(registration), _value(std::move(value)) {}
 
     void apply([[maybe_unused]] ComputedValues const& parent, ComputedValues& c, [[maybe_unused]] ComputationContext const& cx) const override {
         c.outline.cow().offset = computeValue(_value, cx);
@@ -282,7 +282,7 @@ export struct OutlineProperty : Property {
     Value _value;
 
     OutlineProperty(Rc<Property::Registration> registration, Value value)
-        : Property(registration), _value(value) {}
+        : Property(registration), _value(std::move(value)) {}
 
     Longhands expand(RegisteredPropertySet& registry, ComputedValues const&, ComputedValues&) const override {
         return {
