@@ -5,6 +5,8 @@ module;
 export module Vaev.Engine:style.selector2;
 
 import Karm.Core;
+import Karm.Glob;
+
 import :css.parser;
 import :dom.element;
 
@@ -12,7 +14,6 @@ using namespace Karm;
 using namespace Karm::Literals;
 
 // https://www.w3.org/TR/selectors-4
-
 namespace Vaev::Style {
 
 // https://www.w3.org/TR/selectors-4/#combinators
@@ -24,6 +25,36 @@ enum struct SelectorCombinator {
 
     _LEN,
 };
+
+Opt<SelectorCombinator> parseCombinator(Rune rune) {
+    switch (rune) {
+    case ' ':
+        return Some(SelectorCombinator::DESCENDANT);
+    case '>':
+        return Some(SelectorCombinator::CHILD);
+    case '+':
+        return Some(SelectorCombinator::NEXT_SIBLING);
+    case '~':
+        return Some(SelectorCombinator::NEXT_SIBLING);
+    default:
+        return NONE;
+    }
+}
+
+Str serializeCombinator(SelectorCombinator combinator) {
+    switch (combinator) {
+    case SelectorCombinator::DESCENDANT:
+        return " ";
+    case SelectorCombinator::CHILD:
+        return ">";
+    case SelectorCombinator::NEXT_SIBLING:
+        return "+";
+    case SelectorCombinator::SUBSEQUENT:
+        return "~";
+    default:
+        unreachable();
+    }
+}
 
 export struct NullNamespace {
     bool operator==(NullNamespace const&) const = default;
@@ -116,15 +147,15 @@ export struct QualifiedNameSelector {
         auto exactName = this->exactName();
 
         if (ns.is<Universal>() and exactName)
-            e("*|{}", exactName.expect());
+            e("*|{}", exactName);
         else if (auto exactNs = ns.is<Symbol>(); exactNs and exactName)
-            e("{}|{}", *exactNs, exactName.expect());
+            e("{}|{}", exactNs, exactName);
         else if (exactName)
-            e("{}", exactName.expect());
+            e("{}", exactName);
         else if (ns.is<Universal>())
             e("*");
         else if (auto exactNs = ns.is<Symbol>())
-            e("{}|*", *exactNs);
+            e("{}|*", exactNs);
         else
             e("|*");
     }
@@ -133,16 +164,30 @@ export struct QualifiedNameSelector {
 // MARK: Selectors -------------------------------------------------------------
 
 struct ComplexSelector;
+struct RelativeComplexSelector;
 
 // https://www.w3.org/TR/selectors-4/#selector-list
 using SelectorList = Vec<ComplexSelector>;
+
+// https://www.w3.org/TR/selectors-4/#typedef-relative-selector-list
+using RelativeSelectorList = Vec<RelativeComplexSelector>;
 
 // https://www.w3.org/TR/selectors-4/#type-selector
 // https://www.w3.org/TR/selectors-4/#universal-selector
 struct TypeSelector {
     QualifiedNameSelector qualifiedName;
 
+    static TypeSelector universal() {
+        return {
+            .qualifiedName = {UNIVERSAL, UNIVERSAL},
+        };
+    }
+
     bool operator==(TypeSelector const&) const = default;
+
+    void repr(Io::Emit& e) const {
+        e("(type-selector {})", qualifiedName);
+    }
 };
 
 // https://www.w3.org/TR/selectors-4/#attribute-selector
@@ -174,6 +219,10 @@ struct AttributeSelector {
     String value;
 
     bool operator==(AttributeSelector const&) const = default;
+
+    void repr(Io::Emit& e) const {
+        e("(attribute-selector qualifiedName:{} case:{} match:{} value:{})", qualifiedName, case_, match, value);
+    }
 };
 
 // https://www.w3.org/TR/selectors-4/#class-selector
@@ -181,6 +230,10 @@ struct ClassSelector {
     String class_;
 
     bool operator==(ClassSelector const&) const = default;
+
+    void repr(Io::Emit& e) const {
+        e("(class-selector {})", class_);
+    }
 };
 
 // https://www.w3.org/TR/selectors-4/#id-selector
@@ -190,7 +243,7 @@ struct IdSelector {
     bool operator==(IdSelector const&) const = default;
 
     void repr(Io::Emit& e) const {
-        e("(id-selector)");
+        e("(id-selector {})", id);
     }
 };
 
@@ -201,7 +254,7 @@ struct PseudoElementSelector {
     bool operator==(PseudoElementSelector const&) const = default;
 
     void repr(Io::Emit& e) const {
-        e("{}", type);
+        e("(pseudo-element-selector {})", type);
     }
 };
 
@@ -213,6 +266,31 @@ enum struct PseudoClass {
     _LEN,
 };
 
+static Opt<PseudoClass> parsePseudoClass(Str name) {
+#define PSEUDO(IDENT, NAME) \
+    if (name == NAME)       \
+        return Some(PseudoClass::IDENT);
+#include "defs/pseudo-class.inc"
+
+#undef PSEUDO
+
+    return NONE;
+}
+
+static Str serializePseudoClass(PseudoClass pseudoClass) {
+    switch (pseudoClass) {
+#define PSEUDO(IDENT, NAME)  \
+    case PseudoClass::IDENT: \
+        return NAME;
+
+#include "defs/pseudo-class.inc"
+
+#undef PSEUDO
+    default:
+        unreachable();
+    }
+}
+
 // https://www.w3.org/TR/selectors-4/#pseudo-class
 struct PseudoClassSelector {
     PseudoClass pseudoClass;
@@ -220,21 +298,25 @@ struct PseudoClassSelector {
     bool operator==(PseudoClassSelector const&) const = default;
 
     void repr(Io::Emit& e) const {
-        e("(pseudo-class {})", pseudoClass);
+        e("(pseudo-class-selector {})", pseudoClass);
     }
 };
 
 // https://www.w3.org/TR/selectors-4/#matches
 struct MatchAnyPseudoClass {
+    SelectorList selectors;
+
     bool operator==(MatchAnyPseudoClass const&) const = default;
 
     void repr(Io::Emit& e) const {
-        e("(match-any-pseudo-class)");
+        e("(match-any-pseudo-class {})", selectors);
     }
 };
 
 // https://www.w3.org/TR/selectors-4/#negation
 struct NegationPseudoClass {
+    SelectorList selectors;
+
     bool operator==(NegationPseudoClass const&) const = default;
 
     void repr(Io::Emit& e) const {
@@ -244,6 +326,8 @@ struct NegationPseudoClass {
 
 // https://www.w3.org/TR/selectors-4/#zero-matches
 struct SpecificityAdjustmentPseudoClass {
+    SelectorList selectors;
+
     bool operator==(SpecificityAdjustmentPseudoClass const&) const = default;
 
     void repr(Io::Emit& e) const {
@@ -253,6 +337,8 @@ struct SpecificityAdjustmentPseudoClass {
 
 // https://www.w3.org/TR/selectors-4/#relational
 struct RelationalPseudoClass {
+    RelativeSelectorList selectors;
+
     bool operator==(RelationalPseudoClass const&) const = default;
 
     void repr(Io::Emit& e) const {
@@ -263,6 +349,7 @@ struct RelationalPseudoClass {
 export enum struct Dir {
     LTR,
     RTL,
+    _LEN,
 };
 
 // https://www.w3.org/TR/selectors-4/#the-dir-pseudo
@@ -272,12 +359,14 @@ struct DirPseudoClass {
     bool operator==(DirPseudoClass const&) const = default;
 
     void repr(Io::Emit& e) const {
-        e("(dir-pseudo-class)");
+        e("(dir-pseudo-class {})", dir);
     }
 };
 
 // https://www.w3.org/TR/selectors-4/#the-dir-pseudo
 struct LangPseudoClass {
+    String lang;
+
     bool operator==(LangPseudoClass const&) const = default;
 
     void repr(Io::Emit& e) const {
@@ -504,24 +593,42 @@ export struct AnB {
 
 // https://www.w3.org/TR/selectors-4/#child-index
 struct ChildIndexPseudoClass {
+    enum Type {
+        NTH_CHILD,
+        NTH_LAST_CHILD,
+        FIRST_CHILD,
+        LAST_CHILD,
+        ONLY_CHILD,
+    };
+
+    Type type;
     AnB anb;
     SelectorList s;
 
     bool operator==(ChildIndexPseudoClass const&) const = default;
 
     void repr(Io::Emit& e) const {
-        e("(child-index-pseudo-class AnB:{} s:{})", anb, s);
+        e("(child-index-pseudo-class {} AnB:{} s:{})", type, anb, s);
     }
 };
 
 // https://www.w3.org/TR/selectors-4/#typed-child-index
 struct TypedChildIndexPseudoClass {
+    enum Type {
+        NTH_OF_TYPE,
+        NTH_LAST_OF_TYPE,
+        FIRST_OF_TYPE,
+        LAST_OF_TYPE,
+        ONLY_OF_TYPE,
+    };
+
+    Type type;
     AnB anb;
 
     bool operator==(TypedChildIndexPseudoClass const&) const = default;
 
     void repr(Io::Emit& e) const {
-        e("(typed-child-index-pseudo-class AnB:{})", anb);
+        e("(typed-child-index-pseudo-class {} AnB:{})", type, anb);
     }
 };
 
@@ -567,18 +674,18 @@ struct CompoundSelector {
     }
 };
 
+struct CombinatedSelector {
+    CompoundSelector selector;
+    SelectorCombinator combinator;
+
+    void repr(Io::Emit& e) const {
+        e("{} {} ", selector, combinator);
+    }
+};
+
 // https://www.w3.org/TR/selectors-4/#complex
 struct ComplexSelector {
-    struct Lhs {
-        CompoundSelector selector;
-        SelectorCombinator combinator;
-
-        void repr(Io::Emit& e) const {
-            e("{} {} ", selector, combinator);
-        }
-    };
-
-    Vec<Lhs> lhs;
+    Vec<CombinatedSelector> lhs;
     CompoundSelector rhs;
 
     bool operator==(ComplexSelector const&) const = default;
@@ -592,6 +699,26 @@ struct Selector {
     SelectorList selectors;
 
     bool operator==(Selector const&) const = default;
+
+    void repr(Io::Emit& e) const {
+        e("(selector {})", selectors);
+    }
+};
+
+// https://www.w3.org/TR/selectors-4/#typedef-relative-selector
+struct RelativeComplexSelector {
+    Vec<CombinatedSelector> selectors;
+};
+
+// https://www.w3.org/TR/selectors-4/#relative
+struct RelativeSelector {
+    RelativeSelectorList selectors;
+
+    bool operator==(RelativeSelector const&) const = default;
+
+    void repr(Io::Emit& e) const {
+        e("(selector {})", selectors);
+    }
 };
 
 // MARK: Parser ================================================================
@@ -689,11 +816,123 @@ static Res<QualifiedNameSelector> _parseQualifiedNameSelector(Cursor<Css::Sst>& 
 
 Res<TypeSelector> _parseTypeSelector(Cursor<Css::Sst>& s) {}
 
-Res<AttributeSelector> _parseAttributeSelector(Cursor<Css::Sst>& s) {}
+Res<AttributeSelector> _parseAttributeSelector(Cursor<Css::Sst>& s, NamespaceScope const& ns) {
+    if (s->type != Css::Sst::BLOCK)
+        return Error::invalidData("expected attribute selector");
 
-Res<ClassSelector> _parseClassSelector(Cursor<Css::Sst>& s) {}
+    auto case_ = AttributeSelector::SENSITIVE;
+    auto match = AttributeSelector::PRESENT;
+    String value = ""s;
+    Cursor cur = sub(s->content);
 
-Res<IdSelector> _parseIdSelector(Cursor<Css::Sst>& s) {}
+    eatWhitespace(cur);
+    if (cur.ended())
+        return Error::invalidData("expected attribute name");
+
+    auto qualifiedName = try$(_parseQualifiedNameSelector(cur, ns, NULL_NAMESPACE));
+
+    eatWhitespace(cur);
+    if (cur.ended()) {
+        s.next();
+        return Ok(AttributeSelector{
+            qualifiedName,
+            case_,
+            match,
+            value,
+        });
+    }
+
+    if (cur.skip(Css::Token::delim("="))) {
+        match = AttributeSelector::EXACT;
+    } else {
+        if (*cur != Css::Sst::TOKEN or cur->token.type != Css::Token::DELIM)
+            return Error::invalidData("unexpected attribute selector operator");
+
+        auto attrSelectorCase = cur->token.data;
+        cur.next();
+
+        if (cur.ended() or not cur.skip(Css::Token::delim("=")))
+            return Error::invalidData("expected '=' after attribute selector operator");
+
+        if (attrSelectorCase == "~") {
+            match = AttributeSelector::CONTAINS;
+        } else if (attrSelectorCase == "|") {
+            match = AttributeSelector::HYPHENATED;
+        } else if (attrSelectorCase == "^") {
+            match = AttributeSelector::STR_START_WITH;
+        } else if (attrSelectorCase == "$") {
+            match = AttributeSelector::STR_END_WITH;
+        } else if (attrSelectorCase == "*") {
+            match = AttributeSelector::STR_CONTAIN;
+        } else {
+            return Error::invalidData("unexpected attribute selector operator");
+        }
+    }
+
+    eatWhitespace(cur);
+
+    if (cur.ended())
+        return Error::invalidData("expected attribute selector value");
+
+    if (auto maybeValue = parseValue<String>(cur)) {
+        value = maybeValue.take();
+    } else if (*cur == Css::Token::IDENT) {
+        value = cur->token.data;
+        cur.next();
+    } else {
+        return Error::invalidData("expected attribute selector value");
+    }
+
+    eatWhitespace(cur);
+    if (not cur.ended()) {
+        if (*cur != Css::Sst::TOKEN or cur->token != Css::Token::IDENT)
+            return Error::invalidData("unexpected attribute selector modifier");
+
+        if (cur->token.data == "s") {
+            case_ = AttributeSelector::SENSITIVE;
+        } else if (cur->token.data == "i") {
+            case_ = AttributeSelector::INSENSITIVE;
+        } else {
+            return Error::invalidData("unexpected attribute selector modifier");
+        }
+
+        cur.next();
+        eatWhitespace(cur);
+    }
+
+    if (not cur.ended())
+        return Error::invalidData("unexpected attribute selector content");
+
+    s.next();
+    return Ok(AttributeSelector{
+        qualifiedName,
+        case_,
+        match,
+        value,
+    });
+}
+
+Res<ClassSelector> _parseClassSelector(Cursor<Css::Sst>& s) {
+    auto rollback = s.rollbackPoint();
+    if (not s.skipIf(Css::tokenDataIs(".")))
+        return Error::invalidData("expected class selector");
+
+    if (s->token != Css::Token::IDENT)
+        return Error::invalidData("expected class selector");
+
+    return Ok(ClassSelector{s->token.data});
+}
+
+Res<IdSelector> _parseIdSelector(Cursor<Css::Sst>& s) {
+    auto rollback = s.rollbackPoint();
+    if (not s.skipIf(Css::tokenDataIs("#")))
+        return Error::invalidData("expected id selector");
+
+    if (s->token != Css::Token::IDENT)
+        return Error::invalidData("expected id selector");
+
+    return Ok(ClassSelector{s->token.data});
+}
 
 Res<PseudoElementSelector> _parsePseudoElementSelector(Cursor<Css::Sst>& s) {}
 
@@ -773,19 +1012,19 @@ export void parseSelector() {
 // MARK: Relative Selector
 
 // https://www.w3.org/TR/selectors-4/#typedef-relative-selector
-Res<ComplexSelector> _parseRelativeSelector() {
+Res<RelativeComplexSelector> _parseRelativeSelector() {
     // <relative-selector> = <combinator>? <complex-selector>
 }
 
 // https://www.w3.org/TR/selectors-4/#typedef-relative-selector-list
-Res<SelectorList> _parseRelativeSelectorList(Io::SScan& s) {
+Res<RelativeSelectorList> _parseRelativeSelectorList(Io::SScan& s) {
     // <relative-selector-list> = <relative-selector>#
     while (not s.ended()) {
     }
 }
 
 // https://www.w3.org/TR/selectors-4/#parse-relative-selector
-export Res<Selector> parseRelativeSelector(Io::SScan& s) {
+export Res<RelativeSelector> parseRelativeSelector(Io::SScan& s) {
     // 1. Let selector be the result of parsing source as a <relative-selector-list>. If this returns failure, it’s an invalid selector; return failure.
     auto selector = try$(_parseRelativeSelectorList(s));
     // 2. If selector is an invalid selector for any other reason (such as, for example, containing an undeclared namespace prefix), return failure.
@@ -795,10 +1034,44 @@ export Res<Selector> parseRelativeSelector(Io::SScan& s) {
 
 // MARK: Serialize -------------------------------------------------------------
 
-void serialize(TypeSelector const&, Io::Emit& e) {
+void serialize(SelectorList const& selector, Io::Emit& e);
+void serialize(RelativeSelectorList const& selector, Io::Emit& e);
+
+void serialize(TypeSelector const& selector, Io::Emit& e) {
+    e(".{}", selector.qualifiedName);
 }
 
-void serialize(AttributeSelector const&, Io::Emit& e) {
+void serialize(AttributeSelector const& selector, Io::Emit& e) {
+    e("[");
+    e("{}", selector.qualifiedName);
+    if (selector.match != AttributeSelector::PRESENT) {
+        switch (selector.match) {
+        case AttributeSelector::PRESENT:
+            break;
+        case AttributeSelector::EXACT:
+            e("=");
+            break;
+        case AttributeSelector::CONTAINS:
+            e("~=");
+            break;
+        case AttributeSelector::HYPHENATED:
+            e("|=");
+            break;
+        case AttributeSelector::STR_START_WITH:
+            e("^=");
+            break;
+        case AttributeSelector::STR_END_WITH:
+            e("$=");
+            break;
+        case AttributeSelector::STR_CONTAIN:
+            e("*=");
+            break;
+        default:
+            unreachable();
+        }
+        serializeValue(e, selector.value).expect();
+    }
+    e("]");
 }
 
 void serialize(ClassSelector const& selector, Io::Emit& e) {
@@ -813,55 +1086,89 @@ void serialize(PseudoElementSelector const& selector, Io::Emit& e) {
     e("::{}", selector);
 }
 
-void serialize(PseudoClassSelector const&, Io::Emit& e) {
+void serialize(PseudoClassSelector const& selector, Io::Emit& e) {
+    e(":{}", serializePseudoClass(selector.pseudoClass));
 }
 
-void serialize(MatchAnyPseudoClass const&, Io::Emit& e) {
+void serialize(MatchAnyPseudoClass const& selector, Io::Emit& e) {
+    e(":is(");
+    serialize(selector.selectors, e);
+    e(")");
 }
 
-void serialize(NegationPseudoClass const&, Io::Emit& e) {
+void serialize(NegationPseudoClass const& selector, Io::Emit& e) {
+    e(":not(");
+    serialize(selector.selectors, e);
+    e(")");
 }
 
-void serialize(SpecificityAdjustmentPseudoClass const&, Io::Emit& e) {
+void serialize(SpecificityAdjustmentPseudoClass const& selector, Io::Emit& e) {
+    e(":where(");
+    serialize(selector.selectors, e);
+    e(")");
 }
 
-void serialize(RelationalPseudoClass const&, Io::Emit& e) {
+void serialize(RelationalPseudoClass const& selector, Io::Emit& e) {
+    e(":has(");
+    serialize(selector.selectors, e);
+    e(")");
 }
 
-void serialize(DirPseudoClass const&, Io::Emit& e) {
+void serialize(DirPseudoClass const& selector, Io::Emit& e) {
+    e(":dir({})", selector.dir == Dir::LTR ? "ltr" : "rtl");
 }
 
-void serialize(LangPseudoClass const&, Io::Emit& e) {
+void serialize(LangPseudoClass const& selector, Io::Emit& e) {
+    e(":lang({})", selector.lang);
 }
 
 void serialize(RootPseudoClass const&, Io::Emit& e) {
+    e(":root");
 }
 
 void serialize(EmptyPseudoClass const&, Io::Emit& e) {
+    e(":empty");
 }
 
-void serialize(ChildIndexPseudoClass const&, Io::Emit& e) {
+void serialize(ChildIndexPseudoClass const& selector, Io::Emit& e) {
 }
 
-void serialize(TypedChildIndexPseudoClass const&, Io::Emit& e) {
+void serialize(TypedChildIndexPseudoClass const& selector, Io::Emit& e) {
 }
 
 void serialize(NestingSelector const&, Io::Emit& e) {
+    e("&");
 }
 
-void serialize(SimpleSelector const&, Io::Emit& e) {
+void serialize(SimpleSelector const& selector, Io::Emit& e) {
+    selector.visit([&](auto& s) {
+        serialize(s, e);
+    });
 }
 
-void serialize(CompoundSelector const&, Io::Emit& e) {
+void serialize(CompoundSelector const& selector, Io::Emit& e) {
+    for (auto& s : selector)
+        serialize(s, e);
 }
 
-void serialize(ComplexSelector const&, Io::Emit& e) {
+void serialize(ComplexSelector const& selector, Io::Emit& e) {
+    for (auto& [s, c] : selector.lhs) {
+        serialize(s, e);
+        e("{}", serializeCombinator(c));
+    }
+    serialize(selector.rhs, e);
 }
 
-void serialize(SelectorList const&, Io::Emit& e) {
+void serialize(SelectorList const& selector, Io::Emit& e) {
+    for (auto& [s, i] : iter(selector) | Index()) {
+        if (i > 0)
+            e(", ");
+        serialize(s, e);
+    }
 }
 
-void serialize(Selector const&, Io::Emit& e) {
+void serialize(Selector const& selector, Io::Emit& e) {
+    serialize(selector.selectors, e);
 }
 
 // MARK: Specificity -----------------------------------------------------------
@@ -905,143 +1212,196 @@ Specificity const INLINE_SPEC = Specificity::ZERO;
 Specificity const PRESENTATION_ATTR_SPEC = Specificity::ZERO;
 Specificity const PRESENTATION_HINT_SPEC = Specificity::ZERO;
 
-Specificity specificity(TypeSelector const& selector) {
-    if (selector.qualifiedName.exactName())
-        return Specificity::C;
-    else
-        return Specificity::ZERO;
+Specificity specificity(ComplexSelector const&);
+
+static Specificity maxSpecificity(auto const& selectors) {
+    Specificity res = Specificity::ZERO;
+    for (auto const& s : selectors)
+        res = max(res, specificity(s));
+    return res;
 }
 
-Specificity specificity(AttributeSelector const&) {
-    return Specificity::B;
+Specificity specificity(MatchAnyPseudoClass const& s) {
+    return maxSpecificity(s.selectors);
 }
 
-Specificity specificity(ClassSelector const&) {
-    return Specificity::B;
+Specificity specificity(NegationPseudoClass const& s) {
+    return maxSpecificity(s.selectors);
 }
 
-Specificity specificity(IdSelector const&) {
-    return Specificity::A;
-}
-
-Specificity specificity(PseudoElementSelector const&) {
-    return Specificity::C;
-}
-
-Specificity specificity(PseudoClassSelector const&) {
-    return Specificity::B;
-}
-
-Specificity specificity(MatchAnyPseudoClass const&) {
-}
-
-Specificity specificity(NegationPseudoClass const&) {
-}
-
+// :where()
 Specificity specificity(SpecificityAdjustmentPseudoClass const&) {
+    return Specificity::ZERO;
 }
 
-Specificity specificity(RelationalPseudoClass const&) {
+Specificity specificity(RelationalPseudoClass const& s) {
+    return maxSpecificity(s.selectors);
 }
 
 Specificity specificity(DirPseudoClass const&) {
+    return Specificity::B;
 }
 
 Specificity specificity(LangPseudoClass const&) {
+    return Specificity::B;
 }
 
 Specificity specificity(RootPseudoClass const&) {
+    return Specificity::B;
 }
 
 Specificity specificity(EmptyPseudoClass const&) {
+    return Specificity::B;
 }
 
-Specificity specificity(ChildIndexPseudoClass const&) {
+// :nth-child(... of S) adds the most specific S.
+Specificity specificity(ChildIndexPseudoClass const& s) {
+    return Specificity::B + maxSpecificity(s.s);
 }
 
 Specificity specificity(TypedChildIndexPseudoClass const&) {
+    return Specificity::B;
 }
 
+// Should equal :is(parent); needs parent context.
 Specificity specificity(NestingSelector const&) {
+    return Specificity::ZERO;
 }
 
-Specificity specificity(SimpleSelector const&) {
+Specificity specificity(SimpleSelector const& s) {
+    return s.visit([](auto const& s) {
+        return specificity(s);
+    });
 }
 
-Specificity specificity(CompoundSelector const&) {
+Specificity specificity(CompoundSelector const& s) {
+    Specificity res = Specificity::ZERO;
+    for (auto const& simple : s.selectors)
+        res = res + specificity(simple);
+    return res;
 }
 
-Specificity specificity(ComplexSelector const&) {
+Specificity specificity(ComplexSelector const& s) {
+    Specificity res = Specificity::ZERO;
+    for (auto const& compound : s.lhs)
+        res = res + specificity(compound.selector);
+    res = res + specificity(s.rhs);
+    return res;
 }
 
 // MARK: Matching --------------------------------------------------------------
 
+struct MatchResult {
+    bool match = false;
+    Specificity specificity;
+};
+
+struct MatchSubject {
+    Gc::Ref<Dom::Element> element;
+    Opt<Symbol> pseudoElement = NONE;
+    Dir direction = Dir::LTR;
+    Str lang = "";
+};
+
 // https://www.w3.org/TR/selectors-4/#type-selectors
-bool match(TypeSelector const& selector, Gc::Ref<Dom::Element> element) {
-    return selector.qualifiedName.match(element->qualifiedName);
+bool match(TypeSelector const& selector, MatchSubject const& subject) {
+    return selector.qualifiedName.match(subject.element->qualifiedName);
 }
 
-bool match(AttributeSelector selector, Gc::Ref<Dom::Element> element) {
+bool match(AttributeSelector const& selector, MatchSubject const& subject) {
 }
 
-bool match(ClassSelector selector, Gc::Ref<Dom::Element> element) {
+bool match(ClassSelector const& selector, MatchSubject const& subject) {
 }
 
-bool match(IdSelector selector, Gc::Ref<Dom::Element> element) {
+bool match(IdSelector const& selector, MatchSubject const& subject) {
 }
 
-bool match(PseudoElementSelector selector, Gc::Ref<Dom::Element> element) {
+bool match(PseudoElementSelector const& selector, MatchSubject const& subject) {
 }
 
-bool match(PseudoClassSelector selector, Gc::Ref<Dom::Element> element) {
+bool match(PseudoClassSelector const& selector, MatchSubject const& subject) {
 }
 
-bool match(MatchAnyPseudoClass selector, Gc::Ref<Dom::Element> element) {
+bool match(MatchAnyPseudoClass const& selector, MatchSubject const& subject) {
 }
 
-bool match(NegationPseudoClass selector, Gc::Ref<Dom::Element> element) {
+bool match(NegationPseudoClass const& selector, MatchSubject const& subject) {
 }
 
-bool match(SpecificityAdjustmentPseudoClass selector, Gc::Ref<Dom::Element> element) {
+bool match(SpecificityAdjustmentPseudoClass const& selector, MatchSubject const& subject) {
 }
 
-bool match(RelationalPseudoClass selector, Gc::Ref<Dom::Element> element) {
+bool match(RelationalPseudoClass const& selector, MatchSubject const& subject) {
 }
 
-bool match(DirPseudoClass selector, Gc::Ref<Dom::Element> element) {
+bool match(DirPseudoClass const& selector, MatchSubject const& subject) {
 }
 
-bool match(LangPseudoClass selector, Gc::Ref<Dom::Element> element) {
+bool match(LangPseudoClass const& selector, MatchSubject const& subject) {
 }
 
-bool match(RootPseudoClass selector, Gc::Ref<Dom::Element> element) {
+bool match(RootPseudoClass const& selector, MatchSubject const& subject) {
 }
 
-bool match(EmptyPseudoClass selector, Gc::Ref<Dom::Element> element) {
+bool match(EmptyPseudoClass const& selector, MatchSubject const& subject) {
 }
 
-bool match(ChildIndexPseudoClass selector, Gc::Ref<Dom::Element> element) {
+bool match(ChildIndexPseudoClass const& selector, MatchSubject const& subject) {
 }
 
-bool match(TypedChildIndexPseudoClass selector, Gc::Ref<Dom::Element> element) {
+bool match(TypedChildIndexPseudoClass const& selector, MatchSubject const& subject) {
 }
 
-bool match(NestingSelector selector, Gc::Ref<Dom::Element> element) {
+bool match(NestingSelector const& selector, MatchSubject const& subject) {
 }
 
-bool match(SimpleSelector selector, Gc::Ref<Dom::Element> element) {
+bool match(SimpleSelector const& selector, MatchSubject const& subject) {
 }
 
-bool match(CompoundSelector selector, Gc::Ref<Dom::Element> element) {
+bool match(CompoundSelector const& selector, MatchSubject const& subject) {
 }
 
-bool match(ComplexSelector selector, Gc::Ref<Dom::Element> element) {
+// MARK: Selector
+
+bool match(ComplexSelector const& selector, usize i, MatchSubject const& subject) {
 }
 
-bool match(SelectorList selector, Gc::Ref<Dom::Element> element) {
+bool match(ComplexSelector const& selector, MatchSubject const& subject) {
+    if (not match(selector.rhs, subject))
+        return false;
+    return match(selector, 0, subject);
 }
 
-bool match(Selector selector, Gc::Ref<Dom::Element> element, Opt<Symbol> const& pseudoElement = NONE) {
+MatchResult match(SelectorList const& selector, MatchSubject const& subject) {
+    for (auto& s : selector)
+        if (match(s, subject))
+            return {true, specificity(s)};
+    return {false};
+}
+
+MatchResult match(Selector const& selector, MatchSubject const& subject) {
+    return match(selector.selectors, subject);
+}
+
+// MARK: Relative Selector
+
+bool match(RelativeComplexSelector const& selector, usize i, MatchSubject const& subject) {
+}
+
+bool match(RelativeComplexSelector const& selector, MatchSubject const& subject) {
+    return match(selector, 0, subject);
+}
+
+MatchResult match(RelativeSelectorList const& selector, MatchSubject const& subject) {
+    for (auto& s : selector)
+        if (match(s, subject))
+            return {true, specificity(s)};
+    return {false};
+}
+
+MatchResult match(RelativeSelector const& selector, MatchSubject const& subject) {
+    return match(selector.selectors, subject);
 }
 
 } // namespace Vaev::Style
