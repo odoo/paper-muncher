@@ -40,7 +40,7 @@ export struct CounterResetProperty : Property {
     Value _value;
 
     CounterResetProperty(Rc<Property::Registration> registration, Value value)
-        : Property(registration), _value(value) {}
+        : Property(registration), _value(std::move(value)) {}
 
     void apply(ComputedValues const&, ComputedValues& c, [[maybe_unused]] ComputationContext const& cx) const override {
         c.counters.cow().reset = _value;
@@ -77,7 +77,7 @@ export struct CounterIncrementProperty : Property {
     Value _value;
 
     CounterIncrementProperty(Rc<Property::Registration> registration, Value value)
-        : Property(registration), _value(value) {}
+        : Property(registration), _value(std::move(value)) {}
 
     void apply(ComputedValues const&, ComputedValues& c, [[maybe_unused]] ComputationContext const& cx) const override {
         c.counters.cow().increment = _value;
@@ -114,7 +114,7 @@ export struct CounterSetProperty : Property {
     Value _value;
 
     CounterSetProperty(Rc<Property::Registration> registration, Value value)
-        : Property(registration), _value(value) {}
+        : Property(registration), _value(std::move(value)) {}
 
     void apply(ComputedValues const&, ComputedValues& c, [[maybe_unused]] ComputationContext const& cx) const override {
         c.counters.cow().set = _value;

@@ -47,7 +47,7 @@ export struct TextAlignProperty : Property {
     Value _value;
 
     TextAlignProperty(Rc<Property::Registration> registration, Value value)
-        : Property(registration), _value(value) {}
+        : Property(registration), _value(std::move(value)) {}
 
     void apply([[maybe_unused]] ComputedValues const& parent, ComputedValues& c, [[maybe_unused]] ComputationContext const& cx) const override {
         c.text.cow().align = _value;
@@ -96,7 +96,7 @@ export struct TextTransformProperty : Property {
     Value _value;
 
     TextTransformProperty(Rc<Property::Registration> registration, Value value)
-        : Property(registration), _value(value) {}
+        : Property(registration), _value(std::move(value)) {}
 
     void apply([[maybe_unused]] ComputedValues const& parent, ComputedValues& c, [[maybe_unused]] ComputationContext const& cx) const override {
         c.text.cow().transform = _value;
@@ -139,7 +139,7 @@ export struct WhiteSpaceProperty : Property {
     Value _value;
 
     WhiteSpaceProperty(Rc<Property::Registration> registration, Value value)
-        : Property(registration), _value(value) {}
+        : Property(registration), _value(std::move(value)) {}
 
     void apply([[maybe_unused]] ComputedValues const& parent, ComputedValues& c, [[maybe_unused]] ComputationContext const& cx) const override {
         c.text.cow().whiteSpace = _value;

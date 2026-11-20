@@ -40,7 +40,7 @@ export struct BreakAfterProperty : Property {
     Value _value;
 
     BreakAfterProperty(Rc<Property::Registration> registration, Value value)
-        : Property(registration), _value(value) {}
+        : Property(registration), _value(std::move(value)) {}
 
     void apply([[maybe_unused]] ComputedValues const& parent, ComputedValues& c, [[maybe_unused]] ComputationContext const& cx) const override {
         c.break_.cow().after = _value;
@@ -78,7 +78,7 @@ export struct BreakBeforeProperty : Property {
     Value _value;
 
     BreakBeforeProperty(Rc<Property::Registration> registration, Value value)
-        : Property(registration), _value(value) {}
+        : Property(registration), _value(std::move(value)) {}
 
     void apply([[maybe_unused]] ComputedValues const& parent, ComputedValues& c, [[maybe_unused]] ComputationContext const& cx) const override {
         c.break_.cow().before = _value;
@@ -116,7 +116,7 @@ export struct BreakInsideProperty : Property {
     Value _value;
 
     BreakInsideProperty(Rc<Property::Registration> registration, Value value)
-        : Property(registration), _value(value) {}
+        : Property(registration), _value(std::move(value)) {}
 
     void apply([[maybe_unused]] ComputedValues const& parent, ComputedValues& c, [[maybe_unused]] ComputationContext const& cx) const override {
         c.break_.cow().inside = _value;
@@ -178,7 +178,7 @@ export struct PageBreakAfterProperty : Property {
     Value _value;
 
     PageBreakAfterProperty(Rc<Property::Registration> registration, Value value)
-        : Property(registration), _value(value) {}
+        : Property(registration), _value(std::move(value)) {}
 
     Longhands expand(RegisteredPropertySet& registry, ComputedValues const&, ComputedValues&) const override {
         return {
@@ -214,7 +214,7 @@ export struct PageBreakBeforeProperty : Property {
     Value _value;
 
     PageBreakBeforeProperty(Rc<Property::Registration> registration, Value value)
-        : Property(registration), _value(value) {}
+        : Property(registration), _value(std::move(value)) {}
 
     Longhands expand(RegisteredPropertySet& registry, ComputedValues const&, ComputedValues&) const override {
         return {
@@ -254,7 +254,7 @@ export struct PageBreakInsideProperty : Property {
     Value _value;
 
     PageBreakInsideProperty(Rc<Property::Registration> registration, Value value)
-        : Property(registration), _value(value) {}
+        : Property(registration), _value(std::move(value)) {}
 
     Longhands expand(RegisteredPropertySet& registry, ComputedValues const&, ComputedValues&) const override {
         return {

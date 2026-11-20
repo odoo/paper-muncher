@@ -43,7 +43,7 @@ export struct VisibilityProperty : Property {
     Value _value;
 
     VisibilityProperty(Rc<Property::Registration> registration, Value value)
-        : Property(registration), _value(value) {}
+        : Property(registration), _value(std::move(value)) {}
 
     void apply([[maybe_unused]] ComputedValues const& parent, ComputedValues& c, [[maybe_unused]] ComputationContext const& cx) const override {
         c.visibility = _value;
@@ -121,7 +121,7 @@ export struct ClipPathProperty : Property {
     Value _value;
 
     ClipPathProperty(Rc<Property::Registration> registration, Value value)
-        : Property(registration), _value(value) {}
+        : Property(registration), _value(std::move(value)) {}
 
     void apply([[maybe_unused]] ComputedValues const& parent, ComputedValues& c, [[maybe_unused]] ComputationContext const& cx) const override {
         if (auto clipShape = _value.is<Css::BasicShape>())

@@ -44,7 +44,7 @@ export struct SvgXProperty : Property {
     Value _value;
 
     SvgXProperty(Rc<Property::Registration> registration, Value value)
-        : Property(registration), _value(value) {}
+        : Property(registration), _value(std::move(value)) {}
 
     void apply([[maybe_unused]] ComputedValues const& parent, ComputedValues& c, [[maybe_unused]] ComputationContext const& cx) const override {
         c.svg.cow().x = computeValue(_value, cx);
@@ -87,7 +87,7 @@ export struct SvgYProperty : Property {
     Value _value;
 
     SvgYProperty(Rc<Property::Registration> registration, Value value)
-        : Property(registration), _value(value) {}
+        : Property(registration), _value(std::move(value)) {}
 
     void apply([[maybe_unused]] ComputedValues const& parent, ComputedValues& c, [[maybe_unused]] ComputationContext const& cx) const override {
         c.svg.cow().y = computeValue(_value, cx);
@@ -130,7 +130,7 @@ export struct SvgCXProperty : Property {
     Value _value;
 
     SvgCXProperty(Rc<Property::Registration> registration, Value value)
-        : Property(registration), _value(value) {}
+        : Property(registration), _value(std::move(value)) {}
 
     void apply([[maybe_unused]] ComputedValues const& parent, ComputedValues& c, [[maybe_unused]] ComputationContext const& cx) const override {
         c.svg.cow().cx = computeValue(_value, cx);
@@ -173,7 +173,7 @@ export struct SvgCYProperty : Property {
     Value _value;
 
     SvgCYProperty(Rc<Property::Registration> registration, Value value)
-        : Property(registration), _value(value) {}
+        : Property(registration), _value(std::move(value)) {}
 
     void apply([[maybe_unused]] ComputedValues const& parent, ComputedValues& c, [[maybe_unused]] ComputationContext const& cx) const override {
         c.svg.cow().cy = computeValue(_value, cx);
@@ -216,7 +216,7 @@ export struct SvgRProperty : Property {
     Value _value;
 
     SvgRProperty(Rc<Property::Registration> registration, Value value)
-        : Property(registration), _value(value) {}
+        : Property(registration), _value(std::move(value)) {}
 
     void apply([[maybe_unused]] ComputedValues const& parent, ComputedValues& c, [[maybe_unused]] ComputationContext const& cx) const override {
         c.svg.cow().r = computeValue(_value, cx);
@@ -261,7 +261,7 @@ export struct SvgRxProperty : Property {
     Value _value;
 
     SvgRxProperty(Rc<Property::Registration> registration, Value value)
-        : Property(registration), _value(value) {}
+        : Property(registration), _value(std::move(value)) {}
 
     void apply([[maybe_unused]] ComputedValues const& parent, ComputedValues& c, [[maybe_unused]] ComputationContext const& cx) const override {
         c.svg.cow().rx = computeValue(_value, cx);
@@ -306,7 +306,7 @@ export struct SvgRyProperty : Property {
     Value _value;
 
     SvgRyProperty(Rc<Property::Registration> registration, Value value)
-        : Property(registration), _value(value) {}
+        : Property(registration), _value(std::move(value)) {}
 
     void apply([[maybe_unused]] ComputedValues const& parent, ComputedValues& c, [[maybe_unused]] ComputationContext const& cx) const override {
         c.svg.cow().ry = computeValue(_value, cx);
@@ -345,7 +345,7 @@ export struct SvgFillProperty : Property {
     Value _value;
 
     SvgFillProperty(Rc<Property::Registration> registration, Value value)
-        : Property(registration), _value(value) {}
+        : Property(registration), _value(std::move(value)) {}
 
     void apply([[maybe_unused]] ComputedValues const& parent, ComputedValues& c, [[maybe_unused]] ComputationContext const& cx) const override {
         c.svgPaint.cow().fill = computeValue(_value, c.color);
@@ -415,7 +415,7 @@ export struct SvgDProperty : Property {
     Value _value;
 
     SvgDProperty(Rc<Property::Registration> registration, Value value)
-        : Property(registration), _value(value) {}
+        : Property(registration), _value(std::move(value)) {}
 
     void apply([[maybe_unused]] ComputedValues const& parent, ComputedValues& c, [[maybe_unused]] ComputationContext const& cx) const override {
         c.svg.cow().d = _value;
@@ -524,7 +524,7 @@ export struct SvgStrokeProperty : Property {
     Value _value;
 
     SvgStrokeProperty(Rc<Property::Registration> registration, Value value)
-        : Property(registration), _value(value) {}
+        : Property(registration), _value(std::move(value)) {}
 
     void apply([[maybe_unused]] ComputedValues const& parent, ComputedValues& c, [[maybe_unused]] ComputationContext const& cx) const override {
         c.svgPaint.cow().stroke = computeValue(_value, c.color);
@@ -563,7 +563,7 @@ export struct SvgStrokeOpacityProperty : Property {
     Value _value;
 
     SvgStrokeOpacityProperty(Rc<Property::Registration> registration, Value value)
-        : Property(registration), _value(value) {}
+        : Property(registration), _value(std::move(value)) {}
 
     void apply([[maybe_unused]] ComputedValues const& parent, ComputedValues& c, [[maybe_unused]] ComputationContext const& cx) const override {
         c.svgPaint.cow().strokeOpacity = computeValue(_value);
@@ -602,7 +602,7 @@ export struct FillOpacityProperty : Property {
     Value _value;
 
     FillOpacityProperty(Rc<Property::Registration> registration, Value value)
-        : Property(registration), _value(value) {}
+        : Property(registration), _value(std::move(value)) {}
 
     void apply([[maybe_unused]] ComputedValues const& parent, ComputedValues& c, [[maybe_unused]] ComputationContext const& cx) const override {
         c.svgPaint.cow().fillOpacity = computeValue(_value);
@@ -644,7 +644,7 @@ export struct StrokeWidthProperty : Property {
     Value _value;
 
     StrokeWidthProperty(Rc<Property::Registration> registration, Value value)
-        : Property(registration), _value(value) {}
+        : Property(registration), _value(std::move(value)) {}
 
     void apply([[maybe_unused]] ComputedValues const& parent, ComputedValues& c, [[maybe_unused]] ComputationContext const& cx) const override {
         c.svgPaint.cow().strokeWidth = computeValue(_value, cx);

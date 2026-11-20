@@ -41,7 +41,7 @@ export struct PositionProperty : Property {
     Value _value;
 
     PositionProperty(Rc<Property::Registration> registration, Value value)
-        : Property(registration), _value(value) {}
+        : Property(registration), _value(std::move(value)) {}
 
     void apply([[maybe_unused]] ComputedValues const& parent, ComputedValues& c, [[maybe_unused]] ComputationContext const& cx) const override {
         c.position = _value;
@@ -75,7 +75,7 @@ export struct TopProperty : Property {
     Value _value;
 
     TopProperty(Rc<Property::Registration> registration, Value value)
-        : Property(registration), _value(value) {}
+        : Property(registration), _value(std::move(value)) {}
 
     void apply([[maybe_unused]] ComputedValues const& parent, ComputedValues& c, [[maybe_unused]] ComputationContext const& cx) const override {
         c.insets.cow().top = computeValue(_value, cx);
@@ -113,7 +113,7 @@ export struct RightProperty : Property {
     Value _value;
 
     RightProperty(Rc<Property::Registration> registration, Value value)
-        : Property(registration), _value(value) {}
+        : Property(registration), _value(std::move(value)) {}
 
     void apply([[maybe_unused]] ComputedValues const& parent, ComputedValues& c, [[maybe_unused]] ComputationContext const& cx) const override {
         c.insets.cow().end = computeValue(_value, cx);
@@ -151,7 +151,7 @@ export struct BottomProperty : Property {
     Value _value;
 
     BottomProperty(Rc<Property::Registration> registration, Value value)
-        : Property(registration), _value(value) {}
+        : Property(registration), _value(std::move(value)) {}
 
     void apply([[maybe_unused]] ComputedValues const& parent, ComputedValues& c, [[maybe_unused]] ComputationContext const& cx) const override {
         c.insets.cow().bottom = computeValue(_value, cx);
@@ -189,7 +189,7 @@ export struct LeftProperty : Property {
     Value _value;
 
     LeftProperty(Rc<Property::Registration> registration, Value value)
-        : Property(registration), _value(value) {}
+        : Property(registration), _value(std::move(value)) {}
 
     void apply([[maybe_unused]] ComputedValues const& parent, ComputedValues& c, [[maybe_unused]] ComputationContext const& cx) const override {
         c.insets.cow().start = computeValue(_value, cx);
@@ -227,7 +227,7 @@ export struct ZIndexProperty : Property {
     Value _value;
 
     ZIndexProperty(Rc<Property::Registration> registration, Value value)
-        : Property(registration), _value(value) {}
+        : Property(registration), _value(std::move(value)) {}
 
     void apply([[maybe_unused]] ComputedValues const& parent, ComputedValues& c, [[maybe_unused]] ComputationContext const& cx) const override {
         c.zIndex = _value;

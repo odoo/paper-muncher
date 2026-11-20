@@ -43,7 +43,7 @@ export struct LineHeightProperty : Property {
     Value _value;
 
     LineHeightProperty(Rc<Property::Registration> registration, Value value)
-        : Property(registration), _value(value) {}
+        : Property(registration), _value(std::move(value)) {}
 
     void apply([[maybe_unused]] ComputedValues const& parent, ComputedValues& c, [[maybe_unused]] ComputationContext const& cx) const override {
         // Computed value: for <length-percentage> the absolute length (percentages against
@@ -93,7 +93,7 @@ export struct DominantBaselineProperty : Property {
     Value _value;
 
     DominantBaselineProperty(Rc<Property::Registration> registration, Value value)
-        : Property(registration), _value(value) {}
+        : Property(registration), _value(std::move(value)) {}
 
     void apply([[maybe_unused]] ComputedValues const& parent, ComputedValues& c, [[maybe_unused]] ComputationContext const& cx) const override {
         c.inline_.cow().dominantBaseline = _value;
@@ -131,7 +131,7 @@ export struct BaselineSourceProperty : Property {
     Value _value;
 
     BaselineSourceProperty(Rc<Property::Registration> registration, Value value)
-        : Property(registration), _value(value) {}
+        : Property(registration), _value(std::move(value)) {}
 
     void apply([[maybe_unused]] ComputedValues const& parent, ComputedValues& c, [[maybe_unused]] ComputationContext const& cx) const override {
         c.inline_.cow().baselineSource = _value;
@@ -169,7 +169,7 @@ export struct AlignmentBaselineProperty : Property {
     Value _value;
 
     AlignmentBaselineProperty(Rc<Property::Registration> registration, Value value)
-        : Property(registration), _value(value) {}
+        : Property(registration), _value(std::move(value)) {}
 
     void apply([[maybe_unused]] ComputedValues const& parent, ComputedValues& c, [[maybe_unused]] ComputationContext const& cx) const override {
         c.inline_.cow().alignmentBaseline = _value;
@@ -213,7 +213,7 @@ export struct BaselineShiftProperty : Property {
     Value _value;
 
     BaselineShiftProperty(Rc<Property::Registration> registration, Value value)
-        : Property(registration), _value(value) {}
+        : Property(registration), _value(std::move(value)) {}
 
     void apply([[maybe_unused]] ComputedValues const& parent, ComputedValues& c, [[maybe_unused]] ComputationContext const& cx) const override {
         c.inline_.cow().baselineShift = computeValue(_value, cx);
@@ -310,7 +310,7 @@ export struct VerticalAlignProperty : Property {
     Value _value;
 
     VerticalAlignProperty(Rc<Property::Registration> registration, Value value)
-        : Property(registration), _value(value) {}
+        : Property(registration), _value(std::move(value)) {}
 
     Longhands expand(RegisteredPropertySet& registry, ComputedValues const&, ComputedValues&) const override {
         Longhands shorthands = {};

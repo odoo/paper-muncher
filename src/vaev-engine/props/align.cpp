@@ -41,7 +41,7 @@ export struct AlignContentProperty : Property {
     Value _value;
 
     AlignContentProperty(Rc<Property::Registration> registration, Value value)
-        : Property(registration), _value(value) {}
+        : Property(registration), _value(std::move(value)) {}
 
     void apply([[maybe_unused]] ComputedValues const& parent, ComputedValues& c, [[maybe_unused]] ComputationContext const& cx) const override {
         c.aligns.alignContent = _value;
@@ -79,7 +79,7 @@ export struct JustifyContentProperty : Property {
     Value _value;
 
     JustifyContentProperty(Rc<Property::Registration> registration, Value value)
-        : Property(registration), _value(value) {}
+        : Property(registration), _value(std::move(value)) {}
 
     void apply([[maybe_unused]] ComputedValues const& parent, ComputedValues& c, [[maybe_unused]] ComputationContext const& cx) const override {
         c.aligns.justifyContent = _value;
@@ -117,7 +117,7 @@ export struct JustifySelfProperty : Property {
     Value _value;
 
     JustifySelfProperty(Rc<Property::Registration> registration, Value value)
-        : Property(registration), _value(value) {}
+        : Property(registration), _value(std::move(value)) {}
 
     void apply([[maybe_unused]] ComputedValues const& parent, ComputedValues& c, [[maybe_unused]] ComputationContext const& cx) const override {
         c.aligns.justifySelf = _value;
@@ -155,7 +155,7 @@ export struct AlignSelfProperty : Property {
     Value _value;
 
     AlignSelfProperty(Rc<Property::Registration> registration, Value value)
-        : Property(registration), _value(value) {}
+        : Property(registration), _value(std::move(value)) {}
 
     void apply([[maybe_unused]] ComputedValues const& parent, ComputedValues& c, [[maybe_unused]] ComputationContext const& cx) const override {
         c.aligns.alignSelf = _value;
@@ -193,7 +193,7 @@ export struct JustifyItemsProperty : Property {
     Value _value;
 
     JustifyItemsProperty(Rc<Property::Registration> registration, Value value)
-        : Property(registration), _value(value) {}
+        : Property(registration), _value(std::move(value)) {}
 
     void apply([[maybe_unused]] ComputedValues const& parent, ComputedValues& c, [[maybe_unused]] ComputationContext const& cx) const override {
         c.aligns.justifyItems = _value;
@@ -231,7 +231,7 @@ export struct AlignItemsProperty : Property {
     Value _value;
 
     AlignItemsProperty(Rc<Property::Registration> registration, Value value)
-        : Property(registration), _value(value) {}
+        : Property(registration), _value(std::move(value)) {}
 
     void apply([[maybe_unused]] ComputedValues const& parent, ComputedValues& c, [[maybe_unused]] ComputationContext const& cx) const override {
         c.aligns.alignItems = _value;
@@ -276,7 +276,7 @@ export struct RowGapProperty : Property {
     Value _value;
 
     RowGapProperty(Rc<Property::Registration> registration, Value value)
-        : Property(registration), _value(value) {}
+        : Property(registration), _value(std::move(value)) {}
 
     void apply([[maybe_unused]] ComputedValues const& parent, ComputedValues& c, [[maybe_unused]] ComputationContext const& cx) const override {
         c.gaps.cow().row = computeValue(_value, cx);
@@ -319,7 +319,7 @@ export struct ColumnGapProperty : Property {
     Value _value;
 
     ColumnGapProperty(Rc<Property::Registration> registration, Value value)
-        : Property(registration), _value(value) {}
+        : Property(registration), _value(std::move(value)) {}
 
     void apply([[maybe_unused]] ComputedValues const& parent, ComputedValues& c, [[maybe_unused]] ComputationContext const& cx) const override {
         c.gaps.cow().col = computeValue(_value, cx);
@@ -377,7 +377,7 @@ export struct GapProperty : Property {
     Value _value;
 
     GapProperty(Rc<Property::Registration> registration, Value value)
-        : Property(registration), _value(value) {}
+        : Property(registration), _value(std::move(value)) {}
 
     Longhands expand(RegisteredPropertySet& registry, ComputedValues const&, ComputedValues&) const override {
         return {

@@ -44,7 +44,7 @@ export struct BackgroundColorProperty : Property {
     Value _value;
 
     BackgroundColorProperty(Rc<Property::Registration> registration, Value value)
-        : Property(registration), _value(value) {}
+        : Property(registration), _value(std::move(value)) {}
 
     void apply([[maybe_unused]] ComputedValues const& parent, ComputedValues& c, [[maybe_unused]] ComputationContext const& cx) const override {
         c.backgrounds.cow().color = computeValue(_value, c.color);
@@ -315,7 +315,7 @@ export struct ColorProperty : Property {
     Value _value;
 
     ColorProperty(Rc<Property::Registration> registration, Value value)
-        : Property(registration), _value(value) {}
+        : Property(registration), _value(std::move(value)) {}
 
     void apply(ComputedValues const& parent, ComputedValues& c, [[maybe_unused]] ComputationContext const& cx) const override {
         // In the color property, the used value of currentcolor is the resolved inherited value.

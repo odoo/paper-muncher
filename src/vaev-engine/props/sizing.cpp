@@ -41,7 +41,7 @@ export struct BoxSizingProperty : Property {
     Value _value;
 
     BoxSizingProperty(Rc<Property::Registration> registration, Value value)
-        : Property(registration), _value(value) {}
+        : Property(registration), _value(std::move(value)) {}
 
     void apply([[maybe_unused]] ComputedValues const& parent, ComputedValues& c, [[maybe_unused]] ComputationContext const& cx) const override {
         c.boxSizing = _value;
@@ -92,7 +92,7 @@ export struct WidthProperty : Property {
     Value _value;
 
     WidthProperty(Rc<Property::Registration> registration, Value value)
-        : Property(registration), _value(value) {}
+        : Property(registration), _value(std::move(value)) {}
 
     void apply([[maybe_unused]] ComputedValues const& parent, ComputedValues& c, [[maybe_unused]] ComputationContext const& cx) const override {
         c.sizing.cow().width = computeValue(_value, cx);
@@ -138,7 +138,7 @@ export struct HeightProperty : Property {
     Value _value;
 
     HeightProperty(Rc<Property::Registration> registration, Value value)
-        : Property(registration), _value(value) {}
+        : Property(registration), _value(std::move(value)) {}
 
     void apply([[maybe_unused]] ComputedValues const& parent, ComputedValues& c, [[maybe_unused]] ComputationContext const& cx) const override {
         c.sizing.cow().height = computeValue(_value, cx);
@@ -176,7 +176,7 @@ export struct MinWidthProperty : Property {
     Value _value;
 
     MinWidthProperty(Rc<Property::Registration> registration, Value value)
-        : Property(registration), _value(value) {}
+        : Property(registration), _value(std::move(value)) {}
 
     void apply([[maybe_unused]] ComputedValues const& parent, ComputedValues& c, [[maybe_unused]] ComputationContext const& cx) const override {
         c.sizing.cow().minWidth = computeValue(_value, cx);
@@ -214,7 +214,7 @@ export struct MinHeightProperty : Property {
     Value _value;
 
     MinHeightProperty(Rc<Property::Registration> registration, Value value)
-        : Property(registration), _value(value) {}
+        : Property(registration), _value(std::move(value)) {}
 
     void apply([[maybe_unused]] ComputedValues const& parent, ComputedValues& c, [[maybe_unused]] ComputationContext const& cx) const override {
         c.sizing.cow().minHeight = computeValue(_value, cx);
@@ -253,7 +253,7 @@ export struct MaxWidthProperty : Property {
     Value _value;
 
     MaxWidthProperty(Rc<Property::Registration> registration, Value value)
-        : Property(registration), _value(value) {}
+        : Property(registration), _value(std::move(value)) {}
 
     void apply([[maybe_unused]] ComputedValues const& parent, ComputedValues& c, [[maybe_unused]] ComputationContext const& cx) const override {
         c.sizing.cow().maxWidth = computeValue(_value, cx);
@@ -291,7 +291,7 @@ export struct MaxHeightProperty : Property {
     Value _value;
 
     MaxHeightProperty(Rc<Property::Registration> registration, Value value)
-        : Property(registration), _value(value) {}
+        : Property(registration), _value(std::move(value)) {}
 
     void apply([[maybe_unused]] ComputedValues const& parent, ComputedValues& c, [[maybe_unused]] ComputationContext const& cx) const override {
         c.sizing.cow().maxHeight = computeValue(_value, cx);

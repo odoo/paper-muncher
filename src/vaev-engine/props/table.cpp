@@ -38,7 +38,7 @@ export struct TableLayoutProperty : Property {
     Value _value;
 
     TableLayoutProperty(Rc<Property::Registration> registration, Value value)
-        : Property(registration), _value(value) {}
+        : Property(registration), _value(std::move(value)) {}
 
     void apply([[maybe_unused]] ComputedValues const& parent, ComputedValues& c, [[maybe_unused]] ComputationContext const& cx) const override {
         c.tableLayout = _value;
@@ -77,7 +77,7 @@ export struct CaptionSideProperty : Property {
     Value _value;
 
     CaptionSideProperty(Rc<Property::Registration> registration, Value value)
-        : Property(registration), _value(value) {}
+        : Property(registration), _value(std::move(value)) {}
 
     void apply([[maybe_unused]] ComputedValues const& parent, ComputedValues& c, [[maybe_unused]] ComputationContext const& cx) const override {
         c.table.cow().captionSide = _value;

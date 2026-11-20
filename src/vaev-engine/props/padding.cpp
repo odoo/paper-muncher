@@ -40,7 +40,7 @@ export struct PaddingTopProperty : Property {
     Value _value;
 
     PaddingTopProperty(Rc<Property::Registration> registration, Value value)
-        : Property(registration), _value(value) {}
+        : Property(registration), _value(std::move(value)) {}
 
     void apply([[maybe_unused]] ComputedValues const& parent, ComputedValues& c, [[maybe_unused]] ComputationContext const& cx) const override {
         c.padding.cow().top = computeValue(_value, cx);
@@ -77,7 +77,7 @@ export struct PaddingRightProperty : Property {
     Value _value;
 
     PaddingRightProperty(Rc<Property::Registration> registration, Value value)
-        : Property(registration), _value(value) {}
+        : Property(registration), _value(std::move(value)) {}
 
     void apply([[maybe_unused]] ComputedValues const& parent, ComputedValues& c, [[maybe_unused]] ComputationContext const& cx) const override {
         c.padding.cow().end = computeValue(_value, cx);
@@ -114,7 +114,7 @@ export struct PaddingBottomProperty : Property {
     Value _value;
 
     PaddingBottomProperty(Rc<Property::Registration> registration, Value value)
-        : Property(registration), _value(value) {}
+        : Property(registration), _value(std::move(value)) {}
 
     void apply([[maybe_unused]] ComputedValues const& parent, ComputedValues& c, [[maybe_unused]] ComputationContext const& cx) const override {
         c.padding.cow().bottom = computeValue(_value, cx);
@@ -151,7 +151,7 @@ export struct PaddingLeftProperty : Property {
     Value _value;
 
     PaddingLeftProperty(Rc<Property::Registration> registration, Value value)
-        : Property(registration), _value(value) {}
+        : Property(registration), _value(std::move(value)) {}
 
     void apply([[maybe_unused]] ComputedValues const& parent, ComputedValues& c, [[maybe_unused]] ComputationContext const& cx) const override {
         c.padding.cow().start = computeValue(_value, cx);
@@ -188,7 +188,7 @@ export struct PaddingInlineStartProperty : Property {
     Value _value;
 
     PaddingInlineStartProperty(Rc<Property::Registration> registration, Value value)
-        : Property(registration), _value(value) {}
+        : Property(registration), _value(std::move(value)) {}
 
     // FIXME: Take writing mode into account
     Longhands expand(RegisteredPropertySet& registry, ComputedValues const&, ComputedValues&) const override {
@@ -228,7 +228,7 @@ export struct PaddingInlineEndProperty : Property {
     Value _value;
 
     PaddingInlineEndProperty(Rc<Property::Registration> registration, Value value)
-        : Property(registration), _value(value) {}
+        : Property(registration), _value(std::move(value)) {}
 
     // FIXME: Take writing mode into account
     Longhands expand(RegisteredPropertySet& registry, ComputedValues const&, ComputedValues&) const override {
@@ -269,7 +269,7 @@ export struct PaddingProperty : Property {
     Value _value;
 
     PaddingProperty(Rc<Property::Registration> registration, Value value)
-        : Property(registration), _value(value) {}
+        : Property(registration), _value(std::move(value)) {}
 
     Longhands expand(RegisteredPropertySet& registry, ComputedValues const&, ComputedValues&) const override {
         return {

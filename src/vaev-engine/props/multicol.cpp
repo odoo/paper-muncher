@@ -39,7 +39,7 @@ export struct ColumnWidthProperty : Property {
     Value _value;
 
     ColumnWidthProperty(Rc<Property::Registration> registration, Value value)
-        : Property(registration), _value(value) {}
+        : Property(registration), _value(std::move(value)) {}
 
     void apply([[maybe_unused]] ComputedValues const& parent, ComputedValues& c, ComputationContext const& cx) const override {
         c.column.cow().width = computeValue(_value, cx);
@@ -78,7 +78,7 @@ export struct ColumnHeightProperty : Property {
     Value _value;
 
     ColumnHeightProperty(Rc<Property::Registration> registration, Value value)
-        : Property(registration), _value(value) {}
+        : Property(registration), _value(std::move(value)) {}
 
     void apply([[maybe_unused]] ComputedValues const& parent, ComputedValues& c, ComputationContext const& cx) const override {
         c.column.cow().height = computeValue(_value, cx);
@@ -117,7 +117,7 @@ export struct ColumnCountProperty : Property {
     Value _value;
 
     ColumnCountProperty(Rc<Property::Registration> registration, Value value)
-        : Property(registration), _value(value) {}
+        : Property(registration), _value(std::move(value)) {}
 
     void apply([[maybe_unused]] ComputedValues const& parent, ComputedValues& c, [[maybe_unused]] ComputationContext const& cx) const override {
         c.column.cow().count = _value;
@@ -209,7 +209,7 @@ export struct ColumnsProperty : Property {
     Value _value;
 
     ColumnsProperty(Rc<Property::Registration> registration, Value value)
-        : Property(registration), _value(value) {}
+        : Property(registration), _value(std::move(value)) {}
 
     // FIXME: This property should also resets the column-wrap property to its initial value.
     Longhands expand(RegisteredPropertySet& registry, ComputedValues const&, ComputedValues&) const override {
