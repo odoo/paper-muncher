@@ -136,6 +136,10 @@ export struct Token {
         return this->type == type;
     }
 
+    bool operator==(Str str) const {
+        return this->data == str;
+    }
+
     bool operator==(Token const& other) const {
         return type == other.type and eqCi(data.str(), other.data.str());
     }

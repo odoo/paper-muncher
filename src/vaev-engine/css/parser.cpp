@@ -112,6 +112,14 @@ export struct Sst {
     }
 };
 
+// MARK: Parser Predicates -----------------------------------------------------
+
+export auto tokenDataIs(Str data) {
+    return [=](Sst const& s) {
+        return s.token.data == data;
+    };
+}
+
 // MARK: Parser ----------------------------------------------------------------
 
 Sst consumeAtRule(Lexer& lex, Diag::Collector& diags);

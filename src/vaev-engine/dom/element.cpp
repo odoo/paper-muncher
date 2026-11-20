@@ -21,6 +21,39 @@ namespace Vaev::Dom {
 export struct Element;
 export struct PseudoElement;
 
+export enum struct PseudoClass : u8 {
+#define PSEUDO(ID, ...) ID,
+#include "defs/pseudo-class.inc"
+
+#undef PSEUDO
+    _LEN,
+};
+
+export Opt<PseudoClass> parsePseudoClass(Str name) {
+#define PSEUDO(IDENT, NAME) \
+    if (name == NAME)       \
+        return Some(PseudoClass::IDENT);
+#include "defs/pseudo-class.inc"
+
+#undef PSEUDO
+
+    return NONE;
+}
+
+export Str serializePseudoClass(PseudoClass pseudoClass) {
+    switch (pseudoClass) {
+#define PSEUDO(IDENT, NAME)  \
+    case PseudoClass::IDENT: \
+        return NAME;
+
+#include "defs/pseudo-class.inc"
+
+#undef PSEUDO
+    default:
+        unreachable();
+    }
+}
+
 // https://drafts.csswg.org/css-pseudo/#CSSPseudoElement-interface
 export struct PseudoElement : Tree<PseudoElement> {
     // https://drafts.csswg.org/css-pseudo/#dom-csspseudoelement-type
@@ -35,10 +68,10 @@ export struct PseudoElement : Tree<PseudoElement> {
     Opt<Rc<Style::ComputedValues>> _computedValues = NONE;
     Style::CounterSet counters = {};
 
-    PseudoElement(Symbol type, Rc<Style::ComputedValues> computedValues)
-        : type(type), _computedValues(Some(computedValues)) {}
+    PseudoElement(Symbol type, Rc<Style::ComputedValues> computedValues) : type(type), _computedValues(Some(computedValues)) {}
 
-    Rc<Style::ComputedValues const> computedValues() const {
+    Rc<Style::ComputedValues const>
+    computedValues() const {
         return _computedValues.expect("unstyled pseudo-element");
     }
 
@@ -55,7 +88,7 @@ export struct PseudoElement : Tree<PseudoElement> {
     bool operator==(PseudoElement const& other) const {
         return this == &other;
     }
-};
+}; // namespace Vaev::Dom
 
 Symbol const PseudoElement::BEFORE = "::before"_sym;
 Symbol const PseudoElement::AFTER = "::after"_sym;
@@ -213,6 +246,22 @@ export struct Element : Node {
                qualifiedName == Html::SOURCE_TAG or
                qualifiedName == Html::TRACK_TAG or
                qualifiedName == Html::WBR_TAG;
+    }
+
+    // MARK: Pseudo Class ------------------------------------------------------
+
+    SmallVec<PseudoClass, 16> pseudoClasses() const {
+        SmallVec<PseudoClass, 16> pseudoClasses;
+
+        // https://www.w3.org/TR/selectors-4/#link-pseudo
+        if (qualifiedName == Html::A_TAG and hasAttribute(Html::HREF_ATTR))
+            pseudoClasses.pushBack(PseudoClass::LINK);
+
+        // https://www.w3.org/TR/selectors-4/#root-pseudo
+        if (qualifiedName == Html::HTML_TAG)
+            pseudoClasses.pushBack(PseudoClass::ROOT);
+
+        return pseudoClasses;
     }
 
     // MARK: Pseudo Elements ---------------------------------------------------

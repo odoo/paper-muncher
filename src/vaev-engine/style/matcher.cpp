@@ -124,120 +124,6 @@ static bool _match(Nfix const& selector, Gc::Ref<Dom::Element> element, Opt<Symb
     }
 }
 
-// 5.1. Type (tag name) selector
-// https://www.w3.org/TR/selectors-4/#type
-static bool _match(TypeSelector const& selector, Gc::Ref<Dom::Element> element) {
-    return selector.qualifiedName.match(element->qualifiedName);
-}
-
-static bool _match(IdSelector const& selector, Gc::Ref<Dom::Element> element) {
-    return element->id() == selector.id;
-}
-
-static bool _match(ClassSelector const& selector, Gc::Ref<Dom::Element> element) {
-    return element->classList.contains(selector.class_);
-}
-
-// 6. Attribute Selector
-// https://www.w3.org/TR/selectors-4/#attribute-selectors
-
-static Opt<Str> _getAttributeValue(AttributeSelector const& selector, Gc::Ref<Dom::Element> element) {
-    auto name = selector.qualifiedName.exactName();
-    if (not name)
-        return NONE;
-
-    if (selector.qualifiedName.ns.is<Universal>())
-        return element->getAttributeUnqualified(name.expect().str());
-
-    return element->getAttribute(selector.qualifiedName.fullyQualified());
-}
-
-static bool _matchContainsWord(Str attrValue, Str word, auto cmp) {
-    usize tokenStart = 0;
-    while (tokenStart < attrValue.len()) {
-        while (tokenStart < attrValue.len() and isAsciiSpace(attrValue[tokenStart]))
-            tokenStart++;
-
-        usize tokenEnd = tokenStart;
-        while (tokenEnd < attrValue.len() and not isAsciiSpace(attrValue[tokenEnd]))
-            tokenEnd++;
-
-        if (tokenStart != tokenEnd and startWith(sub(attrValue, tokenStart, tokenEnd), word, cmp) == Match::YES)
-            return true;
-
-        tokenStart = tokenEnd;
-    }
-
-    return false;
-}
-
-static bool _match(AttributeSelector const& selector, Gc::Ref<Dom::Element> element) {
-    auto maybeAttrValue = _getAttributeValue(selector, element);
-
-    if (selector.match == AttributeSelector::PRESENT) {
-        // Represents an element with the att attribute, whatever the value of the attribute.
-        return maybeAttrValue != NONE;
-    }
-
-    if (not maybeAttrValue)
-        return false;
-
-    auto attrValue = maybeAttrValue.expect();
-
-    auto cmp = [&selector](Rune const& a, Rune const& b) {
-        if (selector.case_ == AttributeSelector::INSENSITIVE)
-            return toAsciiLower(a) == toAsciiLower(b);
-        else
-            return a == b;
-    };
-
-    if (selector.match == AttributeSelector::EXACT) {
-        // Represents an element with the att attribute whose value is exactly "val".
-        return startWith(attrValue, selector.value.str(), cmp) == Match::YES;
-    } else if (selector.match == AttributeSelector::CONTAINS) {
-        // If "val" contains whitespace, it will never represent anything (since the words are separated by spaces).
-        if (contains(selector.value, ' '))
-            return false;
-
-        // Also if "val" is the empty string, it will never represent anything.
-        if (selector.value.len() == 0)
-            return false;
-
-        // Represents an element with the att attribute whose value is a whitespace-separated list of words,
-        // one of which is exactly "val".
-        return _matchContainsWord(attrValue, selector.value, cmp);
-    } else if (selector.match == AttributeSelector::HYPHENATED) {
-        // Represents an element with the att attribute, its value either being exactly "val"
-        auto prefixMatch = startWith(attrValue, selector.value.str(), cmp);
-        if (prefixMatch == Match::YES)
-            return true;
-        if (prefixMatch == Match::NO)
-            return false;
-
-        // or beginning with "val" immediately followed by "-" (U+002D).
-        return attrValue[selector.value.len()] == '-';
-    } else {
-        // 6.2. Substring matching attribute selectors
-        // https://www.w3.org/TR/selectors-4/#attribute-substrings
-
-        // If "val" is the empty string then the selector does not represent anything.
-        if (selector.value.len() == 0)
-            return false;
-
-        if (selector.match == AttributeSelector::STR_START_WITH) {
-            // Represents an element with the att attribute whose value begins with the prefix "val".
-            return startWith(attrValue, selector.value.str(), cmp) != Match::NO;
-        } else if (selector.match == AttributeSelector::STR_END_WITH) {
-            // Represents an element with the att attribute whose value ends with the suffix "val".
-            return endWith(attrValue, selector.value.str(), cmp) != Match::NO;
-        } else {
-            // Represents an element with the att attribute whose value contains at least one instance of the
-            // substring "val".
-            return contains(attrValue, selector.value, cmp);
-        }
-    }
-}
-
 // 8.2. The Link History Pseudo-classes: :link and :visited
 // https://www.w3.org/TR/selectors-4/#link
 
@@ -297,11 +183,6 @@ static bool _match(PseudoElementSelector const& selector, Gc::Ref<Dom::Element>,
 
 static bool _match(PseudoClassSelector const& selector, Gc::Ref<Dom::Element> element) {
     switch (selector.type) {
-    case PseudoClassSelector::LINK:
-        return _matchLink(element);
-
-    case PseudoClassSelector::ROOT:
-        return element->qualifiedName == Html::HTML_TAG;
 
     case PseudoClassSelector::FIRST_OF_TYPE:
         return _matchNthOfType(AnB{0, 1}, element, false);
