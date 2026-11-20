@@ -165,28 +165,6 @@ export struct FontFace {
 
 // MARK: Props -----------------------------------------------------------------
 
-template <typename T>
-struct _OneOrTwo {
-    T start;
-    Opt<T> end = NONE;
-
-    void repr(Io::Emit& e) const {
-        e("{}", start);
-        if (end)
-            e(" {}", *end);
-    }
-};
-
-template <typename T>
-Res<_OneOrTwo<T>> _parseOneOrTwo(Cursor<Css::Sst>& c) {
-    auto start = try$(parseValue<T>(c));
-    eatWhitespace(c);
-    if (c.ended())
-        return Ok(_OneOrTwo<T>{start, NONE});
-    return Ok(_OneOrTwo<T>{start, Some(try$(parseValue<T>(c)))});
-}
-
-// MARK: font-family
 // https://www.w3.org/TR/css-fonts-4/#font-family-desc
 export struct FontFamilyFontDescriptor {
     using Value = Css::FontFamily;
@@ -207,7 +185,6 @@ export struct FontFamilyFontDescriptor {
     }
 };
 
-// MARK: src
 // https://www.w3.org/TR/css-fonts-4/#src-desc
 export struct SrcFontDescriptor {
     using Value = Vec<FontSource>;
@@ -285,12 +262,10 @@ export struct SrcFontDescriptor {
     }
 };
 
-// MARK: font-style
 // https://www.w3.org/TR/css-fonts-4/#font-style-desc
 export struct FontStyleFontDescriptor {
-    // oblique [ <angle [-90deg,90deg]>{1,2} ]?
     struct Oblique {
-        Opt<_OneOrTwo<Css::Angle>> angles = NONE;
+        Opt<Pair<Css::Angle>> angles = NONE;
 
         void repr(Io::Emit& e) const {
             e("(oblique");
@@ -300,7 +275,6 @@ export struct FontStyleFontDescriptor {
         }
     };
 
-    // auto | normal | italic | left | right | oblique [ <angle [-90deg,90deg]>{1,2} ]?
     using Value = Union<
         Keywords::Auto,
         Keywords::Normal,
@@ -315,7 +289,6 @@ export struct FontStyleFontDescriptor {
 
     static Value initial() { return Keywords::AUTO; }
 
-    // <angle [-90deg,90deg]>: math functions are clamped to the range.
     static Deg _clampAngle(Css::Angle const& angle) {
         return Deg{clamp(computeValue(angle).value(), -90.0, 90.0)};
     }
@@ -334,11 +307,12 @@ export struct FontStyleFontDescriptor {
                 if (not oblique.angles)
                     return style;
 
-                auto const& angles = *oblique.angles;
-                if (angles.end)
-                    return Range<Deg>::fromStartEnd(_clampAngle(angles.start), _clampAngle(*angles.end));
+                auto start = _clampAngle(oblique.angles->v0);
+                auto end = _clampAngle(oblique.angles->v1);
+                if (start != end)
+                    return Range<Deg>::fromStartEnd(start, end);
 
-                style.obliqueAngle = _clampAngle(angles.start);
+                style.obliqueAngle = start;
                 return style;
             },
             // NOSPEC: left and right are treated as normal.
@@ -355,7 +329,7 @@ export struct FontStyleFontDescriptor {
                 value = Oblique{};
                 return Ok();
             }
-            value = Oblique{Some(try$(_parseOneOrTwo<Css::Angle>(c)))};
+            value = Oblique{Some(try$(parseValue<Pair<Css::Angle>>(c)))};
             return Ok();
         }
 
@@ -373,11 +347,9 @@ export struct FontStyleFontDescriptor {
     }
 };
 
-// MARK: font-weight
 // https://www.w3.org/TR/css-fonts-4/#font-weight-desc
 export struct FontWeightFontDescriptor {
-    // auto | <font-weight-absolute>{1,2}
-    using Value = Union<Keywords::Auto, _OneOrTwo<Css::FontWeightAbsolute>>;
+    using Value = Union<Keywords::Auto, Pair<Css::FontWeightAbsolute>>;
 
     Value value = initial();
 
@@ -394,10 +366,8 @@ export struct FontWeightFontDescriptor {
             [](Keywords::Auto) -> Opt<Range<Gfx::FontWeight>> {
                 return NONE;
             },
-            [](_OneOrTwo<Css::FontWeightAbsolute> const& weights) -> Opt<Range<Gfx::FontWeight>> {
-                if (weights.end)
-                    return Some(Range<Gfx::FontWeight>::fromStartEnd(_weight(weights.start), _weight(*weights.end)));
-                return Some(Range<Gfx::FontWeight>::emptyAt(_weight(weights.start)));
+            [](Pair<Css::FontWeightAbsolute> const& weights) -> Opt<Range<Gfx::FontWeight>> {
+                return Some(Range<Gfx::FontWeight>::fromStartEnd(_weight(weights.v0), _weight(weights.v1)));
             }
         );
     }
@@ -408,7 +378,7 @@ export struct FontWeightFontDescriptor {
             return Ok();
         }
 
-        value = try$(_parseOneOrTwo<Css::FontWeightAbsolute>(c));
+        value = try$(parseValue<Pair<Css::FontWeightAbsolute>>(c));
         return Ok();
     }
 };
@@ -416,8 +386,7 @@ export struct FontWeightFontDescriptor {
 // MARK: font-width
 // https://www.w3.org/TR/css-fonts-4/#font-width-prop
 export struct FontWidthFontDescriptor {
-    // auto | <'font-width'>{1,2}
-    using Value = Union<Keywords::Auto, _OneOrTwo<Css::FontWidth>>;
+    using Value = Union<Keywords::Auto, Pair<Css::FontWidth>>;
 
     Value value = initial();
 
@@ -430,10 +399,8 @@ export struct FontWidthFontDescriptor {
             [](Keywords::Auto) -> Opt<Range<Percent>> {
                 return NONE;
             },
-            [](_OneOrTwo<Css::FontWidth> const& widths) -> Opt<Range<Percent>> {
-                if (widths.end)
-                    return Some(Range<Percent>::fromStartEnd(computeValue(widths.start), computeValue(*widths.end)));
-                return Some(Range<Percent>::emptyAt(computeValue(widths.start)));
+            [](Pair<Css::FontWidth> const& widths) -> Opt<Range<Percent>> {
+                return Some(Range<Percent>::fromStartEnd(computeValue(widths.v0), computeValue(widths.v1)));
             }
         );
     }
@@ -444,12 +411,11 @@ export struct FontWidthFontDescriptor {
             return Ok();
         }
 
-        value = try$(_parseOneOrTwo<Css::FontWidth>(c));
+        value = try$(parseValue<Pair<Css::FontWidth>>(c));
         return Ok();
     }
 };
 
-// MARK: unicode-range
 // https://www.w3.org/TR/css-fonts-4/#unicode-range-desc
 export struct UnicodeRangeFontDescriptor {
     using Value = Vec<Range<Rune>>;
@@ -467,7 +433,6 @@ export struct UnicodeRangeFontDescriptor {
     }
 };
 
-// MARK: font-feature-settings
 // https://www.w3.org/TR/css-fonts-4/#font-rend-desc
 export struct FontFeatureSettingsFontDescriptor {
     using Value = Vec<FontFeature>;
@@ -483,7 +448,6 @@ export struct FontFeatureSettingsFontDescriptor {
     }
 };
 
-// MARK: font-variation-settings
 // https://www.w3.org/TR/css-fonts-4/#font-rend-desc
 export struct FontVariationSettingsFontDescriptor {
     using Value = Vec<FontVariation>;
@@ -499,7 +463,6 @@ export struct FontVariationSettingsFontDescriptor {
     }
 };
 
-// MARK: font-named-instance
 // https://www.w3.org/TR/css-fonts-4/#font-named-instance
 export struct FontNamedInstanceFontDescriptor {
     using Value = Union<Keywords::Auto, String>;
@@ -520,7 +483,6 @@ export struct FontNamedInstanceFontDescriptor {
     }
 };
 
-// MARK: font-display
 // https://www.w3.org/TR/css-fonts-4/#font-display-desc
 export struct FontDisplayFontDescriptor {
     using Value = FontDisplay;
@@ -554,10 +516,8 @@ export struct FontDisplayFontDescriptor {
     }
 };
 
-// MARK: ascent-override
 // https://www.w3.org/TR/css-fonts-4/#font-metrics-override-desc
 export struct AscentOverrideFontDescriptor {
-    // normal | <percentage [0,∞]>
     using Value = Union<Keywords::Normal, Css::Percentage>;
 
     Value value = initial();
@@ -580,10 +540,8 @@ export struct AscentOverrideFontDescriptor {
     }
 };
 
-// MARK: descent-override
 // https://www.w3.org/TR/css-fonts-4/#font-metrics-override-desc
 export struct DescentOverrideStyleProp {
-    // normal | <percentage [0,∞]>
     using Value = Union<Keywords::Normal, Css::Percentage>;
 
     Value value = initial();
@@ -606,10 +564,8 @@ export struct DescentOverrideStyleProp {
     }
 };
 
-// MARK: line-gap-override
 // https://www.w3.org/TR/css-fonts-4/#font-metrics-override-desc
 export struct LineGapOverrideFontDescriptor {
-    // normal | <percentage [0,∞]>
     using Value = Union<Keywords::Normal, Css::Percentage>;
 
     Value value = initial();
@@ -632,10 +588,8 @@ export struct LineGapOverrideFontDescriptor {
     }
 };
 
-// MARK: size-adjust
 // https://www.w3.org/TR/css-fonts-5/#size-adjust-desc
 export struct SizeAdjustFontDescriptor {
-    // <percentage [0,∞]>
     using Value = Css::Percentage;
 
     Value value = initial();
