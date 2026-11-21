@@ -33,9 +33,8 @@ struct Viewport : Ui::View<Viewport> {
     Viewport(Rc<WebView> webview, DispatchEvent dispatchEvent, ViewportProps props)
         : _webview(webview), _dispatchEvent(dispatchEvent), _props(props) {}
 
-    void reconcile(Viewport& o) override {
-        _webview = o._webview;
-        _props = o._props;
+    void adopt(Viewport& o) override {
+        _listener = o._listener;
     }
 
     void paint(Gfx::Canvas& g, Layout::RectAu) override {
