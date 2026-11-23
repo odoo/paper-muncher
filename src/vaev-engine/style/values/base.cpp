@@ -46,7 +46,8 @@ struct ValueComputer<Union<Ts...>> {
         ([&] {
             if (auto const& [v] = value.template is<Cs>())
                 result = Some(Union<Ts...>{specifyValue<Ts>(v)});
-        }(), ...);
+        }(),
+         ...);
         return result.take();
     }
 };

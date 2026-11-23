@@ -17,7 +17,7 @@ namespace Vaev::Layout {
 // https://www.w3.org/TR/css-break-3/#fragmentation-context
 export struct Fragmentainer {
     Vec2Au _size;
-    Au _blockStart = 0_au; //< Block position of the fragmentainer's start, in the same space as the layout positions
+    Au _blockStart = 0_au;         //< Block position of the fragmentainer's start, in the same space as the layout positions
     bool _isDiscoveryMode = false; //< Are we looking for suitable breakpoints?
     usize _monolithicCount = 0;    //< How deep we are in a monolithic box
 

@@ -36,7 +36,6 @@ export struct MatrixTransform {
     }
 };
 
-
 export template <>
 struct ValueParser<MatrixTransform> {
     static Res<MatrixTransform> parse(Cursor<Sst>& c) {
@@ -80,7 +79,6 @@ export struct TranslateTransform {
         e("translate({}, {})", x, y);
     }
 };
-
 
 export template <>
 struct ValueParser<TranslateTransform> {
@@ -146,7 +144,6 @@ export struct ScaleTransform {
     }
 };
 
-
 export template <>
 struct ValueParser<ScaleTransform> {
     static Res<ScaleTransform> parse(Cursor<Sst>& c) {
@@ -211,7 +208,6 @@ export struct RotateTransform {
     }
 };
 
-
 export template <>
 struct ValueParser<RotateTransform> {
     static Res<RotateTransform> parse(Cursor<Sst>& c) {
@@ -244,7 +240,6 @@ export struct SkewTransform {
         e("skew({}, {})", x, y);
     }
 };
-
 
 export template <>
 struct ValueParser<SkewTransform> {
@@ -287,7 +282,6 @@ export struct SkewXTransform {
     }
 };
 
-
 export template <>
 struct ValueParser<SkewXTransform> {
     static Res<SkewXTransform> parse(Cursor<Sst>& c) {
@@ -319,7 +313,6 @@ export struct SkewYTransform {
         e("skewY({})", value);
     }
 };
-
 
 export template <>
 struct ValueParser<SkewYTransform> {

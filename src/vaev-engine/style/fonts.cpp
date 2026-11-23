@@ -103,7 +103,6 @@ export struct FontSource {
     }
 };
 
-
 // MARK: FontFace --------------------------------------------------------------
 
 export struct FontFace {
@@ -529,8 +528,12 @@ export struct AscentOverrideFontDescriptor {
     void apply(FontFace& f) const {
         // NOTE: normal is NONE
         f.ascentOverride = value.visit(
-            [](Keywords::Normal) -> Opt<Percent> { return NONE; },
-            [](Css::Percentage const& p) -> Opt<Percent> { return Some(computeValue(p)); }
+            [](Keywords::Normal) -> Opt<Percent> {
+                return NONE;
+            },
+            [](Css::Percentage const& p) -> Opt<Percent> {
+                return Some(computeValue(p));
+            }
         );
     }
 
@@ -553,8 +556,12 @@ export struct DescentOverrideStyleProp {
     void apply(FontFace& f) const {
         // NOTE: normal is NONE
         f.descentOverride = value.visit(
-            [](Keywords::Normal) -> Opt<Percent> { return NONE; },
-            [](Css::Percentage const& p) -> Opt<Percent> { return Some(computeValue(p)); }
+            [](Keywords::Normal) -> Opt<Percent> {
+                return NONE;
+            },
+            [](Css::Percentage const& p) -> Opt<Percent> {
+                return Some(computeValue(p));
+            }
         );
     }
 
@@ -577,8 +584,12 @@ export struct LineGapOverrideFontDescriptor {
     void apply(FontFace& f) const {
         // NOTE: normal is NONE
         f.lineGapOverride = value.visit(
-            [](Keywords::Normal) -> Opt<Percent> { return NONE; },
-            [](Css::Percentage const& p) -> Opt<Percent> { return Some(computeValue(p)); }
+            [](Keywords::Normal) -> Opt<Percent> {
+                return NONE;
+            },
+            [](Css::Percentage const& p) -> Opt<Percent> {
+                return Some(computeValue(p));
+            }
         );
     }
 

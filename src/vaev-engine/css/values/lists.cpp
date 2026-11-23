@@ -57,7 +57,6 @@ export struct CountersFunc {
     }
 };
 
-
 export template <>
 struct ValueParser<CountersFunc> {
     static Res<CountersFunc> parse(Cursor<Sst>& c) {

@@ -57,20 +57,20 @@ export template <>
 struct ValueComputer<Css::FontStyle> {
     static FontStyle compute(Css::FontStyle const& value) {
         return value.visit(
-                [](Opt<Css::Angle> const& oblique) {
-                    auto style = FontStyle{.val = Gfx::FontStyle::OBLIQUE};
-                    if (auto const& [angle] = oblique)
-                        style.obliqueAngle = computeValue(angle);
-                    return style;
-                },
-                [](Keywords::Italic) {
-                    return FontStyle{.val = Gfx::FontStyle::ITALIC};
-                },
-                // TODO: left and right
-                [](auto) {
-                    return FontStyle{.val = Gfx::FontStyle::NORMAL};
-                }
-            );
+            [](Opt<Css::Angle> const& oblique) {
+                auto style = FontStyle{.val = Gfx::FontStyle::OBLIQUE};
+                if (auto const& [angle] = oblique)
+                    style.obliqueAngle = computeValue(angle);
+                return style;
+            },
+            [](Keywords::Italic) {
+                return FontStyle{.val = Gfx::FontStyle::ITALIC};
+            },
+            // TODO: left and right
+            [](auto) {
+                return FontStyle{.val = Gfx::FontStyle::NORMAL};
+            }
+        );
     }
 
     static Css::FontStyle specify(FontStyle const& value) {

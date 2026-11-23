@@ -75,7 +75,6 @@ concept LengthContext = requires(T t) {
     { t.horizontalWritingMode } -> Meta::Convertible<bool>;
 };
 
-
 // https://drafts.csswg.org/css-values/#relative-lengths
 UnitValue _resolveRelative(UnitValue const& value, LengthContext auto const& ctx) {
     using Unit = UnitValue::Unit;

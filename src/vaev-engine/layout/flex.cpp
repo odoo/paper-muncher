@@ -752,10 +752,7 @@ struct FlexFormatingContext : FormatingContext {
     void _determineFlexBaseSizeAndHypotheticalMainSize(Box& box, Input input) {
         Opt<Au> containerDefiniteMainSize = fa.mainAxis(input.knownSize);
         if (fa.mainAxis(*box.style).is<Style::PxPercent>()) {
-            containerDefiniteMainSize = Some(Layout::resolve(
-                fa.mainAxis(*box.style).expect<Style::PxPercent>(),
-                fa.mainAxis(input.containingBlock
-            )));
+            containerDefiniteMainSize = Some(Layout::resolve(fa.mainAxis(*box.style).expect<Style::PxPercent>(), fa.mainAxis(input.containingBlock)));
         }
 
         for (auto& i : _items) {
