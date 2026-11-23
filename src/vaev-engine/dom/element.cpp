@@ -167,13 +167,12 @@ export struct Element : Node {
         return NONE;
     }
 
-    bool containsStylingAttribute() {
+    bool containsStylingAttribute() const {
         return style() or
                hasAttribute(Html::FGCOLOR_ATTR) or
                hasAttribute(Html::BGCOLOR_ATTR) or
                hasAttribute(Html::WIDTH_ATTR) or
-               hasAttribute(Html::HEIGHT_ATTR) or
-               hasAttribute(Html::SIZE_ATTR);
+               hasAttribute(Html::HEIGHT_ATTR);
     }
 
     Opt<Str> getAttributeUnqualified(Str name) const {
