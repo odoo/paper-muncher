@@ -663,7 +663,7 @@ struct BogusProperty : Property {
 // https://www.w3.org/TR/cssom-1/#css-declarations
 export struct Declaration {
     Rc<Property> property;
-    bool important;
+    bool important = false;
 
     void repr(Io::Emit& e) const {
         e("(decl prop={} important={})", property, important);

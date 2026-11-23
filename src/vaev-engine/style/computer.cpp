@@ -1,3 +1,7 @@
+module;
+
+#include <karm/macros>
+
 export module Vaev.Engine:style.computer;
 
 import Karm.Debug;
@@ -10,6 +14,7 @@ import Karm.Ref;
 
 import :dom.document;
 import :dom.element;
+import :html.microsyntax;
 import :style.ancestorFilter;
 import :style.cascaded;
 import :style.computed;
@@ -228,6 +233,37 @@ export struct Computer {
         }
     }
 
+    // https://html.spec.whatwg.org/rendering.html#maps-to-the-pixel-length-property
+    template <typename T>
+    Opt<Rc<Property>> _mapToPixelLengthProperty(Gc::Ref<Dom::Element> el, Symbol const& propertyName, Dom::QualifiedName const& attr) const {
+        if (auto const& [value] = el->getAttribute(attr)) {
+            auto val = try$(Html::parseNonNegativeInteger(value).ok());
+            auto reg = _registeredPropertySet.resolveRegistration(propertyName, {}).expect();
+            return Some(makeRc<T>(reg, Css::px(val)));
+        }
+        return NONE;
+    }
+
+    // https://html.spec.whatwg.org/multipage/rendering.html#maps-to-the-dimension-property
+    template <typename T>
+    Opt<Rc<Property>> _mapToDimensionProperty(Gc::Ref<Dom::Element> el, Symbol const& propertyName, Dom::QualifiedName const& attr) const {
+        if (auto const& [value] = el->getAttribute(attr)) {
+            auto val = try$(Html::parseDimension(value).ok());
+            auto calc = val.visit(
+                [](Html::Length const& length) -> Css::LengthPercentage {
+                    return Css::px(length.value());
+                },
+                [](Html::Percentage const& percentage) -> Css::LengthPercentage {
+                    return Css::percent(percentage.value());
+                }
+            );
+
+            auto reg = _registeredPropertySet.resolveRegistration(propertyName, {}).expect();
+            return Some(makeRc<T>(reg, calc));
+        }
+        return NONE;
+    }
+
     // https://www.w3.org/TR/css-cascade-4/#author-presentational-hint-origin
     void _considerHtmlPresentationalHint(Gc::Ref<Dom::Element> el, CascadedValues& cascadedValues) {
         if (el->namespaceUri() != Html::NAMESPACE)
@@ -235,42 +271,44 @@ export struct Computer {
 
         // https://html.spec.whatwg.org/multipage/obsolete.html#dom-document-fgcolor
         if (auto const& [fgcolor] = el->getAttribute(Html::FGCOLOR_ATTR)) {
-            if (auto property = _registeredPropertySet.parseValue(
-                    Properties::COLOR, fgcolor, {}
-                ))
-                cascadedValues.putStyleAttribute(Declaration{property.take(), false}, Origin::AUTHOR_PRESENTATIONAL_HINT, PRESENTATION_HINT_SPEC);
+            if (auto property = _registeredPropertySet.parseValue(Properties::COLOR, fgcolor, {}))
+                cascadedValues.putStyleAttribute(Declaration{property.take()}, Origin::AUTHOR_PRESENTATIONAL_HINT, PRESENTATION_HINT_SPEC);
         }
 
         // https://html.spec.whatwg.org/multipage/obsolete.html#dom-document-bgcolor
         if (auto const& [bgcolor] = el->getAttribute(Html::BGCOLOR_ATTR)) {
-            if (auto property = _registeredPropertySet.parseValue(
-                    Properties::BACKGROUND_COLOR, bgcolor, {}
-                ))
-                cascadedValues.putStyleAttribute(Declaration{property.take(), false}, Origin::AUTHOR_PRESENTATIONAL_HINT, PRESENTATION_HINT_SPEC);
+            if (auto property = _registeredPropertySet.parseValue(Properties::BACKGROUND_COLOR, bgcolor, {}))
+                cascadedValues.putStyleAttribute(Declaration{property.take()}, Origin::AUTHOR_PRESENTATIONAL_HINT, PRESENTATION_HINT_SPEC);
         }
 
-        // https://html.spec.whatwg.org/multipage/images.html#sizes-attributes
-        if (auto const& [width] = el->getAttribute(Html::WIDTH_ATTR)) {
-            if (auto property = _registeredPropertySet.parseValue(
-                    Properties::WIDTH, width, {}
-                ))
-                cascadedValues.putStyleAttribute(Declaration{property.take(), false}, Origin::AUTHOR_PRESENTATIONAL_HINT, PRESENTATION_HINT_SPEC);
+        // https://html.spec.whatwg.org/multipage/rendering.html#images-3
+        // The width and height attributes on an img element's dimension attribute source map to the dimension properties 'width' and 'height'
+        // on the img element respectively. They similarly map to the aspect-ratio property (using dimension rules) of the img element.
+        if (el->qualifiedName == Html::IMAGE_TAG) {
+            if (auto const& [prop] = _mapToDimensionProperty<WidthProperty>(el, Properties::WIDTH, Html::WIDTH_ATTR)) {
+                cascadedValues.putStyleAttribute(Declaration{prop}, Origin::AUTHOR_PRESENTATIONAL_HINT, PRESENTATION_HINT_SPEC);
+            }
+            if (auto const& [prop] = _mapToDimensionProperty<HeightProperty>(el, Properties::HEIGHT, Html::HEIGHT_ATTR)) {
+                cascadedValues.putStyleAttribute(Declaration{prop}, Origin::AUTHOR_PRESENTATIONAL_HINT, PRESENTATION_HINT_SPEC);
+            }
+            // TODO: Aspect ratio
         }
 
-        // https://html.spec.whatwg.org/multipage/images.html#sizes-attributes
-        if (auto const& [height] = el->getAttribute(Html::HEIGHT_ATTR)) {
-            if (auto property = _registeredPropertySet.parseValue(
-                    Properties::HEIGHT, height, {}
-                ))
-                cascadedValues.putStyleAttribute(Declaration{property.take(), false}, Origin::AUTHOR_PRESENTATIONAL_HINT, PRESENTATION_HINT_SPEC);
-        }
-
-        // https://html.spec.whatwg.org/multipage/input.html#the-size-attribute
-        if (auto const& [size] = el->getAttribute(Html::SIZE_ATTR)) {
-            if (auto property = _registeredPropertySet.parseValue(
-                    Properties::WIDTH, Io::format("{}ch", size), {}
-                ))
-                cascadedValues.putStyleAttribute(Declaration{property.take(), false}, Origin::AUTHOR_PRESENTATIONAL_HINT, PRESENTATION_HINT_SPEC);
+        // https://html.spec.whatwg.org/multipage/rendering.html#images-3
+        // The width and height attributes on embed, iframe, object, and video elements, and input elements with a type attribute
+        // in the Image Button state and that either represents an image or that the user expects will eventually represent an image,
+        // map to the dimension properties 'width' and 'height' on the element respectively.
+        if (
+            oneOf(el->qualifiedName, Html::EMBED_TAG, Html::IFRAME_TAG, Html::VIDEO_TAG) or
+            // NOSPEC: Doesn't check if the image won't materialize due to it being invalid.
+            (el->qualifiedName == Html::INPUT_TAG and el->getAttribute(Html::TYPE_ATTR) == Opt{Some("image"s)})
+        ) {
+            if (auto const& [prop] = _mapToDimensionProperty<WidthProperty>(el, Properties::WIDTH, Html::WIDTH_ATTR)) {
+                cascadedValues.putStyleAttribute(Declaration{prop}, Origin::AUTHOR_PRESENTATIONAL_HINT, PRESENTATION_HINT_SPEC);
+            }
+            if (auto const& [prop] = _mapToDimensionProperty<HeightProperty>(el, Properties::HEIGHT, Html::HEIGHT_ATTR)) {
+                cascadedValues.putStyleAttribute(Declaration{prop}, Origin::AUTHOR_PRESENTATIONAL_HINT, PRESENTATION_HINT_SPEC);
+            }
         }
     }
 
@@ -316,19 +354,13 @@ export struct Computer {
 
             if (not svgEl->hasAttribute(Svg::WIDTH_ATTR))
                 cascadedValues.putStyleAttribute(
-                    Declaration{
-                        .property = _registeredPropertySet.parseValue(Properties::WIDTH, "300px", {}).expect(),
-                        .important = false,
-                    },
+                    Declaration{_registeredPropertySet.parseValue(Properties::WIDTH, "300px", {}).expect()},
                     Origin::AUTHOR_PRESENTATIONAL_HINT, PRESENTATION_HINT_SPEC
                 );
 
             if (not svgEl->hasAttribute(Svg::HEIGHT_ATTR))
                 cascadedValues.putStyleAttribute(
-                    Declaration{
-                        .property = _registeredPropertySet.parseValue(Properties::HEIGHT, "150px", {}).expect(),
-                        .important = false,
-                    },
+                    Declaration{_registeredPropertySet.parseValue(Properties::HEIGHT, "150px", {}).expect()},
                     Origin::AUTHOR_PRESENTATIONAL_HINT, PRESENTATION_HINT_SPEC
                 );
         }
@@ -344,7 +376,7 @@ export struct Computer {
 
         for (auto const& attr : el->attributes)
             if (auto const& [prop] = _registeredPropertySet.parsePresentationAttribute(attr.qualifiedName.name, attr.value))
-                cascadedValues.putStyleAttribute(Declaration{prop, false}, Origin::AUTHOR_PRESENTATIONAL_HINT, PRESENTATION_HINT_SPEC);
+                cascadedValues.putStyleAttribute(Declaration{prop}, Origin::AUTHOR_PRESENTATIONAL_HINT, PRESENTATION_HINT_SPEC);
 
         if (el->qualifiedName == Svg::SVG_TAG)
             _applySvgElementSizingRules(el, cascadedValues);
@@ -515,7 +547,9 @@ export struct Computer {
 
         // If the computed value of background-image on the
         // root element is none and its background-color is transparent
-        bool imageIsNone = iter(rootBackground->layers) | All([](auto const& l) { return l.image == NONE; });
+        bool imageIsNone = iter(rootBackground->layers) | All([](auto const& l) {
+                               return l.image == NONE;
+                           });
         if (rootBackground->color == Gfx::ALPHA and imageIsNone) {
             // User agents must instead propagate the computed values of the
             // background properties from that element’s first HTML BODY
