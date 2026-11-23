@@ -29,7 +29,6 @@ export using FontWidth = Union<
     Keywords::ExtraExpanded,
     Keywords::UltraExpanded>;
 
-
 // https://drafts.csswg.org/css-fonts-4/#font-style-prop
 export using FontStyle = Union<
     Keywords::Normal,

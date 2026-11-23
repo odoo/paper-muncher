@@ -12,7 +12,6 @@ namespace Vaev::Layout {
 static RectAu _computeInsetModifiedContainingBlock(Box& box, RectAu containingBlock, RectAu staticPositionRect) {
     auto const& style = *box.style;
 
-
     InsetsAu resolvedInsets = {};
 
     using InsetLength = Style::PxPercent;

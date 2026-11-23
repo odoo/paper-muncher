@@ -296,7 +296,8 @@ export struct FlexProperty : Property {
                     specifyValue<FlexBasisProperty::Value>(c.flex->basis),
                     specifyValue<Css::Number>(c.flex->grow),
                     specifyValue<Css::Number>(c.flex->shrink),
-            });
+                }
+            );
         }
 
         Res<Rc<Property>> parse(Cursor<Css::Sst>& c) const override {

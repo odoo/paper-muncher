@@ -120,7 +120,7 @@ struct NumericType {
 
         // 2. -> If both type1 and type2 have non-null percent hints with different values
         if (type1.percentHint and type2.percentHint and *type1.percentHint != *type2.percentHint) {
-            //The types can’t be added. Return failure.
+            // The types can’t be added. Return failure.
             return NONE;
         }
         //    -> If type1 has a non-null percent hint 'hint' and type2 doesn’t
@@ -696,7 +696,7 @@ Opt<NumericType> determineType(Calc const& calc, Opt<NumericBaseType> mainType) 
                 // which must resolve to either a <number> or an <angle>
                 auto childType = try$(determineType(f.children[0], mainType));
 
-                if (not (childType.isBaseType(NONE) or childType.isBaseType(Some(NumericBaseType::ANGLE))))
+                if (not(childType.isBaseType(NONE) or childType.isBaseType(Some(NumericBaseType::ANGLE))))
                     return NONE;
 
                 return Some(NumericType{});
@@ -804,8 +804,9 @@ struct ParamParser {
     template <typename T>
     Opt<T> maybe() {
         return _param([&] {
-            return parseValue<T>(_c);
-        }).ok();
+                   return parseValue<T>(_c);
+               })
+            .ok();
     }
 };
 

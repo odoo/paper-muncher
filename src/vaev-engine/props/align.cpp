@@ -357,10 +357,13 @@ export struct GapProperty : Property {
         }
 
         Rc<Property> load(ComputedValues const& c) const override {
-            return makeRc<GapProperty>(self(), Value{
-                specifyValue<RowGapProperty::Value>(c.gaps->row),
-                specifyValue<RowGapProperty::Value>(c.gaps->col),
-            });
+            return makeRc<GapProperty>(
+                self(),
+                Value{
+                    specifyValue<RowGapProperty::Value>(c.gaps->row),
+                    specifyValue<RowGapProperty::Value>(c.gaps->col),
+                }
+            );
         }
 
         Res<Rc<Property>> parse(Cursor<Css::Sst>& c) const override {

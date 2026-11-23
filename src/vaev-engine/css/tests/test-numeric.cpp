@@ -702,10 +702,34 @@ test$("calc-parse-optional-params") {
 test$("calc-parse-round-invalid") {
     // https://wpt.fyi/results/css/css-values/round-mod-rem-invalid.html
     for (auto args : Array{
-             ""s, " "s, ","s, "1, "s, ", 1"s, "1 + "s, "1 - "s, "1 * "s, "1 / "s, "1 2"s,
-             "nearest, 1 2"s, "1, nearest, 12"s, "1, nearest"s, "nearest, 1, nearest"s, "1, , 2"s,
-             "nearest"s, "nearest,"s, "sideways, 1, 2"s, "1, 2, 3"s, "0px"s, "1, 1%"s, "1, 0px"s,
-             "up 1, 2"s, "up up, 1, 2"s, "up + 1, 2"s, "1, up, 2"s, "up"s, "up, "s,
+             ""s,
+             " "s,
+             ","s,
+             "1, "s,
+             ", 1"s,
+             "1 + "s,
+             "1 - "s,
+             "1 * "s,
+             "1 / "s,
+             "1 2"s,
+             "nearest, 1 2"s,
+             "1, nearest, 12"s,
+             "1, nearest"s,
+             "nearest, 1, nearest"s,
+             "1, , 2"s,
+             "nearest"s,
+             "nearest,"s,
+             "sideways, 1, 2"s,
+             "1, 2, 3"s,
+             "0px"s,
+             "1, 1%"s,
+             "1, 0px"s,
+             "up 1, 2"s,
+             "up up, 1, 2"s,
+             "up + 1, 2"s,
+             "1, up, 2"s,
+             "up"s,
+             "up, "s,
          }) {
         auto input = Io::format("round({})", args);
         if (_valid<Number>(input.str()))
@@ -721,8 +745,23 @@ test$("calc-parse-mod-rem-invalid") {
     // https://wpt.fyi/results/css/css-values/round-mod-rem-invalid.html
     for (auto fn : Array{"mod"s, "rem"s}) {
         for (auto args : Array{
-                 ""s, " "s, ","s, "1, "s, ", 1"s, "1 + "s, "1 - "s, "1 * "s, "1 / "s,
-                 "1 2"s, "1, , 2"s, "1"s, "1, 2, 3"s, "0px"s, "1, 1%"s, "1, 0px"s, "1, 0deg"s,
+                 ""s,
+                 " "s,
+                 ","s,
+                 "1, "s,
+                 ", 1"s,
+                 "1 + "s,
+                 "1 - "s,
+                 "1 * "s,
+                 "1 / "s,
+                 "1 2"s,
+                 "1, , 2"s,
+                 "1"s,
+                 "1, 2, 3"s,
+                 "0px"s,
+                 "1, 1%"s,
+                 "1, 0px"s,
+                 "1, 0deg"s,
              }) {
             auto input = Io::format("{}({})", fn, args);
             if (_valid<Number>(input.str()))

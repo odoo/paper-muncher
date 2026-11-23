@@ -343,7 +343,6 @@ export struct Xywh {
     }
 };
 
-
 export template <>
 struct ValueParser<Xywh> {
     static Res<Xywh> parse(Cursor<Sst>& c) {

@@ -124,7 +124,9 @@ struct ValueComputer<Css::Color> {
     }
 
     static Css::Color specify(Color const& value) {
-        return value.visit([](auto const& v) -> Css::Color { return v; });
+        return value.visit([](auto const& v) -> Css::Color {
+            return v;
+        });
     }
 };
 

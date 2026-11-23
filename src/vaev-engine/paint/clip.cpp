@@ -106,9 +106,9 @@ Tuple<Math::Path, Gfx::FillRule> resolvedClipShape(Style::BasicShapeFunction con
                 auto hSquared = Math::pow2(referenceBox.height.cast<f64>());
                 auto wSquared = Math::pow2(referenceBox.width.cast<f64>());
                 radius = Layout::resolve(
-                                 circle.radius.expect<Style::PxPercent>(),
-                                 Layout::Au(Math::sqrt(hSquared + wSquared) / Math::sqrt(2.0))
-                             )
+                             circle.radius.expect<Style::PxPercent>(),
+                             Layout::Au(Math::sqrt(hSquared + wSquared) / Math::sqrt(2.0))
+                )
                              .cast<f64>();
             }
             path.ellipse(Math::Ellipsef(center + referenceBox.xy.cast<f64>(), radius));
@@ -165,8 +165,8 @@ Tuple<Math::Path, Gfx::FillRule> resolvedClipShape(Style::BasicShapeFunction con
                 rx = max(Math::abs(referenceBox.width.cast<f64>() - center.x), center.x);
             } else {
                 rx = Layout::resolve(
-                                 ellipse.rx.expect<Style::PxPercent>(),
-                                 referenceBox.width
+                         ellipse.rx.expect<Style::PxPercent>(),
+                         referenceBox.width
                 )
                          .cast<f64>();
             }
@@ -179,8 +179,8 @@ Tuple<Math::Path, Gfx::FillRule> resolvedClipShape(Style::BasicShapeFunction con
             } else {
                 ry =
                     Layout::resolve(
-                                ellipse.ry.expect<Style::PxPercent>(),
-                                referenceBox.height
+                        ellipse.ry.expect<Style::PxPercent>(),
+                        referenceBox.height
                     )
                         .cast<f64>();
             }
