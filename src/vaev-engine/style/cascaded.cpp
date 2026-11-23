@@ -41,7 +41,6 @@ export struct CascadedValues {
     };
 
     Map<Symbol, Entry> _entries;
-    usize _nextAttributeOrder = 0;
 
     void _putLonghand(Rc<Property> property, Origin origin, usize layerOrder, Specificity specificity, bool important, usize ruleOrder, usize declarationOrder) {
         auto name = property->registration->name;
@@ -61,17 +60,7 @@ export struct CascadedValues {
         }
     }
 
-    void putStyleAttribute(Declaration const& declaration, Origin origin, Specificity specificity) {
-        auto const& [prop, important] = declaration;
-
-        if (prop->isBogusProperty())
-            return;
-
-        _putLonghand(prop, origin, 0, specificity, important, 0, _nextAttributeOrder++);
-    }
-
     void clear() {
-        _nextAttributeOrder = 0;
         _entries.clear();
     }
 

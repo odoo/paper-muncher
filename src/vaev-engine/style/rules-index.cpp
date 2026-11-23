@@ -185,9 +185,7 @@ struct RuleIndex {
         );
     }
 
-    Vec<MatchingRule> match(Gc::Ref<Dom::Element> el, Opt<Symbol> pseudoElement, AncestorFilter const& ancestorFilter) {
-        Vec<MatchingRule> matching;
-
+    void match(Gc::Ref<Dom::Element> el, Opt<Symbol> pseudoElement, AncestorFilter const& ancestorFilter, Vec<MatchingRule>& out) {
         auto _insertIfBucketHit = [&](auto const& bucket, auto const& key) {
             if (auto [entries] = bucket.lookup(key)) {
                 for (auto const& entry : entries) {
@@ -198,7 +196,7 @@ struct RuleIndex {
                         continue;
 
                     if (auto const& [specificity] = matchPreprocessedSelector(entry.selector, el, pseudoElement)) {
-                        matching.pushBack({entry.originatingRule, specificity, entry.order, entry.layer});
+                        out.pushBack({entry.originatingRule, specificity, entry.order, entry.layer});
                     }
                 }
             }
@@ -226,11 +224,9 @@ struct RuleIndex {
                 continue;
 
             if (auto const& [specificity] = matchPreprocessedSelector(entry.selector, el, pseudoElement)) {
-                matching.pushBack({entry.originatingRule, specificity, entry.order, entry.layer});
+                out.pushBack({entry.originatingRule, specificity, entry.order, entry.layer});
             }
         }
-
-        return matching;
     }
 };
 

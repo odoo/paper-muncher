@@ -167,14 +167,6 @@ export struct Element : Node {
         return NONE;
     }
 
-    bool containsStylingAttribute() const {
-        return style() or
-               hasAttribute(Html::FGCOLOR_ATTR) or
-               hasAttribute(Html::BGCOLOR_ATTR) or
-               hasAttribute(Html::WIDTH_ATTR) or
-               hasAttribute(Html::HEIGHT_ATTR);
-    }
-
     Opt<Str> getAttributeUnqualified(Str name) const {
         for (auto const& attr : this->attributes)
             if (attr.qualifiedName.name == name)

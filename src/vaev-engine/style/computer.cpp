@@ -52,6 +52,8 @@ export struct Computer {
     AncestorFilter _ancestorFilter = {};
     Viewport _viewport{.small = _area.viewport};
     Opt<Rc<ComputedValues>> _rootComputedValues = NONE;
+    Vec<StyleRule> _attributeRuleStash = {};
+    Vec<MatchingRule> _matchingRules = {};
 
     MatchedPropertyCache _mpc = {};
 
@@ -265,20 +267,22 @@ export struct Computer {
     }
 
     // https://www.w3.org/TR/css-cascade-4/#author-presentational-hint-origin
-    void _considerHtmlPresentationalHint(Gc::Ref<Dom::Element> el, CascadedValues& cascadedValues) {
+    Opt<StyleRule> _collectHtmlPresentationalHint(Gc::Ref<Dom::Element> el) const {
         if (el->namespaceUri() != Html::NAMESPACE)
-            return;
+            return NONE;
+
+        auto rule = StyleRule{.declarations = {}, .origin = Origin::AUTHOR_PRESENTATIONAL_HINT};
 
         // https://html.spec.whatwg.org/multipage/obsolete.html#dom-document-fgcolor
         if (auto const& [fgcolor] = el->getAttribute(Html::FGCOLOR_ATTR)) {
             if (auto property = _registeredPropertySet.parseValue(Properties::COLOR, fgcolor, {}))
-                cascadedValues.putStyleAttribute(Declaration{property.take()}, Origin::AUTHOR_PRESENTATIONAL_HINT, PRESENTATION_HINT_SPEC);
+                rule.declarations.pushBack(Declaration{property.take()});
         }
 
         // https://html.spec.whatwg.org/multipage/obsolete.html#dom-document-bgcolor
         if (auto const& [bgcolor] = el->getAttribute(Html::BGCOLOR_ATTR)) {
             if (auto property = _registeredPropertySet.parseValue(Properties::BACKGROUND_COLOR, bgcolor, {}))
-                cascadedValues.putStyleAttribute(Declaration{property.take()}, Origin::AUTHOR_PRESENTATIONAL_HINT, PRESENTATION_HINT_SPEC);
+                rule.declarations.pushBack(Declaration{property.take()});
         }
 
         // https://html.spec.whatwg.org/multipage/rendering.html#images-3
@@ -286,10 +290,10 @@ export struct Computer {
         // on the img element respectively. They similarly map to the aspect-ratio property (using dimension rules) of the img element.
         if (el->qualifiedName == Html::IMAGE_TAG) {
             if (auto const& [prop] = _mapToDimensionProperty<WidthProperty>(el, Properties::WIDTH, Html::WIDTH_ATTR)) {
-                cascadedValues.putStyleAttribute(Declaration{prop}, Origin::AUTHOR_PRESENTATIONAL_HINT, PRESENTATION_HINT_SPEC);
+                rule.declarations.pushBack(Declaration{prop});
             }
             if (auto const& [prop] = _mapToDimensionProperty<HeightProperty>(el, Properties::HEIGHT, Html::HEIGHT_ATTR)) {
-                cascadedValues.putStyleAttribute(Declaration{prop}, Origin::AUTHOR_PRESENTATIONAL_HINT, PRESENTATION_HINT_SPEC);
+                rule.declarations.pushBack(Declaration{prop});
             }
             // TODO: Aspect ratio
         }
@@ -304,23 +308,34 @@ export struct Computer {
             (el->qualifiedName == Html::INPUT_TAG and el->getAttribute(Html::TYPE_ATTR) == Opt{Some("image"s)})
         ) {
             if (auto const& [prop] = _mapToDimensionProperty<WidthProperty>(el, Properties::WIDTH, Html::WIDTH_ATTR)) {
-                cascadedValues.putStyleAttribute(Declaration{prop}, Origin::AUTHOR_PRESENTATIONAL_HINT, PRESENTATION_HINT_SPEC);
+                rule.declarations.pushBack(Declaration{prop});
             }
             if (auto const& [prop] = _mapToDimensionProperty<HeightProperty>(el, Properties::HEIGHT, Html::HEIGHT_ATTR)) {
-                cascadedValues.putStyleAttribute(Declaration{prop}, Origin::AUTHOR_PRESENTATIONAL_HINT, PRESENTATION_HINT_SPEC);
+                rule.declarations.pushBack(Declaration{prop});
             }
         }
+
+        if (isEmpty(rule.declarations))
+            return NONE;
+
+        return Some(std::move(rule));
     }
 
-    void _considerInlineStyleAttribute(Gc::Ref<Dom::Element> el, CascadedValues& cascadedValues) {
-        auto styleAttr = el->style();
+    Opt<StyleRule> _collectInlineStyleAttribute(Gc::Ref<Dom::Element> el) const {
+        auto styleAttr = try$(el->style());
 
         auto declarations = _registeredPropertySet.parseDeclarations(
-            styleAttr ? *styleAttr : "",
+            styleAttr,
             RegisteredPropertySet::TOP_LEVEL
         );
-        for (auto& decl : declarations)
-            cascadedValues.putStyleAttribute(decl, Origin::INLINE, INLINE_SPEC);
+
+        if (isEmpty(declarations))
+            return NONE;
+
+        return Some(StyleRule{
+            .declarations = std::move(declarations),
+            .origin = Origin::INLINE,
+        });
     }
 
     static void _considerElementAttributes(Cow<ComputedValues>& values, Gc::Ref<Dom::Element> el) {
@@ -339,7 +354,7 @@ export struct Computer {
     }
 
     // https://svgwg.org/specs/integration/#svg-css-sizing
-    void _applySvgElementSizingRules(Gc::Ref<Dom::Element> svgEl, CascadedValues& cascadedValues) {
+    void _considerSvgElementSizing(Gc::Ref<Dom::Element> svgEl, StyleRule& rule) const {
         if (auto parentEl = svgEl->parentNode()->as<Dom::Element>()) {
             // **If we have an <svg> element inside a CSS context**
             if (parentEl->qualifiedName.ns == Svg::NAMESPACE)
@@ -353,64 +368,104 @@ export struct Computer {
                 return;
 
             if (not svgEl->hasAttribute(Svg::WIDTH_ATTR))
-                cascadedValues.putStyleAttribute(
-                    Declaration{_registeredPropertySet.parseValue(Properties::WIDTH, "300px", {}).expect()},
-                    Origin::AUTHOR_PRESENTATIONAL_HINT, PRESENTATION_HINT_SPEC
-                );
+                rule.declarations.pushBack(Declaration{_registeredPropertySet.parseValue(Properties::WIDTH, "300px", {}).expect()});
 
             if (not svgEl->hasAttribute(Svg::HEIGHT_ATTR))
-                cascadedValues.putStyleAttribute(
-                    Declaration{_registeredPropertySet.parseValue(Properties::HEIGHT, "150px", {}).expect()},
-                    Origin::AUTHOR_PRESENTATIONAL_HINT, PRESENTATION_HINT_SPEC
-                );
+                rule.declarations.pushBack(Declaration{_registeredPropertySet.parseValue(Properties::HEIGHT, "150px", {}).expect()});
         }
     }
 
     // https://svgwg.org/svg2-draft/styling.html#PresentationAttributes
-    void _considerSvgPresentationAttributes(Gc::Ref<Dom::Element> el, CascadedValues& cascadedValues) {
+    Opt<StyleRule> _collectSvgPresentationAttributes(Gc::Ref<Dom::Element> el) const {
         // Presentation attributes contribute to the author level of the cascade, followed by all other author-level
         // style sheets, and have specificity 0.
 
         if (el->qualifiedName.ns != Svg::NAMESPACE)
-            return;
+            return NONE;
+
+        auto rule = StyleRule{.declarations = {}, .origin = Origin::AUTHOR_PRESENTATIONAL_HINT};
 
         for (auto const& attr : el->attributes)
             if (auto const& [prop] = _registeredPropertySet.parsePresentationAttribute(attr.qualifiedName.name, attr.value))
-                cascadedValues.putStyleAttribute(Declaration{prop}, Origin::AUTHOR_PRESENTATIONAL_HINT, PRESENTATION_HINT_SPEC);
+                rule.declarations.pushBack(Declaration{prop});
 
         if (el->qualifiedName == Svg::SVG_TAG)
-            _applySvgElementSizingRules(el, cascadedValues);
+            _considerSvgElementSizing(el, rule);
+
+        if (isEmpty(rule.declarations))
+            return NONE;
+
+        return Some(std::move(rule));
+    }
+
+    void _collectMatchingRules(Gc::Ref<Dom::Element> el, Opt<Symbol> pseudoElement = NONE) {
+        _attributeRuleStash.clear();
+        _matchingRules.clear();
+
+        _ruleIndex.match(el, pseudoElement, _ancestorFilter, _matchingRules);
+
+        if (not pseudoElement) {
+            _attributeRuleStash.ensure(3);
+
+            if (auto rule = _collectHtmlPresentationalHint(el)) {
+                _attributeRuleStash.pushBack(rule.take());
+                _matchingRules.pushBack(MatchingRule{
+                    .rule = last(_attributeRuleStash),
+                    .specificity = PRESENTATION_HINT_SPEC,
+                    .order = 0,
+                    .layer = Layer{0},
+                });
+            }
+
+            if (auto rule = _collectSvgPresentationAttributes(el)) {
+                _attributeRuleStash.pushBack(rule.take());
+                _matchingRules.pushBack(MatchingRule{
+                    .rule = last(_attributeRuleStash),
+                    .specificity = PRESENTATION_ATTR_SPEC,
+                    .order = 0,
+                    .layer = Layer{0},
+                });
+            }
+
+            if (auto rule = _collectInlineStyleAttribute(el)) {
+                _attributeRuleStash.pushBack(rule.take());
+                _matchingRules.pushBack(MatchingRule{
+                    .rule = last(_attributeRuleStash),
+                    .specificity = INLINE_SPEC,
+                    .order = 0,
+                    .layer = Layer{0},
+                });
+            }
+        }
     }
 
     // https://drafts.csswg.org/css-cascade/#cascade-origin
     Rc<ComputedValues const> computeValues(ComputedValues const& parent, Gc::Ref<Dom::Element> el, Opt<Symbol> pseudoElement = NONE) {
-        auto matchingRules = _ruleIndex.match(el, pseudoElement, _ancestorFilter);
+        _collectMatchingRules(el, pseudoElement);
 
         bool isRootElement = pseudoElement == NONE and el->parentNode()->is<Dom::Document>();
-        bool cacheEligible = _mpc.eligible(el, pseudoElement);
+
+        // FIXME: Right now, rules derived from attributes are stored in a stash and don't have a
+        //        stable address throughout the whole cascade, so they can't be cached.
+        //        However, it should be possible to fit them in the mpc if they live on the dom.
+        bool cacheEligible = _mpc.eligible(el, pseudoElement) and isEmpty(_attributeRuleStash);
 
         CascadedValues cascadedValues;
 
         Opt<Cow<ComputedValues>> cached = NONE;
         if (cacheEligible)
-            cached = _mpc.lookup(parent, matchingRules);
+            cached = _mpc.lookup(parent, _matchingRules);
 
         Cow<ComputedValues> values = cached.unwrapOrElse([&] {
             auto v = _registeredPropertySet.inheritsComputedValues(parent);
 
-            for (auto const& [styleRule, specificity, order, layer] : matchingRules)
+            for (auto const& [styleRule, specificity, order, layer] : _matchingRules)
                 cascadedValues.putStyleRule(styleRule, _layers.rank(layer), specificity, order);
 
             return Cow{v};
         });
 
         if (not cached) {
-            if (not pseudoElement) {
-                _considerHtmlPresentationalHint(el, cascadedValues);
-                _considerInlineStyleAttribute(el, cascadedValues);
-                _considerSvgPresentationAttributes(el, cascadedValues);
-            }
-
             ComputationContext cx;
             cx.populateUsingViewport(_viewport);
 
@@ -441,7 +496,7 @@ export struct Computer {
             cascadedValues.apply(Property::ComputationPhase::LATE, parent, values, cx);
 
             if (cacheEligible)
-                _mpc.put(parent, matchingRules, values);
+                _mpc.put(parent, _matchingRules, values);
         }
 
         if (not pseudoElement)
