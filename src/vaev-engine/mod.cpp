@@ -6,6 +6,7 @@ export import :dom;
 export import :driver;
 export import :html;
 export import :layout;
+export import :layout2;
 export import :loader;
 export import :props;
 export import :style;
