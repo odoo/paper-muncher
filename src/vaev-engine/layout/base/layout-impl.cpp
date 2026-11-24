@@ -88,7 +88,7 @@ Au _snapLengthAsBorderWidth(Au v) {
     return floor(v);
 }
 
-InsetsAu computeBorders(Box& box) {
+InsetsAu computeBorders(Box const& box) {
     // NOTE: In borders collapse mode, we assume that the table box borders are 'transfered' to the cells
     if (box.style->display == Style::Display::TABLE_BOX and box.style->table->collapse == Keywords::COLLAPSE) {
         return InsetsAu{};

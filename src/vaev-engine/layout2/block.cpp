@@ -14,8 +14,8 @@ import :layout.layout;
 namespace Vaev::Layout2 {
 
 export struct BlockFormattingContext {
-    static LogicalInsets<Au> _computeChildMargins(Layout::Tree& tree, Layout::Box& child, LogicalSize<Opt<Au>> const& containingBlock) {
-        auto maybeMargins = resolveMargins(tree, child, {Some(0_au), Some(0_au)});
+    static LogicalInsets<Au> _computeChildMargins(Layout::Box const& child, LogicalSize<Opt<Au>> const& containingBlock) {
+        auto maybeMargins = resolveMargins(*child.style, {Some(0_au), Some(0_au)});
 
         auto margins = LogicalInsets<Au>{};
 
@@ -32,7 +32,7 @@ export struct BlockFormattingContext {
         }
 
         // FIXME: Pass gud cb.
-        auto childMetrics = computeMetrics(tree, child, {Some(0_au), Some(0_au)});
+        auto childMetrics = computeMetrics(child, {Some(0_au), Some(0_au)});
         auto inlineSize = childMetrics.size.inline_.unwrapOr(0_au);
 
         // If both 'margin-left' and 'margin-right' are 'auto', their used values are equal.
@@ -57,16 +57,16 @@ export struct BlockFormattingContext {
         return margins;
     }
 
-    Output run(Layout::Tree& tree, Layout::Box& box, Input const& input) {
+    Output run(Layout::Box& box, Input const& input) {
         auto const& [constraints, metrics, opportunity, continuation] = input;
 
-        auto fragBuilder = FragBuilder{tree, box};
+        auto fragBuilder = FragBuilder{box};
 
         auto inlineSizeBehavior = input.constraints.inlineAutoSizeBehavior;
 
         Au autoInlineSize = 0_au;
         if (inlineSizeBehavior == AutoSizeBehavior::STRETCH_FIT and constraints.containingBlock.inline_) {
-            auto [inlineStartMargin, inlineEndMargin] = resolveInlineMargins(tree, box, constraints.containingBlock);
+            auto [inlineStartMargin, inlineEndMargin] = resolveInlineMargins(*box.style, constraints.containingBlock);
             auto inlineMargins = inlineStartMargin.unwrapOr(0_au) + inlineEndMargin.unwrapOr(0_au);
             autoInlineSize = max(metrics.borders.inlineSum() + metrics.paddings.inlineSum(), *constraints.containingBlock.inline_ - inlineMargins);
         } else {
@@ -110,7 +110,7 @@ export struct BlockFormattingContext {
             metrics.borders.blockStart + metrics.paddings.blockStart
         };
 
-        BreakBetween previousBreakAfter = BreakBetween::AUTO;
+        Style::BreakBetween previousBreakAfter = Keywords::AUTO;
 
         usize start = 0;
         if (continuation) {
@@ -127,7 +127,7 @@ export struct BlockFormattingContext {
             if (child.isRemovedFromFlow())
                 continue;
 
-            auto childMargins = _computeChildMargins(tree, child, constraints.containingBlock);
+            auto childMargins = _computeChildMargins(child, constraints.containingBlock);
 
             Opt<Fragmentainer> childFragmentainer = NONE;
 
@@ -157,7 +157,7 @@ export struct BlockFormattingContext {
                 childOpportunity = Some(**opportunity->inner);
 
             auto childOutput = layout(
-                tree, child,
+                child,
                 childConstraints,
                 childOpportunity,
                 childContinuation
@@ -173,7 +173,7 @@ export struct BlockFormattingContext {
                     logInfo("Relayout: {}", needsEarlierBreak.opportunity);
 
                     auto relayoutOutput = layout(
-                        tree, child,
+                        child,
                         childConstraints,
                         Some(needsEarlierBreak.opportunity)
                     );
@@ -186,19 +186,14 @@ export struct BlockFormattingContext {
                 initialBreakBefore = max(initialBreakBefore, placed.initialBreakBefore);
             }
 
-            auto forcedBreak = [](BreakBetween b, Fragmentainer const& f) {
-                switch (b) {
-                case BreakBetween::REGION:
+            auto forcedBreak = [](Style::BreakBetween b, Fragmentainer const& f) {
+                if (b == Keywords::REGION) {
                     return f.hasContext(Fragmentainer::Type::REGION);
-                case BreakBetween::COLUMN:
+                } else if (b == Keywords::COLUMN) {
                     return f.hasContext(Fragmentainer::Type::COLUMN);
-                case BreakBetween::PAGE:
-                case BreakBetween::LEFT:
-                case BreakBetween::RIGHT:
-                case BreakBetween::RECTO:
-                case BreakBetween::VERSO:
+                } else if (oneOf(b, Keywords::PAGE, Keywords::LEFT, Keywords::RIGHT, Keywords::VERSO)) {
                     return f.hasContext(Fragmentainer::Type::PAGE);
-                default:
+                } else {
                     return false;
                 }
             };
@@ -244,7 +239,7 @@ export struct BlockFormattingContext {
                 auto between = max(previousBreakAfter, placed.initialBreakBefore);
 
                 auto appeal = BreakAppeal::PERFECT;
-                if (oneOf(between, BreakBetween::AVOID, BreakBetween::AVOID_PAGE)) {
+                if (oneOf(between, Keywords::AVOID, Keywords::AVOID_PAGE)) {
                     appeal = BreakAppeal::DROPS_AVOID;
                 }
 

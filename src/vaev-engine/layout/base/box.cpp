@@ -49,11 +49,11 @@ export struct Box : Meta::NoCopy {
         return Box(inlineBox.style, prose, inlineBox.origin);
     }
 
-    Box(Rc<Style::ComputedValues const> style, Opt<Dom::OriginatingElement> og)
-        : style{std::move(style)}, origin{og} {}
+    Box(Rc<Style::ComputedValues const> style, Opt<Dom::OriginatingElement> og, bool establishesFc = false)
+        : style{std::move(style)}, origin{og}, establishesFc{establishesFc} {}
 
-    Box(Rc<Style::ComputedValues const> style, Content content, Opt<Dom::OriginatingElement> og)
-        : style{std::move(style)}, content{std::move(content)}, origin{og} {}
+    Box(Rc<Style::ComputedValues const> style, Content content, Opt<Dom::OriginatingElement> og, bool establishesFc = false)
+        : style{std::move(style)}, content{std::move(content)}, origin{og}, establishesFc{establishesFc} {}
 
     Slice<Box> children() const {
         return _children;

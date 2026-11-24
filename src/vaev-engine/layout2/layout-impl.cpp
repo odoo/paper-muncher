@@ -8,53 +8,49 @@ import :layout.values;
 namespace Vaev::Layout2 {
 
 // FIXME: This should be removed after the calc refactor because it'll be unnecessary.
-static bool _calcContainsPercents(Calc<PercentOr<Length>> const& calc) {
-    auto resolveUnion = Visitor{
-        [&](PercentOr<Length> const& v) -> bool {
-            return static_cast<bool>(v.is<Percent>());
-        },
-        [&](Calc<PercentOr<Length>>::Leaf const& v) -> bool {
-            return _calcContainsPercents(*v);
-        },
-        [](Number const&) -> bool {
-            return false;
-        }
-    };
+// static bool _calcContainsPercents(Calc<PercentOr<Length>> const& calc) {
+//     auto resolveUnion = Visitor{
+//         [&](PercentOr<Length> const& v) -> bool {
+//             return static_cast<bool>(v.is<Percent>());
+//         },
+//         [&](Calc<PercentOr<Length>>::Leaf const& v) -> bool {
+//             return _calcContainsPercents(*v);
+//         },
+//         [](Number const&) -> bool {
+//             return false;
+//         }
+//     };
+//
+//     return calc.visit(
+//         [&](Calc<PercentOr<Length>>::Value const& v) -> bool {
+//             return v.visit(resolveUnion);
+//         },
+//         [&](Calc<PercentOr<Length>>::Unary const& u) -> bool {
+//             return u.val.visit(resolveUnion);
+//         },
+//         [&](Calc<PercentOr<Length>>::Binary const& b) -> bool {
+//             return b.lhs.visit(resolveUnion) or b.rhs.visit(resolveUnion);
+//         }
+//     );
+// }
 
-    return calc.visit(
-        [&](Calc<PercentOr<Length>>::Value const& v) -> bool {
-            return v.visit(resolveUnion);
-        },
-        [&](Calc<PercentOr<Length>>::Unary const& u) -> bool {
-            return u.val.visit(resolveUnion);
-        },
-        [&](Calc<PercentOr<Length>>::Binary const& b) -> bool {
-            return b.lhs.visit(resolveUnion) or b.rhs.visit(resolveUnion);
-        }
-    );
-}
-
-Metrics computeMetrics(Layout::Tree& tree, Layout::Box& box, LogicalSize<Opt<Au>> const& containingBlock) {
+Metrics computeMetrics(Layout::Box const& box, LogicalSize<Opt<Au>> const& containingBlock) {
     auto paddingLeft = Layout::resolve(
-        tree, box,
         box.style->padding->start,
         containingBlock.inline_.unwrapOr(0_au)
     );
 
     auto paddingRight = Layout::resolve(
-        tree, box,
         box.style->padding->end,
         containingBlock.inline_.unwrapOr(0_au)
     );
 
     auto paddingTop = Layout::resolve(
-        tree, box,
         box.style->padding->top,
         containingBlock.inline_.unwrapOr(0_au)
     );
 
     auto paddingBottom = Layout::resolve(
-        tree, box,
         box.style->padding->bottom,
         containingBlock.inline_.unwrapOr(0_au)
     );
@@ -68,7 +64,7 @@ Metrics computeMetrics(Layout::Tree& tree, Layout::Box& box, LogicalSize<Opt<Au>
     };
 
     // FIXME: Move the resolution of borders for computed values, this should just be a cast to Au.
-    auto physicalBorders = Layout::computeBorders(tree, box);
+    auto physicalBorders = Layout::computeBorders(box);
 
     // FIXME: Implement writing-mode translation
     auto borders = LogicalInsets{
@@ -81,15 +77,14 @@ Metrics computeMetrics(Layout::Tree& tree, Layout::Box& box, LogicalSize<Opt<Au>
     LogicalSize<Opt<Au>> size = {NONE, NONE};
 
     // FIXME: Intrinsic sizing.
-    if (auto [calc] = box.style->sizing->width.is<Calc<PercentOr<Length>>>()) {
-        if (not _calcContainsPercents(calc)) {
-            auto width = resolve(tree, box, calc, containingBlock.inline_.unwrapOr(0_au));
-            if (box.style->writingMode == WritingMode::HORIZONTAL_TB) {
+    if (auto [calc] = box.style->sizing->width.is<Style::PxPercent>()) {
+        if (auto const [width] = Layout::resolve(calc, NONE)) {
+            if (box.style->writingMode == Keywords::HORIZONTAL_TB) {
                 size.inline_ = Some(width);
             } else {
                 size.block = Some(width);
             }
-            if (box.style->writingMode == WritingMode::HORIZONTAL_TB) {
+            if (box.style->writingMode == Keywords::HORIZONTAL_TB) {
                 if (box.style->boxSizing == Keywords::CONTENT_BOX) {
                     size.inline_ = Some(width + paddings.inlineSum() + borders.inlineSum());
                 } else {
@@ -106,11 +101,9 @@ Metrics computeMetrics(Layout::Tree& tree, Layout::Box& box, LogicalSize<Opt<Au>
     }
 
     // FIXME: Intrinsic sizing.
-    if (auto [calc] = box.style->sizing->height.is<Calc<PercentOr<Length>>>()) {
-        if (not _calcContainsPercents(calc)) {
-            auto height = resolve(tree, box, calc, containingBlock.inline_.unwrapOr(0_au));
-
-            if (box.style->writingMode == WritingMode::HORIZONTAL_TB) {
+    if (auto [calc] = box.style->sizing->height.is<Style::PxPercent>()) {
+        if (auto const [height] = Layout::resolve(calc, NONE)) {
+            if (box.style->writingMode == Keywords::HORIZONTAL_TB) {
                 if (box.style->boxSizing == Keywords::CONTENT_BOX) {
                     size.block = Some(height + paddings.blockSum() + borders.blockSum());
                 } else {
@@ -134,19 +127,19 @@ Metrics computeMetrics(Layout::Tree& tree, Layout::Box& box, LogicalSize<Opt<Au>
 }
 
 
-Output layout(Layout::Tree& tree, Layout::Box& box, Constraints const& constraints, Opt<BreakOpportunity const&> breakOpportunity, Opt<BreakNode const&> breakTree) {
+Output layout(Layout::Box& box, Constraints const& constraints, Opt<BreakOpportunity const&> breakOpportunity, Opt<BreakNode const&> breakTree) {
     auto input = Input{
         .constraints = constraints,
-        .metrics = computeMetrics(tree, box, constraints.containingBlock),
+        .metrics = computeMetrics(box, constraints.containingBlock),
         .breakOpportunity = breakOpportunity,
         .breakTree = breakTree,
     };
 
-    if (box.style->display == Display::BLOCK) {
-        return BlockFormattingContext{}.run(tree, box, input);
+    if (box.style->display == Style::Display::BLOCK) {
+        return BlockFormattingContext{}.run(box, input);
     } else {
         logWarn("falling back to bfc");
-        return BlockFormattingContext{}.run(tree, box, input);
+        return BlockFormattingContext{}.run(box, input);
     }
 }
 

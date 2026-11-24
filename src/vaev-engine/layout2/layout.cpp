@@ -7,10 +7,10 @@ import :layout2.output;
 
 namespace Vaev::Layout2 {
 
-export Metrics computeMetrics(Layout::Tree& tree, Layout::Box& box, LogicalSize<Opt<Au>> const& containingBlock);
+export Metrics computeMetrics(Layout::Box const& box, LogicalSize<Opt<Au>> const& containingBlock);
 
 export Output layout(
-    Layout::Tree& tree, Layout::Box& box,
+    Layout::Box& box,
     Constraints const& constraints,
     Opt<BreakOpportunity const&> breakOpportunity = NONE,
     Opt<BreakNode const&> breakTree = NONE

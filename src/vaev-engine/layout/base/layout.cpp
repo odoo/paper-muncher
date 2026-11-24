@@ -11,7 +11,7 @@ namespace Vaev::Layout {
 
 export InsetsAu computeMargins(Box& box, Vec2Au containingBlock);
 
-export InsetsAu computeBorders(Box& box);
+export InsetsAu computeBorders(Box const& box);
 
 export InsetsAu computePaddings(Box& box, Vec2Au containingBlock);
 

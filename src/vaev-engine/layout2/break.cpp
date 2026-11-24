@@ -65,7 +65,7 @@ export struct BreakOpportunity : Meta::NoCopy {
     Opt<Box<BreakOpportunity>> inner;
     usize index;
     Au consumedBlockSize;
-    BreakBetween originatingBreak;
+    Style::BreakBetween originatingBreak;
     BreakAppeal appeal;
 
     void repr(Io::Emit& e) const {
@@ -101,28 +101,20 @@ export struct BreakNode : Meta::NoCopy {
     }
 };
 
-export usize breakPrecedence(BreakBetween b) {
-    switch (b) {
-
-    case BreakBetween::AUTO:
+export usize breakPrecedence(Style::BreakBetween b) {
+    if (b == Keywords::AUTO) {
         return 0;
-    case BreakBetween::AVOID_REGION:
-    case BreakBetween::AVOID_COLUMN:
-    case BreakBetween::AVOID_PAGE:
+    } else if (oneOf(b, Keywords::AVOID_REGION, Keywords::AVOID_COLUMN, Keywords::AVOID_PAGE)) {
         return 1;
-    case BreakBetween::AVOID:
+    } else if (b == Keywords::AVOID) {
         return 2;
-    case BreakBetween::REGION:
-    case BreakBetween::COLUMN:
+    } else if (oneOf(b, Keywords::REGION, Keywords::COLUMN)) {
         return 3;
-    case BreakBetween::PAGE:
+    } else if (b == Keywords::PAGE) {
         return 4;
-    case BreakBetween::LEFT:
-    case BreakBetween::RIGHT:
-    case BreakBetween::RECTO:
-    case BreakBetween::VERSO:
+    } else if (oneOf(b, Keywords::LEFT, Keywords::RIGHT, Keywords::RECTO, Keywords::VERSO)) {
         return 5;
-    case BreakBetween::_LEN:
+    } else {
         unreachable();
     }
 }

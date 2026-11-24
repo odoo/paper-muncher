@@ -119,13 +119,13 @@ export struct WebView {
             rootFrag = Some(Layout2::layout(
                 *root,
                 Layout2::Constraints{
-                    .knownSize = {Some(viewport.small.width), NONE},
+                    .knownSize = {Some(viewport.width), NONE},
                     .containingBlock = {
-                        Some(viewport.small.width),
-                        Some(viewport.small.height),
+                        Some(viewport.width),
+                        Some(viewport.height),
                     },
                     .availableSpace = {
-                        viewport.small.width,
+                        viewport.width,
                         Layout2::MAX_CONTENT,
                     },
 

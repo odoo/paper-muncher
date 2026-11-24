@@ -247,7 +247,7 @@ export Yield<Gfx::Snapshot> print(Gc::Heap& heap, Gc::Ref<Dom::Document> dom, Pr
             };
 
             auto pageStyle = computer.computeValues(*initialStyle, page);
-            auto pageRect = Layout::RectAu{area.scaledViewport()};
+            auto pageRect = Layout::RectAu{Layout::resolve(area.viewport)};
             auto pageDecoration = pageRect.shrink(
                 _resolvePageMargin(settings.margins, *pageStyle->style->margin, pageRect)
             );
@@ -284,7 +284,7 @@ export Yield<Gfx::Snapshot> print(Gc::Heap& heap, Gc::Ref<Dom::Document> dom, Pr
             };
 
             auto output = Layout2::layout(
-                contentTree, contentTree.root,
+                contentRoot,
                 constraints,
                 NONE,
                 continuation
@@ -298,7 +298,7 @@ export Yield<Gfx::Snapshot> print(Gc::Heap& heap, Gc::Ref<Dom::Document> dom, Pr
                     logInfo("Relayout: {}", needsEarlierBreak.opportunity);
 
                     auto relayoutOutput = layout(
-                        contentTree, contentTree.root,
+                        contentRoot,
                         constraints,
                         Some(needsEarlierBreak.opportunity),
                         continuation
@@ -324,7 +324,7 @@ export Yield<Gfx::Snapshot> print(Gc::Heap& heap, Gc::Ref<Dom::Document> dom, Pr
 
             Gfx::Snapshot::Recorder snapshot{settings.pageSize().cast<isize>()};
             snapshot.push();
-            snapshot.transform(Math::Trans2f::scale(media.scale()));
+            snapshot.transform(Math::Trans2f::scale(area.scale()));
 
             Paint::StackingContext::establishStackingContext(placed.fragment)->paintRoot(snapshot);
 

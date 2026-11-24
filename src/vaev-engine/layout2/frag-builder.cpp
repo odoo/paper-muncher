@@ -6,13 +6,11 @@ import :layout.layout;
 namespace Vaev::Layout2 {
 
 export struct FragBuilder {
-    Layout::Tree& _tree;
     Layout::Box& _box;
     Vec<Rc<Layout::Fragment>> _children;
 
-    FragBuilder(Layout::Tree& tree, Layout::Box& box)
-        : _tree(tree),
-          _box(box) {}
+    FragBuilder(Layout::Box& box)
+        : _box(box) {}
 
     void addChild(Rc<Layout::Fragment>& child, Vec2Au offset) {
         if (auto [boxFrag] = child.is<Layout::BoxFragment>()) {

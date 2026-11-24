@@ -16,16 +16,16 @@ struct LogicalSize {
         return {block, inline_};
     }
 
-    static LogicalSize fromPhysical(Math::Vec2<T> physical, WritingMode writingMode) {
-        if (writingMode == WritingMode::HORIZONTAL_TB) {
+    static LogicalSize fromPhysical(Math::Vec2<T> physical, Style::WritingMode writingMode) {
+        if (writingMode == Keywords::HORIZONTAL_TB) {
             return {physical.width, physical.height};
         } else {
             return {physical.height, physical.width};
         }
     }
 
-    Math::Vec2<T> toPhysical(WritingMode writingMode) const {
-        if (writingMode == WritingMode::HORIZONTAL_TB) {
+    Math::Vec2<T> toPhysical(Style::WritingMode writingMode) const {
+        if (writingMode == Keywords::HORIZONTAL_TB) {
             return Math::Vec2<T>{inline_, block};
         } else {
             return Math::Vec2<T>{block, inline_};
@@ -68,30 +68,30 @@ struct LogicalInsets {
         };
     }
 
-    Math::Insets<T> toPhysical(WritingMode writingMode, Direction direction) const {
-        if (writingMode == WritingMode::HORIZONTAL_TB and direction == Direction::LTR) {
-            return InsetsAu{
+    Math::Insets<T> toPhysical(Style::WritingMode writingMode, Style::Direction direction) const {
+        if (writingMode == Keywords::HORIZONTAL_TB and direction == Keywords::LTR) {
+            return Math::Insets{
                 blockStart,
                 inlineEnd,
                 blockEnd,
                 inlineStart,
             };
-        } else if (writingMode == WritingMode::HORIZONTAL_TB and direction == Direction::RTL) {
-            return InsetsAu{
+        } else if (writingMode == Keywords::HORIZONTAL_TB and direction == Keywords::RTL) {
+            return Math::Insets{
                 blockStart,
                 inlineStart,
                 blockEnd,
                 inlineEnd,
             };
-        } else if (writingMode == WritingMode::VERTICAL_RL and direction == Direction::LTR) {
-            return InsetsAu{
+        } else if (writingMode == Keywords::VERTICAL_RL and direction == Keywords::LTR) {
+            return Math::Insets{
                 inlineStart,
                 blockStart,
                 inlineEnd,
                 blockEnd,
             };
-        } else if (writingMode == WritingMode::VERTICAL_LR and direction == Direction::LTR) {
-            return InsetsAu{
+        } else if (writingMode == Keywords::VERTICAL_LR and direction == Keywords::LTR) {
+            return Math::Insets{
                 inlineStart,
                 blockEnd,
                 inlineEnd,
@@ -99,7 +99,7 @@ struct LogicalInsets {
             };
         } else {
             logWarn("unsupported (writing-mode,direction): ({},{})", writingMode, direction);
-            return InsetsAu{
+            return Math::Insets{
                 blockStart,
                 inlineEnd,
                 blockEnd,
@@ -113,16 +113,16 @@ struct LogicalInsets {
     }
 };
 
-export Size const& logicalWidth(Style::ComputedValues const& style) {
-    if (style.writingMode == WritingMode::HORIZONTAL_TB) {
+export Style::Size const& logicalWidth(Style::ComputedValues const& style) {
+    if (style.writingMode == Keywords::HORIZONTAL_TB) {
         return style.sizing->width;
     } else {
         return style.sizing->height;
     }
 }
 
-export Size const& logicalHeight(Style::ComputedValues const& style) {
-    if (style.writingMode == WritingMode::HORIZONTAL_TB) {
+export Style::Size const& logicalHeight(Style::ComputedValues const& style) {
+    if (style.writingMode == Keywords::HORIZONTAL_TB) {
         return style.sizing->height;
     } else {
         return style.sizing->width;
