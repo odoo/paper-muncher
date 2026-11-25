@@ -61,6 +61,8 @@ export struct Metrics {
     LogicalInsets<Au> borders;
     LogicalInsets<Au> paddings;
     LogicalSize<Opt<Au>> size;
+    LogicalSize<Opt<Au>> minSize;
+    LogicalSize<Opt<Au>> maxSize;
 
     void repr(Io::Emit& e) const {
         e.ln("(metrics");
@@ -68,6 +70,8 @@ export struct Metrics {
         e.ln("borders={}", borders);
         e.ln("paddings={}", paddings);
         e.ln("size={}", size);
+        e.ln("minSize={}", minSize);
+        e.ln("maxSize={}", maxSize);
         e.deindent();
         e(")");
     }

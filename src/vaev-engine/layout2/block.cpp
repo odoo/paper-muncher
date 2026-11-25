@@ -14,7 +14,8 @@ import :layout.layout;
 namespace Vaev::Layout2 {
 
 export struct BlockFormattingContext {
-    static LogicalInsets<Au> _computeChildMargins(Layout::Box const& child, LogicalSize<Opt<Au>> const& containingBlock) {
+    // https://www.w3.org/TR/CSS22/visudet.html#blockwidth
+    static LogicalInsets<Au> _computSizingMargins(Layout::Box const& child, LogicalSize<Opt<Au>> const& containingBlock) {
         auto maybeMargins = resolveMargins(*child.style, {Some(0_au), Some(0_au)});
 
         auto margins = LogicalInsets<Au>{};
@@ -57,6 +58,70 @@ export struct BlockFormattingContext {
         return margins;
     }
 
+    // https://www.w3.org/TR/CSS22/visudet.html#Computing_widths_and_margins
+    static Vec2Au solveInlineMargins(Opt<Au> inlineSize, Au inlineCb, Opt<Au> inlineStartMargin, Opt<Au> inlineEndMargin) {
+        // NOTE: inlineSize := 'border-left-width' + 'padding-left' + 'width' + 'padding-right' + 'border-right-width'
+
+        // The following constraints must hold among the used values of the other properties:
+        // 'margin-left' + 'border-left-width' + 'padding-left' + 'width' + 'padding-right' + 'border-right-width' + 'margin-right'
+        // = width of containing block
+
+        // If all of the above have a computed value other than 'auto', the values are said to be "over-constrained" and one
+        // of the used values will have to be different from its computed value.
+        if (inlineSize and inlineStartMargin and inlineEndMargin) {
+            // TODO: Only ltr is implemented for now.
+            // If the 'direction' property of the containing block has the value 'ltr', the specified value of 'margin-right' is
+            // ignored and the value is calculated so as to make the equality true.
+            // If the value of 'direction' is 'rtl', this happens to 'margin-left' instead.
+            return {
+                inlineCb - *inlineSize - *inlineEndMargin,
+                *inlineEndMargin,
+            };
+        }
+
+        // If 'width' is not 'auto' and 'border-left-width' + 'padding-left' + 'width' + 'padding-right' + 'border-right-width' (plus
+        // any of 'margin-left' or 'margin-right' that are not 'auto') is larger than the width of the containing block,
+        if (inlineSize and *inlineSize + inlineStartMargin.unwrapOr(0_au) + inlineEndMargin.unwrapOr(0_au) > inlineCb) {
+            // then any 'auto' values for 'margin-left' or 'margin-right' are, for the following rules, treated as zero.
+            return {
+                inlineStartMargin.unwrapOr(0_au),
+                inlineEndMargin.unwrapOr(0_au),
+            };
+        }
+
+        // If 'width' is set to 'auto', any other 'auto' values become '0' and 'width' follows from the resulting equality.
+        if (not inlineSize) {
+            return {
+                inlineStartMargin.unwrapOr(0_au),
+                inlineEndMargin.unwrapOr(0_au),
+            };
+        }
+
+        // If both 'margin-left' and 'margin-right' are 'auto', their used values are equal. This horizontally centers the element
+        // with respect to the edges of the containing block.
+        if (not inlineStartMargin and not inlineEndMargin) {
+            return {(inlineCb - *inlineSize) / 2};
+        }
+
+        // If there is exactly one value specified as 'auto', its used value follows from the equality.
+        if (not inlineStartMargin) {
+            return {
+                inlineCb - *inlineSize - *inlineEndMargin,
+                *inlineEndMargin,
+            };
+        } else if (inlineEndMargin) {
+            return {
+                *inlineStartMargin,
+                inlineCb - *inlineSize - *inlineStartMargin,
+            };
+        }
+
+        return {
+            *inlineStartMargin,
+            *inlineEndMargin,
+        };
+    }
+
     Output run(Layout::Box& box, Input const& input) {
         auto const& [constraints, metrics, opportunity, continuation] = input;
 
@@ -66,9 +131,11 @@ export struct BlockFormattingContext {
 
         Au autoInlineSize = 0_au;
         if (inlineSizeBehavior == AutoSizeBehavior::STRETCH_FIT and constraints.containingBlock.inline_) {
+            // https://www.w3.org/TR/css-sizing-3/#stretch-fit-sizing
             auto [inlineStartMargin, inlineEndMargin] = resolveInlineMargins(*box.style, constraints.containingBlock);
             auto inlineMargins = inlineStartMargin.unwrapOr(0_au) + inlineEndMargin.unwrapOr(0_au);
             autoInlineSize = max(metrics.borders.inlineSum() + metrics.paddings.inlineSum(), *constraints.containingBlock.inline_ - inlineMargins);
+            autoInlineSize = clamp(autoInlineSize, metrics.minSize.inline_.unwrapOr(0_au), metrics.maxSize.inline_.unwrapOr(Limits<Au>::MAX));
         } else {
             autoInlineSize = metrics.borders.inlineSum() + metrics.paddings.inlineSum();
         }
@@ -121,13 +188,21 @@ export struct BlockFormattingContext {
         if (opportunity)
             end = opportunity->inner ? opportunity->index + 1 : opportunity->index;
 
+        auto childCbInline = input.metrics.size.inline_.unwrapOr(autoInlineSize) -
+                             metrics.borders.inlineSum() -
+                             metrics.paddings.inlineSum();
+
         for (usize i = start; i < end; i++) {
             auto& child = box.children()[i];
 
             if (child.isRemovedFromFlow())
                 continue;
 
-            auto childMargins = _computeChildMargins(child, constraints.containingBlock);
+            auto childSpecifiedMargins = resolveMargins(*child.style, {Some(childCbInline), NONE});
+            // FIXME: Should there be a first margin resolution pass here?
+            auto childMargins = childSpecifiedMargins.map([](Opt<Au> const& x) {
+                return x.unwrapOr(0_au);
+            });
 
             Opt<Fragmentainer> childFragmentainer = NONE;
 
@@ -137,7 +212,7 @@ export struct BlockFormattingContext {
 
             auto const childConstraints = Constraints{
                 .containingBlock = {
-                    Some(input.metrics.size.inline_.unwrapOr(autoInlineSize) - metrics.borders.inlineSum() - metrics.paddings.inlineSum()),
+                    Some(childCbInline),
                     NONE,
                 },
                 .pendingMargin = pendingMargin,
@@ -286,7 +361,26 @@ export struct BlockFormattingContext {
                 }
             }
 
-            fragBuilder.addChild(placed.fragment, cursor + Vec2Au{childMargins.inlineStart, 0_au});
+            auto childSize = LogicalSize<Au>::fromPhysical(placed.fragment->borderBox().size(), box.style->writingMode);
+
+            auto inlineMargins = solveInlineMargins(
+                Some(childSize.inline_),
+                // FIXME: This doesn't look correct.
+                constraints.containingBlock.inline_.unwrapOr(0_au),
+                childSpecifiedMargins.inlineStart,
+                childSpecifiedMargins.inlineEnd
+            );
+
+            logInfo("inlineMargins: {}", inlineMargins);
+
+            LogicalInsets usedMargins = {
+                .inlineStart = inlineMargins.x,
+                .inlineEnd = inlineMargins.y,
+                .blockStart = childMargins.blockStart,
+                .blockEnd = childMargins.blockEnd,
+            };
+
+            fragBuilder.addChild(placed.fragment, cursor + Vec2Au{usedMargins.inlineStart, 0_au}, usedMargins);
 
             if (auto [completed] = placed.breakState.is<Completed>()) {
                 previousBreakAfter = completed.finalBreakAfter;
@@ -341,7 +435,6 @@ export struct BlockFormattingContext {
                 };
             }
 
-            auto childSize = LogicalSize<Au>::fromPhysical(placed.fragment->borderBox().size(), box.style->writingMode);
             cursor.y += childSize.block;
 
             // FIXME: Rework and bring back in.

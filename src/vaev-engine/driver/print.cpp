@@ -308,7 +308,7 @@ export Yield<Gfx::Snapshot> print(Gc::Heap& heap, Gc::Ref<Dom::Document> dom, Pr
                 }
             );
 
-            if (auto [broke] = placed.breakState.is<Layout2::Broke>()) {
+            if (auto const& [broke] = placed.breakState.is<Layout2::Broke>()) {
                 if (broke.forced) {
                     logInfo("forced-break [{}]: {}", broke.appeal, broke.tree);
                 } else {

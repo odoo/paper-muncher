@@ -12,9 +12,13 @@ export struct FragBuilder {
     FragBuilder(Layout::Box& box)
         : _box(box) {}
 
-    void addChild(Rc<Layout::Fragment>& child, Vec2Au offset) {
+    void addChild(Rc<Layout::Fragment>& child, Vec2Au offset, LogicalInsets<Au> const& margins) {
+        auto writingMode = _box.style->writingMode;
+        auto direction = _box.style->direction;
+
         if (auto [boxFrag] = child.is<Layout::BoxFragment>()) {
             boxFrag.metrics.position = offset;
+            boxFrag.metrics.margin = margins.toPhysical(writingMode, direction);
         }
 
         _children.pushBack(child);

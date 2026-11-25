@@ -7,33 +7,6 @@ import :layout.values;
 
 namespace Vaev::Layout2 {
 
-// FIXME: This should be removed after the calc refactor because it'll be unnecessary.
-// static bool _calcContainsPercents(Calc<PercentOr<Length>> const& calc) {
-//     auto resolveUnion = Visitor{
-//         [&](PercentOr<Length> const& v) -> bool {
-//             return static_cast<bool>(v.is<Percent>());
-//         },
-//         [&](Calc<PercentOr<Length>>::Leaf const& v) -> bool {
-//             return _calcContainsPercents(*v);
-//         },
-//         [](Number const&) -> bool {
-//             return false;
-//         }
-//     };
-//
-//     return calc.visit(
-//         [&](Calc<PercentOr<Length>>::Value const& v) -> bool {
-//             return v.visit(resolveUnion);
-//         },
-//         [&](Calc<PercentOr<Length>>::Unary const& u) -> bool {
-//             return u.val.visit(resolveUnion);
-//         },
-//         [&](Calc<PercentOr<Length>>::Binary const& b) -> bool {
-//             return b.lhs.visit(resolveUnion) or b.rhs.visit(resolveUnion);
-//         }
-//     );
-// }
-
 Metrics computeMetrics(Layout::Box const& box, LogicalSize<Opt<Au>> const& containingBlock) {
     auto paddingLeft = Layout::resolve(
         box.style->padding->start,
@@ -74,55 +47,66 @@ Metrics computeMetrics(Layout::Box const& box, LogicalSize<Opt<Au>> const& conta
         .blockEnd = physicalBorders.bottom,
     };
 
-    LogicalSize<Opt<Au>> size = {NONE, NONE};
+    auto const _resolveSize = [&](auto const& inline_, auto const& block) {
+        LogicalSize<Opt<Au>> size = {NONE, NONE};
 
-    // FIXME: Intrinsic sizing.
-    if (auto [calc] = box.style->sizing->width.is<Style::PxPercent>()) {
-        if (auto const [width] = Layout::resolve(calc, NONE)) {
-            if (box.style->writingMode == Keywords::HORIZONTAL_TB) {
-                size.inline_ = Some(width);
-            } else {
-                size.block = Some(width);
-            }
-            if (box.style->writingMode == Keywords::HORIZONTAL_TB) {
-                if (box.style->boxSizing == Keywords::CONTENT_BOX) {
-                    size.inline_ = Some(width + paddings.inlineSum() + borders.inlineSum());
+        // FIXME: Intrinsic sizing.
+        if (auto [calc] = inline_.template is<Style::PxPercent>()) {
+            if (auto const [resolved] = Layout::resolve(calc, NONE)) {
+                if (box.style->writingMode == Keywords::HORIZONTAL_TB) {
+                    size.inline_ = Some(resolved);
                 } else {
-                    size.inline_ = Some(max(width, paddings.inlineSum() + borders.inlineSum()));
+                    size.block = Some(resolved);
                 }
-            } else {
-                if (box.style->boxSizing == Keywords::CONTENT_BOX) {
-                    size.block = Some(width + paddings.blockSum() + borders.blockSum());
+                if (box.style->writingMode == Keywords::HORIZONTAL_TB) {
+                    if (box.style->boxSizing == Keywords::CONTENT_BOX) {
+                        size.inline_ = Some(resolved + paddings.inlineSum() + borders.inlineSum());
+                    } else {
+                        size.inline_ = Some(max(resolved, paddings.inlineSum() + borders.inlineSum()));
+                    }
                 } else {
-                    size.block = Some(max(width, paddings.blockSum() + borders.blockSum()));
+                    if (box.style->boxSizing == Keywords::CONTENT_BOX) {
+                        size.block = Some(resolved + paddings.blockSum() + borders.blockSum());
+                    } else {
+                        size.block = Some(max(resolved, paddings.blockSum() + borders.blockSum()));
+                    }
                 }
             }
         }
-    }
 
-    // FIXME: Intrinsic sizing.
-    if (auto [calc] = box.style->sizing->height.is<Style::PxPercent>()) {
-        if (auto const [height] = Layout::resolve(calc, NONE)) {
-            if (box.style->writingMode == Keywords::HORIZONTAL_TB) {
-                if (box.style->boxSizing == Keywords::CONTENT_BOX) {
-                    size.block = Some(height + paddings.blockSum() + borders.blockSum());
+        // FIXME: Intrinsic sizing.
+        if (auto [calc] = block.template is<Style::PxPercent>()) {
+            if (auto const [resolved] = Layout::resolve(calc, NONE)) {
+                if (box.style->writingMode == Keywords::HORIZONTAL_TB) {
+                    if (box.style->boxSizing == Keywords::CONTENT_BOX) {
+                        size.block = Some(resolved + paddings.blockSum() + borders.blockSum());
+                    } else {
+                        size.block = Some(max(resolved, paddings.blockSum() + borders.blockSum()));
+                    }
                 } else {
-                    size.block = Some(max(height, paddings.blockSum() + borders.blockSum()));
-                }
-            } else {
-                if (box.style->boxSizing == Keywords::CONTENT_BOX) {
-                    size.inline_ = Some(height + paddings.inlineSum() + borders.inlineSum());
-                } else {
-                    size.inline_ = Some(max(height, paddings.inlineSum() + borders.inlineSum()));
+                    if (box.style->boxSizing == Keywords::CONTENT_BOX) {
+                        size.inline_ = Some(resolved + paddings.inlineSum() + borders.inlineSum());
+                    } else {
+                        size.inline_ = Some(max(resolved, paddings.inlineSum() + borders.inlineSum()));
+                    }
                 }
             }
         }
-    }
+
+        return size;
+    };
+
+    // FIXME: Implement writing-mode translation
+    LogicalSize<Opt<Au>> size = _resolveSize(box.style->sizing->width, box.style->sizing->height);
+    LogicalSize<Opt<Au>> minSize = _resolveSize(box.style->sizing->minWidth, box.style->sizing->minHeight);
+    LogicalSize<Opt<Au>> maxSize = _resolveSize(box.style->sizing->maxWidth, box.style->sizing->maxHeight);
 
     return Metrics{
-        .borders = {}, //< FIXME
+        .borders = borders,
         .paddings = paddings,
         .size = size,
+        .minSize = minSize,
+        .maxSize = maxSize,
     };
 }
 

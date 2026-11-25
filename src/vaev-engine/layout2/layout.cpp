@@ -14,6 +14,6 @@ export Output layout(
     Constraints const& constraints,
     Opt<BreakOpportunity const&> breakOpportunity = NONE,
     Opt<BreakNode const&> breakTree = NONE
-);
+    );
 
 } // namespace Vaev::Layout2
