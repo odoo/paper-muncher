@@ -14,50 +14,6 @@ import :layout.layout;
 namespace Vaev::Layout2 {
 
 export struct BlockFormattingContext {
-    // https://www.w3.org/TR/CSS22/visudet.html#blockwidth
-    static LogicalInsets<Au> _computSizingMargins(Layout::Box const& child, LogicalSize<Opt<Au>> const& containingBlock) {
-        auto maybeMargins = resolveMargins(*child.style, {Some(0_au), Some(0_au)});
-
-        auto margins = LogicalInsets<Au>{};
-
-        // FIXME: Follow spec
-        margins.blockStart = maybeMargins.blockStart.unwrapOr(0_au);
-        margins.blockEnd = maybeMargins.blockEnd.unwrapOr(0_au);
-
-        // FIXME: Writing mode
-        // If 'width' is set to 'auto', any other 'auto' values become '0' and 'width' follows from the resulting equality.
-        if (child.style->sizing->width.is<Keywords::Auto>()) {
-            margins.inlineStart = maybeMargins.inlineStart.unwrapOr(0_au);
-            margins.inlineEnd = maybeMargins.inlineEnd.unwrapOr(0_au);
-            return margins;
-        }
-
-        // FIXME: Pass gud cb.
-        auto childMetrics = computeMetrics(child, {Some(0_au), Some(0_au)});
-        auto inlineSize = childMetrics.size.inline_.unwrapOr(0_au);
-
-        // If both 'margin-left' and 'margin-right' are 'auto', their used values are equal.
-        // This horizontally centers the element with respect to the edges of the containing block.
-        if (not maybeMargins.inlineStart and not maybeMargins.inlineEnd) {
-            auto inlineMargin = containingBlock.inline_.unwrapOr(0_au) / 2 - (inlineSize / 2);
-            margins.inlineStart = inlineMargin;
-            margins.inlineEnd = inlineMargin;
-        } else if (maybeMargins.inlineStart and not maybeMargins.inlineEnd) {
-            margins.inlineStart = *maybeMargins.inlineStart;
-            // FIXME: Should be clamped.
-            margins.inlineEnd = containingBlock.inline_.unwrapOr(0_au) - inlineSize - *maybeMargins.inlineStart;
-        } else if (not maybeMargins.inlineStart and maybeMargins.inlineEnd) {
-            // FIXME: Should be clamped.
-            margins.inlineStart = containingBlock.inline_.unwrapOr(0_au) - inlineSize - *maybeMargins.inlineEnd;
-            margins.inlineEnd = *maybeMargins.inlineEnd;
-        } else {
-            margins.inlineStart = *maybeMargins.inlineStart;
-            margins.inlineEnd = *maybeMargins.inlineEnd;
-        }
-
-        return margins;
-    }
-
     // https://www.w3.org/TR/CSS22/visudet.html#Computing_widths_and_margins
     static Vec2Au solveInlineMargins(Opt<Au> inlineSize, Au inlineCb, Opt<Au> inlineStartMargin, Opt<Au> inlineEndMargin) {
         // NOTE: inlineSize := 'border-left-width' + 'padding-left' + 'width' + 'padding-right' + 'border-right-width'
@@ -145,7 +101,8 @@ export struct BlockFormattingContext {
         if (constraints.truncateBlockStartMargin) {
             pendingMargin = {};
         } else {
-            pendingMargin.add(constraints.margins.blockStart);
+            // FIXME: Is this correct?
+            pendingMargin.add(constraints.margins.blockStart.unwrapOr(0_au));
         }
 
         Opt<Au> blockOffset = NONE;
@@ -199,10 +156,6 @@ export struct BlockFormattingContext {
                 continue;
 
             auto childSpecifiedMargins = resolveMargins(*child.style, {Some(childCbInline), NONE});
-            // FIXME: Should there be a first margin resolution pass here?
-            auto childMargins = childSpecifiedMargins.map([](Opt<Au> const& x) {
-                return x.unwrapOr(0_au);
-            });
 
             Opt<Fragmentainer> childFragmentainer = NONE;
 
@@ -216,7 +169,7 @@ export struct BlockFormattingContext {
                     NONE,
                 },
                 .pendingMargin = pendingMargin,
-                .margins = childMargins,
+                .margins = childSpecifiedMargins,
                 .truncateBlockStartMargin = continuation and not continuation->preservedMargin and isEmpty(fragBuilder._children),
                 .fragmentainer = childFragmentainer,
             };
@@ -366,7 +319,7 @@ export struct BlockFormattingContext {
             auto inlineMargins = solveInlineMargins(
                 Some(childSize.inline_),
                 // FIXME: This doesn't look correct.
-                constraints.containingBlock.inline_.unwrapOr(0_au),
+                childCbInline,
                 childSpecifiedMargins.inlineStart,
                 childSpecifiedMargins.inlineEnd
             );
@@ -376,8 +329,8 @@ export struct BlockFormattingContext {
             LogicalInsets usedMargins = {
                 .inlineStart = inlineMargins.x,
                 .inlineEnd = inlineMargins.y,
-                .blockStart = childMargins.blockStart,
-                .blockEnd = childMargins.blockEnd,
+                .blockStart = childSpecifiedMargins.blockStart.unwrapOr(0_au),
+                .blockEnd = childSpecifiedMargins.blockEnd.unwrapOr(0_au),
             };
 
             fragBuilder.addChild(placed.fragment, cursor + Vec2Au{usedMargins.inlineStart, 0_au}, usedMargins);
@@ -488,7 +441,8 @@ export struct BlockFormattingContext {
             pendingMargin = PendingMargin{};
         }
 
-        pendingMargin.add(constraints.margins.blockEnd);
+        // FIXME: Are we allowed to unwrap?
+        pendingMargin.add(constraints.margins.blockEnd.unwrapOr(0_au));
 
         logInfo("Returned Placed::Completed {}", size);
 

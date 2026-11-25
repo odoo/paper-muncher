@@ -134,7 +134,7 @@ export struct WebView {
                     .collapseMargins = false,
 
                     // NoSpec AF >.<
-                    .margins = Layout2::LogicalInsets<Au>::all(0_au),
+                    .margins = Layout2::LogicalInsets<Opt<Au>>::all(Some(0_au)),
                 }
             ).is<Layout2::Placed>()->fragment);
 

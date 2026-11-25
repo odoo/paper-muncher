@@ -273,7 +273,7 @@ export Yield<Gfx::Snapshot> print(Gc::Heap& heap, Gc::Ref<Dom::Document> dom, Pr
                 .collapseMargins = false,
 
                 // NoSpec AF >.<
-                .margins = Layout2::LogicalInsets<Au>::all(0_au),
+                .margins = Layout2::LogicalInsets<Opt<Au>>::all(Some(0_au)),
 
                 .fragmentainer = Some(Layout2::Fragmentainer{
                     .type = Layout2::Fragmentainer::Type::PAGE,

@@ -51,7 +51,7 @@ export struct Constraints {
     bool collapseMargins = true;
     PendingMargin pendingMargin = PendingMargin{};
 
-    LogicalInsets<Au> margins;
+    LogicalInsets<Opt<Au>> margins;
     bool truncateBlockStartMargin = false;
 
     Opt<Fragmentainer> fragmentainer = NONE;

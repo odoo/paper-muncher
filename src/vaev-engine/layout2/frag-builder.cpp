@@ -33,7 +33,7 @@ export struct FragBuilder {
             .borders = input.metrics.borders.toPhysical(writingMode, direction),
             .position = {0_au, 0_au},
             .borderSize = size.toPhysical(writingMode),
-            .margin = input.constraints.margins.toPhysical(writingMode, direction),
+            .margin = {0_au},
         };
 
         return makeRc<Layout::BoxFragment>(_box, metrics, std::move(_children));
