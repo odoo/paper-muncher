@@ -12,6 +12,16 @@
         </html>
     </container>
 
+    <rendering>
+        <div style="background-color: red; margin: 10px; padding: 10px;">
+            <div style="background-color: green; margin: 10px; padding: 10px;">
+                <div style="background-color: blue; margin: 10px; padding: 10px;">
+                    <div style="background-color: red; margin: 10px; padding: 10px;">
+                    </div>
+                </div>
+            </div>
+        </div>
+    </rendering>
 
     <rendering>
         <div class="toggled">
@@ -31,16 +41,23 @@
         </style>
     </rendering>
 
-    <rendering>
-        <div style="background-color: red; margin: 10px; padding: 10px;">
-            <div style="background-color: green; margin: 10px; padding: 10px;">
-                <div style="background-color: blue; margin: 10px; padding: 10px;">
-                    <div style="background-color: red; margin: 10px; padding: 10px;">
+    <error>
+        <div class="toggled">
+            <div class="toggled">
+                <div class="toggled">
+                    <div class="toggled">
                     </div>
                 </div>
             </div>
         </div>
-    </rendering>
+        <style>
+            .toggled {
+                background-color: toggle(red, green, blue) yapyapyap;
+                margin: 10px;
+                padding: 10px;
+            }
+        </style>
+    </error>
 </test>
 
 </tests>
