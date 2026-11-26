@@ -5,6 +5,12 @@ import :layout2.layout;
 
 namespace Vaev::Layout2 {
 
+struct IntrinsicContributions {
+    Au min;
+    Au max;
+};
+
+// https://www.w3.org/TR/css-sizing-3/#contributions
 IntrinsicContributions intrinsicInlineContributions(Layout::Box const& box) {
     // https://www.w3.org/TR/css-sizing-3/#min-percentage-contribution
     // FIXME: Writing mode translation.
@@ -70,18 +76,18 @@ IntrinsicContributions intrinsicInlineContributions(Layout::Box const& box) {
                 contributions.max = contributions.min;
             }
         } else {
-            IntrinsicSizes intrinsicSizes = intrinsicInlineContentSizes(box);
+            IntrinsicSizes sizes = intrinsicSizes(box);
             if (box.isReplaced()) {
                 contributions.min = 0_au;
             } else {
-                contributions.min = intrinsicSizes.minContentSize;
+                contributions.min = sizes.minContentSize;
             }
-            contributions.max = intrinsicSizes.maxContentSize;
+            contributions.max = sizes.maxContentSize;
         }
     } else {
-        IntrinsicSizes intrinsicSizes = intrinsicInlineContentSizes(box);
-        contributions.min = intrinsicSizes.minContentSize;
-        contributions.max = intrinsicSizes.maxContentSize;
+        IntrinsicSizes sizes = intrinsicSizes(box);
+        contributions.min = sizes.minContentSize;
+        contributions.max = sizes.maxContentSize;
     }
 
     contributions.min = clamp(

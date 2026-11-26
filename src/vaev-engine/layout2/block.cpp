@@ -14,7 +14,7 @@ import :layout.layout;
 namespace Vaev::Layout2 {
 
 export struct BlockFormattingContext {
-    static IntrinsicSizes intrinsicInlineSizes(Layout::Box const& box) {
+    static IntrinsicSizes intrinsicSizes(Layout::Box const& box) {
         auto sizes = IntrinsicSizes{};
 
         for (auto const& child : box.children()) {

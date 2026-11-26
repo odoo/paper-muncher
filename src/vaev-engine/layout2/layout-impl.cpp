@@ -64,12 +64,12 @@ Metrics computeMetrics(Layout::Box const& box, LogicalSize<Opt<Au>> const& conta
             [&](Keywords::MinContent) -> Opt<Au> {
                 // Use the min-content size in the relevant axis; for a box’s block size,
                 // unless otherwise specified, this is equivalent to its automatic size.
-                return Some(intrinsicInlineContentSizes(box).minContentSize);
+                return Some(intrinsicSizes(box).minContentSize);
             },
             [&](Keywords::MaxContent) -> Opt<Au> {
                 // Use the max-content size in the relevant axis; for a box’s block size,
                 // unless otherwise specified, this is equivalent to its automatic size.
-                return Some(intrinsicInlineContentSizes(box).maxContentSize);
+                return Some(intrinsicSizes(box).maxContentSize);
             },
             [&](Keywords::FitContent) -> Opt<Au> {
                 // TODO
@@ -113,12 +113,12 @@ Metrics computeMetrics(Layout::Box const& box, LogicalSize<Opt<Au>> const& conta
     };
 }
 
-IntrinsicSizes intrinsicInlineContentSizes(Layout::Box const& box) {
+IntrinsicSizes intrinsicSizes(Layout::Box const& box) {
     if (box.style->display == Style::Display::BLOCK) {
-        return BlockFormattingContext{}.intrinsicInlineSizes(box);
+        return BlockFormattingContext{}.intrinsicSizes(box);
     } else {
         // TODO
-        return BlockFormattingContext{}.intrinsicInlineSizes(box);
+        return BlockFormattingContext{}.intrinsicSizes(box);
     }
 }
 

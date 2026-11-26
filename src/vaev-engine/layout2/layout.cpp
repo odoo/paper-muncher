@@ -10,7 +10,14 @@ namespace Vaev::Layout2 {
 
 export Metrics computeMetrics(Layout::Box const& box, LogicalSize<Opt<Au>> const& containingBlock);
 
-IntrinsicSizes intrinsicInlineContentSizes(Layout::Box const& box);
+// http://w3.org/TR/css-layout-api-1/#intrinsicsizes
+struct IntrinsicSizes {
+    Au minContentSize;
+    Au maxContentSize;
+};
+
+// https://www.w3.org/TR/css-layout-api-1/#intrinsic-sizes
+IntrinsicSizes intrinsicSizes(Layout::Box const& box);
 
 export Output layout(
     Layout::Box& box,
