@@ -51,47 +51,50 @@ Metrics computeMetrics(Layout::Box const& box, LogicalSize<Opt<Au>> const& conta
         LogicalSize<Opt<Au>> size = {NONE, NONE};
 
         // FIXME: Intrinsic sizing.
-        if (auto [calc] = inline_.template is<Style::PxPercent>()) {
-            if (auto const [resolved] = Layout::resolve(calc, NONE)) {
-                if (box.style->writingMode == Keywords::HORIZONTAL_TB) {
-                    size.inline_ = Some(resolved);
+        size.inline_ = inline_.visit(
+            [&](Style::PxPercent const& calc) -> Opt<Au> {
+                // FIXME: Handle empty containing block gracefully.
+                auto resolved = Layout::resolve(calc, containingBlock.inline_.unwrapOr(0_au));
+                if (box.style->boxSizing == Keywords::CONTENT_BOX) {
+                    return Some(resolved + paddings.inlineSum() + borders.inlineSum());
                 } else {
-                    size.block = Some(resolved);
+                    return Some(max(resolved, paddings.inlineSum() + borders.inlineSum()));
                 }
-                if (box.style->writingMode == Keywords::HORIZONTAL_TB) {
-                    if (box.style->boxSizing == Keywords::CONTENT_BOX) {
-                        size.inline_ = Some(resolved + paddings.inlineSum() + borders.inlineSum());
-                    } else {
-                        size.inline_ = Some(max(resolved, paddings.inlineSum() + borders.inlineSum()));
-                    }
-                } else {
-                    if (box.style->boxSizing == Keywords::CONTENT_BOX) {
-                        size.block = Some(resolved + paddings.blockSum() + borders.blockSum());
-                    } else {
-                        size.block = Some(max(resolved, paddings.blockSum() + borders.blockSum()));
-                    }
-                }
+            },
+            [&](Keywords::MinContent) -> Opt<Au> {
+                // Use the min-content size in the relevant axis; for a box’s block size,
+                // unless otherwise specified, this is equivalent to its automatic size.
+                return Some(intrinsicInlineContentSizes(box).minContentSize);
+            },
+            [&](Keywords::MaxContent) -> Opt<Au> {
+                // Use the max-content size in the relevant axis; for a box’s block size,
+                // unless otherwise specified, this is equivalent to its automatic size.
+                return Some(intrinsicInlineContentSizes(box).maxContentSize);
+            },
+            [&](Keywords::FitContent) -> Opt<Au> {
+                // TODO
+                return NONE;
+            },
+            [](auto const&) -> Opt<Au> {
+                return NONE;
             }
-        }
+        );
 
         // FIXME: Intrinsic sizing.
-        if (auto [calc] = block.template is<Style::PxPercent>()) {
-            if (auto const [resolved] = Layout::resolve(calc, NONE)) {
-                if (box.style->writingMode == Keywords::HORIZONTAL_TB) {
-                    if (box.style->boxSizing == Keywords::CONTENT_BOX) {
-                        size.block = Some(resolved + paddings.blockSum() + borders.blockSum());
-                    } else {
-                        size.block = Some(max(resolved, paddings.blockSum() + borders.blockSum()));
-                    }
+        size.block = block.visit(
+            [&](Style::PxPercent const& calc) -> Opt<Au> {
+                // FIXME: Handle empty containing block gracefully.
+                auto resolved = Layout::resolve(calc, containingBlock.inline_.unwrapOr(0_au));
+                if (box.style->boxSizing == Keywords::CONTENT_BOX) {
+                    return Some(resolved + paddings.blockSum() + borders.blockSum());
                 } else {
-                    if (box.style->boxSizing == Keywords::CONTENT_BOX) {
-                        size.inline_ = Some(resolved + paddings.inlineSum() + borders.inlineSum());
-                    } else {
-                        size.inline_ = Some(max(resolved, paddings.inlineSum() + borders.inlineSum()));
-                    }
+                    return Some(max(resolved, paddings.blockSum() + borders.blockSum()));
                 }
+            },
+            [](auto const&) -> Opt<Au> {
+                return NONE;
             }
-        }
+        );
 
         return size;
     };
@@ -110,6 +113,111 @@ Metrics computeMetrics(Layout::Box const& box, LogicalSize<Opt<Au>> const& conta
     };
 }
 
+IntrinsicSizes intrinsicInlineContentSizes(Layout::Box const& box) {
+    if (box.style->display == Style::Display::BLOCK) {
+        return BlockFormattingContext{}.intrinsicInlineSizes(box);
+    } else {
+        // TODO
+        return BlockFormattingContext{}.intrinsicInlineSizes(box);
+    }
+}
+
+IntrinsicContributions intrinsicInlineContributions(Layout::Box const& box) {
+    // https://www.w3.org/TR/css-sizing-3/#min-percentage-contribution
+    // FIXME: Writing mode translation.
+
+    auto paddingLeft = Layout::resolve(box.style->padding->start, NONE).unwrapOr(0_au);
+
+    auto paddingRight = Layout::resolve(box.style->padding->end, NONE).unwrapOr(0_au);
+
+    auto paddingInline = paddingLeft + paddingRight;
+
+    auto marginVisitor = Visitor{
+        [](Keywords::Auto) {
+            return 0_au;
+        },
+        [](Style::PxPercent const& calc) {
+            return Layout::resolve(calc, NONE).unwrapOr(0_au);
+        }
+    };
+
+    auto borders = Layout::computeBorders(box);
+
+    auto borderInline = borders.horizontal();
+
+    auto marginLeft = box.style->margin->start.visit(marginVisitor);
+    auto marginRight = box.style->margin->end.visit(marginVisitor);
+    auto marginInline = marginLeft + marginRight;
+
+    Opt<Au> minInlineSize = Some(0_au);
+    if (auto [calc] = box.style->sizing->minWidth.is<Style::PxPercent>()) {
+        if (auto const [resolved] = Layout::resolve(calc, NONE)) {
+            if (box.style->boxSizing == Keywords::CONTENT_BOX) {
+                minInlineSize = Some(resolved + paddingInline + borderInline);
+            } else {
+                minInlineSize = Some(resolved);
+            }
+        } else {
+            minInlineSize = NONE;
+        }
+    }
+
+    Opt<Au> maxInlineSize = Some(Limits<Au>::MAX);
+    if (auto [calc] = box.style->sizing->maxWidth.is<Style::PxPercent>()) {
+        if (auto const [resolved] = Layout::resolve(calc, NONE)) {
+            if (box.style->boxSizing == Keywords::CONTENT_BOX) {
+                maxInlineSize = Some(resolved + paddingInline + borderInline);
+            } else {
+                maxInlineSize = Some(resolved);
+            }
+        } else {
+            maxInlineSize = NONE;
+        }
+    }
+
+    auto contributions = IntrinsicContributions{};
+
+    if (auto [calc] = box.style->sizing->width.is<Style::PxPercent>()) {
+        if (auto const [resolved] = Layout::resolve(calc, NONE)) {
+            if (box.style->boxSizing == Keywords::CONTENT_BOX) {
+                contributions.min = resolved + paddingInline + borderInline;
+                contributions.max = contributions.min;
+            } else {
+                contributions.min = resolved;
+                contributions.max = contributions.min;
+            }
+        } else {
+            IntrinsicSizes intrinsicSizes = intrinsicInlineContentSizes(box);
+            if (box.isReplaced()) {
+                contributions.min = 0_au;
+            } else {
+                contributions.min = intrinsicSizes.minContentSize;
+            }
+            contributions.max = intrinsicSizes.maxContentSize;
+        }
+    } else {
+        IntrinsicSizes intrinsicSizes = intrinsicInlineContentSizes(box);
+        contributions.min = intrinsicSizes.minContentSize;
+        contributions.max = intrinsicSizes.maxContentSize;
+    }
+
+    contributions.min = clamp(
+        contributions.min,
+        minInlineSize.unwrapOr(0_au),
+        maxInlineSize.unwrapOr(box.isReplaced() ? 0_au : Limits<Au>::MAX)
+    );
+
+    contributions.max = clamp(
+        contributions.max,
+        minInlineSize.unwrapOr(0_au),
+        maxInlineSize.unwrapOr(Limits<Au>::MAX)
+    );
+
+    contributions.min += marginInline;
+    contributions.max += marginInline;
+
+    return contributions;
+}
 
 Output layout(Layout::Box& box, Constraints const& constraints, Opt<BreakOpportunity const&> breakOpportunity, Opt<BreakNode const&> breakTree) {
     auto input = Input{

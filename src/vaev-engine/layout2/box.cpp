@@ -1,9 +1,8 @@
 export module Vaev.Engine:layout2.box;
 
+import :layout2.base;
 import :layout2.sizing;
 import :layout.values;
-
-using Au = Vaev::Layout::Au;
 
 namespace Vaev::Layout2 {
 

@@ -14,6 +14,18 @@ import :layout.layout;
 namespace Vaev::Layout2 {
 
 export struct BlockFormattingContext {
+    static IntrinsicSizes intrinsicInlineSizes(Layout::Box const& box) {
+        auto sizes = IntrinsicSizes{};
+
+        for (auto const& child : box.children()) {
+            auto contributions = intrinsicInlineContributions(child);
+            sizes.minContentSize = max(sizes.minContentSize, contributions.min);
+            sizes.maxContentSize = max(sizes.maxContentSize, contributions.max);
+        }
+
+        return sizes;
+    }
+
     // https://www.w3.org/TR/CSS22/visudet.html#Computing_widths_and_margins
     static Vec2Au solveInlineMargins(Opt<Au> inlineSize, Au inlineCb, Opt<Au> inlineStartMargin, Opt<Au> inlineEndMargin) {
         // NOTE: inlineSize := 'border-left-width' + 'padding-left' + 'width' + 'padding-right' + 'border-right-width'
