@@ -19,7 +19,6 @@ enum struct AutoSizeBehavior {
     _LEN,
 };
 
-
 export struct Constraints {
     LogicalSize<Opt<Au>> knownSize = {NONE, NONE};
     LogicalSize<Opt<Au>> containingBlock = {NONE, NONE};

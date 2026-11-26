@@ -10,8 +10,20 @@ struct IntrinsicContributions {
     Au max;
 };
 
+// // https://www.w3.org/TR/css-sizing-3/#stretch-fit-sizing
+// export Op<Au> stretchFitSize(AvailableSpace availableSpace, Au summedMargins) {
+//     // The size a box would take if its outer size filled the available space in the given axis; in other
+//     // words, the stretch fit into the available space, if that is definite. Undefined if the available
+//     // space is indefinite.
+//     return availableSpace.visit(
+//         [](Au definite) {
+//             return definite - summedMargins
+//         }
+//     );
+// }
+
 // https://www.w3.org/TR/css-sizing-3/#contributions
-IntrinsicContributions intrinsicInlineContributions(Layout::Box const& box) {
+export IntrinsicContributions intrinsicInlineContributions(Layout::Box const& box) {
     // https://www.w3.org/TR/css-sizing-3/#min-percentage-contribution
     // FIXME: Writing mode translation.
 
