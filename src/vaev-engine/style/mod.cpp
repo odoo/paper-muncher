@@ -13,5 +13,6 @@ export import :style.origin;
 export import :style.page;
 export import :style.rules;
 export import :style.selector;
+export import :style.supports;
 export import :style.computed;
 export import :style.stylesheet;
