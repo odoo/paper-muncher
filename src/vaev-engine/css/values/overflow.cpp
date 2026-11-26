@@ -12,6 +12,7 @@ namespace Vaev::Css {
 export using Overflow = Union<
     Keywords::Visible,
     Keywords::Hidden,
+    Keywords::Clip,
     Keywords::Scroll,
     Keywords::Auto>;
 

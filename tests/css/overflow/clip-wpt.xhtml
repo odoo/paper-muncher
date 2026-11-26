@@ -1,0 +1,165 @@
+<!-- Ported from web-platform-tests @ ba6d9f67 -->
+<!-- https://github.com/web-platform-tests/wpt/tree/ba6d9f678ee91de9f58097921ed34e9b6b6849d3 -->
+
+<!-- SPDX-License-Identifier: BSD-3-Clause -->
+<!--
+    The 3-Clause BSD License
+
+    Copyright © web-platform-tests contributors
+
+    Redistribution and use in source and binary forms, with or without modification, are permitted provided that the
+    following conditions are met:
+
+    1. Redistributions of source code must retain the above copyright notice, this list of conditions and the following
+    disclaimer.
+    2. Redistributions in binary form must reproduce the above copyright notice, this list of conditions and the
+    following disclaimer in the documentation and/or other materials provided with the distribution.
+    3. Neither the name of the copyright holder nor the names of its contributors may be used to endorse or promote
+    products derived from this software without specific prior written permission.
+
+    THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES,
+    INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
+    DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
+    SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
+    SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY,
+    WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE
+    USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+-->
+
+<tests>
+
+<!-- https://github.com/web-platform-tests/wpt/blob/ba6d9f67/css/css-overflow/clip-001.html -->
+<!-- https://github.com/web-platform-tests/wpt/blob/ba6d9f67/css/css-overflow/clip-001-ref.html -->
+<test name="css/css-overflow/clip-001.html" width="800px" height="600px">
+    <rendering>
+        <style>
+            #target {
+              width: 100px;
+              height: 100px;
+              background: red;
+              /* For this simple case, hidden and clip are equivalent */
+              overflow: hidden;
+            }
+            #container {
+              overflow: auto;
+              height: 300px;
+            }
+            #fill {
+              background: blue;
+              height: 5000px;
+            }
+        </style>
+        <div id="container">
+          <div id="target">
+            <div id="fill"></div>
+          </div>
+        </div>
+    </rendering>
+
+    <rendering help="overflow: clip clips its contents and doesn't cause scrollable overflow">
+        <style>
+            #target {
+              width: 100px;
+              height: 100px;
+              background: red;
+              overflow: clip;
+            }
+            #container {
+              overflow: auto;
+              height: 300px;
+            }
+            #fill {
+              background: blue;
+              height: 5000px;
+            }
+        </style>
+        <div id="container">
+          <div id="target">
+            <div id="fill"></div>
+          </div>
+        </div>
+    </rendering>
+</test>
+
+<!-- https://github.com/web-platform-tests/wpt/blob/ba6d9f67/css/css-overflow/clip-006.html -->
+<!-- https://github.com/web-platform-tests/wpt/blob/ba6d9f67/css/reference/ref-filled-green-100px-square-only.html -->
+<test name="css/css-overflow/clip-006.html" width="800px" height="600px">
+    <rendering>
+        <p>Test passes if there is a filled green square.</p>
+        <div style="width:100px; height:100px; background:green;"></div>
+    </rendering>
+
+    <rendering>
+        <p>Test passes if there is a filled green square.</p>
+        <div style="width: 100px; height: 100px; overflow-x: auto;">
+          <div style="overflow-x: clip;">
+            <div style="width: 200px; height: 100px; background: green;"></div>
+          </div>
+        </div>
+    </rendering>
+</test>
+
+<!-- https://github.com/web-platform-tests/wpt/blob/ba6d9f67/css/css-overflow/clip-007.html -->
+<!-- https://github.com/web-platform-tests/wpt/blob/ba6d9f67/css/reference/ref-filled-green-100px-square-only.html -->
+<test name="css/css-overflow/clip-007.html" width="800px" height="600px">
+    <rendering>
+        <p>Test passes if there is a filled green square.</p>
+        <div style="width:100px; height:100px; background:green;"></div>
+    </rendering>
+
+    <rendering>
+        <p>Test passes if there is a filled green square.</p>
+        <div style="width: 100px; height: 100px; overflow-y: auto;">
+          <div style="overflow-y: clip; height: 100px;">
+            <div style="width: 100px; height: 200px; background: green;"></div>
+          </div>
+        </div>
+    </rendering>
+</test>
+
+<!-- https://github.com/web-platform-tests/wpt/blob/ba6d9f67/css/css-overflow/clip-008.html -->
+<!-- https://github.com/web-platform-tests/wpt/blob/ba6d9f67/css/reference/ref-filled-green-100px-square.xht -->
+<test name="css/css-overflow/clip-008.html" width="800px" height="600px">
+    <rendering>
+        <style>
+            div
+            {
+            background-color: green;
+            height: 100px;
+            width: 100px;
+            }
+        </style>
+        <p>Test passes if there is a filled green square and <strong>no red</strong>.</p>
+        <div></div>
+    </rendering>
+
+    <rendering help="border-radius should not clip contents if overflow is clipped in only one direction">
+        <style>
+            #testHolder {
+              width: 100px;
+              height: 100px;
+              background-color: red;
+            }
+            #clipped {
+              width: 100px;
+              height: 100px;
+              overflow-x: clip;
+              background-color: wheat;
+              border-radius: 50%;
+            }
+            #contents {
+              width: 100px;
+              height: 100px;
+              background-color: green;
+            }
+        </style>
+        <p>Test passes if there is a filled green square and <strong>no red</strong>.</p>
+        <div id="testHolder">
+          <div id="clipped">
+            <div id="contents"></div>
+          </div>
+        </div>
+    </rendering>
+</test>
+
+</tests>
