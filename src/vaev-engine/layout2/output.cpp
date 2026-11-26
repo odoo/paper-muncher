@@ -1,6 +1,5 @@
 export module Vaev.Engine:layout2.output;
 
-import :layout2.sizing;
 // FIXME: Should not be necessary
 import :layout2.input;
 import :layout2.break_;

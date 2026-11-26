@@ -1,117 +1,106 @@
 export module Vaev.Engine:layout2.sizing;
 
 import :style;
-
-import Karm.Math;
-import Karm.Core;
+import :layout2.layout;
 
 namespace Vaev::Layout2 {
 
-template <typename T>
-struct LogicalSize {
-    T inline_;
-    T block;
+IntrinsicContributions intrinsicInlineContributions(Layout::Box const& box) {
+    // https://www.w3.org/TR/css-sizing-3/#min-percentage-contribution
+    // FIXME: Writing mode translation.
 
-    LogicalSize transpose() const {
-        return {block, inline_};
-    }
+    auto paddingLeft = Layout::resolve(box.style->padding->start, NONE).unwrapOr(0_au);
 
-    static LogicalSize fromPhysical(Math::Vec2<T> physical, Style::WritingMode writingMode) {
-        if (writingMode == Keywords::HORIZONTAL_TB) {
-            return {physical.width, physical.height};
+    auto paddingRight = Layout::resolve(box.style->padding->end, NONE).unwrapOr(0_au);
+
+    auto paddingInline = paddingLeft + paddingRight;
+
+    auto marginVisitor = Visitor{
+        [](Keywords::Auto) {
+            return 0_au;
+        },
+        [](Style::PxPercent const& calc) {
+            return Layout::resolve(calc, NONE).unwrapOr(0_au);
+        }
+    };
+
+    auto borders = Layout::computeBorders(box);
+
+    auto borderInline = borders.horizontal();
+
+    auto marginLeft = box.style->margin->start.visit(marginVisitor);
+    auto marginRight = box.style->margin->end.visit(marginVisitor);
+    auto marginInline = marginLeft + marginRight;
+
+    Opt<Au> minInlineSize = Some(0_au);
+    if (auto [calc] = box.style->sizing->minWidth.is<Style::PxPercent>()) {
+        if (auto const [resolved] = Layout::resolve(calc, NONE)) {
+            if (box.style->boxSizing == Keywords::CONTENT_BOX) {
+                minInlineSize = Some(resolved + paddingInline + borderInline);
+            } else {
+                minInlineSize = Some(resolved);
+            }
         } else {
-            return {physical.height, physical.width};
+            minInlineSize = NONE;
         }
     }
 
-    Math::Vec2<T> toPhysical(Style::WritingMode writingMode) const {
-        if (writingMode == Keywords::HORIZONTAL_TB) {
-            return Math::Vec2<T>{inline_, block};
+    Opt<Au> maxInlineSize = Some(Limits<Au>::MAX);
+    if (auto [calc] = box.style->sizing->maxWidth.is<Style::PxPercent>()) {
+        if (auto const [resolved] = Layout::resolve(calc, NONE)) {
+            if (box.style->boxSizing == Keywords::CONTENT_BOX) {
+                maxInlineSize = Some(resolved + paddingInline + borderInline);
+            } else {
+                maxInlineSize = Some(resolved);
+            }
         } else {
-            return Math::Vec2<T>{block, inline_};
+            maxInlineSize = NONE;
         }
     }
 
+    auto contributions = IntrinsicContributions{};
 
-
-    void repr(Io::Emit& e) const {
-        e("(logicalSize {} {})", inline_, block);
-    }
-};
-
-template <typename T>
-struct LogicalInsets {
-    T inlineStart;
-    T inlineEnd;
-    T blockStart;
-    T blockEnd;
-
-    static LogicalInsets all(T const& value) {
-        return {value, value, value, value};
-    }
-
-    T inlineSum() const {
-        return inlineStart + inlineEnd;
-    }
-
-    T blockSum() const {
-        return blockStart + blockEnd;
-    }
-
-    constexpr auto map(auto f) const {
-        using U = decltype(f(inlineStart));
-        return LogicalInsets<U>{
-            f(inlineStart),
-            f(inlineEnd),
-            f(blockStart),
-            f(blockEnd),
-        };
-    }
-
-    Math::Insets<T> toPhysical(Style::WritingMode writingMode, Style::Direction direction) const {
-        if (writingMode == Keywords::HORIZONTAL_TB and direction == Keywords::LTR) {
-            return Math::Insets{
-                blockStart,
-                inlineEnd,
-                blockEnd,
-                inlineStart,
-            };
-        } else if (writingMode == Keywords::HORIZONTAL_TB and direction == Keywords::RTL) {
-            return Math::Insets{
-                blockStart,
-                inlineStart,
-                blockEnd,
-                inlineEnd,
-            };
-        } else if (writingMode == Keywords::VERTICAL_RL and direction == Keywords::LTR) {
-            return Math::Insets{
-                inlineStart,
-                blockStart,
-                inlineEnd,
-                blockEnd,
-            };
-        } else if (writingMode == Keywords::VERTICAL_LR and direction == Keywords::LTR) {
-            return Math::Insets{
-                inlineStart,
-                blockEnd,
-                inlineEnd,
-                blockStart,
-            };
+    if (auto [calc] = box.style->sizing->width.is<Style::PxPercent>()) {
+        if (auto const [resolved] = Layout::resolve(calc, NONE)) {
+            if (box.style->boxSizing == Keywords::CONTENT_BOX) {
+                contributions.min = resolved + paddingInline + borderInline;
+                contributions.max = contributions.min;
+            } else {
+                contributions.min = resolved;
+                contributions.max = contributions.min;
+            }
         } else {
-            logWarn("unsupported (writing-mode,direction): ({},{})", writingMode, direction);
-            return Math::Insets{
-                blockStart,
-                inlineEnd,
-                blockEnd,
-                inlineStart,
-            };
+            IntrinsicSizes intrinsicSizes = intrinsicInlineContentSizes(box);
+            if (box.isReplaced()) {
+                contributions.min = 0_au;
+            } else {
+                contributions.min = intrinsicSizes.minContentSize;
+            }
+            contributions.max = intrinsicSizes.maxContentSize;
         }
+    } else {
+        IntrinsicSizes intrinsicSizes = intrinsicInlineContentSizes(box);
+        contributions.min = intrinsicSizes.minContentSize;
+        contributions.max = intrinsicSizes.maxContentSize;
     }
 
-    void repr(Io::Emit& e) const {
-        e("(logicalInsets inlineStart={} inlineEnd={} blockStart={} blockEnd={})", inlineStart, inlineEnd, blockStart, blockEnd);
-    }
-};
+    contributions.min = clamp(
+        contributions.min,
+        minInlineSize.unwrapOr(0_au),
+        maxInlineSize.unwrapOr(box.isReplaced() ? 0_au : Limits<Au>::MAX)
+    );
+
+    contributions.max = clamp(
+        contributions.max,
+        minInlineSize.unwrapOr(0_au),
+        maxInlineSize.unwrapOr(Limits<Au>::MAX)
+    );
+
+    contributions.min += marginInline;
+    contributions.max += marginInline;
+
+    return contributions;
+}
 
 export Style::Size const& logicalWidth(Style::ComputedValues const& style) {
     if (style.writingMode == Keywords::HORIZONTAL_TB) {

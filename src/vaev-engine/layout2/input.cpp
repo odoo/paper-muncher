@@ -1,7 +1,7 @@
 export module Vaev.Engine:layout2.input;
 
+import :layout2.base;
 import :layout2.break_;
-import :layout2.sizing;
 
 namespace Vaev::Layout2 {
 
@@ -19,26 +19,6 @@ enum struct AutoSizeBehavior {
     _LEN,
 };
 
-struct PendingMargin {
-    Au positive = 0_au;
-    Au negative = 0_au;
-
-    void add(Au value) {
-        if (value > 0_au) {
-            positive = max(value, positive);
-        } else {
-            negative = min(value, negative);
-        }
-    }
-
-    Au sum() const {
-        return positive + negative;
-    }
-
-    void repr(Io::Emit& e) const {
-        e("(pendingMargin pos={} neg={})", positive, negative);
-    }
-};
 
 export struct Constraints {
     LogicalSize<Opt<Au>> knownSize = {NONE, NONE};
