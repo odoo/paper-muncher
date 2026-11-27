@@ -62,7 +62,7 @@ String unescape(Str str) {
 
             auto high = parseCodeUnit().expect();
 
-            Utf16::One units;
+            Utf16::Sequence units;
             units.put(high);
 
             if (Utf16::unitLen(high) == 2) {

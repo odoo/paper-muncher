@@ -2541,10 +2541,6 @@ test$("vaev-style-wpt-css-css-color-parsing-color-invalid-color-mix-function") {
     try$(_expectInvalid(_driver, "color", "color-mix(in lch lch(10% 20 30deg), lch(50% 60 70deg))"));
     try$(_expectInvalid(_driver, "color", "color-mix(in lch, lch(10% 20 30deg) lch(50% 60 70deg))"));
     try$(_expectInvalid(_driver, "color", "color-mix(lch(10% 20 30deg), lch(50% 60 70deg), in lch)"));
-    try$(_expectInvalid(_driver, "color", "color-mix(in oklch, oklch(10% 20 30deg) -10%, oklch(50% 60 70deg))"));
-    try$(_expectInvalid(_driver, "color", "color-mix(in oklch, oklch(10% 20 30deg) 150%, oklch(50% 60 70deg))"));
-    try$(_expectInvalid(_driver, "color", "color-mix(in oklch, oklch(10% 20 30deg / .4) -10%, oklch(50% 60 70deg / .8))"));
-    try$(_expectInvalid(_driver, "color", "color-mix(in oklch, oklch(10% 20 30deg / .4) 150%, oklch(50% 60 70deg / .8))"));
     try$(_expectInvalid(_driver, "color", "color-mix(in oklch hue, oklch(10% 20 30deg), oklch(50% 60 70deg))"));
     try$(_expectInvalid(_driver, "color", "color-mix(in oklch shorter, oklch(10% 20 30deg), oklch(50% 60 70deg))"));
     try$(_expectInvalid(_driver, "color", "color-mix(in oklch foo, oklch(10% 20 30deg), oklch(50% 60 70deg))"));
@@ -2614,6 +2610,10 @@ test$("vaev-style-wpt-css-css-color-parsing-color-invalid-color-mix-function-xfa
     try$(_expectInvalid(_driver, "color", "color-mix(in hsl, hsl(120deg 10% 20%) -10%, hsl(30deg 30% 40%))"));
     try$(_expectInvalid(_driver, "color", "color-mix(in hsl, hsl(120deg 10% 20%) 150%, hsl(30deg 30% 40%))"));
     try$(_expectInvalid(_driver, "color", "color-mix(in srgb, red, blue blue)"));
+    try$(_expectInvalid(_driver, "color", "color-mix(in oklch, oklch(10% 20 30deg) -10%, oklch(50% 60 70deg))"));
+    try$(_expectInvalid(_driver, "color", "color-mix(in oklch, oklch(10% 20 30deg) 150%, oklch(50% 60 70deg))"));
+    try$(_expectInvalid(_driver, "color", "color-mix(in oklch, oklch(10% 20 30deg / .4) -10%, oklch(50% 60 70deg / .8))"));
+    try$(_expectInvalid(_driver, "color", "color-mix(in oklch, oklch(10% 20 30deg / .4) 150%, oklch(50% 60 70deg / .8))"));
     try$(_expectInvalid(_driver, "color", "color-mix(in srgb, color(srgb .1 .2 .3) -10%, color(srgb .5 .6 .7))"));
     try$(_expectInvalid(_driver, "color", "color-mix(in srgb, color(srgb .1 .2 .3) 150%, color(srgb .5 .6 .7))"));
     try$(_expectInvalid(_driver, "color", "color-mix(in srgb, color(srgb .1 .2 .3 / .4) -10%, color(srgb .5 .6 .7 / .8))"));
@@ -3249,6 +3249,37 @@ test$("vaev-style-wpt-css-css-color-parsing-color-valid-hsl-xfail", XFAIL) {
     try$(_expectSerialized(_driver, "color", "hsla(0 0 0 / calc(0.75 + (sign(1em - 10px) * 0.1)))", "hsl(0 0 0 / calc(0.75 + (0.1 * sign(1em - 10px))))"));
     try$(_expectSerialized(_driver, "color", "hsla(calc(50deg + (sign(1em - 10px) * 10deg)) -100 300 / 0.5)", "hsl(calc(50deg + (10deg * sign(1em - 10px))) 0 300 / 0.5)"));
     try$(_expectSerialized(_driver, "color", "hsla(calc(50deg + (sign(1em - 10px) * 10deg)) -100% 300% / 0.5)", "hsl(calc(50deg + (10deg * sign(1em - 10px))) 0 300 / 0.5)"));
+    return Ok();
+}
+
+// https://github.com/web-platform-tests/wpt/blob/ba6d9f67/css/css-color/parsing/color-valid-lab.html
+test$("vaev-style-wpt-css-css-color-parsing-color-valid-lab") {
+    try$(_expectSerialized(_driver, "color", "oklch(0 0 0deg)", "oklch(0 0 0)"));
+    try$(_expectSerialized(_driver, "color", "oklch(0 0 0deg / 1)", "oklch(0 0 0)"));
+    try$(_expectSerialized(_driver, "color", "oklch(0 0 0deg / 0.5)", "oklch(0 0 0 / 0.5)"));
+    try$(_expectSerialized(_driver, "color", "oklch(1 2.3 0deg / 0.5)", "oklch(1 2.3 0 / 0.5)"));
+    try$(_expectSerialized(_driver, "color", "oklch(0.2 0.5 20deg/0.5)", "oklch(0.2 0.5 20 / 0.5)"));
+    try$(_expectSerialized(_driver, "color", "oklch(0.2 0.5 20deg/50%)", "oklch(0.2 0.5 20 / 0.5)"));
+    try$(_expectSerialized(_driver, "color", "oklch(0.1 0.2 20deg / -10%)", "oklch(0.1 0.2 20 / 0)"));
+    try$(_expectSerialized(_driver, "color", "oklch(0.1 0.2 20deg / 110%)", "oklch(0.1 0.2 20)"));
+    try$(_expectSerialized(_driver, "color", "oklch(0.1 0.2 1.28rad)", "oklch(0.1 0.2 73.3386)"));
+    try$(_expectSerialized(_driver, "color", "oklch(0.1 0.2 380deg)", "oklch(0.1 0.2 20)"));
+    try$(_expectSerialized(_driver, "color", "oklch(0.1 0.2 -340deg)", "oklch(0.1 0.2 20)"));
+    try$(_expectSerialized(_driver, "color", "oklch(0.1 0.2 740deg)", "oklch(0.1 0.2 20)"));
+    try$(_expectSerialized(_driver, "color", "oklch(0.1 0.2 -700deg)", "oklch(0.1 0.2 20)"));
+    try$(_expectSerialized(_driver, "color", "oklch(-4 0 0)", "oklch(0 0 0)"));
+    try$(_expectSerialized(_driver, "color", "oklch(0.2 -0.2 0)", "oklch(0.2 0 0)"));
+    try$(_expectSerialized(_driver, "color", "oklch(0 0 0 / 0.5)", "oklch(0 0 0 / 0.5)"));
+    try$(_expectSerialized(_driver, "color", "oklch(0.1 0.2 20 / 110%)", "oklch(0.1 0.2 20)"));
+    try$(_expectSerialized(_driver, "color", "oklch(0.1 0.2 -700)", "oklch(0.1 0.2 20)"));
+    try$(_expectSerialized(_driver, "color", "oklch(50% 50% 20)", "oklch(0.5 0.2 20)"));
+    try$(_expectSerialized(_driver, "color", "oklch(0.5 -20% -20)", "oklch(0.5 0 340)"));
+    try$(_expectSerialized(_driver, "color", "oklch(none none none / none)", "oklch(none none none / none)"));
+    try$(_expectSerialized(_driver, "color", "oklch(none none none)", "oklch(none none none)"));
+    try$(_expectSerialized(_driver, "color", "oklch(0.2 none none / none)", "oklch(0.2 none none / none)"));
+    try$(_expectSerialized(_driver, "color", "oklch(none none none / 0.5)", "oklch(none none none / 0.5)"));
+    try$(_expectSerialized(_driver, "color", "oklch(0 0 0 / none)", "oklch(0 0 0 / none)"));
+    try$(_expectSerialized(_driver, "color", "oklch(20% 60% 10/0.5)", "oklch(0.2 0.24 10 / 0.5)"));
     return Ok();
 }
 
