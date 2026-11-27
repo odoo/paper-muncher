@@ -62,7 +62,7 @@ String unescape(Str str) {
 
             auto high = parseCodeUnit().expect();
 
-            Utf16::One units;
+            Utf16::Sequence units;
             units.put(high);
 
             if (Utf16::unitLen(high) == 2) {
@@ -215,7 +215,7 @@ export Res<Result> run(Str inputStr) {
     Serde::Array actual;
     for (auto const& state : initialStates) {
         Gc::Heap gc;
-        auto dom = Dom::Document::create(gc, Ref::Url(), Ref::Uti::PUBLIC_HTML);
+        auto dom = Dom::Document::create(gc, Ref::Url(), Dom::DocumentKind::HTML, Ref::Uti::PUBLIC_HTML);
 
         HtmlParser parser{gc, dom};
         parser._lexer._lastStartTag = lastStartTag;

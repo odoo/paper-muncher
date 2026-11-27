@@ -18,6 +18,7 @@ export struct ComputedValues;
 
 namespace Vaev::Dom {
 
+export struct Document;
 export struct Element;
 export struct PseudoElement;
 
@@ -167,7 +168,7 @@ export struct Element : Node {
         return NONE;
     }
 
-    bool containsStylingAttribute() {
+    bool containsStylingAttribute() const {
         return style() or
                hasAttribute(Html::FGCOLOR_ATTR) or
                hasAttribute(Html::BGCOLOR_ATTR) or
@@ -198,21 +199,27 @@ export struct Element : Node {
 
     // MARK: Element -----------------------------------------------------------
 
-    // https://html.spec.whatwg.org/multipage/syntax.html#void-elements
-    bool isVoidElement() const {
-        return qualifiedName == Html::AREA_TAG or
-               qualifiedName == Html::BASE_TAG or
-               qualifiedName == Html::BR_TAG or
-               qualifiedName == Html::COL_TAG or
-               qualifiedName == Html::EMBED_TAG or
-               qualifiedName == Html::HR_TAG or
-               qualifiedName == Html::IMG_TAG or
-               qualifiedName == Html::INPUT_TAG or
-               qualifiedName == Html::LINK_TAG or
-               qualifiedName == Html::META_TAG or
-               qualifiedName == Html::SOURCE_TAG or
-               qualifiedName == Html::TRACK_TAG or
-               qualifiedName == Html::WBR_TAG;
+    // https://dom.spec.whatwg.org/#document-element
+    bool isDocumentElement() const {
+        // The document element of a document is the element whose parent is that document
+        auto parent = parentNode();
+        return parent and parent->is(Meta::idOf<Document>());
+    }
+
+    // https://dom.spec.whatwg.org/#dom-nondocumenttypechildnode-previouselementsibling
+    Gc::Ptr<Element> previousElementSibling() const {
+        for (auto curr = previousSibling(); curr; curr = curr->previousSibling())
+            if (auto el = curr->as<Element>())
+                return el;
+        return nullptr;
+    }
+
+    // https://dom.spec.whatwg.org/#dom-nondocumenttypechildnode-nextelementsibling
+    Gc::Ptr<Element> nextElementSibling() const {
+        for (auto curr = nextSibling(); curr; curr = curr->nextSibling())
+            if (auto el = curr->as<Element>())
+                return el;
+        return nullptr;
     }
 
     // MARK: Pseudo Elements ---------------------------------------------------

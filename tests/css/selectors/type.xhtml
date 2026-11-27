@@ -1,0 +1,103 @@
+<tests>
+
+<test name="select-type">
+    <container>
+        <html xmlns="http://www.w3.org/1999/xhtml">
+
+        <head>
+            <style>
+                body {
+                    margin: 0;
+                }
+
+                div, p, span, em, a, section, article {
+                    display: block;
+                    width: 100px;
+                    margin: 0;
+                    padding: 0;
+                }
+
+                div, p, span, em, a {
+                    height: 20px;
+                }
+            </style>
+        </head>
+
+        <body>
+            <slot />
+        </body>
+
+        </html>
+    </container>
+
+    <rendering help="reference">
+        <div style="background-color: green;" />
+        <div style="background-color: green;" />
+        <div style="background-color: green;" />
+    </rendering>
+
+    <rendering help="type selectors">
+        <style>
+            div, p, span {
+                background-color: green;
+            }
+
+            em, article {
+                background-color: red !important;
+            }
+        </style>
+        <div />
+        <p />
+        <span />
+    </rendering>
+
+    <rendering help="universal selector">
+        <style>
+            body > * {
+                background-color: green;
+            }
+        </style>
+        <div />
+        <p />
+        <span />
+    </rendering>
+
+    <rendering help="type selector in compound">
+        <style>
+            div.a, p.a, span.a {
+                background-color: green;
+            }
+
+            em.a, div.b {
+                background-color: red !important;
+            }
+        </style>
+        <div class="a" />
+        <p class="a" />
+        <span class="a" />
+    </rendering>
+
+    <error help="type selector of another element">
+        <style>
+            span {
+                background-color: green;
+            }
+        </style>
+        <div />
+        <div />
+        <div />
+    </error>
+
+    <error help="type selectors are case-sensitive in xhtml">
+        <style>
+            DIV {
+                background-color: green;
+            }
+        </style>
+        <div />
+        <div />
+        <div />
+    </error>
+</test>
+
+</tests>

@@ -1,0 +1,85 @@
+<tests>
+
+<test name="select-child">
+    <container>
+        <html xmlns="http://www.w3.org/1999/xhtml">
+
+        <head>
+            <style>
+                body {
+                    margin: 0;
+                }
+
+                div, p, span, em, a, section, article {
+                    display: block;
+                    width: 100px;
+                    margin: 0;
+                    padding: 0;
+                }
+
+                div, p, span, em, a {
+                    height: 20px;
+                }
+            </style>
+        </head>
+
+        <body>
+            <slot />
+        </body>
+
+        </html>
+    </container>
+
+    <rendering help="reference">
+        <div style="background-color: green;" />
+        <div style="background-color: green;" />
+    </rendering>
+
+    <rendering help="child combinator only matches direct children">
+        <style>
+            .parent > .child,
+            .parent > article > .grandchild {
+                background-color: green;
+            }
+
+            .parent > .grandchild,
+            .child > .parent {
+                background-color: red !important;
+            }
+        </style>
+        <section class="parent">
+            <div class="child" />
+            <article>
+                <div class="grandchild" />
+            </article>
+        </section>
+    </rendering>
+
+    <rendering help="child combinator without whitespace">
+        <style>
+            .parent>.child {
+                background-color: green;
+            }
+        </style>
+        <section class="parent">
+            <div class="child" />
+            <div class="child" />
+        </section>
+    </rendering>
+
+    <error help="child combinator does not match grandchildren">
+        <style>
+            .parent > .grandchild {
+                background-color: green;
+            }
+        </style>
+        <section class="parent">
+            <article>
+                <div class="grandchild" />
+                <div class="grandchild" />
+            </article>
+        </section>
+    </error>
+</test>
+
+</tests>

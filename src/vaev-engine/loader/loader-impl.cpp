@@ -84,10 +84,7 @@ Async::Task<Rc<Gfx::Fontface>> _loadFontfaceAsync(Http::Client& client, Ref::Url
     co_return Font::loadFontface(std::move(data));
 }
 
-// Formats the engine cannot decode (no woff/woff2/brotli unwrap, no svg/eot
-// font support). Sources carrying one of these format() hints are skipped
-// before fetching; sources with no hint are still tried (we can only know by
-// parsing). See https://www.w3.org/TR/css-fonts-4/#font-format-values
+// https://www.w3.org/TR/css-fonts-4/#font-format-values
 static bool _isDecodableFontFormat(Str format) {
     // format() keywords are ASCII case-insensitive (CSS Fonts 4).
     return not(

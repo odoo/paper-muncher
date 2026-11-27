@@ -77,10 +77,10 @@ struct MatchedPropertyCache {
     usize _hits = 0;
     usize _ineligible = 0;
 
-    bool eligible(Gc::Ref<Dom::Element> el, Opt<Symbol> pseudoElement) {
-        bool eligible = not pseudoElement and
-                        el->namespaceUri() == Html::NAMESPACE and
-                        not el->containsStylingAttribute();
+    bool eligible(MatchSubject const& subject) {
+        bool eligible = not subject.pseudoElement and
+                        subject.element->namespaceUri() == Html::NAMESPACE and
+                        not subject.element->containsStylingAttribute();
         if (not eligible)
             _ineligible++;
         return eligible;

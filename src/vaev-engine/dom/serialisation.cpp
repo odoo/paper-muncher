@@ -59,7 +59,7 @@ bool _serializeAsVoid(Gc::Ref<Node> node) {
 
     // For the purposes of the following algorithm, an element serializes as void
     // if its element type is one of the void elements, or is basefont, bgsound, frame, keygen, or param.
-    return el->isVoidElement() or
+    return Html::isVoidElement(el->qualifiedName) or
            el->qualifiedName == Html::BASEFONT_TAG or
            el->qualifiedName == Html::BGSOUND_TAG or
            el->qualifiedName == Html::FRAME_TAG or
@@ -141,9 +141,8 @@ export void serializeHtmlFragment(Gc::Ref<Node> node, Io::Emit& e) {
 
         // If current node is a Text node:
         else if (auto text = currentNode->as<Text>()) {
-            auto parent = text->parentNode();
             // - If its parent is style, script, xmp, iframe, noembed, noframes, plaintext, or (if scripting enabled) noscript,
-            if (auto parentElement = parent->as<Element>();
+            if (auto parentElement = text->parentElement();
                 parentElement and
                 (parentElement->qualifiedName == Html::STYLE_TAG or
                  parentElement->qualifiedName == Html::SCRIPT_TAG or

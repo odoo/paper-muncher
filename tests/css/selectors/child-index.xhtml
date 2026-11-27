@@ -1,0 +1,191 @@
+<tests>
+
+<test name="select-child-index">
+    <container>
+        <html xmlns="http://www.w3.org/1999/xhtml">
+
+        <head>
+            <style>
+                body {
+                    margin: 0;
+                }
+
+                div, p, span, em, a, section, article {
+                    display: block;
+                    width: 100px;
+                    margin: 0;
+                    padding: 0;
+                }
+
+                div, p, span, em, a {
+                    height: 20px;
+                }
+            </style>
+        </head>
+
+        <body>
+            <slot />
+        </body>
+
+        </html>
+    </container>
+
+    <rendering help="reference">
+        <div style="background-color: green;" />
+        <div style="background-color: green;" />
+        <div style="background-color: green;" />
+        <div style="background-color: green;" />
+        <div style="background-color: green;" />
+    </rendering>
+
+    <rendering help=":first-child, :last-child and :nth-child()">
+        <style>
+            div:first-child,
+            div:nth-child(2),
+            div:nth-child(3),
+            div:nth-last-child(2),
+            div:last-child {
+                background-color: green;
+            }
+
+            div:only-child,
+            div:nth-child(6),
+            div:nth-last-child(0) {
+                background-color: red !important;
+            }
+        </style>
+        <section>
+            <div />
+            <div />
+            <div />
+            <div />
+            <div />
+        </section>
+    </rendering>
+
+    <rendering help="An+B expressions">
+        <style>
+            div:nth-child(odd),
+            div:nth-child(2n) {
+                background-color: green;
+            }
+
+            div:nth-child(-n+2):nth-last-child(-n+2) {
+                background-color: red !important;
+            }
+        </style>
+        <section>
+            <div />
+            <div />
+            <div />
+            <div />
+            <div />
+        </section>
+    </rendering>
+
+    <rendering help=":nth-child() of S">
+        <style>
+            div:nth-child(1 of .x),
+            div:nth-child(2 of .x),
+            div:nth-last-child(1 of .x),
+            div:nth-child(even of .y, .z) {
+                background-color: green;
+            }
+
+            div:nth-child(4 of .x),
+            .y:nth-child(1 of .x) {
+                background-color: red !important;
+            }
+
+            div:nth-child(2 of .y) {
+                background-color: green;
+            }
+
+            div:nth-child(1 of .y) {
+                background-color: green;
+            }
+        </style>
+        <section>
+            <div class="x" />
+            <div class="y" />
+            <div class="x" />
+            <div class="y" />
+            <div class="x" />
+        </section>
+    </rendering>
+
+    <error help="only the first child">
+        <style>
+            div:first-child {
+                background-color: green;
+            }
+        </style>
+        <section>
+            <div />
+            <div />
+            <div />
+            <div />
+            <div />
+        </section>
+    </error>
+</test>
+
+<test name="select-only-child">
+    <container>
+        <html xmlns="http://www.w3.org/1999/xhtml">
+
+        <head>
+            <style>
+                body {
+                    margin: 0;
+                }
+
+                div, p, span, em, a, section, article {
+                    display: block;
+                    width: 100px;
+                    margin: 0;
+                    padding: 0;
+                }
+
+                div, p, span, em, a {
+                    height: 20px;
+                }
+            </style>
+        </head>
+
+        <body>
+            <slot />
+        </body>
+
+        </html>
+    </container>
+
+    <rendering help="reference">
+        <div style="background-color: green;" />
+    </rendering>
+
+    <rendering help=":only-child">
+        <style>
+            div:only-child {
+                background-color: green;
+            }
+        </style>
+        <section>
+            <div />
+        </section>
+    </rendering>
+
+    <error help=":only-child with a sibling">
+        <style>
+            div:only-child {
+                background-color: green;
+            }
+        </style>
+        <section>
+            <div />
+            <p />
+        </section>
+    </error>
+</test>
+
+</tests>

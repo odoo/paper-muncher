@@ -10,23 +10,23 @@ using namespace Karm::Literals;
 namespace Vaev::Style::Tests {
 
 test$("test-specificity-selector-list") {
-    Selector selector = try$(Selector::parse(".a, .b#x, .c.d.e.f"));
+    auto selector = try$(parseSelector(".a, .b#x, .c.d.e.f"));
 
     StyleRule rule{
-        .selector = selector,
+        .selectors = selector,
         .declarations = {}
     };
 
     {
         Dom::Element elZeroMatches{Html::DIV_TAG};
 
-        assert$(rule.match(elZeroMatches, NONE) == NONE);
+        assert$(rule.match(MatchSubject{elZeroMatches}) == NONE);
     }
     {
         Dom::Element elOneMatch{Html::DIV_TAG};
         elOneMatch.classList.add("a");
 
-        assert$(rule.match(elOneMatch, NONE) == Specificity(0, 1, 0));
+        assert$(rule.match(MatchSubject{elOneMatch}) == Specificity(0, 1, 0));
     }
     {
         Dom::Element elOneMatch{Html::DIV_TAG};
@@ -35,14 +35,14 @@ test$("test-specificity-selector-list") {
         elOneMatch.classList.add("e");
         elOneMatch.classList.add("f");
 
-        assert$(rule.match(elOneMatch, NONE) == Specificity(0, 4, 0));
+        assert$(rule.match(MatchSubject{elOneMatch}) == Specificity(0, 4, 0));
     }
     {
         Dom::Element elAnotherMatch{Html::DIV_TAG};
         elAnotherMatch.classList.add("b");
         elAnotherMatch.setAttribute(Html::ID_ATTR, "x"s);
 
-        assert$(rule.match(elAnotherMatch, NONE) == Specificity(1, 1, 0));
+        assert$(rule.match(MatchSubject{elAnotherMatch}) == Specificity(1, 1, 0));
     }
     {
         Dom::Element twoMatches{Html::DIV_TAG};
@@ -51,7 +51,7 @@ test$("test-specificity-selector-list") {
         twoMatches.setAttribute(Html::ID_ATTR, "x"s);
         twoMatches.classList.add("a");
 
-        assert$(rule.match(twoMatches, NONE) == Specificity(1, 1, 0));
+        assert$(rule.match(MatchSubject{twoMatches}) == Specificity(1, 1, 0));
     }
 
     return Ok();
@@ -63,22 +63,22 @@ test$("test-specificity-is-where") {
     el.setAttribute(Html::ID_ATTR, "x"s);
 
     // https://www.w3.org/TR/selectors-4/#zero-matches
-    StyleRule where{.selector = try$(Selector::parse("div:where(#x, .a)")), .declarations = {}};
-    assert$(where.match(el, NONE) == Specificity(0, 0, 1));
+    StyleRule where{.selectors = try$(parseSelector("div:where(#x, .a)")), .declarations = {}};
+    assert$(where.match(MatchSubject{el}) == Specificity(0, 0, 1));
 
     // https://www.w3.org/TR/selectors-4/#matches
-    StyleRule is{.selector = try$(Selector::parse("div:is(.a, #y)")), .declarations = {}};
-    assert$(is.match(el, NONE) == Specificity(1, 0, 1));
+    StyleRule is{.selectors = try$(parseSelector("div:is(.a, #y)")), .declarations = {}};
+    assert$(is.match(MatchSubject{el}) == Specificity(1, 0, 1));
 
-    StyleRule whereNoMatch{.selector = try$(Selector::parse("div:where(.b)")), .declarations = {}};
-    assert$(whereNoMatch.match(el, NONE) == NONE);
+    StyleRule whereNoMatch{.selectors = try$(parseSelector("div:where(.b)")), .declarations = {}};
+    assert$(whereNoMatch.match(MatchSubject{el}) == NONE);
 
     return Ok();
 }
 
 test$("test-specificity-simple-selector-class") {
-    Selector selector{try$(Selector::parse(".a"))};
-    Specificity specificity{spec(selector)};
+    auto selector = try$(parseSelector(".a"));
+    Specificity specificity{Style::specificity(first(selector))};
 
     assert$(specificity == Specificity(0, 1, 0));
 
@@ -86,8 +86,8 @@ test$("test-specificity-simple-selector-class") {
 }
 
 test$("test-specificity-simple-selector-id") {
-    Selector selector{try$(Selector::parse("#id"))};
-    Specificity specificity{spec(selector)};
+    auto selector = try$(parseSelector("#id"));
+    Specificity specificity{Style::specificity(first(selector))};
 
     assert$(specificity == Specificity(1, 0, 0));
 
@@ -95,8 +95,8 @@ test$("test-specificity-simple-selector-id") {
 }
 
 test$("test-specificity-simple-selector-type") {
-    Selector selector{try$(Selector::parse("div"))};
-    Specificity specificity{spec(selector)};
+    auto selector = try$(parseSelector("div"));
+    Specificity specificity{Style::specificity(first(selector))};
 
     assert$(specificity == Specificity(0, 0, 1));
 
@@ -104,8 +104,8 @@ test$("test-specificity-simple-selector-type") {
 }
 
 test$("test-specificity-simple-selector-universal") {
-    Selector selector{try$(Selector::parse("*"))};
-    Specificity specificity{spec(selector)};
+    auto selector = try$(parseSelector("*"));
+    Specificity specificity{Style::specificity(first(selector))};
 
     assert$(specificity == Specificity(0, 0, 0));
 
@@ -113,8 +113,8 @@ test$("test-specificity-simple-selector-universal") {
 }
 
 test$("test-specificity-simple-selector-attr") {
-    Selector selector{try$(Selector::parse("[a=b]"))};
-    Specificity specificity{spec(selector)};
+    auto selector = try$(parseSelector("[a=b]"));
+    Specificity specificity{Style::specificity(first(selector))};
 
     assert$(specificity == Specificity(0, 1, 0));
 
@@ -122,8 +122,8 @@ test$("test-specificity-simple-selector-attr") {
 }
 
 test$("test-specificity-simple-selector-pseudo") {
-    Selector selector{try$(Selector::parse(":pseu"))};
-    Specificity specificity{spec(selector)};
+    auto selector = try$(parseSelector(":hover"));
+    Specificity specificity{Style::specificity(first(selector))};
 
     assert$(specificity == Specificity(0, 1, 0));
 
@@ -131,8 +131,8 @@ test$("test-specificity-simple-selector-pseudo") {
 }
 
 test$("test-specificity-compound-selector-1") {
-    Selector selector{try$(Selector::parse(".a.b.c.d"))};
-    Specificity specificity{spec(selector)};
+    auto selector = try$(parseSelector(".a.b.c.d"));
+    Specificity specificity{Style::specificity(first(selector))};
 
     assert$(specificity == Specificity(0, 4, 0));
 
@@ -140,8 +140,8 @@ test$("test-specificity-compound-selector-1") {
 }
 
 test$("test-specificity-compound-selector-2") {
-    Selector selector{try$(Selector::parse("#id.a"))};
-    Specificity specificity{spec(selector)};
+    auto selector = try$(parseSelector("#id.a"));
+    Specificity specificity{Style::specificity(first(selector))};
 
     assert$(specificity == Specificity(1, 1, 0));
 
@@ -149,8 +149,8 @@ test$("test-specificity-compound-selector-2") {
 }
 
 test$("test-specificity-compound-selector-repeated-simple-selector") {
-    Selector selector{try$(Selector::parse(".a.a.a"))};
-    Specificity specificity{spec(selector)};
+    auto selector = try$(parseSelector(".a.a.a"));
+    Specificity specificity{Style::specificity(first(selector))};
 
     assert$(specificity == Specificity(0, 3, 0));
 
@@ -158,8 +158,8 @@ test$("test-specificity-compound-selector-repeated-simple-selector") {
 }
 
 test$("test-specificity-compound-selector-one-of-each-simple-1") {
-    Selector selector{try$(Selector::parse("div#id.a[x=y]:pseu"))};
-    Specificity specificity{spec(selector)};
+    auto selector = try$(parseSelector("div#id.a[x=y]:hover"));
+    Specificity specificity{Style::specificity(first(selector))};
 
     assert$(specificity == Specificity(1, 3, 1));
 
@@ -167,8 +167,8 @@ test$("test-specificity-compound-selector-one-of-each-simple-1") {
 }
 
 test$("test-specificity-compound-selector-one-of-each-simple-2") {
-    Selector selector{try$(Selector::parse("*#id.a[x=y]:pseu"))};
-    Specificity specificity{spec(selector)};
+    auto selector = try$(parseSelector("*#id.a[x=y]:hover"));
+    Specificity specificity{Style::specificity(first(selector))};
 
     assert$(specificity == Specificity(1, 3, 0));
 
@@ -176,8 +176,8 @@ test$("test-specificity-compound-selector-one-of-each-simple-2") {
 }
 
 test$("test-specificity-pseudo-not") {
-    Selector selector{try$(Selector::parse("button:not([DISABLED])"))};
-    Specificity specificity{spec(selector)};
+    auto selector = try$(parseSelector("button:not([DISABLED])"));
+    Specificity specificity{Style::specificity(first(selector))};
 
     assert$(specificity == Specificity(0, 1, 1));
 
@@ -185,8 +185,8 @@ test$("test-specificity-pseudo-not") {
 }
 
 test$("test-specificity-descendant-combinator") {
-    Selector selector{try$(Selector::parse("div button .a #x"))};
-    Specificity specificity{spec(selector)};
+    auto selector = try$(parseSelector("div button .a #x"));
+    Specificity specificity{Style::specificity(first(selector))};
 
     assert$(specificity == Specificity(1, 1, 2));
 
@@ -194,8 +194,8 @@ test$("test-specificity-descendant-combinator") {
 }
 
 test$("test-specificity-child-combinator") {
-    Selector selector{try$(Selector::parse("div > button > .a > #x"))};
-    Specificity specificity{spec(selector)};
+    auto selector = try$(parseSelector("div > button > .a > #x"));
+    Specificity specificity{Style::specificity(first(selector))};
 
     assert$(specificity == Specificity(1, 1, 2));
 
@@ -203,8 +203,8 @@ test$("test-specificity-child-combinator") {
 }
 
 test$("test-specificity-next-sibling-combinator") {
-    Selector selector{try$(Selector::parse("div + button + .a + #x"))};
-    Specificity specificity{spec(selector)};
+    auto selector = try$(parseSelector("div + button + .a + #x"));
+    Specificity specificity{Style::specificity(first(selector))};
 
     assert$(specificity == Specificity(1, 1, 2));
 
@@ -212,8 +212,8 @@ test$("test-specificity-next-sibling-combinator") {
 }
 
 test$("test-specificity-subsequent-sibling-combinator") {
-    Selector selector{try$(Selector::parse("div ~ button ~ .a ~ #x"))};
-    Specificity specificity{spec(selector)};
+    auto selector = try$(parseSelector("div ~ button ~ .a ~ #x"));
+    Specificity specificity{Style::specificity(first(selector))};
 
     assert$(specificity == Specificity(1, 1, 2));
 
@@ -221,8 +221,8 @@ test$("test-specificity-subsequent-sibling-combinator") {
 }
 
 test$("test-specificity-mixed-combinators") {
-    Selector selector{try$(Selector::parse("div button ~ .a > #x + #y"))};
-    Specificity specificity{spec(selector)};
+    auto selector = try$(parseSelector("div button ~ .a > #x + #y"));
+    Specificity specificity{Style::specificity(first(selector))};
 
     assert$(specificity == Specificity(2, 1, 2));
 
@@ -230,8 +230,8 @@ test$("test-specificity-mixed-combinators") {
 }
 
 test$("test-specificity-not-with-child-list") {
-    Selector selector{try$(Selector::parse(":not(.a, #b)"))};
-    Specificity specificity{spec(selector)};
+    auto selector = try$(parseSelector(":not(.a, #b)"));
+    Specificity specificity{Style::specificity(first(selector))};
 
     assert$(specificity == Specificity(1, 0, 0));
 
@@ -239,8 +239,8 @@ test$("test-specificity-not-with-child-list") {
 }
 
 test$("test-specificity-nth-child-with-sub-selector") {
-    Selector selector{try$(Selector::parse(":nth-child(n of .a, #b)"))};
-    Specificity specificity{spec(selector)};
+    auto selector = try$(parseSelector(":nth-child(n of .a, #b)"));
+    Specificity specificity{Style::specificity(first(selector))};
 
     assert$(specificity == Specificity(1, 1, 0));
 
@@ -248,11 +248,30 @@ test$("test-specificity-nth-child-with-sub-selector") {
 }
 
 test$("test-specificity-nth-last-child-with-sub-selector") {
-    Selector selector{try$(Selector::parse(":nth-last-child(n of .a, #b)"))};
-    Specificity specificity{spec(selector)};
+    auto selector = try$(parseSelector(":nth-last-child(n of .a, #b)"));
+    Specificity specificity{Style::specificity(first(selector))};
 
     assert$(specificity == Specificity(1, 1, 0));
 
+    return Ok();
+}
+
+test$("test-specificity-pseudo-elements") {
+    assertEq$(Style::specificity(first(try$(parseSelector("::before")))), Specificity(0, 0, 1));
+    assertEq$(Style::specificity(first(try$(parseSelector("div::before:hover")))), Specificity(0, 1, 2));
+    return Ok();
+}
+
+test$("test-specificity-logical-combinations") {
+    assertEq$(Style::specificity(first(try$(parseSelector(":where(#a) .b")))), Specificity(0, 1, 0));
+    assertEq$(Style::specificity(first(try$(parseSelector(":is(#a, .b) .c")))), Specificity(1, 1, 0));
+    assertEq$(Style::specificity(first(try$(parseSelector(":has(> #a, .b)")))), Specificity(1, 0, 0));
+    return Ok();
+}
+
+test$("test-specificity-tree-structural") {
+    assertEq$(Style::specificity(first(try$(parseSelector(":first-child")))), Specificity(0, 1, 0));
+    assertEq$(Style::specificity(first(try$(parseSelector("li:nth-of-type(2)")))), Specificity(0, 1, 1));
     return Ok();
 }
 

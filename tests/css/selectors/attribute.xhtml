@@ -1,0 +1,175 @@
+<tests>
+
+<test name="select-attribute-operators">
+    <container>
+        <html xmlns="http://www.w3.org/1999/xhtml">
+
+        <head>
+            <style>
+                body {
+                    margin: 0;
+                }
+
+                div, p, span, em, a, section, article {
+                    display: block;
+                    width: 100px;
+                    margin: 0;
+                    padding: 0;
+                }
+
+                div, p, span, em, a {
+                    height: 20px;
+                }
+            </style>
+        </head>
+
+        <body>
+            <slot />
+        </body>
+
+        </html>
+    </container>
+
+    <rendering help="reference">
+        <div style="background-color: green;" />
+        <div style="background-color: green;" />
+        <div style="background-color: green;" />
+        <div style="background-color: green;" />
+        <div style="background-color: green;" />
+        <div style="background-color: green;" />
+        <div style="background-color: green;" />
+    </rendering>
+
+    <rendering help="every attribute operator">
+        <style>
+            [data-a],
+            [data-b="foo"],
+            [data-c~="foo"],
+            [data-d|="en"],
+            [data-e^="foo"],
+            [data-f$="foo"],
+            [data-g*="foo"] {
+                background-color: green;
+            }
+
+            [data-z],
+            [data-b="fo"],
+            [data-c~="fo"],
+            [data-d|="e"],
+            [data-e^="bar"],
+            [data-f$="bar"],
+            [data-g*="baz"] {
+                background-color: red !important;
+            }
+        </style>
+        <div data-a="" />
+        <div data-b="foo" />
+        <div data-c="bar foo baz" />
+        <div data-d="en-US" />
+        <div data-e="foobar" />
+        <div data-f="barfoo" />
+        <div data-g="bafooar" />
+    </rendering>
+
+    <error help="attribute selector on a missing attribute">
+        <style>
+            [data-a] {
+                background-color: green;
+            }
+        </style>
+        <div />
+        <div />
+        <div />
+        <div />
+        <div />
+        <div />
+        <div />
+    </error>
+</test>
+
+<test name="select-attribute-syntax">
+    <container>
+        <html xmlns="http://www.w3.org/1999/xhtml">
+
+        <head>
+            <style>
+                body {
+                    margin: 0;
+                }
+
+                div, p, span, em, a, section, article {
+                    display: block;
+                    width: 100px;
+                    margin: 0;
+                    padding: 0;
+                }
+
+                div, p, span, em, a {
+                    height: 20px;
+                }
+            </style>
+        </head>
+
+        <body>
+            <slot />
+        </body>
+
+        </html>
+    </container>
+
+    <rendering help="reference">
+        <div style="background-color: green;" />
+        <div style="background-color: green;" />
+        <div style="background-color: green;" />
+        <div style="background-color: green;" />
+    </rendering>
+
+    <rendering help="quoting, whitespace and case-sensitivity flags">
+        <style>
+            [data-a=foo],
+            [ data-a = "foo" i ][data-a^="F" s],
+            [data-a='hello world'],
+            [data-a="BAR" i] {
+                background-color: green;
+            }
+
+            [data-a="Foo"],
+            [data-a="hello" i] {
+                background-color: red !important;
+            }
+        </style>
+        <div data-a="foo" />
+        <div data-a="FOO" />
+        <div data-a="hello world" />
+        <div data-a="bar" />
+    </rendering>
+
+    <error help="values are case-sensitive by default">
+        <style>
+            [data-a="foo"] {
+                background-color: green;
+            }
+        </style>
+        <div data-a="FOO" />
+        <div data-a="FOO" />
+        <div data-a="FOO" />
+        <div data-a="FOO" />
+    </error>
+
+    <error help="empty values never match ~=, ^=, $= and *=">
+        <style>
+            [data-a~=""],
+            [data-a^=""],
+            [data-a$=""],
+            [data-a*=""] {
+                background-color: green;
+            }
+        </style>
+        <div data-a="" />
+        <div data-a="" />
+        <div data-a="" />
+        <div data-a="" />
+    </error>
+</test>
+
+</tests>
