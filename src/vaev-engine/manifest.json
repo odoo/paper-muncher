@@ -17,6 +17,7 @@
         "props",
         "style",
         "style/values",
+        "style/select",
         "xml"
     ],
     "requires": [

@@ -84,6 +84,36 @@ export Array const IMPLIED_END_TAGS = {
     RTC_TAG,
 };
 
+// https://html.spec.whatwg.org/multipage/syntax.html#void-elements
+export bool isVoidElement(Dom::QualifiedName const& name) {
+    return oneOf(name, AREA_TAG, BASE_TAG, BR_TAG, COL_TAG, EMBED_TAG, HR_TAG, IMG_TAG, INPUT_TAG, LINK_TAG, META_TAG, SOURCE_TAG, TRACK_TAG, WBR_TAG);
+}
+
+// https://html.spec.whatwg.org/multipage/links.html#hyperlink
+export bool isHyperlinkElement(Dom::QualifiedName const& name) {
+    return oneOf(name, A_TAG, AREA_TAG);
+}
+
+// https://html.spec.whatwg.org/multipage/form-control-infrastructure.html#concept-fe-disabled
+export bool isDisableableFormControl(Dom::QualifiedName const& name) {
+    return oneOf(name, BUTTON_TAG, INPUT_TAG, SELECT_TAG, TEXTAREA_TAG);
+}
+
+// https://html.spec.whatwg.org/multipage/semantics-other.html#concept-element-disabled
+export bool isDisableableElement(Dom::QualifiedName const& name) {
+    return isDisableableFormControl(name) or oneOf(name, OPTGROUP_TAG, OPTION_TAG, FIELDSET_TAG);
+}
+
+// https://html.spec.whatwg.org/multipage/semantics-other.html#selector-open
+export bool isOpenableElement(Dom::QualifiedName const& name) {
+    return oneOf(name, DETAILS_TAG, DIALOG_TAG);
+}
+
+// https://html.spec.whatwg.org/multipage/semantics-other.html#selector-required
+export bool isRequirableElement(Dom::QualifiedName const& name) {
+    return oneOf(name, SELECT_TAG, TEXTAREA_TAG);
+}
+
 #define ATTR(IDENT, VALUE) export Dom::QualifiedName IDENT##_ATTR = {NONE, Symbol::from(#VALUE)};
 #include "defs/ns-html-attr-names.inc"
 #undef ATTR

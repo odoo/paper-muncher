@@ -15,8 +15,7 @@ import :style.layers;
 import :style.media;
 import :style.origin;
 import :style.page;
-import :style.selector;
-import :style.matcher;
+import :style.select;
 import :style.values.primitives;
 
 using namespace Karm;
@@ -29,11 +28,11 @@ export struct Rule;
 
 // https://www.w3.org/TR/cssom-1/#the-cssstylerule-interface
 export struct StyleRule {
-    Selector selector = TypeSelector::universal();
+    SelectorList selectors = {};
     Vec<Declaration> declarations;
     Origin origin = Origin::AUTHOR;
 
-    static StyleRule parse(RegisteredPropertySet& propertyRegistry, Css::Sst const& sst, Origin origin, NamespaceScope& ns) {
+    static StyleRule parse(RegisteredPropertySet& propertyRegistry, Css::Sst const& sst, Origin origin, NamespaceScope const& ns) {
         if (sst != Css::Sst::RULE)
             panic("expected rule");
 
@@ -45,11 +44,10 @@ export struct StyleRule {
         // Parse the selector.
         auto& prefix = sst.prefix.expect();
         Cursor<Css::Sst> prefixContent = prefix->content;
-        if (auto s = Selector::parse(prefixContent, ns)) {
-            res.selector = s.take();
+        if (auto s = parseSelector(prefixContent, ns)) {
+            res.selectors = s.take();
         } else {
             logWarnIf(debugRule, "failed to parse selector: {}: {}", prefix->content, s);
-            res.selector = EmptySelector{};
         }
 
         // Parse the properties.
@@ -66,14 +64,14 @@ export struct StyleRule {
         return res;
     }
 
-    Opt<Specificity> match(Gc::Ref<Dom::Element> element, Opt<Symbol> pseudoElement) const {
-        return matchSelector(selector, element, pseudoElement);
+    Opt<Specificity> match(MatchSubject const& subject) const {
+        return Style::match(selectors, subject);
     }
 
     void repr(Io::Emit& e) const {
         e("(style-rule");
         e.indent();
-        e("\nselector: {}", selector);
+        e("\nselectors: {}", selectors);
         if (declarations) {
             e.newline();
             e("declarations: [");

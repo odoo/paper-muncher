@@ -19,11 +19,18 @@ export enum struct QuirkMode {
     YES
 };
 
+// https://dom.spec.whatwg.org/#concept-document-type
+export enum struct DocumentKind {
+    XML,
+    HTML,
+};
+
 // https://dom.spec.whatwg.org/#interface-document
 export struct Document : Node {
     static constexpr auto TYPE = NodeType::DOCUMENT;
 
     Ref::Url _url;
+    DocumentKind _kind;
     Ref::Uti _uti;
     QuirkMode quirkMode = QuirkMode::NO;
 
@@ -40,14 +47,15 @@ export struct Document : Node {
     Rc<Font::Database> fontDatabase;
     Style::CounterStyleSet counters = {};
 
-    static Gc::Ref<Document> create(Gc::Heap& heap, Ref::Url url, Ref::Uti contentType) {
+    static Gc::Ref<Document> create(Gc::Heap& heap, Ref::Url url, DocumentKind kind, Ref::Uti contentType) {
         auto styleSheets = heap.alloc<Style::StyleSheetList>();
-        auto doc = heap.alloc<Dom::Document>(url, contentType, styleSheets);
+        auto doc = heap.alloc<Dom::Document>(url, kind, contentType, styleSheets);
         return doc;
     }
 
-    Document(Ref::Url url, Ref::Uti uti, Gc::Ref<Style::StyleSheetList> styleSheets)
+    Document(Ref::Url url, DocumentKind kind, Ref::Uti uti, Gc::Ref<Style::StyleSheetList> styleSheets)
         : _url(url),
+          _kind(kind),
           _uti(uti),
           styleSheets(styleSheets),
           fontDatabase(makeRc<Font::Database>(Font::globalDatabase())) {
@@ -73,6 +81,17 @@ export struct Document : Node {
 
     Ref::Url const& url() const {
         return _url;
+    }
+
+    // https://dom.spec.whatwg.org/#concept-document-type
+    DocumentKind kind() const {
+        return _kind;
+    }
+
+    // https://dom.spec.whatwg.org/#html-document
+    bool isHtmlDocument() const {
+        // A document is said to be an XML document if its type is "xml"; otherwise an HTML document.
+        return _kind != DocumentKind::XML;
     }
 
     // https://dom.spec.whatwg.org/#ref-for-dom-document-contenttype%E2%91%A0

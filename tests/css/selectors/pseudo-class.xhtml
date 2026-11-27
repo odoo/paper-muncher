@@ -1,0 +1,587 @@
+<tests>
+
+<test name="select-root">
+    <container>
+        <html xmlns="http://www.w3.org/1999/xhtml">
+
+        <head>
+            <style>
+                body {
+                    margin: 0;
+                }
+
+                div, p, span, em, a, section, article {
+                    display: block;
+                    width: 100px;
+                    margin: 0;
+                    padding: 0;
+                }
+
+                div, p, span, em, a {
+                    height: 20px;
+                }
+            </style>
+        </head>
+
+        <body>
+            <slot />
+        </body>
+
+        </html>
+    </container>
+
+    <rendering help="reference">
+        <div style="background-color: green;" />
+        <div style="background-color: green;" />
+    </rendering>
+
+    <rendering help=":root">
+        <style>
+            :root > body > div {
+                background-color: green;
+            }
+
+            div:root,
+            body:root > div {
+                background-color: red !important;
+            }
+        </style>
+        <div />
+        <div />
+    </rendering>
+
+    <error help=":root is not the body">
+        <style>
+            :root > div {
+                background-color: green;
+            }
+        </style>
+        <div />
+        <div />
+    </error>
+</test>
+
+<test name="select-link">
+    <container>
+        <html xmlns="http://www.w3.org/1999/xhtml">
+
+        <head>
+            <style>
+                body {
+                    margin: 0;
+                }
+
+                div, p, span, em, a, section, article {
+                    display: block;
+                    width: 100px;
+                    margin: 0;
+                    padding: 0;
+                }
+
+                div, p, span, em, a {
+                    height: 20px;
+                }
+            </style>
+        </head>
+
+        <body>
+            <slot />
+        </body>
+
+        </html>
+    </container>
+
+    <rendering help="reference">
+        <div style="background-color: green;" />
+        <div style="background-color: green;" />
+    </rendering>
+
+    <rendering help=":link">
+        <style>
+            a {
+                background-color: red;
+            }
+
+            a:link,
+            a:not(:link) {
+                background-color: green;
+            }
+
+            a:not([href]):link {
+                background-color: red !important;
+            }
+        </style>
+        <a href="#" />
+        <a />
+    </rendering>
+
+    <error help=":link without href">
+        <style>
+            a:link {
+                background-color: green;
+            }
+        </style>
+        <a />
+        <a />
+    </error>
+</test>
+
+<test name="select-any-link">
+    <container>
+        <html xmlns="http://www.w3.org/1999/xhtml">
+
+        <head>
+            <style>
+                body {
+                    margin: 0;
+                }
+
+                div, p, span, em, a, section, article {
+                    display: block;
+                    width: 100px;
+                    margin: 0;
+                    padding: 0;
+                }
+
+                div, p, span, em, a {
+                    height: 20px;
+                }
+            </style>
+        </head>
+
+        <body>
+            <slot />
+        </body>
+
+        </html>
+    </container>
+
+    <rendering help="reference">
+        <div style="background-color: green;" />
+        <div style="background-color: green;" />
+    </rendering>
+
+    <rendering help=":any-link">
+        <style>
+            a {
+                background-color: red;
+            }
+
+            a:any-link,
+            a:not(:any-link) {
+                background-color: green;
+            }
+
+            a:not([href]):any-link {
+                background-color: red !important;
+            }
+        </style>
+        <a href="#" />
+        <a />
+    </rendering>
+
+    <error help=":any-link without href">
+        <style>
+            a:any-link {
+                background-color: green;
+            }
+        </style>
+        <a />
+        <a />
+    </error>
+</test>
+
+<test name="select-empty">
+    <container>
+        <html xmlns="http://www.w3.org/1999/xhtml">
+
+        <head>
+            <style>
+                body {
+                    margin: 0;
+                }
+
+                div, p, span, em, a, section, article {
+                    display: block;
+                    width: 100px;
+                    margin: 0;
+                    padding: 0;
+                }
+
+                div, p, span, em, a {
+                    height: 20px;
+                }
+            </style>
+        </head>
+
+        <body>
+            <slot />
+        </body>
+
+        </html>
+    </container>
+
+    <rendering help="reference">
+        <div style="background-color: green;" />
+        <div style="background-color: green;" />
+        <div style="background-color: green;" />
+    </rendering>
+
+    <rendering help=":empty ignores comments and document white space">
+        <style>
+            div:empty {
+                background-color: green;
+            }
+
+            body:empty,
+            section:empty + div {
+                background-color: red !important;
+            }
+        </style>
+        <div />
+        <div> </div>
+        <div><!-- comment --></div>
+    </rendering>
+
+    <error help=":empty with text">
+        <style>
+            div:empty {
+                background-color: green;
+            }
+        </style>
+        <div>x</div>
+        <div>x</div>
+        <div>x</div>
+    </error>
+</test>
+
+<test name="select-form-states">
+    <container>
+        <html xmlns="http://www.w3.org/1999/xhtml">
+
+        <head>
+            <style>
+                body {
+                    margin: 0;
+                }
+
+                div, p, span, em, a, section, article {
+                    display: block;
+                    width: 100px;
+                    margin: 0;
+                    padding: 0;
+                }
+
+                div, p, span, em, a {
+                    height: 20px;
+                }
+
+                input, select, textarea, button, progress, details, fieldset, legend {
+                    display: none;
+                }
+            </style>
+        </head>
+
+        <body>
+            <slot />
+        </body>
+
+        </html>
+    </container>
+
+    <rendering help="reference">
+        <div style="background-color: green;" />
+        <div style="background-color: green;" />
+        <div style="background-color: green;" />
+        <div style="background-color: green;" />
+        <div style="background-color: green;" />
+        <div style="background-color: green;" />
+        <div style="background-color: green;" />
+        <div style="background-color: green;" />
+        <div style="background-color: green;" />
+    </rendering>
+
+    <rendering help="form control states">
+        <style>
+            .checked:has(input:checked),
+            .default:has(button:default),
+            .indeterminate:has(progress:indeterminate),
+            .disabled:has(input:disabled),
+            .enabled:has(input:enabled),
+            .required:has(input:required),
+            .placeholder:has(input:placeholder-shown),
+            .read-only:has(input:read-only),
+            .open:has(details:open) {
+                background-color: green;
+            }
+
+            .default:has([type=reset]:default),
+            .disabled:has(input:enabled),
+            .enabled:has(input:disabled),
+            .required:has(input:optional),
+            .read-only:has(input:read-write),
+            .placeholder:has(input:not(:placeholder-shown)) {
+                background-color: red !important;
+            }
+        </style>
+        <div class="checked"><input type="checkbox" checked="" /></div>
+        <div class="default"><form><button type="reset" /><button /></form></div>
+        <div class="indeterminate"><progress /></div>
+        <div class="disabled"><fieldset disabled=""><input /></fieldset></div>
+        <div class="enabled"><fieldset disabled=""><legend><input /></legend></fieldset></div>
+        <div class="required"><input required="" /></div>
+        <div class="placeholder"><input placeholder="placeholder" /></div>
+        <div class="read-only"><input readonly="" /></div>
+        <div class="open"><details open="" /></div>
+    </rendering>
+
+    <error help="form control states do not match">
+        <style>
+            .checked:has(input:checked),
+            .default:has(button:default),
+            .indeterminate:has(progress:indeterminate),
+            .disabled:has(input:disabled),
+            .enabled:has(input:enabled),
+            .required:has(input:required),
+            .placeholder:has(input:placeholder-shown),
+            .read-only:has(input:read-only),
+            .open:has(details:open) {
+                background-color: green;
+            }
+        </style>
+        <div class="checked"><input type="checkbox" /></div>
+        <div class="default"><form><button type="reset" /></form></div>
+        <div class="indeterminate"><progress value="1" /></div>
+        <div class="disabled"><fieldset><input /></fieldset></div>
+        <div class="enabled"><fieldset disabled=""><input /></fieldset></div>
+        <div class="required"><input /></div>
+        <div class="placeholder"><input placeholder="placeholder" value="value" /></div>
+        <div class="read-only"><input /></div>
+        <div class="open"><details /></div>
+    </error>
+</test>
+
+<test name="select-form-states-edge-cases">
+    <container>
+        <html xmlns="http://www.w3.org/1999/xhtml">
+
+        <head>
+            <style>
+                body {
+                    margin: 0;
+                }
+
+                div, p, span, em, a, section, article {
+                    display: block;
+                    width: 100px;
+                    margin: 0;
+                    padding: 0;
+                }
+
+                div, p, span, em, a {
+                    height: 20px;
+                }
+
+                input, select, textarea, button, progress, details, fieldset, legend, map {
+                    display: none;
+                }
+            </style>
+        </head>
+
+        <body>
+            <slot />
+        </body>
+
+        </html>
+    </container>
+
+    <rendering help="reference">
+        <div style="background-color: green;" />
+        <div style="background-color: green;" />
+        <div style="background-color: green;" />
+        <div style="background-color: green;" />
+        <div style="background-color: green;" />
+        <div style="background-color: green;" />
+        <div style="background-color: green;" />
+    </rendering>
+
+    <rendering help="disabledness inheritance, radio groups, default buttons, and inapplicable attributes">
+        <style>
+            .select:has(option:disabled),
+            .optgroup:has(option:disabled),
+            .lone-radio:has(input:indeterminate),
+            .radio-group:has(input:checked),
+            .default:has(button:default),
+            .hidden:not(:has(:required, :optional)),
+            .area:has(area:link) {
+                background-color: green;
+            }
+
+            .select:has(option:enabled),
+            .optgroup:has(option:enabled),
+            .radio-group:has(input:indeterminate),
+            .default:has(input:default) {
+                background-color: red !important;
+            }
+        </style>
+        <div class="select"><select disabled=""><optgroup><option /></optgroup></select></div>
+        <div class="optgroup"><select><optgroup disabled=""><option /></optgroup></select></div>
+        <div class="lone-radio"><input type="radio" name="lone" /></div>
+        <div class="radio-group"><form><input type="radio" name="group" /><input type="radio" name="group" checked="" /></form></div>
+        <div class="default"><form><button /><input type="submit" /></form></div>
+        <div class="hidden"><input type="hidden" required="" /></div>
+        <div class="area"><map><area href="#" /></map></div>
+    </rendering>
+
+    <error help="states that do not apply">
+        <style>
+            .select:has(option:disabled),
+            .optgroup:has(option:disabled),
+            .lone-radio:has(input:indeterminate),
+            .radio-group:has(input:checked),
+            .default:has(button:default),
+            .hidden:not(:has(:required, :optional)),
+            .area:has(area:link) {
+                background-color: green;
+            }
+        </style>
+        <div class="select"><select><optgroup><option /></optgroup></select></div>
+        <div class="optgroup"><select><optgroup><option /></optgroup></select></div>
+        <div class="lone-radio"><input type="radio" name="lone" checked="" /></div>
+        <div class="radio-group"><form><input type="radio" name="group" /><input type="radio" name="group" /></form></div>
+        <div class="default"><form><button type="button" /><input type="reset" /></form></div>
+        <div class="hidden"><input required="" /></div>
+        <div class="area"><map><area /></map></div>
+    </error>
+</test>
+
+<test name="select-editable">
+    <container>
+        <html xmlns="http://www.w3.org/1999/xhtml">
+
+        <head>
+            <style>
+                body {
+                    margin: 0;
+                }
+
+                div, p, span, em, a, section, article {
+                    display: block;
+                    width: 100px;
+                    margin: 0;
+                    padding: 0;
+                }
+
+                div, p, span, em, a {
+                    height: 20px;
+                }
+            </style>
+        </head>
+
+        <body>
+            <slot />
+        </body>
+
+        </html>
+    </container>
+
+    <rendering help="reference">
+        <div style="background-color: green;" />
+        <div style="background-color: green;" />
+        <div style="background-color: green;" />
+    </rendering>
+
+    <rendering help=":read-write and :read-only on editing hosts">
+        <style>
+            div:read-write,
+            body > div:read-only {
+                background-color: green;
+            }
+
+            [contenteditable]:read-only,
+            section div:read-only {
+                background-color: red !important;
+            }
+        </style>
+        <div contenteditable="" />
+        <section contenteditable="true">
+            <div />
+        </section>
+        <div />
+    </rendering>
+
+    <error help="contenteditable=false is read-only">
+        <style>
+            div:read-write {
+                background-color: green;
+            }
+        </style>
+        <div contenteditable="false" />
+        <div contenteditable="false" />
+        <div contenteditable="false" />
+    </error>
+</test>
+
+<test name="select-user-action">
+    <container>
+        <html xmlns="http://www.w3.org/1999/xhtml">
+
+        <head>
+            <style>
+                body {
+                    margin: 0;
+                }
+
+                div, p, span, em, a, section, article {
+                    display: block;
+                    width: 100px;
+                    margin: 0;
+                    padding: 0;
+                }
+
+                div, p, span, em, a {
+                    height: 20px;
+                }
+            </style>
+        </head>
+
+        <body>
+            <slot />
+        </body>
+
+        </html>
+    </container>
+
+    <rendering help="reference">
+        <div style="background-color: green;" />
+        <div style="background-color: green;" />
+    </rendering>
+
+    <rendering help="user action pseudo-classes never match when printing">
+        <style>
+            div {
+                background-color: green;
+            }
+
+            div:hover,
+            div:active,
+            div:focus {
+                background-color: red !important;
+            }
+        </style>
+        <div />
+        <div />
+    </rendering>
+
+    <error help="user action pseudo-classes never match when printing">
+        <style>
+            div:hover {
+                background-color: green;
+            }
+        </style>
+        <div />
+        <div />
+    </error>
+</test>
+
+</tests>

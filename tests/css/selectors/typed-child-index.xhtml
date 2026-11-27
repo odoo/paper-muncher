@@ -1,0 +1,106 @@
+<tests>
+
+<test name="select-typed-child-index">
+    <container>
+        <html xmlns="http://www.w3.org/1999/xhtml">
+
+        <head>
+            <style>
+                body {
+                    margin: 0;
+                }
+
+                div, p, span, em, a, section, article {
+                    display: block;
+                    width: 100px;
+                    margin: 0;
+                    padding: 0;
+                }
+
+                div, p, span, em, a {
+                    height: 20px;
+                }
+            </style>
+        </head>
+
+        <body>
+            <slot />
+        </body>
+
+        </html>
+    </container>
+
+    <rendering help="reference">
+        <div style="background-color: green;" />
+        <div style="background-color: green;" />
+        <div style="background-color: green;" />
+        <div style="background-color: green;" />
+        <div style="background-color: green;" />
+    </rendering>
+
+    <rendering help=":first-of-type, :last-of-type and :nth-of-type()">
+        <style>
+            div:first-of-type,
+            div:nth-of-type(2),
+            div:last-of-type,
+            p:nth-last-of-type(2),
+            p:last-of-type {
+                background-color: green;
+            }
+
+            div:nth-of-type(4),
+            p:nth-of-type(3),
+            div:only-of-type,
+            p:first-of-type:last-of-type {
+                background-color: red !important;
+            }
+        </style>
+        <section>
+            <div />
+            <p />
+            <div />
+            <p />
+            <div />
+        </section>
+    </rendering>
+
+    <rendering help=":only-of-type">
+        <style>
+            p:only-of-type,
+            span:only-of-type,
+            em:only-of-type,
+            div:nth-of-type(odd),
+            div:nth-last-of-type(1) {
+                background-color: green;
+            }
+
+            div:only-of-type {
+                background-color: red !important;
+            }
+        </style>
+        <section>
+            <div />
+            <p />
+            <span />
+            <em />
+            <div />
+        </section>
+    </rendering>
+
+    <error help="only the first of each type">
+        <style>
+            section > :first-of-type {
+                background-color: green;
+            }
+        </style>
+        <section>
+            <div />
+            <p />
+            <div />
+            <p />
+            <div />
+        </section>
+    </error>
+</test>
+
+</tests>

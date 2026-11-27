@@ -4,6 +4,7 @@ import Karm.Core;
 import Karm.Gc;
 
 import :dom.element;
+import :style.select.matching;
 
 using namespace Karm;
 
@@ -24,13 +25,18 @@ export struct AncestorFilter {
     Vec<u16> _journal;
     Vec<usize> _journalMarks;
 
+    // NOTE: Type and attribute names are hashed ASCII case-insensitively, as they are matched against their ASCII
+    //       lowercase form on HTML elements in HTML documents.
     struct _Entry {
         Category category;
         Str name;
 
         void hash(Meta::Derive<Hasher> auto& h) const {
             Karm::hash(h, category);
-            Karm::hash(h, name);
+            if (category == ID or category == CLASS)
+                Karm::hash(h, name);
+            else
+                hashCi(h, name);
         }
     };
 
@@ -54,20 +60,20 @@ export struct AncestorFilter {
         bloom.set(index, true);
     }
 
-    void push(Gc::Ref<Dom::Element> el) {
+    void push(MatchSubject const& subject) {
         auto& journalEntrySize = _journalMarks.emplaceBack();
 
-        _add(hashEntry(TYPE, el->qualifiedName.name.str()), journalEntrySize);
+        _add(hashEntry(TYPE, subject.element->qualifiedName.name.str()), journalEntrySize);
 
-        if (auto const& [id] = el->id()) {
+        if (auto const& [id] = subject.element->id()) {
             _add(hashEntry(ID, id), journalEntrySize);
         }
 
-        for (auto const& class_ : el->classList._tokens) {
+        for (auto const& class_ : subject.element->classList._tokens) {
             _add(hashEntry(CLASS, class_), journalEntrySize);
         }
 
-        for (auto const& attr : el->attributes) {
+        for (auto const& attr : subject.element->attributes) {
             if (not oneOf(attr.qualifiedName.name, "id"s, "class"s, "style"s))
                 _add(hashEntry(ATTR, attr.qualifiedName.name.str()), journalEntrySize);
         }

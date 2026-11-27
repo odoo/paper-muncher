@@ -48,4 +48,67 @@
     </rendering>
 </test>
 
+<test name="select-subsequent-sibling">
+    <container>
+        <html xmlns="http://www.w3.org/1999/xhtml">
+
+        <head>
+            <style>
+                body {
+                    margin: 0;
+                }
+
+                div, p {
+                    display: block;
+                    width: 100px;
+                    height: 20px;
+                    margin: 0;
+                }
+            </style>
+        </head>
+
+        <body>
+            <slot />
+        </body>
+
+        </html>
+    </container>
+
+    <rendering help="reference">
+        <div style="background-color: green;" />
+        <div style="background-color: green;" />
+        <div style="background-color: green;" />
+    </rendering>
+
+    <rendering help="subsequent sibling combinator">
+        <style>
+            .a,
+            .a ~ p,
+            .a ~ p ~ div {
+                background-color: green;
+            }
+
+            div ~ .a,
+            p ~ p,
+            .a ~ div ~ p {
+                background-color: red !important;
+            }
+        </style>
+        <div class="a" />
+        <p />
+        <div />
+    </rendering>
+
+    <error help="subsequent sibling combinator does not match previous siblings">
+        <style>
+            div ~ .a {
+                background-color: green;
+            }
+        </style>
+        <div class="a" />
+        <div />
+        <div />
+    </error>
+</test>
+
 </tests>

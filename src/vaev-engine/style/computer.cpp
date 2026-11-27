@@ -229,12 +229,15 @@ export struct Computer {
     }
 
     // https://www.w3.org/TR/css-cascade-4/#author-presentational-hint-origin
-    void _considerHtmlPresentationalHint(Gc::Ref<Dom::Element> el, CascadedValues& cascadedValues) {
-        if (el->namespaceUri() != Html::NAMESPACE)
+    void _considerHtmlPresentationalHint(MatchSubject& subject, CascadedValues& cascadedValues) {
+        if (subject.pseudoElement)
+            return;
+
+        if (subject.element->namespaceUri() != Html::NAMESPACE)
             return;
 
         // https://html.spec.whatwg.org/multipage/obsolete.html#dom-document-fgcolor
-        if (auto const& [fgcolor] = el->getAttribute(Html::FGCOLOR_ATTR)) {
+        if (auto const& [fgcolor] = subject.element->getAttribute(Html::FGCOLOR_ATTR)) {
             if (auto property = _registeredPropertySet.parseValue(
                     Properties::COLOR, fgcolor, {}
                 ))
@@ -242,7 +245,7 @@ export struct Computer {
         }
 
         // https://html.spec.whatwg.org/multipage/obsolete.html#dom-document-bgcolor
-        if (auto const& [bgcolor] = el->getAttribute(Html::BGCOLOR_ATTR)) {
+        if (auto const& [bgcolor] = subject.element->getAttribute(Html::BGCOLOR_ATTR)) {
             if (auto property = _registeredPropertySet.parseValue(
                     Properties::BACKGROUND_COLOR, bgcolor, {}
                 ))
@@ -250,7 +253,7 @@ export struct Computer {
         }
 
         // https://html.spec.whatwg.org/multipage/images.html#sizes-attributes
-        if (auto const& [width] = el->getAttribute(Html::WIDTH_ATTR)) {
+        if (auto const& [width] = subject.element->getAttribute(Html::WIDTH_ATTR)) {
             if (auto property = _registeredPropertySet.parseValue(
                     Properties::WIDTH, width, {}
                 ))
@@ -258,7 +261,7 @@ export struct Computer {
         }
 
         // https://html.spec.whatwg.org/multipage/images.html#sizes-attributes
-        if (auto const& [height] = el->getAttribute(Html::HEIGHT_ATTR)) {
+        if (auto const& [height] = subject.element->getAttribute(Html::HEIGHT_ATTR)) {
             if (auto property = _registeredPropertySet.parseValue(
                     Properties::HEIGHT, height, {}
                 ))
@@ -266,7 +269,7 @@ export struct Computer {
         }
 
         // https://html.spec.whatwg.org/multipage/input.html#the-size-attribute
-        if (auto const& [size] = el->getAttribute(Html::SIZE_ATTR)) {
+        if (auto const& [size] = subject.element->getAttribute(Html::SIZE_ATTR)) {
             if (auto property = _registeredPropertySet.parseValue(
                     Properties::WIDTH, Io::format("{}ch", size), {}
                 ))
@@ -274,8 +277,11 @@ export struct Computer {
         }
     }
 
-    void _considerInlineStyleAttribute(Gc::Ref<Dom::Element> el, CascadedValues& cascadedValues) {
-        auto styleAttr = el->style();
+    void _considerInlineStyleAttribute(MatchSubject& subject, CascadedValues& cascadedValues) {
+        if (subject.pseudoElement)
+            return;
+
+        auto styleAttr = subject.element->style();
 
         auto declarations = _registeredPropertySet.parseDeclarations(
             styleAttr ? *styleAttr : "",
@@ -285,9 +291,12 @@ export struct Computer {
             cascadedValues.putStyleAttribute(decl, Origin::INLINE, INLINE_SPEC);
     }
 
-    static void _considerElementAttributes(Cow<ComputedValues>& values, Gc::Ref<Dom::Element> el) {
+    static void _considerElementAttributes(Cow<ComputedValues>& values, MatchSubject& subject) {
+        if (subject.pseudoElement)
+            return;
+
         // https://html.spec.whatwg.org/multipage/obsolete.html#attr-table-align
-        if (auto const& [align] = el->getAttribute(Html::ALIGN_ATTR)) {
+        if (auto const& [align] = subject.element->getAttribute(Html::ALIGN_ATTR)) {
             if (align == "left") {
                 values.cow().text.cow().align = Keywords::LEFT;
             } else if (align == "right") {
@@ -302,7 +311,7 @@ export struct Computer {
 
     // https://svgwg.org/specs/integration/#svg-css-sizing
     void _applySvgElementSizingRules(Gc::Ref<Dom::Element> svgEl, CascadedValues& cascadedValues) {
-        if (auto parentEl = svgEl->parentNode()->as<Dom::Element>()) {
+        if (auto parentEl = svgEl->parentElement()) {
             // **If we have an <svg> element inside a CSS context**
             if (parentEl->qualifiedName.ns == Svg::NAMESPACE)
                 return;
@@ -320,7 +329,8 @@ export struct Computer {
                         .property = _registeredPropertySet.parseValue(Properties::WIDTH, "300px", {}).expect(),
                         .important = false,
                     },
-                    Origin::AUTHOR_PRESENTATIONAL_HINT, PRESENTATION_HINT_SPEC
+                    Origin::AUTHOR_PRESENTATIONAL_HINT,
+                    PRESENTATION_HINT_SPEC
                 );
 
             if (not svgEl->hasAttribute(Svg::HEIGHT_ATTR))
@@ -329,33 +339,36 @@ export struct Computer {
                         .property = _registeredPropertySet.parseValue(Properties::HEIGHT, "150px", {}).expect(),
                         .important = false,
                     },
-                    Origin::AUTHOR_PRESENTATIONAL_HINT, PRESENTATION_HINT_SPEC
+                    Origin::AUTHOR_PRESENTATIONAL_HINT,
+                    PRESENTATION_HINT_SPEC
                 );
         }
     }
 
     // https://svgwg.org/svg2-draft/styling.html#PresentationAttributes
-    void _considerSvgPresentationAttributes(Gc::Ref<Dom::Element> el, CascadedValues& cascadedValues) {
+    void _considerSvgPresentationAttributes(MatchSubject& subject, CascadedValues& cascadedValues) {
         // Presentation attributes contribute to the author level of the cascade, followed by all other author-level
         // style sheets, and have specificity 0.
 
-        if (el->qualifiedName.ns != Svg::NAMESPACE)
+        if (subject.pseudoElement)
             return;
 
-        for (auto const& attr : el->attributes)
+        if (subject.element->qualifiedName.ns != Svg::NAMESPACE)
+            return;
+
+        for (auto const& attr : subject.element->attributes)
             if (auto const& [prop] = _registeredPropertySet.parsePresentationAttribute(attr.qualifiedName.name, attr.value))
                 cascadedValues.putStyleAttribute(Declaration{prop, false}, Origin::AUTHOR_PRESENTATIONAL_HINT, PRESENTATION_HINT_SPEC);
 
-        if (el->qualifiedName == Svg::SVG_TAG)
-            _applySvgElementSizingRules(el, cascadedValues);
+        if (subject.element->qualifiedName == Svg::SVG_TAG)
+            _applySvgElementSizingRules(subject.element, cascadedValues);
     }
 
     // https://drafts.csswg.org/css-cascade/#cascade-origin
-    Rc<ComputedValues const> computeValues(ComputedValues const& parent, Gc::Ref<Dom::Element> el, Opt<Symbol> pseudoElement = NONE) {
-        auto matchingRules = _ruleIndex.match(el, pseudoElement, _ancestorFilter);
+    Rc<ComputedValues const> computeValues(ComputedValues const& parent, MatchSubject& subject) {
+        auto matchingRules = _ruleIndex.match(subject, _ancestorFilter);
 
-        bool isRootElement = pseudoElement == NONE and el->parentNode()->is<Dom::Document>();
-        bool cacheEligible = _mpc.eligible(el, pseudoElement);
+        bool cacheEligible = _mpc.eligible(subject);
 
         CascadedValues cascadedValues;
 
@@ -373,16 +386,14 @@ export struct Computer {
         });
 
         if (not cached) {
-            if (not pseudoElement) {
-                _considerHtmlPresentationalHint(el, cascadedValues);
-                _considerInlineStyleAttribute(el, cascadedValues);
-                _considerSvgPresentationAttributes(el, cascadedValues);
-            }
+            _considerHtmlPresentationalHint(subject, cascadedValues);
+            _considerInlineStyleAttribute(subject, cascadedValues);
+            _considerSvgPresentationAttributes(subject, cascadedValues);
 
             ComputationContext cx;
             cx.populateUsingViewport(_viewport);
 
-            if (isRootElement)
+            if (subject.isDocumentElement())
                 cx.populateUsingRootComputedValues(*values);
             else if (_rootComputedValues)
                 cx.populateUsingRootComputedValues(**_rootComputedValues);
@@ -399,7 +410,7 @@ export struct Computer {
             _updateFontface(parent, values);
 
             // NOTE: Correct as long as the computation context doesn't need any NORMAL or LATE property.
-            if (isRootElement) {
+            if (subject.isDocumentElement()) {
                 _rootComputedValues = Some(makeRc<ComputedValues>(*values));
                 cx.populateUsingRootComputedValues(*values);
             }
@@ -412,8 +423,7 @@ export struct Computer {
                 _mpc.put(parent, matchingRules, values);
         }
 
-        if (not pseudoElement)
-            _considerElementAttributes(values, el);
+        _considerElementAttributes(values, subject);
 
         // https://www.w3.org/TR/CSS22/visuren.html#dis-pos-flo
         // Otherwise, if 'position' has the value 'absolute' or 'fixed', the box is absolutely positioned, the computed
@@ -433,13 +443,13 @@ export struct Computer {
 
         // NOSPEC: By default Chrome and other browsers render disc/circle/square
         // list markers a bit larger than their font size would otherwise imply.
-        if (pseudoElement == Dom::PseudoElement::MARKER and
+        if (subject.pseudoElement == Dom::PseudoElement::MARKER and
             values->content.is<Keywords::Normal>()) {
             auto listStyleType = parent.list->type;
             if (listStyleType == CustomIdent{"disc"_sym} or
                 listStyleType == CustomIdent{"circle"_sym} or
                 listStyleType == CustomIdent{"square"_sym}) {
-                values.cow().transform.cow().transform = Style::TransformList{Style::ScaleTransform{1.25, 1.25}};
+                values.cow().transform.cow().transform = TransformList{ScaleTransform{1.25, 1.25}};
             }
         }
 
@@ -463,8 +473,8 @@ export struct Computer {
 
     // MARK: Styling -----------------------------------------------------------
 
-    void generatePseudoElement(ComputedValues const& parentComputedValues, Dom::Element& el, Symbol type) {
-        auto computedValues = computeValues(parentComputedValues, el, Some(type));
+    void generatePseudoElement(ComputedValues const& parentComputedValues, MatchSubject& subject) {
+        auto computedValues = computeValues(parentComputedValues, subject);
 
         // https://drafts.csswg.org/css-content/#valdef-content-none
         // On pseudo-elements it inhibits the creation of the pseudo-element as if it had display: none.
@@ -473,29 +483,38 @@ export struct Computer {
 
         // https://drafts.csswg.org/css-content/#valdef-content-normal
         if (computedValues->content == Keywords::NORMAL and
-            (type == Dom::PseudoElement::BEFORE or
-             type == Dom::PseudoElement::AFTER))
+            (subject.pseudoElement == Dom::PseudoElement::BEFORE or
+             subject.pseudoElement == Dom::PseudoElement::AFTER))
             return;
 
-        el.addPseudoElement(_heap.alloc<Dom::PseudoElement>(type, computedValues));
+        subject.element->addPseudoElement(_heap.alloc<Dom::PseudoElement>(subject.pseudoElement.expect(), computedValues));
     }
 
-    void styleElement(ComputedValues const& parentComputedValues, Dom::Element& el) {
-        auto computedValues = computeValues(parentComputedValues, el);
-        el._computedValues = Some(computedValues);
+    void styleElement(ComputedValues const& parentComputedValues, MatchSubject& subject) {
+        auto computedValues = computeValues(parentComputedValues, subject);
+        subject.element->_computedValues = Some(computedValues);
 
-        if (computedValues->display == Display::Item::YES)
-            generatePseudoElement(*computedValues, el, Dom::PseudoElement::MARKER);
+        // FIXME: This is too broad, in some context an pseudo-elements can generate child pseudo element
+        if (not subject.pseudoElement) {
+            if (computedValues->display == Display::Item::YES) {
+                auto markerSubject = subject.withPseudoElement(Dom::PseudoElement::MARKER);
+                generatePseudoElement(*computedValues, markerSubject);
+            }
 
-        generatePseudoElement(*computedValues, el, Dom::PseudoElement::AFTER);
-        generatePseudoElement(*computedValues, el, Dom::PseudoElement::BEFORE);
+            auto afterSubject = subject.withPseudoElement(Dom::PseudoElement::AFTER);
+            generatePseudoElement(*computedValues, afterSubject);
+            auto beforeSubject = subject.withPseudoElement(Dom::PseudoElement::BEFORE);
+            generatePseudoElement(*computedValues, beforeSubject);
 
-        _ancestorFilter.push(el);
-        for (auto child = el.firstChild(); child; child = child->nextSibling()) {
-            if (auto childEl = child->as<Dom::Element>())
-                styleElement(*computedValues, *childEl);
+            _ancestorFilter.push(subject);
+            for (auto child = subject.element->firstChild(); child; child = child->nextSibling()) {
+                if (auto childEl = child->as<Dom::Element>()) {
+                    auto elementSubject = subject.withElement(*childEl);
+                    styleElement(*computedValues, elementSubject);
+                }
+            }
+            _ancestorFilter.pop();
         }
-        _ancestorFilter.pop();
     }
 
     // MARK: Body Background ---------------------------------------------------
@@ -563,7 +582,8 @@ export struct Computer {
             auto initialComputedValues = doc.initialComputedValues();
             initialComputedValues->fontFace = _lookupFontface(*initialComputedValues);
 
-            styleElement(*initialComputedValues, *el);
+            MatchSubject subject{*el, NONE, doc.isHtmlDocument()};
+            styleElement(*initialComputedValues, subject);
 
             // https://drafts.csswg.org/css-display/#root
             // The root element’s display type is always blockified, and its principal

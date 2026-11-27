@@ -1,0 +1,103 @@
+<tests>
+
+<test name="select-pseudo-element">
+    <container>
+        <html xmlns="http://www.w3.org/1999/xhtml">
+
+        <head>
+            <style>
+                body {
+                    margin: 0;
+                }
+
+                div, p, span, em, a, section, article {
+                    display: block;
+                    width: 100px;
+                    margin: 0;
+                    padding: 0;
+                }
+
+                div, p, span, em, a {
+                    height: 20px;
+                }
+            </style>
+        </head>
+
+        <body>
+            <slot />
+        </body>
+
+        </html>
+    </container>
+
+    <rendering help="reference">
+        <div style="background-color: green;" />
+        <div style="background-color: green;" />
+        <div style="background-color: green;" />
+        <div style="background-color: green;" />
+    </rendering>
+
+    <rendering help="::before and ::after, and their legacy syntax">
+        <style>
+            section::before,
+            section::after {
+                content: "";
+                display: block;
+                height: 20px;
+            }
+
+            .a::before,
+            .a::after,
+            .b:before,
+            .b:after {
+                background-color: green;
+            }
+
+            .b::before:hover,
+            .c::before,
+            :not(.a, .b)::after {
+                background-color: red !important;
+            }
+        </style>
+        <section class="a" />
+        <section class="b" />
+    </rendering>
+
+    <rendering help="selectors without pseudo-element do not match pseudo-elements">
+        <style>
+            .a::before,
+            .a::after {
+                content: "";
+                display: block;
+                width: 100px;
+                height: 20px;
+                background-color: green;
+            }
+
+            .a {
+                background-color: red !important;
+                width: 0;
+            }
+        </style>
+        <section class="a" />
+        <section class="a" />
+    </rendering>
+
+    <error help="::after does not match ::before">
+        <style>
+            .a::before {
+                content: "";
+                display: block;
+                height: 20px;
+            }
+
+            .a::after {
+                background-color: green;
+            }
+        </style>
+        <section class="a" />
+        <section class="a" />
+    </error>
+</test>
+
+</tests>

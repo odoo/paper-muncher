@@ -4,8 +4,8 @@ import Karm.Core;
 
 import :style.ancestorFilter;
 import :style.layers;
-import :style.matcher;
 import :style.rules;
+import :style.select;
 
 using namespace Karm;
 
@@ -14,7 +14,8 @@ namespace Vaev::Style {
 struct RuleIndex {
     struct Entry {
         StyleRule const& originatingRule;
-        Selector const& selector;
+        ComplexSelector const& selector;
+        Specificity specificity;
         urange ancestorHashes;
         usize order;
         Layer layer;
@@ -27,53 +28,88 @@ struct RuleIndex {
     Map<Symbol, Vec<Entry>> _attrRules;
 
     Vec<Entry> _complexRules;
-
     Vec<u16> _allAncestorHashes;
+    usize _ruleCount = 0;
 
-    usize _ruleCounter = 0;
-
-    enum class DestinationBucket {
+    enum class Bucket {
         ATTR,
         TYPE,
         CLASS,
         ID,
     };
 
-    struct Candidate {
-        DestinationBucket destination;
-        Str key;
+    // NOTE: Type and attribute names are matched against their ASCII lowercase form on HTML elements in HTML
+    //       documents, so rules are indexed under both forms.
+    struct BucketKey {
+        Bucket bucket;
+        Str value;
+        Str asciiLowercaseValue = value;
     };
 
-    void _insert(Opt<Candidate> candidate, StyleRule const& rule, Selector const& selector, usize order, Layer layer) {
-        auto ancestorHashes = _indexAncestorHashes(selector);
-        auto pseudoElement = selectorPseudoElement(selector);
-
-        if (not candidate) {
-            _complexRules.emplaceBack(rule, selector, ancestorHashes, order, layer, pseudoElement);
-        } else if (candidate->destination == DestinationBucket::ID) {
-            _idRules.lookupOrPutDefault(candidate->key).emplaceBack(rule, selector, ancestorHashes, order, layer, pseudoElement);
-        } else if (candidate->destination == DestinationBucket::CLASS) {
-            _classRules.lookupOrPutDefault(candidate->key).emplaceBack(rule, selector, ancestorHashes, order, layer, pseudoElement);
-        } else if (candidate->destination == DestinationBucket::TYPE) {
-            _typeRules.lookupOrPutDefault(Symbol::from(candidate->key)).emplaceBack(rule, selector, ancestorHashes, order, layer, pseudoElement);
-        } else if (candidate->destination == DestinationBucket::ATTR) {
-            _attrRules.lookupOrPutDefault(Symbol::from(candidate->key)).emplaceBack(rule, selector, ancestorHashes, order, layer, pseudoElement);
-        } else {
-            unreachable();
-        }
+    static Opt<BucketKey> _bestBucket(Opt<BucketKey> lhs, Opt<BucketKey> rhs) {
+        if (not lhs)
+            return rhs;
+        if (not rhs)
+            return lhs;
+        return rhs->bucket > lhs->bucket ? rhs : lhs;
     }
 
-    void _collectSimpleHashes(Selector const& selector) {
+    static Opt<BucketKey> _bucketFor(SubclassSelector const& selector) {
+        return selector.visit(
+            [&](IdSelector const& s) -> Opt<BucketKey> {
+                return Some(BucketKey{Bucket::ID, s.id.str()});
+            },
+            [&](ClassSelector const& s) -> Opt<BucketKey> {
+                return Some(BucketKey{Bucket::CLASS, s.class_.str()});
+            },
+            [&](AttributeSelector const& s) -> Opt<BucketKey> {
+                if (auto const& [name] = s.qualifiedName.exactName()) {
+                    return Some(BucketKey{Bucket::ATTR, name.str(), s.qualifiedName.exactName(true)->str()});
+                }
+                return NONE;
+            },
+            [&](auto const&) -> Opt<BucketKey> {
+                return NONE;
+            }
+        );
+    }
+
+    static Opt<BucketKey> _bucketFor(TypeSelector const& selector) {
+        if (auto const& [name] = selector.qualifiedName.exactName()) {
+            return Some(BucketKey{Bucket::TYPE, name.str(), selector.qualifiedName.exactName(true)->str()});
+        }
+        return NONE;
+    }
+
+    static Opt<BucketKey> _bucketFor(CompoundSelector const& selector) {
+        Opt<BucketKey> best = NONE;
+
+        for (auto& subclass : selector.subclasses)
+            best = _bestBucket(best, _bucketFor(subclass));
+
+        if (auto const& [typeSelector] = selector.type)
+            best = _bestBucket(best, _bucketFor(typeSelector));
+
+        return best;
+    }
+
+    static Opt<BucketKey> _bucketFor(ComplexSelectorUnit const& selectorUnit) {
+        if (auto const& [compoundSelector] = selectorUnit.selector)
+            return _bucketFor(compoundSelector);
+        return NONE;
+    }
+
+    static Opt<BucketKey> _bucketFor(ComplexSelector const& selector) {
+        return _bucketFor(selector.rhs);
+    }
+
+    void _collectSelectorHashes(SubclassSelector const& selector) {
         selector.visit(
             [&](IdSelector const& s) {
                 _allAncestorHashes.pushBack(AncestorFilter::hashEntry(AncestorFilter::ID, s.id.str()));
             },
             [&](ClassSelector const& s) {
                 _allAncestorHashes.pushBack(AncestorFilter::hashEntry(AncestorFilter::CLASS, s.class_));
-            },
-            [&](TypeSelector const& s) {
-                if (auto const& [name] = s.qualifiedName.exactName())
-                    _allAncestorHashes.pushBack(AncestorFilter::hashEntry(AncestorFilter::TYPE, name.str()));
             },
             [&](AttributeSelector const& s) {
                 if (auto const& [name] = s.qualifiedName.exactName()) {
@@ -86,149 +122,104 @@ struct RuleIndex {
         );
     }
 
-    void _collectCompoundHashes(Selector const& selector) {
-        if (auto nfix = selector.is<Nfix>()) {
-            if (nfix->type != Nfix::AND)
-                return;
-
-            for (auto const& inner : nfix->inners)
-                _collectSimpleHashes(inner);
-
-            return;
-        }
-        _collectSimpleHashes(selector);
+    void _collectSelectorHashes(TypeSelector const& selector) {
+        if (auto const& [name] = selector.qualifiedName.exactName())
+            _allAncestorHashes.pushBack(AncestorFilter::hashEntry(AncestorFilter::TYPE, name.str()));
     }
 
-    void _collectAncestorHashes(Selector const& selector) {
-        if (auto infix = selector.is<Infix>()) {
-            if (infix->type != Infix::DESCENDANT and infix->type != Infix::CHILD)
-                return;
-
-            _collectCompoundHashes(*infix->rhs);
-            _collectAncestorHashes(*infix->lhs);
-
-            return;
-        }
-        _collectCompoundHashes(selector);
+    void _collectSelectorHashes(CompoundSelector const& selector) {
+        for (auto& s : selector.subclasses)
+            _collectSelectorHashes(s);
+        if (auto& [s] = selector.type)
+            _collectSelectorHashes(s);
     }
 
-    urange _indexAncestorHashes(Selector const& selector) {
+    void _collectSelectorHashes(ComplexSelectorUnit const& selectorUnit) {
+        if (auto& [s] = selectorUnit.selector)
+            _collectSelectorHashes(s);
+    }
+
+    // NOTE: A unit of the left hand side is an ancestor of the subject if it is
+    //       linked to its right neighbor by a descendant or child combinator.
+    void _collectSelectorHashes(ComplexSelector const& selector) {
+        for (auto& s : selector.lhs)
+            if (s.combinator == SelectorCombinator::DESCENDANT or s.combinator == SelectorCombinator::CHILD)
+                _collectSelectorHashes(static_cast<ComplexSelectorUnit const&>(s));
+    }
+
+    urange _indexAncestorHashes(ComplexSelector const& selector) {
         usize before = _allAncestorHashes.len();
-        if (auto infix = selector.is<Infix>())
-            if (infix->type == Infix::DESCENDANT or infix->type == Infix::CHILD)
-                _collectAncestorHashes(*infix->lhs);
-
-        return {before, _allAncestorHashes.len() - before};
+        _collectSelectorHashes(selector);
+        return urange::fromStartEnd(before, _allAncestorHashes.len());
     }
 
     void add(StyleRule const& rule, Layer layer) {
-        auto order = _ruleCounter++;
+        auto order = _ruleCount++;
+        for (auto& selector : rule.selectors) {
+            auto key = _bucketFor(selector);
+            Entry entry{
+                rule,
+                selector,
+                specificity(selector),
+                _indexAncestorHashes(selector),
+                order,
+                layer,
+                selectorPseudoElement(selector),
+            };
 
-        if (auto s = rule.selector.is<Nfix>(); s and s->type == Nfix::OR) {
-            for (auto const& inner : s->inners) {
-                _insert(_addInner(inner), rule, inner, order, layer);
+            if (not key) {
+                _complexRules.pushBack(entry);
+            } else if (key->bucket == Bucket::ID) {
+                _idRules.lookupOrPutDefault(key->value).pushBack(entry);
+            } else if (key->bucket == Bucket::CLASS) {
+                _classRules.lookupOrPutDefault(key->value).pushBack(entry);
+            } else if (key->bucket == Bucket::TYPE) {
+                _typeRules.lookupOrPutDefault(Symbol::from(key->value)).pushBack(entry);
+                if (key->asciiLowercaseValue != key->value)
+                    _typeRules.lookupOrPutDefault(Symbol::from(key->asciiLowercaseValue)).pushBack(entry);
+            } else if (key->bucket == Bucket::ATTR) {
+                _attrRules.lookupOrPutDefault(Symbol::from(key->value)).pushBack(entry);
+                if (key->asciiLowercaseValue != key->value)
+                    _attrRules.lookupOrPutDefault(Symbol::from(key->asciiLowercaseValue)).pushBack(entry);
+            } else {
+                unreachable();
             }
-        } else {
-            _insert(_addInner(rule.selector), rule, rule.selector, order, layer);
         }
     }
 
-    Opt<Candidate> _addInner(Selector const& selector) {
-        return selector.visit(
-            [&](TypeSelector const& s) -> Opt<Candidate> {
-                auto const& qualifiedNameSelector = s.qualifiedName;
-
-                if (auto const& [name] = qualifiedNameSelector.exactName()) {
-                    return Some(Candidate{DestinationBucket::TYPE, name.str()});
-                }
-                return NONE;
-            },
-            [&](IdSelector const& s) -> Opt<Candidate> {
-                return Some(Candidate{DestinationBucket::ID, s.id.str()});
-            },
-            [&](ClassSelector const& s) -> Opt<Candidate> {
-                return Some(Candidate{DestinationBucket::CLASS, s.class_.str()});
-            },
-            [&](AttributeSelector const& s) -> Opt<Candidate> {
-                if (auto const& [name] = s.qualifiedName.exactName()) {
-                    return Some(Candidate{DestinationBucket::ATTR, name.str()});
-                }
-                return NONE;
-            },
-            [&](Infix const& s) -> Opt<Candidate> {
-                return _addInner(*s.rhs);
-            },
-            [&](Nfix const& s) -> Opt<Candidate> {
-                if (s.type == Nfix::AND) {
-                    Opt<Candidate> max = NONE;
-
-                    for (auto const& inner : s.inners) {
-                        auto current = _addInner(inner);
-
-                        if (max) {
-                            if (current and current->destination >= max->destination) {
-                                max = current;
-                            }
-                        } else {
-                            max = current;
-                        }
-                    }
-
-                    return max;
-                }
-
-                return NONE;
-            },
-            [&](auto const&) -> Opt<Candidate> {
-                return NONE;
-            }
-        );
-    }
-
-    Vec<MatchingRule> match(Gc::Ref<Dom::Element> el, Opt<Symbol> pseudoElement, AncestorFilter const& ancestorFilter) {
+    Vec<MatchingRule> match(MatchSubject const& subject, AncestorFilter const& ancestorFilter) {
         Vec<MatchingRule> matching;
 
-        auto _insertIfBucketHit = [&](auto const& bucket, auto const& key) {
-            if (auto [entries] = bucket.lookup(key)) {
-                for (auto const& entry : entries) {
-                    if (entry.pseudoElement != pseudoElement)
-                        continue;
-
-                    if (ancestorFilter.rejects(sub(_allAncestorHashes, entry.ancestorHashes)))
-                        continue;
-
-                    if (auto const& [specificity] = matchPreprocessedSelector(entry.selector, el, pseudoElement)) {
-                        matching.pushBack({entry.originatingRule, specificity, entry.order, entry.layer});
-                    }
-                }
-            }
-        };
-
-        for (auto const& class_ : el->classList._tokens) {
-            _insertIfBucketHit(_classRules, class_);
-        }
-
-        if (auto id = el->id()) {
-            _insertIfBucketHit(_idRules, *id);
-        }
-
-        _insertIfBucketHit(_typeRules, el->qualifiedName.name);
-
-        for (auto const& attr : el->attributes) {
-            _insertIfBucketHit(_attrRules, attr.qualifiedName.name);
-        }
-
-        for (auto const& entry : _complexRules) {
-            if (entry.pseudoElement != pseudoElement)
-                continue;
+        auto _insertIfMatch = [&](Entry const& entry) {
+            if (entry.pseudoElement != subject.pseudoElement)
+                return;
 
             if (ancestorFilter.rejects(sub(_allAncestorHashes, entry.ancestorHashes)))
-                continue;
+                return;
 
-            if (auto const& [specificity] = matchPreprocessedSelector(entry.selector, el, pseudoElement)) {
-                matching.pushBack({entry.originatingRule, specificity, entry.order, entry.layer});
-            }
-        }
+            if (Style::match(entry.selector, subject))
+                matching.pushBack({entry.originatingRule, entry.specificity, entry.order, entry.layer});
+        };
+
+        auto _insertIfBucketHit = [&](auto const& bucket, auto const& key) {
+            if (auto [entries] = bucket.lookup(key))
+                for (auto const& entry : entries)
+                    _insertIfMatch(entry);
+        };
+
+        for (auto const& class_ : subject.element->classList._tokens)
+            _insertIfBucketHit(_classRules, class_);
+
+        if (auto id = subject.element->id())
+            _insertIfBucketHit(_idRules, *id);
+
+        _insertIfBucketHit(_typeRules, subject.element->qualifiedName.name);
+
+        for (auto const& attr : subject.element->attributes)
+            _insertIfBucketHit(_attrRules, attr.qualifiedName.name);
+
+        for (auto const& entry : _complexRules)
+            _insertIfMatch(entry);
 
         return matching;
     }

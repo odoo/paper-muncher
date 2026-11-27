@@ -508,7 +508,7 @@ static void createAndBuildInlineFlowfromElement(BuilderContext bc, Rc<Style::Com
         return;
     }
 
-    if (el->isVoidElement()) {
+    if (Html::isVoidElement(el->qualifiedName)) {
         _buildVoidElement(bc, el);
         return;
     }
@@ -525,7 +525,7 @@ static void buildBlockFlowFromElement(BuilderContext bc, Gc::Ref<Dom::Element> e
         // do nothing
     } else if (el->qualifiedName == Svg::SVG_TAG) {
         buildSVGAggregate(el, bc._parent);
-    } else if (el->isVoidElement()) {
+    } else if (Html::isVoidElement(el->qualifiedName)) {
         _buildVoidElement(bc, el);
     } else {
         _buildChildren(bc, el);

@@ -16,6 +16,13 @@ Ref::Url Node::baseURI() {
     return document->url();
 }
 
+// https://dom.spec.whatwg.org/#dom-node-parentelement
+Gc::Ptr<Element> Node::parentElement() const {
+    if (auto parent = parentNode())
+        return parent->as<Element>();
+    return nullptr;
+}
+
 // https://dom.spec.whatwg.org/#ref-for-dom-node-ownerdocument%E2%91%A0
 Gc::Ptr<Document> Node::ownerDocument() {
     for (auto curr = parentNode(); curr; curr = curr->parentNode())

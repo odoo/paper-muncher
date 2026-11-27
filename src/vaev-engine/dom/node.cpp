@@ -8,6 +8,7 @@ import :dom.tree;
 namespace Vaev::Dom {
 
 export struct Document;
+export struct Element;
 
 #define FOREACH_NODE_TYPE(TYPE)     \
     TYPE(ELEMENT, 1)                \
@@ -44,6 +45,9 @@ export struct Node : Idl::PlatformObject, Tree<Node> {
 
     Gc::Ptr<Document> ownerDocument();
     Gc::Ptr<Document const> ownerDocument() const;
+
+    // https://dom.spec.whatwg.org/#dom-node-parentelement
+    Gc::Ptr<Element> parentElement() const;
 
     // https://dom.spec.whatwg.org/#get-text-content
     virtual void getTextContent(StringBuilder&) const {};

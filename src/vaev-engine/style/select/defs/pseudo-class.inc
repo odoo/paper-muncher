@@ -43,18 +43,3 @@ PSEUDO(USER_VALID, "user-valid"s)
 PSEUDO(USER_INVALID, "user-invalid"s)
 PSEUDO(ROOT, "root"s)
 PSEUDO(EMPTY, "empty"s)
-
-PSEUDO(NTH_CHILD, "nth-child"s)
-PSEUDO(NTH_LAST_CHILD, "nth-last-child"s)
-PSEUDO(FIRST_CHILD, "first-child"s)
-PSEUDO(LAST_CHILD, "last-child"s)
-PSEUDO(ONLY_CHILD, "only-child"s)
-
-PSEUDO(NTH_OF_TYPE, "nth-of-type"s)
-PSEUDO(NTH_LAST_OF_TYPE, "nth-last-of-type"s)
-PSEUDO(FIRST_OF_TYPE, "first-of-type"s)
-PSEUDO(LAST_OF_TYPE, "last-of-type"s)
-PSEUDO(ONLY_OF_TYPE, "only-of-type"s)
-
-PSEUDO(LANG, "lang"s)
-PSEUDO(DIR, "dir"s)

@@ -14,7 +14,7 @@ test$("parse-empty-document") {
     XmlParser p{gc};
 
     auto s = Io::SScan(""s);
-    auto dom = Dom::Document::create(gc, Ref::Url(), Ref::Uti::PUBLIC_XHTML);
+    auto dom = Dom::Document::create(gc, Ref::Url(), Dom::DocumentKind::XML, Ref::Uti::PUBLIC_XHTML);
     assert$(not p.parse(s, Some(Html::NAMESPACE), *dom)); // An empty document is invalid
     assert$(not dom->hasChildren());
 
@@ -28,7 +28,7 @@ test$("parse-error-leaves-no-root") {
     // The root is only attached once it's closed, a document that fails
     // to parse shouldn't end up with half a tree in it.
     auto s = Io::SScan("<html><div>text</html>");
-    auto dom = Dom::Document::create(gc, Ref::Url(), Ref::Uti::PUBLIC_XHTML);
+    auto dom = Dom::Document::create(gc, Ref::Url(), Dom::DocumentKind::XML, Ref::Uti::PUBLIC_XHTML);
     assert$(not p.parse(s, Some(Html::NAMESPACE), *dom));
     assert$(not dom->hasChildren());
 
@@ -40,7 +40,7 @@ test$("parse-open-close-tag") {
     XmlParser p{gc};
 
     auto s = Io::SScan("<html></html>");
-    auto dom = Dom::Document::create(gc, Ref::Url(), Ref::Uti::PUBLIC_XHTML);
+    auto dom = Dom::Document::create(gc, Ref::Url(), Dom::DocumentKind::XML, Ref::Uti::PUBLIC_XHTML);
     try$(p.parse(s, Some(Html::NAMESPACE), *dom));
 
     auto el = dom->firstChild()->as<Dom::Element>();
@@ -56,7 +56,7 @@ test$("parse-empty-tag") {
     XmlParser p{gc};
 
     auto s = Io::SScan("<html/>");
-    auto dom = Dom::Document::create(gc, Ref::Url(), Ref::Uti::PUBLIC_XHTML);
+    auto dom = Dom::Document::create(gc, Ref::Url(), Dom::DocumentKind::XML, Ref::Uti::PUBLIC_XHTML);
     try$(p.parse(s, Some(Html::NAMESPACE), *dom));
 
     auto el = dom->firstChild()->as<Dom::Element>();
@@ -72,7 +72,7 @@ test$("parse-attr") {
     XmlParser p{gc};
 
     auto s = Io::SScan("<html lang=\"en\"/>");
-    auto dom = Dom::Document::create(gc, Ref::Url(), Ref::Uti::PUBLIC_XHTML);
+    auto dom = Dom::Document::create(gc, Ref::Url(), Dom::DocumentKind::XML, Ref::Uti::PUBLIC_XHTML);
     try$(p.parse(s, Some(Html::NAMESPACE), *dom));
 
     auto el = dom->firstChild()->as<Dom::Element>();
@@ -88,7 +88,7 @@ test$("parse-attr-whitespace-around-eq") {
     XmlParser p{gc};
 
     auto s = Io::SScan("<html lang = \"en\" dir =\"ltr\"/>");
-    auto dom = Dom::Document::create(gc, Ref::Url(), Ref::Uti::PUBLIC_XHTML);
+    auto dom = Dom::Document::create(gc, Ref::Url(), Dom::DocumentKind::XML, Ref::Uti::PUBLIC_XHTML);
     try$(p.parse(s, Some(Html::NAMESPACE), *dom));
 
     auto el = dom->firstChild()->as<Dom::Element>();
@@ -104,7 +104,7 @@ test$("parse-text") {
     XmlParser p{gc};
 
     auto s = Io::SScan("<html>text</html>");
-    auto dom = Dom::Document::create(gc, Ref::Url(), Ref::Uti::PUBLIC_XHTML);
+    auto dom = Dom::Document::create(gc, Ref::Url(), Dom::DocumentKind::XML, Ref::Uti::PUBLIC_XHTML);
     try$(p.parse(s, Some(Html::NAMESPACE), *dom));
 
     auto el = dom->firstChild()->as<Dom::Element>();
@@ -123,7 +123,7 @@ test$("parse-text-before-tag") {
     XmlParser p{gc};
 
     auto s = Io::SScan("<html>text<div/></html>");
-    auto dom = Dom::Document::create(gc, Ref::Url(), Ref::Uti::PUBLIC_XHTML);
+    auto dom = Dom::Document::create(gc, Ref::Url(), Dom::DocumentKind::XML, Ref::Uti::PUBLIC_XHTML);
     try$(p.parse(s, Some(Html::NAMESPACE), *dom));
 
     auto el = dom->firstChild()->as<Dom::Element>();
@@ -147,7 +147,7 @@ test$("parse-text-after-tag") {
     XmlParser p{gc};
 
     auto s = Io::SScan("<html><div/>text</html>");
-    auto dom = Dom::Document::create(gc, Ref::Url(), Ref::Uti::PUBLIC_XHTML);
+    auto dom = Dom::Document::create(gc, Ref::Url(), Dom::DocumentKind::XML, Ref::Uti::PUBLIC_XHTML);
     try$(p.parse(s, Some(Html::NAMESPACE), *dom));
 
     auto el = dom->firstChild()->as<Dom::Element>();
@@ -170,7 +170,7 @@ test$("parse-text-between-tags") {
     XmlParser p{gc};
 
     auto s = Io::SScan("<html><div/>text<div/></html>");
-    auto dom = Dom::Document::create(gc, Ref::Url(), Ref::Uti::PUBLIC_XHTML);
+    auto dom = Dom::Document::create(gc, Ref::Url(), Dom::DocumentKind::XML, Ref::Uti::PUBLIC_XHTML);
     try$(p.parse(s, Some(Html::NAMESPACE), *dom));
 
     auto el = dom->firstChild()->as<Dom::Element>();
@@ -200,7 +200,7 @@ test$("parse-text-between-tags-and-before") {
     XmlParser p{gc};
 
     auto s = Io::SScan("<html>test2<div>text</div></html>");
-    auto dom = Dom::Document::create(gc, Ref::Url(), Ref::Uti::PUBLIC_XHTML);
+    auto dom = Dom::Document::create(gc, Ref::Url(), Dom::DocumentKind::XML, Ref::Uti::PUBLIC_XHTML);
     try$(p.parse(s, Some(Html::NAMESPACE), *dom));
 
     auto el = dom->firstChild()->as<Dom::Element>();
@@ -230,7 +230,7 @@ test$("parse-nested-tags") {
     XmlParser p{gc};
 
     auto s = Io::SScan("<html><head></head><body></body></html>");
-    auto dom = Dom::Document::create(gc, Ref::Url(), Ref::Uti::PUBLIC_XHTML);
+    auto dom = Dom::Document::create(gc, Ref::Url(), Dom::DocumentKind::XML, Ref::Uti::PUBLIC_XHTML);
     try$(p.parse(s, Some(Html::NAMESPACE), *dom));
 
     auto el = dom->firstChild()->as<Dom::Element>();
@@ -255,7 +255,7 @@ test$("parse-comment") {
     XmlParser p{gc};
 
     auto s = Io::SScan("<html><!-- comment --></html>");
-    auto dom = Dom::Document::create(gc, Ref::Url(), Ref::Uti::PUBLIC_XHTML);
+    auto dom = Dom::Document::create(gc, Ref::Url(), Dom::DocumentKind::XML, Ref::Uti::PUBLIC_XHTML);
     try$(p.parse(s, Some(Html::NAMESPACE), *dom));
 
     auto el = dom->firstChild()->as<Dom::Element>();
@@ -276,7 +276,7 @@ test$("parse-doctype") {
 
     auto s = Io::SScan("<!DOCTYPE html><html></html>");
 
-    auto dom = Dom::Document::create(gc, Ref::Url(), Ref::Uti::PUBLIC_XHTML);
+    auto dom = Dom::Document::create(gc, Ref::Url(), Dom::DocumentKind::XML, Ref::Uti::PUBLIC_XHTML);
     try$(p.parse(s, Some(Html::NAMESPACE), *dom));
     assert$(dom->hasChildren());
 
@@ -296,7 +296,7 @@ test$("parse-title") {
     XmlParser p{gc};
 
     auto s = Io::SScan("<title>the title</title>");
-    auto dom = Dom::Document::create(gc, Ref::Url(), Ref::Uti::PUBLIC_XHTML);
+    auto dom = Dom::Document::create(gc, Ref::Url(), Dom::DocumentKind::XML, Ref::Uti::PUBLIC_XHTML);
     try$(p.parse(s, Some(Html::NAMESPACE), *dom));
     assert$(dom->title() == "the title"s);
     return Ok();
@@ -310,7 +310,7 @@ test$("parse-comment-with-gt-symb") {
         "<title>im a title!</title>"
         "<!-- a b <meta> c d -->"
     );
-    auto dom = Dom::Document::create(gc, Ref::Url(), Ref::Uti::PUBLIC_XHTML);
+    auto dom = Dom::Document::create(gc, Ref::Url(), Dom::DocumentKind::XML, Ref::Uti::PUBLIC_XHTML);
     try$(p.parse(s, Some(Html::NAMESPACE), *dom));
 
     assert$(dom->hasChildren());
@@ -333,7 +333,7 @@ test$("parse-xml-decl") {
     XmlParser p{gc};
 
     auto s = Io::SScan("<?xml version='1.0' encoding='UTF-8'?><html></html>");
-    auto dom = Dom::Document::create(gc, Ref::Url(), Ref::Uti::PUBLIC_XHTML);
+    auto dom = Dom::Document::create(gc, Ref::Url(), Dom::DocumentKind::XML, Ref::Uti::PUBLIC_XHTML);
     try$(p.parse(s, Some(Html::NAMESPACE), *dom));
     assert$(dom->xmlVersion == "1.0");
     assert$(dom->xmlEncoding == "UTF-8");
@@ -350,7 +350,7 @@ test$("parse-xml-different-namespace") {
         "<rect/>"
         "</svg>"
     );
-    auto dom = Dom::Document::create(gc, Ref::Url(), Ref::Uti::PUBLIC_XHTML);
+    auto dom = Dom::Document::create(gc, Ref::Url(), Dom::DocumentKind::XML, Ref::Uti::PUBLIC_XHTML);
     try$(p.parse(s, Some(Html::NAMESPACE), *dom));
 
     auto svg = dom->firstChild()->as<Dom::Element>();
@@ -376,7 +376,7 @@ test$("parse-xml-prefixed-names") {
         "<a:item/>"
         "</root>"
     );
-    auto dom = Dom::Document::create(gc, Ref::Url(), Ref::Uti::PUBLIC_XHTML);
+    auto dom = Dom::Document::create(gc, Ref::Url(), Dom::DocumentKind::XML, Ref::Uti::PUBLIC_XHTML);
     try$(p.parse(s, NONE, *dom));
 
     auto root = dom->firstChild()->as<Dom::Element>();

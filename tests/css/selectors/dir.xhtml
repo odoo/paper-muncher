@@ -1,0 +1,73 @@
+<tests>
+
+<test name="select-dir">
+    <container>
+        <html xmlns="http://www.w3.org/1999/xhtml">
+
+        <head>
+            <style>
+                body {
+                    margin: 0;
+                }
+
+                div, p, span, em, a, section, article {
+                    display: block;
+                    width: 100px;
+                    margin: 0;
+                    padding: 0;
+                }
+
+                div, p, span, em, a {
+                    height: 20px;
+                }
+            </style>
+        </head>
+
+        <body>
+            <slot />
+        </body>
+
+        </html>
+    </container>
+
+    <rendering help="reference">
+        <div style="background-color: green;" />
+        <div style="background-color: green;" />
+        <div style="background-color: green;" />
+    </rendering>
+
+    <rendering help=":dir() is inherited from the dir attribute">
+        <style>
+            div:dir(ltr),
+            div:dir(rtl) {
+                background-color: green;
+            }
+
+            [dir=rtl]:dir(ltr),
+            section div:dir(ltr),
+            body > div:not([dir]):dir(rtl) {
+                background-color: red !important;
+            }
+        </style>
+        <div />
+        <div dir="rtl" />
+        <section dir="rtl">
+            <div />
+        </section>
+    </rendering>
+
+    <error help="only rtl">
+        <style>
+            div:dir(rtl) {
+                background-color: green;
+            }
+        </style>
+        <div />
+        <div dir="rtl" />
+        <section dir="rtl">
+            <div />
+        </section>
+    </error>
+</test>
+
+</tests>

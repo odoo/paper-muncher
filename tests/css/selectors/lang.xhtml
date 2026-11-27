@@ -1,0 +1,89 @@
+<tests>
+
+<test name="select-lang">
+    <container>
+        <html xmlns="http://www.w3.org/1999/xhtml" lang="en">
+
+        <head>
+            <style>
+                body {
+                    margin: 0;
+                }
+
+                div, p, span, em, a, section, article {
+                    display: block;
+                    width: 100px;
+                    margin: 0;
+                    padding: 0;
+                }
+
+                div, p, span, em, a {
+                    height: 20px;
+                }
+            </style>
+        </head>
+
+        <body>
+            <slot />
+        </body>
+
+        </html>
+    </container>
+
+    <rendering help="reference">
+        <div style="background-color: green;" />
+        <div style="background-color: green;" />
+        <div style="background-color: green;" />
+        <div style="background-color: green;" />
+    </rendering>
+
+    <rendering help="language ranges">
+        <style>
+            div:lang(en),
+            div:lang(FR),
+            div:lang(de),
+            div:lang("*-Hant") {
+                background-color: green;
+            }
+
+            div:lang(e),
+            div:lang(en-US),
+            div:lang(de-AT),
+            div:lang(zh-Hans) {
+                background-color: red !important;
+            }
+        </style>
+        <div />
+        <div lang="fr" />
+        <section lang="de-CH">
+            <div />
+        </section>
+        <div lang="zh-Hant-TW" />
+    </rendering>
+
+    <rendering help="list of language ranges">
+        <style>
+            div:lang(it, de, "fr", en) {
+                background-color: green;
+            }
+        </style>
+        <div />
+        <div lang="fr" />
+        <div lang="de" />
+        <div lang="it" />
+    </rendering>
+
+    <error help="language does not match">
+        <style>
+            div:lang(es) {
+                background-color: green;
+            }
+        </style>
+        <div />
+        <div lang="fr" />
+        <div lang="de" />
+        <div lang="it" />
+    </error>
+</test>
+
+</tests>

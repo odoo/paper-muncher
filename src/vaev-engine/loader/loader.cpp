@@ -39,7 +39,7 @@ static Ref::Uti _determineComputedType(Ref::Url url, Rc<Http::Response> response
 
 // https://html.spec.whatwg.org/#navigate-html
 static Res<Gc::Ref<Dom::Document>> _loadHtmlDocument(Gc::Heap& heap, Ref::Url url, Ref::Uti contentType, Str body) {
-    auto dom = Dom::Document::create(heap, url, contentType);
+    auto dom = Dom::Document::create(heap, url, Dom::DocumentKind::HTML, contentType);
     Html::HtmlParser parser{heap, dom};
     Diag::Collector diags;
     parser.write(body, diags);
@@ -52,7 +52,7 @@ static Res<Gc::Ref<Dom::Document>> _loadHtmlDocument(Gc::Heap& heap, Ref::Url ur
 
 // https://html.spec.whatwg.org/#read-xml
 static Res<Gc::Ref<Dom::Document>> _loadXmlDocument(Gc::Heap& heap, Ref::Url url, Ref::Uti contentType, Str body) {
-    auto dom = Dom::Document::create(heap, url, contentType);
+    auto dom = Dom::Document::create(heap, url, Dom::DocumentKind::XML, contentType);
     Io::SScan scan{body};
     Xml::XmlParser parser{heap};
     try$(parser.parse(scan, NONE, *dom));
@@ -61,7 +61,7 @@ static Res<Gc::Ref<Dom::Document>> _loadXmlDocument(Gc::Heap& heap, Ref::Url url
 
 // https://html.spec.whatwg.org/#read-text
 static Res<Gc::Ref<Dom::Document>> _loadTextDocument(Gc::Heap& heap, Ref::Url url, Ref::Uti contentType, Str body) {
-    auto dom = Dom::Document::create(heap, url, contentType);
+    auto dom = Dom::Document::create(heap, url, Dom::DocumentKind::HTML, contentType);
     auto text = heap.alloc<Dom::Text>();
     text->appendData(body);
     auto bodyEl = heap.alloc<Dom::Element>(Html::BODY_TAG);
@@ -72,7 +72,7 @@ static Res<Gc::Ref<Dom::Document>> _loadTextDocument(Gc::Heap& heap, Ref::Url ur
 
 // https://html.spec.whatwg.org/#read-media
 static Res<Gc::Ref<Dom::Document>> _loadMediaDocument(Gc::Heap& heap, Ref::Url url, Ref::Uti contentType) {
-    auto dom = Dom::Document::create(heap, url, contentType);
+    auto dom = Dom::Document::create(heap, url, Dom::DocumentKind::HTML, contentType);
     auto element = heap.alloc<Dom::Element>(Html::IMG_TAG);
     element->setAttribute(Html::SRC_ATTR, url.str());
     auto bodyEl = heap.alloc<Dom::Element>(Html::BODY_TAG);
@@ -192,7 +192,7 @@ export Async::Task<Gc::Ref<Dom::Document>> viewSourceAsync(Gc::Heap& heap, Resou
     auto respBody = resp->body.expect();
     auto buf = co_trya$(Aio::readAllTextAsync<Utf8>(*respBody, ct));
 
-    auto dom = Dom::Document::create(heap, url, Ref::Uti::PUBLIC_TEXT);
+    auto dom = Dom::Document::create(heap, url, Dom::DocumentKind::HTML, Ref::Uti::PUBLIC_TEXT);
     auto body = heap.alloc<Dom::Element>(Html::BODY_TAG);
     dom->appendChild(body);
     auto pre = heap.alloc<Dom::Element>(Html::PRE_TAG);
