@@ -125,11 +125,28 @@ export enum struct SystemColor : u8 {
     _LEN
 };
 
+// https://drafts.csswg.org/css-color-4/#specifying-oklab-oklch
+export struct Oklch {
+    // https://drafts.csswg.org/css-color-4/#serializing-oklab-oklch
+    // (half float or float, is recommended for internal storage).
+    Opt<f32> lightness;
+    Opt<f32> chroma;
+    Opt<f32> hue;
+    Opt<f32> alpha;
+
+    bool operator==(Oklch const& other) const = default;
+
+    void repr(Io::Emit& e) const {
+        e("(oklch {} {} {} {})", lightness, chroma, hue, alpha);
+    }
+};
+
 export struct ColorMix;
 
 // https://drafts.csswg.org/css-color-4/#typedef-color
 export using Color = Union<
     Gfx::Color,
+    Oklch,
     Keywords::CurrentColor,
     SystemColor,
     Box<ColorMix>>;
@@ -555,6 +572,110 @@ struct ValueParser<Color> {
         });
     }
 
+    // [ <percentage> | <number> | none]
+    static Res<Opt<f64>> _parseNumberOrPercentage(Cursor<Sst>& scan, f64 percentReference) {
+        eatWhitespace(scan);
+        if (scan.ended())
+            return Error::invalidData("unexpected end of input");
+
+        // FIXME: Allow calc.
+        if (scan.skip(Token::ident("none")))
+            return Ok(NONE);
+
+        if (scan.peek() == Token::Type::PERCENTAGE)
+            return Ok(Some(try$(parseValue<LegacyPercentage>(scan)).value() * percentReference / 100));
+
+        if (scan.peek() == Token::Type::NUMBER)
+            return Ok(Some(try$(parseValue<f64>(scan))));
+
+        return Error::invalidData("expected number or percentage");
+    }
+
+    // https://drafts.csswg.org/css-color-4/#hue-syntax
+    // <hue> = <number> | <angle>
+    static Res<Opt<f64>> _parseHue(Cursor<Sst>& scan) {
+        eatWhitespace(scan);
+        if (scan.ended())
+            return Error::invalidData("unexpected end of input");
+
+        // FIXME: Allow calc.
+        if (scan.skip(Token::ident("none")))
+            return Ok(NONE);
+
+        f64 degrees;
+        if (scan.peek() == Token::DIMENSION)
+            degrees = try$(parseValue<LegacyAngle>(scan)).unitValue().to(UnitValue::Unit::DEG);
+        else if (scan.peek() == Token::Type::NUMBER)
+            degrees = try$(parseValue<f64>(scan));
+        else
+            return Error::invalidData("expected hue");
+
+        // This number is normalized to the range [0,360).
+        // In hsl(calc(-infinity) 0 0) or hsl(calc(infinity) 0 0), the <hue> component is again normalized to 0
+        // degrees.
+        if (Math::isInf(degrees))
+            return Ok(Some(0.0));
+
+        f32 hue = Math::fmod(degrees, 360.0);
+        if (hue < 0)
+            hue += 360;
+
+        // NOTE: The hue is stored in a f32, a hue just below 360 is rounded up to 360.
+        if (hue >= 360)
+            hue = 0;
+
+        return Ok(Some(hue));
+    }
+
+    // https://drafts.csswg.org/css-color-4/#typedef-color-alpha-value
+    // <alpha-value> = <number> | <percentage>
+    static Res<Opt<f64>> _parseAlpha(Cursor<Sst>& scan) {
+        eatWhitespace(scan);
+
+        // Unless otherwise specified, an <alpha-value> component of a color defaults to 100% when omitted.
+        if (not scan.skip(Token::delim("/")))
+            return Ok(Some(1.0));
+
+        auto alpha = try$(_parseNumberOrPercentage(scan, 1));
+
+        // Values outside the range [0,1] are not invalid, but are clamped to that range at parsed-value time.
+        return Ok(alpha.map([](f64 value) {
+            return clamp01(value);
+        }));
+    }
+
+    // https://drafts.csswg.org/css-color-4/#specifying-oklab-oklch
+    // oklch() = oklch( [ <percentage> | <number> | none]
+    //       [ <percentage> | <number> | none]
+    //       [ <hue> | none]
+    //       [ / [<alpha-value> | none] ]? )
+    static Res<Oklch> _parseOklchFunc(Sst const& s) {
+        Cursor<Sst> scan = s.content;
+
+        auto lightness = try$(_parseNumberOrPercentage(scan, 1)).map([](f64 value) {
+            return clamp01(value);
+        });
+
+        // for C: 0% = 0.0 100% = 0.4
+        // If the provided value is negative, it is clamped to 0 at parsed-value time.
+        // https://drafts.csswg.org/css-values-4/#numeric-ranges
+        // CSS theoretically supports infinite precision and infinite ranges for all value types; however in reality
+        // implementations have finite capacity. UAs should support reasonably useful ranges and precisions.
+        // NOTE: The chroma is stored in a f32, it is clamped to the largest f32.
+        auto chroma = try$(_parseNumberOrPercentage(scan, 0.4)).map([](f64 value) {
+            return clamp(value, 0.0, static_cast<f64>(Limits<f32>::MAX));
+        });
+
+        auto hue = try$(_parseHue(scan));
+        auto alpha = try$(_parseAlpha(scan));
+
+        eatWhitespace(scan);
+        if (not scan.ended())
+            return Error::invalidData("unexpected tokens at the end of oklch()");
+
+        return Ok(Oklch{lightness, chroma, hue, alpha});
+    }
+
     // https://drafts.csswg.org/css-color-5/#funcdef-color-mix
     static Res<Color> _parseColorMixFunc(Sst const& s) {
         Cursor<Sst> scan = s.content;
@@ -621,6 +742,12 @@ struct ValueParser<Color> {
                 return Ok(color);
             }
 
+            if (c->prefix == Token::function("oklch(")) {
+                auto color = try$(_parseOklchFunc(*c));
+                c.next();
+                return Ok(color);
+            }
+
             auto color = try$(_parseFuncColor(*c));
             c.next();
             return Ok(color);
@@ -658,6 +785,26 @@ struct ValueSerializer<Color> {
                 try$(w.writeStr(")"s));
 
                 return Ok();
+            },
+            // https://drafts.csswg.org/css-color-4/#serializing-oklab-oklch
+            [&](Oklch const& oklch) -> Res<> {
+                try$(w.writeStr("oklch("s));
+
+                try$(oklch.lightness ? serializeValue(w, static_cast<f64>(*oklch.lightness)) : w.writeStr("none"s));
+                try$(w.writeStr(" "s));
+                try$(oklch.chroma ? serializeValue(w, static_cast<f64>(*oklch.chroma)) : w.writeStr("none"s));
+                try$(w.writeStr(" "s));
+                try$(oklch.hue ? serializeValue(w, static_cast<f64>(*oklch.hue)) : w.writeStr("none"s));
+
+                // As noted earlier, unitary alpha values are not explicitly serialized. Non-unitary alpha values must
+                // be explicitly serialized, and the string " / " (an ASCII space, then forward slash, then another
+                // space) must be used to separate the final color component (b, or C) value from the alpha value.
+                if (oklch.alpha != 1.0f) {
+                    try$(w.writeStr(" / "s));
+                    try$(oklch.alpha ? serializeValue(w, static_cast<f64>(*oklch.alpha)) : w.writeStr("none"s));
+                }
+
+                return w.writeStr(")"s);
             },
             [&](auto const& other) -> Res<> {
                 return Io::format(w, "{}", other);
